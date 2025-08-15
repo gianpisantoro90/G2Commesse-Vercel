@@ -42,16 +42,40 @@ class AIFileRouter {
       console.log('AI Router Debug - Raw config (first 50 chars):', storedConfig ? storedConfig.substring(0, 50) + '...' : 'null');
       
       if (storedConfig) {
-        // The entire config is base64 encoded (by useEncryptedLocalStorage), decode it
-        const decoded = atob(storedConfig);
-        console.log('AI Router Debug - Decoded config:', decoded);
-        const config = JSON.parse(decoded);
+        let config;
+        
+        // Check if it's base64 encoded or plain JSON
+        if (storedConfig.startsWith('{')) {
+          // It's already JSON, parse directly
+          console.log('AI Router Debug - Config is plain JSON');
+          config = JSON.parse(storedConfig);
+        } else {
+          // It's base64 encoded, decode first
+          console.log('AI Router Debug - Config is base64 encoded');
+          const decoded = atob(storedConfig);
+          console.log('AI Router Debug - Decoded config:', decoded);
+          config = JSON.parse(decoded);
+        }
+        
         console.log('AI Router Debug - Parsed config:', config);
         console.log('AI Router Debug - Parsed config keys:', Object.keys(config));
         console.log('AI Router Debug - Has API key:', !!config.apiKey);
         
-        // The API key is stored directly without additional encoding
-        this.apiKey = config.apiKey || null;
+        // The API key might be base64 encoded within the config
+        if (config.apiKey) {
+          // Check if API key itself is base64 encoded
+          if (config.apiKey.startsWith('c2stYW50LWFwaTA')) {
+            // It's base64 encoded, decode it
+            this.apiKey = atob(config.apiKey);
+            console.log('AI Router Debug - Decoded API key from base64');
+          } else {
+            // It's already plain text
+            this.apiKey = config.apiKey;
+            console.log('AI Router Debug - API key is plain text');
+          }
+        } else {
+          this.apiKey = null;
+        }
         
         if (this.apiKey) {
           console.log('AI Router Debug - API key loaded successfully');
