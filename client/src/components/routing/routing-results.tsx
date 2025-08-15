@@ -44,6 +44,28 @@ export default function RoutingResults({ result, file, project, onClear }: Routi
     return badges[method as keyof typeof badges] || badges.rules;
   };
 
+  const generateNewFileName = (originalFile: File, projectCode: string): string => {
+    const fileName = originalFile.name;
+    const lastDotIndex = fileName.lastIndexOf('.');
+    
+    if (lastDotIndex === -1) {
+      // No extension
+      return `${projectCode}_${fileName}`;
+    }
+    
+    const nameWithoutExt = fileName.substring(0, lastDotIndex);
+    const extension = fileName.substring(lastDotIndex);
+    
+    // Check if already has project code prefix
+    if (nameWithoutExt.startsWith(projectCode + '_')) {
+      return fileName; // Already has prefix
+    }
+    
+    return `${projectCode}_${nameWithoutExt}${extension}`;
+  };
+
+  const suggestedFileName = project?.code ? generateNewFileName(file, project.code) : file.name;
+
   const handleSelectPath = (path: string) => {
     setSelectedPath(path);
     toast({
@@ -56,19 +78,30 @@ export default function RoutingResults({ result, file, project, onClear }: Routi
     if (!result || !file) return;
     
     const pathToUse = selectedPath || result.suggestedPath;
+    const finalFileName = suggestedFileName;
     
     // Learn from this acceptance if user made a selection
     if (selectedPath && selectedPath !== result.suggestedPath) {
       aiRouter.learnFromCorrection(file, selectedPath);
     }
     
+    const hasRenamed = finalFileName !== file.name;
+    const message = hasRenamed 
+      ? `File "${finalFileName}" verrà spostato in: ${pathToUse}`
+      : `File verrà spostato in: ${pathToUse}`;
+    
     toast({
       title: "Suggerimento accettato",
-      description: `File verrà spostato in: ${pathToUse}`,
+      description: message,
     });
     
-    // TODO: Implement actual file moving logic when File System API is available
-    console.log('Would move file to:', pathToUse);
+    // TODO: Implement actual file moving and renaming logic when File System API is available
+    console.log('Would move and rename file:', {
+      originalName: file.name,
+      newName: finalFileName,
+      path: pathToUse,
+      fullPath: `${pathToUse}${finalFileName}`
+    });
   };
 
   const handleManualPath = () => {
@@ -99,12 +132,20 @@ export default function RoutingResults({ result, file, project, onClear }: Routi
         <div className="bg-gray-50 rounded-xl p-4">
           <h4 className="font-semibold text-gray-700 mb-2">Informazioni File</h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600">Nome:</span>{" "}
+            <div className="col-span-2">
+              <span className="text-gray-600">Nome originale:</span>{" "}
               <span className="font-mono" data-testid="file-name">
                 {file.name}
               </span>
             </div>
+            {project?.code && suggestedFileName !== file.name && (
+              <div className="col-span-2">
+                <span className="text-gray-600">Nome suggerito:</span>{" "}
+                <span className="font-mono font-semibold text-primary" data-testid="suggested-file-name">
+                  {suggestedFileName}
+                </span>
+              </div>
+            )}
             <div>
               <span className="text-gray-600">Dimensione:</span>{" "}
               <span data-testid="file-size">{getFileSize(file.size)}</span>
@@ -135,8 +176,15 @@ export default function RoutingResults({ result, file, project, onClear }: Routi
               data-testid="main-suggestion"
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="font-mono text-sm text-primary font-semibold">
-                  {result.suggestedPath}
+                <div className="space-y-1">
+                  <div className="font-mono text-sm text-primary font-semibold">
+                    📁 {result.suggestedPath}
+                  </div>
+                  {project?.code && suggestedFileName !== file.name && (
+                    <div className="font-mono text-xs text-gray-600">
+                      📄 {suggestedFileName}
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-2">
                   {getMethodBadge(result.method)}
