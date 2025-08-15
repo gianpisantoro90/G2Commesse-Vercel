@@ -39,11 +39,14 @@ class AIFileRouter {
     try {
       const storedConfig = localStorage.getItem('ai_config');
       console.log('AI Router Debug - Stored config:', storedConfig ? 'exists' : 'not found');
+      console.log('AI Router Debug - Raw config (first 50 chars):', storedConfig ? storedConfig.substring(0, 50) + '...' : 'null');
       
       if (storedConfig) {
         // The entire config is base64 encoded (by useEncryptedLocalStorage), decode it
         const decoded = atob(storedConfig);
+        console.log('AI Router Debug - Decoded config:', decoded);
         const config = JSON.parse(decoded);
+        console.log('AI Router Debug - Parsed config:', config);
         console.log('AI Router Debug - Parsed config keys:', Object.keys(config));
         console.log('AI Router Debug - Has API key:', !!config.apiKey);
         
