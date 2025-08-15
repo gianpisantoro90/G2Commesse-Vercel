@@ -247,8 +247,10 @@ class AIFileRouter {
     }
 
     const prompt = this.buildAIPrompt(analysis, template);
+    console.log('AI Router Debug - Generated prompt:', prompt.substring(0, 200) + '...');
     
     try {
+      console.log('AI Router Debug - Calling backend /api/ai-routing');
       const response = await fetch('/api/ai-routing', {
         method: 'POST',
         headers: {
@@ -260,13 +262,19 @@ class AIFileRouter {
         }),
       });
 
+      console.log('AI Router Debug - Backend response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('AI Router Debug - Backend error:', errorData);
         throw new Error(errorData.message || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('AI Router Debug - Backend response data:', data);
+      
       const result = this.parseAIResponse(data.content);
+      console.log('AI Router Debug - Parsed AI result:', result);
       
       return {
         suggestedPath: result.suggestedPath,
