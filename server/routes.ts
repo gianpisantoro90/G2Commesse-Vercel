@@ -213,6 +213,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Claude AI test endpoint
+  app.post("/api/test-claude", async (req, res) => {
+    try {
+      const { apiKey } = req.body;
+      if (!apiKey) {
+        return res.status(400).json({ message: "API Key mancante" });
+      }
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'test' }],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return res.status(400).json({ 
+          message: "API Key non valida o servizio non disponibile",
+          details: {
+            status: response.status,
+            error: errorText
+          }
+        });
+      }
+
+      res.json({ success: true, message: "Connessione Claude API riuscita" });
+    } catch (error) {
+      console.error('Claude API test error:', error);
+      res.status(500).json({ 
+        message: "Errore nel test della connessione",
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

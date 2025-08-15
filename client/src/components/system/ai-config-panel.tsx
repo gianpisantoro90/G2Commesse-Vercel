@@ -42,22 +42,32 @@ export default function AiConfigPanel() {
   });
 
   useEffect(() => {
+    // Load current config and update form
+    const currentConfig = {
+      ...aiConfig,
+      apiKey: aiConfig.apiKey ? atob(aiConfig.apiKey) : '' // Decode for display
+    };
+    form.reset(currentConfig);
+    
     // Check AI status on load
     if (aiConfig.apiKey) {
       checkAiStatus();
     }
-  }, []);
+  }, [aiConfig]);  // Add aiConfig dependency
 
   const checkAiStatus = async () => {
     if (!aiConfig.apiKey) return;
     
     try {
-      const connected = await testClaudeConnection(aiConfig.apiKey);
+      // Decode the stored API key before testing
+      const decodedKey = atob(aiConfig.apiKey);
+      const connected = await testClaudeConnection(decodedKey);
       setIsConnected(connected);
       if (connected) {
         setLastSync(new Date().toLocaleString("it-IT"));
       }
     } catch (error) {
+      console.error('Error checking AI status:', error);
       setIsConnected(false);
     }
   };

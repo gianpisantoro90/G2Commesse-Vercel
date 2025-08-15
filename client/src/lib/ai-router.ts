@@ -35,38 +35,63 @@ class AIFileRouter {
   }
 
   private loadConfiguration(): void {
-    // Load AI configuration
-    const config = localStorageHelpers.loadEncrypted('ai_config', { apiKey: '' });
-    this.apiKey = config.apiKey ? atob(config.apiKey) : null;
+    // Load AI configuration directly from localStorage (already base64 encoded)
+    try {
+      const storedConfig = localStorage.getItem('ai_config');
+      const config = storedConfig ? JSON.parse(storedConfig) : { apiKey: '' };
+      
+      // API key is already base64 encoded when saved, decode it
+      this.apiKey = config.apiKey ? atob(config.apiKey) : null;
+    } catch (error) {
+      console.error('Error loading AI config:', error);
+      this.apiKey = null;
+    }
     
     // Load learned patterns
     this.learnedPatterns = localStorageHelpers.loadLearnedPatterns();
     this.isInitialized = true;
   }
 
-  // Test Claude API connection
+  // Test Claude API connection via backend proxy
   async testConnection(apiKey?: string): Promise<boolean> {
     const keyToTest = apiKey || this.apiKey;
-    if (!keyToTest) return false;
+    if (!keyToTest) {
+      console.error('Claude API test failed: No API key provided');
+      return false;
+    }
 
+    console.log('Testing Claude API connection via backend...');
+    
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/test-claude', {
         method: 'POST',
         headers: {
-          'x-api-key': keyToTest,
-          'anthropic-version': '2023-06-01',
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 10,
-          messages: [{ role: 'user', content: 'test' }],
+          apiKey: keyToTest,
         }),
       });
 
-      return response.ok;
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Claude API test failed:', {
+          status: response.status,
+          message: data.message,
+          details: data.details
+        });
+        return false;
+      }
+      
+      console.log('Claude API test successful:', data.message);
+      return true;
     } catch (error) {
-      console.error('Claude API test failed:', error);
+      const errorDetails = {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'UnknownError',
+      };
+      console.error('Claude API test failed with exception:', errorDetails);
       return false;
     }
   }
