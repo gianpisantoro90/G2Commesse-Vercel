@@ -114,10 +114,9 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
           </Label>
           <Select value={selectedTemplate} onValueChange={setSelectedTemplate} data-testid="select-routing-template">
             <SelectTrigger className="input-g2">
-              <SelectValue placeholder="Auto-detect dal progetto" />
+              <SelectValue placeholder="Seleziona template o auto-detect dal progetto" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Auto-detect dal progetto</SelectItem>
               <SelectItem value="LUNGO">LUNGO - Progetti complessi</SelectItem>
               <SelectItem value="BREVE">BREVE - Progetti semplici</SelectItem>
             </SelectContent>
