@@ -38,17 +38,29 @@ class AIFileRouter {
     // Load AI configuration from encrypted localStorage
     try {
       const storedConfig = localStorage.getItem('ai_config');
+      console.log('AI Router Debug - Stored config:', storedConfig ? 'exists' : 'not found');
+      
       if (storedConfig) {
         // The entire config is base64 encoded (by useEncryptedLocalStorage), decode it
         const decoded = atob(storedConfig);
         const config = JSON.parse(decoded);
+        console.log('AI Router Debug - Parsed config keys:', Object.keys(config));
+        console.log('AI Router Debug - Has API key:', !!config.apiKey);
+        
         // The API key is stored directly without additional encoding
         this.apiKey = config.apiKey || null;
+        
+        if (this.apiKey) {
+          console.log('AI Router Debug - API key loaded successfully');
+        } else {
+          console.log('AI Router Debug - No API key in config');
+        }
       } else {
+        console.log('AI Router Debug - No config found in localStorage');
         this.apiKey = null;
       }
     } catch (error) {
-      console.error('Error loading AI config:', error);
+      console.error('AI Router Debug - Error loading config:', error);
       this.apiKey = null;
     }
     
@@ -111,28 +123,43 @@ class AIFileRouter {
       this.loadConfiguration();
     }
 
+    console.log('AI Router Debug - Starting file routing for:', file.name);
+    console.log('AI Router Debug - Has API key:', !!this.apiKey);
+    console.log('AI Router Debug - Project template:', projectTemplate);
+
     const analysis = await this.analyzeFile(file);
+    console.log('AI Router Debug - File analysis:', analysis);
     
     // Try learned patterns first (highest priority)
     const learnedResult = this.checkLearnedPatterns(analysis);
     if (learnedResult.confidence > 0.9) {
+      console.log('AI Router Debug - Using learned patterns');
       return { ...learnedResult, method: 'learned' };
     }
 
     // Try AI routing if available
     if (this.apiKey) {
+      console.log('AI Router Debug - Attempting AI routing');
       try {
         const aiResult = await this.aiRouting(analysis, projectTemplate);
+        console.log('AI Router Debug - AI routing result:', aiResult);
         if (aiResult.confidence > 0.7) {
+          console.log('AI Router Debug - Using AI routing result');
           return { ...aiResult, method: 'ai' };
+        } else {
+          console.log('AI Router Debug - AI confidence too low, falling back to rules');
         }
       } catch (error) {
         console.warn('AI routing failed, falling back to rules:', error);
       }
+    } else {
+      console.log('AI Router Debug - No API key, skipping AI routing');
     }
 
     // Fallback to rules-based routing
+    console.log('AI Router Debug - Using rules-based routing');
     const rulesResult = this.rulesBasedRouting(analysis, projectTemplate);
+    console.log('AI Router Debug - Rules result:', rulesResult);
     return { ...rulesResult, method: 'rules' };
   }
 
