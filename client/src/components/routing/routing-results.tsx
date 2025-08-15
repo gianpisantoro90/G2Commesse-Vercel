@@ -64,7 +64,7 @@ export default function RoutingResults({ result, file, project, onClear }: Routi
     return `${projectCode}_${nameWithoutExt}${extension}`;
   };
 
-  const suggestedFileName = project?.code ? generateNewFileName(file, project.code) : file.name;
+  const suggestedFileName = project?.code && file ? generateNewFileName(file, project.code) : file?.name || '';
 
   const handleSelectPath = (path: string) => {
     setSelectedPath(path);
