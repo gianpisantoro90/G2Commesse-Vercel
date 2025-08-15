@@ -39,11 +39,11 @@ class AIFileRouter {
     try {
       const storedConfig = localStorage.getItem('ai_config');
       if (storedConfig) {
-        // The entire config is base64 encoded, decode it first
+        // The entire config is base64 encoded (by useEncryptedLocalStorage), decode it
         const decoded = atob(storedConfig);
         const config = JSON.parse(decoded);
-        // The API key inside the config is also base64 encoded, decode it too
-        this.apiKey = config.apiKey ? atob(config.apiKey) : null;
+        // The API key is stored directly without additional encoding
+        this.apiKey = config.apiKey || null;
       } else {
         this.apiKey = null;
       }

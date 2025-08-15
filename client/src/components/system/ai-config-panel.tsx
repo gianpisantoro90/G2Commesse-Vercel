@@ -59,9 +59,8 @@ export default function AiConfigPanel() {
     if (!aiConfig.apiKey) return;
     
     try {
-      // Decode the stored API key before testing
-      const decodedKey = atob(aiConfig.apiKey);
-      const connected = await testClaudeConnection(decodedKey);
+      // API key is stored directly without additional encoding
+      const connected = await testClaudeConnection(aiConfig.apiKey);
       setIsConnected(connected);
       if (connected) {
         setLastSync(new Date().toLocaleString("it-IT"));
@@ -114,13 +113,8 @@ export default function AiConfigPanel() {
   };
 
   const onSubmit = (data: AiConfigForm) => {
-    // Encode API key for storage
-    const configToSave = {
-      ...data,
-      apiKey: data.apiKey ? btoa(data.apiKey) : "",
-    };
-    
-    setAiConfig(configToSave);
+    // Save config directly (encryption handled by useEncryptedLocalStorage)
+    setAiConfig(data);
     
     toast({
       title: "Configurazione salvata",
