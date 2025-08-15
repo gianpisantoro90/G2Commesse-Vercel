@@ -35,13 +35,18 @@ class AIFileRouter {
   }
 
   private loadConfiguration(): void {
-    // Load AI configuration directly from localStorage (already base64 encoded)
+    // Load AI configuration from encrypted localStorage
     try {
       const storedConfig = localStorage.getItem('ai_config');
-      const config = storedConfig ? JSON.parse(storedConfig) : { apiKey: '' };
-      
-      // API key is already base64 encoded when saved, decode it
-      this.apiKey = config.apiKey ? atob(config.apiKey) : null;
+      if (storedConfig) {
+        // The entire config is base64 encoded, decode it first
+        const decoded = atob(storedConfig);
+        const config = JSON.parse(decoded);
+        // The API key inside the config is also base64 encoded, decode it too
+        this.apiKey = config.apiKey ? atob(config.apiKey) : null;
+      } else {
+        this.apiKey = null;
+      }
     } catch (error) {
       console.error('Error loading AI config:', error);
       this.apiKey = null;
@@ -178,7 +183,7 @@ class AIFileRouter {
     };
   }
 
-  // AI-powered routing using Claude
+  // AI-powered routing using Claude via backend proxy
   private async aiRouting(
     analysis: FileAnalysis,
     template: string
@@ -190,26 +195,24 @@ class AIFileRouter {
     const prompt = this.buildAIPrompt(analysis, template);
     
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/ai-routing', {
         method: 'POST',
         headers: {
-          'x-api-key': this.apiKey,
-          'anthropic-version': '2023-06-01',
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'claude-3-sonnet-20240229',
-          max_tokens: 300,
-          messages: [{ role: 'user', content: prompt }],
+          apiKey: this.apiKey,
+          prompt: prompt,
         }),
       });
 
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `API Error: ${response.status}`);
       }
 
       const data = await response.json();
-      const result = this.parseAIResponse(data.content[0].text);
+      const result = this.parseAIResponse(data.content);
       
       return {
         suggestedPath: result.suggestedPath,
