@@ -1,73 +1,97 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { type RoutingResult } from "@/lib/ai-router";
+import { type Project } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { aiRouter } from "@/lib/ai-router";
 
-interface RoutingResult {
-  suggestedPath: string;
-  confidence: number;
-  reasoning: string;
+interface RoutingResultsProps {
+  result: RoutingResult | null;
+  file: File | null;
+  project: Project | null;
+  onClear: () => void;
 }
 
-export default function RoutingResults() {
-  const [results, setResults] = useState<RoutingResult[]>([]);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  // Mock results for demonstration
-  const mockResults: RoutingResult[] = [
-    {
-      suggestedPath: "02_PROGETTAZIONE/01_RELAZIONI/",
-      confidence: 92,
-      reasoning: "Basato su contenuto e nomenclatura"
-    },
-    {
-      suggestedPath: "01_DOCUMENTI_GENERALI/02_TECNICI/",
-      confidence: 67,
-      reasoning: "Alternativa basata su tipologia"
-    }
-  ];
+export default function RoutingResults({ result, file, project, onClear }: RoutingResultsProps) {
+  const [selectedPath, setSelectedPath] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const getConfidenceBadge = (confidence: number) => {
-    if (confidence >= 80) {
-      return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Alta</span>;
-    } else if (confidence >= 60) {
-      return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Media</span>;
+    const percentage = Math.round(confidence * 100);
+    if (percentage >= 80) {
+      return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Alta ({percentage}%)</span>;
+    } else if (percentage >= 60) {
+      return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Media ({percentage}%)</span>;
     } else {
-      return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Bassa</span>;
+      return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Bassa ({percentage}%)</span>;
     }
+  };
+
+  const getFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+
+  const getMethodBadge = (method: string) => {
+    const badges = {
+      'ai': <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">🤖 AI</span>,
+      'rules': <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">📋 Regole</span>,
+      'learned': <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">🧠 Appreso</span>
+    };
+    return badges[method as keyof typeof badges] || badges.rules;
   };
 
   const handleSelectPath = (path: string) => {
-    console.log("Selected path:", path);
-    // TODO: Implement path selection logic
+    setSelectedPath(path);
+    toast({
+      title: "Percorso selezionato",
+      description: `Selezionato: ${path}`,
+    });
   };
 
   const handleAcceptSuggestion = () => {
-    console.log("Accepting suggestion");
-    // TODO: Implement suggestion acceptance logic
+    if (!result || !file) return;
+    
+    const pathToUse = selectedPath || result.suggestedPath;
+    
+    // Learn from this acceptance if user made a selection
+    if (selectedPath && selectedPath !== result.suggestedPath) {
+      aiRouter.learnFromCorrection(file, selectedPath);
+    }
+    
+    toast({
+      title: "Suggerimento accettato",
+      description: `File verrà spostato in: ${pathToUse}`,
+    });
+    
+    // TODO: Implement actual file moving logic when File System API is available
+    console.log('Would move file to:', pathToUse);
   };
 
   const handleManualPath = () => {
-    console.log("Manual path selection");
-    // TODO: Implement manual path selection
+    const manualPath = prompt("Inserisci il percorso manuale:");
+    if (manualPath && file) {
+      aiRouter.learnFromCorrection(file, manualPath);
+      toast({
+        title: "Percorso manuale impostato",
+        description: `Il sistema ha appreso: ${manualPath}`,
+      });
+    }
   };
 
   const handleAnalyzeAnother = () => {
-    setIsVisible(false);
-    setSelectedFile(null);
-    setResults([]);
+    onClear();
   };
 
-  if (!isVisible && mockResults.length > 0) {
-    setIsVisible(true);
-    setResults(mockResults);
-    setSelectedFile(new File([""], "relazione_tecnica.pdf", { type: "application/pdf" }));
+  if (!result || !file) {
+    return null;
   }
 
   return (
-    <div 
-      className={`card-g2 ${isVisible ? 'block' : 'hidden'}`} 
-      data-testid="routing-results"
-    >
+    <div className="card-g2" data-testid="routing-results">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Risultati Analisi</h3>
       
       <div className="space-y-4">
@@ -78,60 +102,76 @@ export default function RoutingResults() {
             <div>
               <span className="text-gray-600">Nome:</span>{" "}
               <span className="font-mono" data-testid="file-name">
-                {selectedFile?.name || "relazione_tecnica.pdf"}
+                {file.name}
               </span>
             </div>
             <div>
               <span className="text-gray-600">Dimensione:</span>{" "}
-              <span data-testid="file-size">2.1 MB</span>
+              <span data-testid="file-size">{getFileSize(file.size)}</span>
             </div>
             <div>
               <span className="text-gray-600">Tipo:</span>{" "}
-              <span data-testid="file-type">PDF Document</span>
+              <span data-testid="file-type">{file.type || 'File generico'}</span>
             </div>
             <div>
-              <span className="text-gray-600">Rilevato:</span>{" "}
-              <span data-testid="file-detected">Documento tecnico</span>
+              <span className="text-gray-600">Progetto:</span>{" "}
+              <span data-testid="file-project">{project?.code || 'Nessuno'}</span>
             </div>
           </div>
         </div>
         
-        {/* Suggested Paths */}
+        {/* Analysis Result */}
         <div>
-          <h4 className="font-semibold text-gray-700 mb-3">💡 Percorsi Suggeriti</h4>
-          <div className="space-y-2">
-            {results.map((result, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => handleSelectPath(result.suggestedPath)}
-                data-testid={`suggested-path-${index}`}
-              >
-                <div className="flex-1">
-                  <div className="font-mono text-sm text-primary">
-                    {result.suggestedPath}
-                  </div>
-                  <div className="text-xs text-gray-600 mt-1">
-                    Confidenza: {result.confidence}% • {result.reasoning}
-                  </div>
+          <h4 className="font-semibold text-gray-700 mb-3">💡 Risultato Analisi</h4>
+          <div className="space-y-3">
+            {/* Main suggestion */}
+            <div
+              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                selectedPath === result.suggestedPath 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}
+              onClick={() => handleSelectPath(result.suggestedPath)}
+              data-testid="main-suggestion"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className="font-mono text-sm text-primary font-semibold">
+                  {result.suggestedPath}
                 </div>
                 <div className="flex gap-2">
+                  {getMethodBadge(result.method)}
                   {getConfidenceBadge(result.confidence)}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="p-1 text-primary hover:bg-primary hover:text-white rounded transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectPath(result.suggestedPath);
-                    }}
-                    data-testid={`select-path-${index}`}
-                  >
-                    ✓
-                  </Button>
                 </div>
               </div>
-            ))}
+              <div className="text-sm text-gray-600">
+                {result.reasoning}
+              </div>
+            </div>
+            
+            {/* Alternative suggestions */}
+            {result.alternatives && result.alternatives.length > 0 && (
+              <div>
+                <h5 className="text-sm font-medium text-gray-700 mb-2">Percorsi alternativi:</h5>
+                <div className="space-y-2">
+                  {result.alternatives.map((altPath, index) => (
+                    <div
+                      key={index}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedPath === altPath 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                      onClick={() => handleSelectPath(altPath)}
+                      data-testid={`alternative-path-${index}`}
+                    >
+                      <div className="font-mono text-sm text-gray-700">
+                        {altPath}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         

@@ -14,6 +14,8 @@ import RoutingResults from "@/components/routing/routing-results";
 import StoragePanel from "@/components/system/storage-panel";
 import AiConfigPanel from "@/components/system/ai-config-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { type RoutingResult } from "@/lib/ai-router";
+import { type Project } from "@shared/schema";
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -22,9 +24,26 @@ export default function Dashboard() {
     sistema: "storage"
   });
   const [pendingProject, setPendingProject] = useState(null);
+  
+  // Routing state
+  const [routingResult, setRoutingResult] = useState<RoutingResult | null>(null);
+  const [routingFile, setRoutingFile] = useState<File | null>(null);
+  const [routingProject, setRoutingProject] = useState<Project | null>(null);
 
   const handleSubTabChange = (mainTab: string, subTab: string) => {
     setActiveSubTab(prev => ({ ...prev, [mainTab]: subTab }));
+  };
+  
+  const handleAnalysisComplete = (result: RoutingResult, file: File, project: Project | null) => {
+    setRoutingResult(result);
+    setRoutingFile(file);
+    setRoutingProject(project);
+  };
+  
+  const handleClearRouting = () => {
+    setRoutingResult(null);
+    setRoutingFile(null);
+    setRoutingProject(null);
   };
 
   return (
@@ -100,8 +119,13 @@ export default function Dashboard() {
             {/* Auto-Routing Panel */}
             {activeTab === "routing" && (
               <div className="max-w-2xl mx-auto space-y-6" data-testid="routing-panel">
-                <RoutingForm />
-                <RoutingResults />
+                <RoutingForm onAnalysisComplete={handleAnalysisComplete} />
+                <RoutingResults 
+                  result={routingResult}
+                  file={routingFile}
+                  project={routingProject}
+                  onClear={handleClearRouting}
+                />
               </div>
             )}
 

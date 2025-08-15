@@ -4,11 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { type Project } from "@shared/schema";
+import { aiRouter, type RoutingResult } from "@/lib/ai-router";
+import { useToast } from "@/hooks/use-toast";
 
-export default function RoutingForm() {
+interface RoutingFormProps {
+  onAnalysisComplete: (result: RoutingResult, file: File, project: Project | null) => void;
+}
+
+export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const { toast } = useToast();
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -26,12 +34,49 @@ export default function RoutingForm() {
     }
   };
 
-  const handleAnalyzeFile = () => {
-    if (!selectedFile) return;
+  const handleAnalyzeFile = async () => {
+    if (!selectedFile) {
+      toast({
+        title: "Errore",
+        description: "Seleziona un file per continuare",
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // This would trigger the AI routing analysis
-    console.log("Analyzing file:", selectedFile.name);
-    // TODO: Implement actual AI routing logic
+    setIsAnalyzing(true);
+    
+    try {
+      // Get project details
+      const project = projects.find(p => p.id === selectedProject) || null;
+      const template = selectedTemplate || project?.template || 'LUNGO';
+      
+      toast({
+        title: "Analisi in corso",
+        description: "Il sistema AI sta analizzando il file...",
+      });
+      
+      // Use AI router to analyze the file
+      const result = await aiRouter.routeFile(selectedFile, template, selectedProject || undefined);
+      
+      // Call parent callback with results
+      onAnalysisComplete(result, selectedFile, project);
+      
+      toast({
+        title: "Analisi completata",
+        description: `Suggerimento generato con confidenza ${Math.round(result.confidence * 100)}%`,
+      });
+      
+    } catch (error) {
+      console.error('Routing analysis failed:', error);
+      toast({
+        title: "Errore nell'analisi",
+        description: "Si è verificato un errore durante l'analisi del file",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -110,11 +155,18 @@ export default function RoutingForm() {
           <Button
             type="button"
             onClick={handleAnalyzeFile}
-            disabled={!selectedFile}
+            disabled={!selectedFile || isAnalyzing}
             className="button-g2-primary disabled:opacity-50"
             data-testid="analyze-file"
           >
-            🔍 Analizza e Suggerisci Percorso
+            {isAnalyzing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Analizzando...
+              </>
+            ) : (
+              "🔍 Analizza e Suggerisci Percorso"
+            )}
           </Button>
         </div>
       </form>
