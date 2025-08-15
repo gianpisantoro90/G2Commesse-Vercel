@@ -30,7 +30,7 @@ export default function AiConfigPanel() {
 
   const [aiConfig, setAiConfig] = useLocalStorage("ai_config", {
     apiKey: "",
-    model: "claude-3-sonnet-20240229",
+    model: "claude-3-5-sonnet-latest",
     autoRouting: true,
     contentAnalysis: true,
     learningMode: true,
@@ -216,7 +216,7 @@ export default function AiConfigPanel() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="claude-3-haiku-20240307">Claude 3 Haiku (Veloce, Economico)</SelectItem>
-              <SelectItem value="claude-3-sonnet-20240229">Claude 3 Sonnet (Bilanciato)</SelectItem>
+              <SelectItem value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet Latest</SelectItem>
               <SelectItem value="claude-3-opus-20240229">Claude 3 Opus (Massima qualità)</SelectItem>
             </SelectContent>
           </Select>
