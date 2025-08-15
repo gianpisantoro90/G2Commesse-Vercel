@@ -8,13 +8,13 @@ import { aiRouter, type RoutingResult } from "@/lib/ai-router";
 import { useToast } from "@/hooks/use-toast";
 
 interface RoutingFormProps {
-  onAnalysisComplete: (result: RoutingResult, file: File, project: Project | null) => void;
+  onAnalysisComplete: (results: Array<{result: RoutingResult, file: File}>, project: Project | null) => void;
 }
 
 export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
 
@@ -23,9 +23,9 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
   });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      setSelectedFiles(files);
       // Auto-detect template from selected project
       const project = projects.find(p => p.id === selectedProject);
       if (project && !selectedTemplate) {
@@ -34,11 +34,11 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
     }
   };
 
-  const handleAnalyzeFile = async () => {
-    if (!selectedFile) {
+  const handleAnalyzeFiles = async () => {
+    if (selectedFiles.length === 0) {
       toast({
         title: "Errore",
-        description: "Seleziona un file per continuare",
+        description: "Seleziona almeno un file per continuare",
         variant: "destructive",
       });
       return;
@@ -53,25 +53,30 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
       
       toast({
         title: "Analisi in corso",
-        description: "Il sistema AI sta analizzando il file...",
+        description: `Il sistema AI sta analizzando ${selectedFiles.length} file...`,
       });
       
-      // Use AI router to analyze the file
-      const result = await aiRouter.routeFile(selectedFile, template, selectedProject || undefined);
+      // Analyze all files in parallel
+      const analysisPromises = selectedFiles.map(async (file) => {
+        const result = await aiRouter.routeFile(file, template, selectedProject || undefined);
+        return { result, file };
+      });
       
-      // Call parent callback with results
-      onAnalysisComplete(result, selectedFile, project);
+      const results = await Promise.all(analysisPromises);
+      
+      // Call parent callback with all results
+      onAnalysisComplete(results, project);
       
       toast({
         title: "Analisi completata",
-        description: `Suggerimento generato con confidenza ${Math.round(result.confidence * 100)}%`,
+        description: `${selectedFiles.length} file analizzati con successo`,
       });
       
     } catch (error) {
       console.error('Routing analysis failed:', error);
       toast({
         title: "Errore nell'analisi",
-        description: "Si è verificato un errore durante l'analisi del file",
+        description: "Si è verificato un errore durante l'analisi dei file",
         variant: "destructive",
       });
     } finally {
@@ -130,15 +135,33 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary transition-colors">
             <input
               type="file"
+              multiple
               onChange={handleFileUpload}
               className="hidden"
               id="file-upload"
               data-testid="file-upload"
             />
-            <div className="text-4xl mb-4">📄</div>
+            <div className="text-4xl mb-4">{selectedFiles.length > 1 ? '📁' : '📄'}</div>
             <p className="text-gray-600 mb-2">
-              {selectedFile ? selectedFile.name : "Trascina qui i file o clicca per selezionare"}
+              {selectedFiles.length > 0 ? (
+                selectedFiles.length === 1 ? (
+                  selectedFiles[0].name
+                ) : (
+                  `${selectedFiles.length} file selezionati`
+                )
+              ) : (
+                "Trascina qui i file o clicca per selezionare"
+              )}
             </p>
+            {selectedFiles.length > 1 && (
+              <div className="text-xs text-gray-500 mb-2">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="truncate">
+                    • {file.name}
+                  </div>
+                ))}
+              </div>
+            )}
             <Button
               type="button"
               onClick={() => document.getElementById('file-upload')?.click()}
@@ -153,18 +176,20 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
         <div className="flex justify-center">
           <Button
             type="button"
-            onClick={handleAnalyzeFile}
-            disabled={!selectedFile || isAnalyzing}
+            onClick={handleAnalyzeFiles}
+            disabled={selectedFiles.length === 0 || isAnalyzing}
             className="button-g2-primary disabled:opacity-50"
-            data-testid="analyze-file"
+            data-testid="analyze-files"
           >
             {isAnalyzing ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Analizzando...
+                Analizzando {selectedFiles.length} file...
               </>
             ) : (
-              "🔍 Analizza e Suggerisci Percorso"
+              selectedFiles.length > 1 
+                ? `🔍 Analizza ${selectedFiles.length} File` 
+                : "🔍 Analizza e Suggerisci Percorso"
             )}
           </Button>
         </div>

@@ -26,23 +26,20 @@ export default function Dashboard() {
   const [pendingProject, setPendingProject] = useState(null);
   
   // Routing state
-  const [routingResult, setRoutingResult] = useState<RoutingResult | null>(null);
-  const [routingFile, setRoutingFile] = useState<File | null>(null);
+  const [routingResults, setRoutingResults] = useState<Array<{result: RoutingResult, file: File}> | null>(null);
   const [routingProject, setRoutingProject] = useState<Project | null>(null);
 
   const handleSubTabChange = (mainTab: string, subTab: string) => {
     setActiveSubTab(prev => ({ ...prev, [mainTab]: subTab }));
   };
   
-  const handleAnalysisComplete = (result: RoutingResult, file: File, project: Project | null) => {
-    setRoutingResult(result);
-    setRoutingFile(file);
+  const handleAnalysisComplete = (results: Array<{result: RoutingResult, file: File}>, project: Project | null) => {
+    setRoutingResults(results);
     setRoutingProject(project);
   };
   
   const handleClearRouting = () => {
-    setRoutingResult(null);
-    setRoutingFile(null);
+    setRoutingResults(null);
     setRoutingProject(null);
   };
 
@@ -121,8 +118,7 @@ export default function Dashboard() {
               <div className="max-w-2xl mx-auto space-y-6" data-testid="routing-panel">
                 <RoutingForm onAnalysisComplete={handleAnalysisComplete} />
                 <RoutingResults 
-                  result={routingResult}
-                  file={routingFile}
+                  results={routingResults}
                   project={routingProject}
                   onClear={handleClearRouting}
                 />
