@@ -47,19 +47,30 @@ class AIFileRouter {
           // It's already JSON, parse directly
           config = JSON.parse(storedConfig);
         } else {
-          // It's base64 encoded, decode first
-          const decoded = atob(storedConfig);
-          config = JSON.parse(decoded);
+          try {
+            // It's base64 encoded, decode first
+            const decoded = atob(storedConfig);
+            config = JSON.parse(decoded);
+          } catch (error) {
+            console.warn('Config decoding failed, trying as JSON:', error);
+            // Fallback: try parsing as JSON directly
+            config = JSON.parse(storedConfig);
+          }
         }
         
         // The API key might be base64 encoded within the config
         if (config.apiKey) {
-          // Check if API key itself is base64 encoded
-          if (config.apiKey.startsWith('c2stYW50LWFwaTA')) {
-            // It's base64 encoded, decode it
-            this.apiKey = atob(config.apiKey);
-          } else {
-            // It's already plain text
+          try {
+            // Check if API key itself is base64 encoded
+            if (config.apiKey.startsWith('c2stYW50LWFwaTA')) {
+              // It's base64 encoded, decode it
+              this.apiKey = atob(config.apiKey);
+            } else {
+              // It's already plain text
+              this.apiKey = config.apiKey;
+            }
+          } catch (error) {
+            console.warn('API Key decoding failed in ai-router, using as-is:', error);
             this.apiKey = config.apiKey;
           }
         } else {

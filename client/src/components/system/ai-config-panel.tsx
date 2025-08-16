@@ -43,9 +43,21 @@ export default function AiConfigPanel() {
 
   useEffect(() => {
     // Load current config and update form
+    let decodedApiKey = '';
+    if (aiConfig.apiKey) {
+      try {
+        // Check if it's a valid base64 string before decoding
+        decodedApiKey = atob(aiConfig.apiKey);
+      } catch (error) {
+        // If decoding fails, the apiKey might already be in plain text or invalid
+        console.warn('API Key decoding failed, using as-is:', error);
+        decodedApiKey = aiConfig.apiKey;
+      }
+    }
+    
     const currentConfig = {
       ...aiConfig,
-      apiKey: aiConfig.apiKey ? atob(aiConfig.apiKey) : '' // Decode for display
+      apiKey: decodedApiKey
     };
     form.reset(currentConfig);
     
