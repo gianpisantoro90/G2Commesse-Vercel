@@ -18,11 +18,7 @@ export default function Header() {
             </div>
           </div>
           
-          {/* Status Indicator */}
-          <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-lg" data-testid="ai-status">
-            <span className="status-indicator bg-g2-success"></span>
-            <span className="text-sm font-medium text-gray-600">AI Routing Attivo</span>
-          </div>
+
         </div>
       </div>
     </header>
