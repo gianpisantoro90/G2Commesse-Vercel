@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Data Persistence Fix (August 17, 2025)**
+**Data Persistence & Local Startup Fix (August 17, 2025)**
 - Fixed critical issue where project list disappeared in local version
 - Implemented FileStorage class for persistent local data storage using JSON files
 - Projects and clients now persist between application restarts
@@ -10,8 +10,10 @@
 - Added proper storage initialization logic with fallback to memory storage
 - Updated project code generation to include city references (YY+CLIENT+CITY+NN format)
 - Fixed bulk file renaming component error (`selectedFiles` undefined)
+- **FIXED**: Local startup script that was closing immediately
+- Created multiple startup options: `AVVIA-G2-LOCALE.bat`, `start-local-simple.bat`, `start-local.cmd`
+- Added comprehensive error handling and user feedback in startup scripts
 - Cleaned up unnecessary files and improved project structure
-- Created `start-local.bat` for easy Windows deployment
 
 G2 Ingegneria is a project management system designed for engineering firms to manage "commesse" (projects/jobs). The application provides a comprehensive dashboard for creating, organizing, and tracking engineering projects with intelligent file routing capabilities. It features a modern web interface with persistent local data storage, AI-powered file organization suggestions, and support for different project templates (LUNGO and BREVE) based on project complexity.
 

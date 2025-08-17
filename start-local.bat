@@ -57,8 +57,8 @@ echo.
 :: Imposta variabile ambiente per modalità locale
 set NODE_ENV=local
 
-:: Avvia con tsx
-call npm run dev
+:: Avvia direttamente con tsx per modalità locale
+call npx tsx server/index.ts
 
 :: Se arriviamo qui, l'applicazione è stata fermata
 echo.
