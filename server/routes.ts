@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map(p => p.code)
         .filter(code => code.startsWith(prefix))
         .map(code => {
-          const match = code.match(/(\d{3})$/);
+          const match = code.match(/(\d{2})$/);
           return match ? parseInt(match[1]) : 0;
         })
         .filter(num => !isNaN(num));
@@ -49,7 +49,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Existing codes for pattern', `${prefix}*:`, existingCodes);
       
       const nextNumber = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
-      const paddedNumber = nextNumber.toString().padStart(3, '0');
+      const paddedNumber = nextNumber.toString().padStart(2, '0');
       const newCode = `${prefix}${paddedNumber}`;
       
       console.log('Generated new code:', newCode);
