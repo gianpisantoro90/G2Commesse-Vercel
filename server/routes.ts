@@ -8,14 +8,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate project code
   app.post("/api/generate-code", async (req, res) => {
     try {
-      const { year, clientSigla } = req.body;
+      const { year, client } = req.body;
       
-      if (!year || !clientSigla) {
-        return res.status(400).json({ message: "Anno e sigla cliente sono obbligatori" });
+      if (!year || !client) {
+        return res.status(400).json({ message: "Anno e cliente sono obbligatori" });
       }
       
+      // Generate client sigla from client name
+      const generateSafeAcronym = (text: string): string => {
+        return (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
+      };
+      
+      const clientSigla = generateSafeAcronym(client);
+      
       // Get current year as 2-digit string
-      const yearStr = year.toString().slice(-2);
+      const yearStr = year.toString().padStart(2, '0');
       
       // Find highest existing code for this year and client
       const allProjects = await storage.getAllProjects();
