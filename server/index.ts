@@ -57,15 +57,34 @@ app.use((req, res, next) => {
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
+  // Other ports are firewalled. Default to 3000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
+  const port = parseInt(process.env.PORT || '3000', 10);
+  
+  // Gestione errori migliorata per Windows
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE' || err.code === 'ENOTSUP') {
+      console.error(`\n❌ Errore: Porta ${port} già in uso o non supportata`);
+      console.error(`💡 Soluzioni:`);
+      console.error(`   1. Chiudi altri processi sulla porta ${port}`);
+      console.error(`   2. Usa una porta diversa: PORT=3001 npm run dev`);
+      console.error(`   3. Su Windows, usa: start-windows.bat o start-windows.ps1\n`);
+      process.exit(1);
+    } else {
+      console.error('Errore del server:', err);
+      process.exit(1);
+    }
+  });
+
   server.listen({
     port,
     host: "0.0.0.0",
-    reusePort: true,
+    reusePort: process.platform !== 'win32', // reusePort non supportato su Windows
   }, () => {
     log(`serving on port ${port}`);
+    console.log(`\n🚀 G2 Ingegneria avviato con successo!`);
+    console.log(`📱 Apri: http://localhost:${port}`);
+    console.log(`⏹️  Premi Ctrl+C per fermare\n`);
   });
 })();
