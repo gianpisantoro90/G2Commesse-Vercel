@@ -27,6 +27,7 @@ echo 🚀 NUOVE FUNZIONALITÀ:
 echo    ✓ File routing funziona davvero (scarica i file rinominati)
 echo    ✓ Sistema di apprendimento AI dai tuoi feedback
 echo    ✓ Storico completo delle operazioni sui file
+echo    ✓ RINOMINA AUTOMATICA CARTELLE INTERE (Windows)
 echo.
 echo 💡 NOTA IMPORTANTE:
 echo    - Ora quando accetti un suggerimento, il file viene scaricato

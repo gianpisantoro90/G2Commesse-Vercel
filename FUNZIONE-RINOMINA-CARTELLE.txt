@@ -1,0 +1,52 @@
+📁 NUOVA FUNZIONE: RINOMINA AUTOMATICA CARTELLE
+══════════════════════════════════════════════════
+
+🎯 COSA FA:
+   Seleziona una cartella dal tuo computer e rinomina automaticamente
+   TUTTI i file contenuti aggiungendo il prefisso della commessa.
+
+🔧 COME USARE:
+   1. Avvia G2 Ingegneria (AVVIA-G2-INGEGNERIA.bat)
+   2. Vai nel tab "Auto-Routing"
+   3. Sezione "📁 Rinomina File Esistenti"
+   4. Seleziona una commessa dal menu
+   5. Clicca "Scegli cartella..."
+   6. Seleziona la cartella dal browser Windows
+   7. Controlla l'anteprima dei file da rinominare
+   8. Clicca "Rinomina File"
+
+💡 ESEMPIO PRATICO:
+   Commessa: 24ABC123
+   Cartella: C:\Progetti\Casa_Rossi\
+   
+   PRIMA:
+   ├── relazione_tecnica.pdf
+   ├── planimetria_piano_terra.dwg  
+   ├── foto_cantiere_1.jpg
+   ├── preventivo.xlsx
+   └── 24ABC123_calcoli.pdf (già corretto)
+   
+   DOPO:
+   ├── 24ABC123_relazione_tecnica.pdf
+   ├── 24ABC123_planimetria_piano_terra.dwg
+   ├── 24ABC123_foto_cantiere_1.jpg
+   ├── 24ABC123_preventivo.xlsx
+   └── 24ABC123_calcoli.pdf (non toccato)
+
+⚠️ REQUISITI:
+   - Browser Chrome o Edge aggiornato
+   - Windows 10/11
+   - Permessi di scrittura sulla cartella
+
+✅ FUNZIONALITÀ INTELLIGENTI:
+   - Rileva file già con prefisso corretto
+   - Sostituisce prefissi di altre commesse
+   - Non tocca le sottocartelle
+   - Rinomina direttamente nella cartella originale
+   - Backup automatico in caso di errori
+
+🛡️ SICUREZZA:
+   - Anteprima completa prima di procedere
+   - Controllo duplicati automatico
+   - Log di tutte le operazioni
+   - Possibilità di annullare prima del salvataggio

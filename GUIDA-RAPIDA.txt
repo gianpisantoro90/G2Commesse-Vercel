@@ -6,13 +6,20 @@
 ✅ NUOVA FUNZIONE: RINOMINA FILE ESISTENTI
    - Vai nel tab "Auto-Routing"
    - Sezione "📁 Rinomina File Esistenti"  
-   - Seleziona una commessa e i file dalla sua cartella
-   - Tutti i file verranno rinominati con prefisso codice commessa
+   - Seleziona una commessa
+   - Clicca "Scegli cartella..." per aprire browser cartelle Windows
+   - Il sistema rinomina AUTOMATICAMENTE tutti i file nella cartella
+   - ⚠️ Richiede Chrome/Edge aggiornato
    
-✅ ESEMPIO:
-   - Codice commessa: 24ABC123
-   - File originale: "relazione.pdf"
-   - File rinominato: "24ABC123_relazione.pdf"
+✅ ESEMPIO FUNZIONAMENTO:
+   1. Selezioni commessa "24ABC123"
+   2. Selezioni cartella "C:\Progetti\Commessa1\"
+   3. Sistema trova: relazione.pdf, planimetria.dwg, foto.jpg
+   4. Rinomina automaticamente:
+      - relazione.pdf → 24ABC123_relazione.pdf
+      - planimetria.dwg → 24ABC123_planimetria.dwg
+      - foto.jpg → 24ABC123_foto.jpg
+   5. File già con prefisso corretto = ignorati
 
 ═══════════════════════════════════════════════════════════════════
 

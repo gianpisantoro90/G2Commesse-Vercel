@@ -53,6 +53,7 @@ Preferred communication style: Simple, everyday language.
 - **Browser API**: File System Access API for direct folder manipulation
 - **Auto-Routing**: Intelligent file placement based on content analysis
 - **Folder Structure**: Automated creation of project-specific directory hierarchies
+- **Bulk Folder Rename**: Automatic renaming of all files in selected directories with project code prefixes
 
 ## External Dependencies
 
