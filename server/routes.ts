@@ -9,43 +9,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/generate-code", async (req, res) => {
     try {
       console.log('Generate code request body:', req.body);
-      const { year, client } = req.body;
+      const { year, client, city } = req.body;
       
-      if (!year || !client) {
-        console.log('Missing required fields - year:', year, 'client:', client);
-        return res.status(400).json({ message: "Anno e cliente sono obbligatori" });
+      if (!year || !client || !city) {
+        console.log('Missing required fields - year:', year, 'client:', client, 'city:', city);
+        return res.status(400).json({ message: "Anno, cliente e città sono obbligatori" });
       }
       
-      // Generate client sigla from client name
+      // Generate safe acronyms from text
       const generateSafeAcronym = (text: string): string => {
         return (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
       };
       
       const clientSigla = generateSafeAcronym(client);
-      console.log('Generated client sigla:', clientSigla, 'from client:', client);
+      const citySigla = generateSafeAcronym(city);
+      console.log('Generated siglas - client:', clientSigla, 'city:', citySigla);
       
       // Get current year as 2-digit string
-      const yearStr = year.toString().padStart(2, '0');
+      const yearStr = year.toString().slice(-2).padStart(2, '0');
       console.log('Year string:', yearStr, 'from year:', year);
       
-      // Find highest existing code for this year and client
+      // Create pattern: YY + CLIENT(3) + CITY(3) + NNN
+      const prefix = `${yearStr}${clientSigla}${citySigla}`;
+      console.log('Generated prefix:', prefix);
+      
+      // Find highest existing code for this pattern
       const allProjects = await storage.getAllProjects();
       console.log('Total projects found:', allProjects.length);
       
       const existingCodes = allProjects
         .map(p => p.code)
-        .filter(code => code.startsWith(`${yearStr}${clientSigla}`))
+        .filter(code => code.startsWith(prefix))
         .map(code => {
           const match = code.match(/(\d{3})$/);
           return match ? parseInt(match[1]) : 0;
         })
         .filter(num => !isNaN(num));
       
-      console.log('Existing codes for pattern', `${yearStr}${clientSigla}*:`, existingCodes);
+      console.log('Existing codes for pattern', `${prefix}*:`, existingCodes);
       
       const nextNumber = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
       const paddedNumber = nextNumber.toString().padStart(3, '0');
-      const newCode = `${yearStr}${clientSigla}${paddedNumber}`;
+      const newCode = `${prefix}${paddedNumber}`;
       
       console.log('Generated new code:', newCode);
       res.json({ code: newCode });

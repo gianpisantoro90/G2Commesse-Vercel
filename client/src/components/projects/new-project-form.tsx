@@ -42,7 +42,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
   });
 
   const generateCodeMutation = useMutation({
-    mutationFn: async (data: { client: string; year: number }) => {
+    mutationFn: async (data: { client: string; city: string; year: number }) => {
       const response = await apiRequest("POST", "/api/generate-code", data);
       return response.json();
     },
@@ -83,17 +83,17 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
   });
 
   const handleGenerateCode = () => {
-    const { client, year } = form.getValues();
-    if (!client || !year) {
+    const { client, city, year } = form.getValues();
+    if (!client || !city || !year) {
       toast({
         title: "Campi mancanti",
-        description: "Compilare Cliente e Anno prima di generare il codice",
+        description: "Compilare Cliente, Città e Anno prima di generare il codice",
         variant: "destructive",
       });
       return;
     }
 
-    generateCodeMutation.mutate({ client, year });
+    generateCodeMutation.mutate({ client, city, year });
   };
 
   const handleSelectRootFolder = async () => {

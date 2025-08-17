@@ -116,7 +116,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         description: `Trovati ${files.length} file in "${dirHandle.name}"`,
       });
       
-    } catch (error) {
+    } catch (error: any) {
       if (error.name !== 'AbortError') {
         console.error('Error selecting folder:', error);
         toast({
@@ -381,7 +381,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         <div className="flex gap-3 pt-4 border-t">
           <Button
             onClick={handleBulkRename}
-            disabled={!selectedProject || selectedFiles.length === 0 || isProcessing}
+            disabled={!selectedProject || folderFiles.length === 0 || isProcessing}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="bulk-rename-button"
           >
