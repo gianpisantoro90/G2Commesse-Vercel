@@ -123,6 +123,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // File Routings
+  app.get("/api/file-routings/:projectId", async (req, res) => {
+    try {
+      const fileRoutings = await storage.getFileRoutingsByProject(req.params.projectId);
+      res.json(fileRoutings);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero dei file routing" });
+    }
+  });
+
+  app.post("/api/file-routings", async (req, res) => {
+    try {
+      const validatedData = insertFileRoutingSchema.parse(req.body);
+      const fileRouting = await storage.createFileRouting(validatedData);
+      res.status(201).json(fileRouting);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati non validi", errors: error.errors });
+      }
+      res.status(500).json({ message: "Errore nella creazione del file routing" });
+    }
+  });
+
   // System Config
   app.get("/api/system-config/:key", async (req, res) => {
     try {

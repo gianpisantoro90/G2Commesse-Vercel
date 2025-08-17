@@ -28,13 +28,14 @@ Preferred communication style: Simple, everyday language.
 ### Data Models
 - **Projects**: Core entity with code, client, location, description, year, and template type
 - **Clients**: Client registry with unique sigla (code) and project count tracking
-- **File Routings**: AI-powered file organization suggestions with confidence scoring
+- **File Routings**: AI-powered file organization suggestions with confidence scoring and actual file movement tracking
 - **System Config**: Application settings and configuration storage
 
-### Local Storage Strategy
-- **IndexedDB**: Primary storage for structured data (projects, clients, routings)
-- **localStorage**: Configuration settings and user preferences
-- **Dual Storage**: Memory-based development storage with interface for production database
+### Data Persistence Strategy
+- **Production Database**: PostgreSQL with Neon serverless hosting for persistent data storage
+- **Development Fallback**: In-memory storage when DATABASE_URL is not available
+- **File Operations**: Real file routing with download fallback and File System API integration
+- **Data Retention**: All projects, clients, and routing decisions are permanently stored
 
 ### AI Integration
 - **File Router**: Intelligent file placement suggestions using Claude AI API

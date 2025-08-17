@@ -63,8 +63,10 @@ echo.
 REM Avvia automaticamente il browser dopo 3 secondi
 start /min timeout /t 3 /nobreak >nul && start http://localhost:%PORT%
 
-REM Avvia l'applicazione
+REM Avvia l'applicazione con database
 set NODE_ENV=development
+set DATABASE_URL=postgresql://localhost:5432/g2_ingegneria
+echo 💾 Database: PostgreSQL (dati persistenti)
 npx tsx server/index.ts
 
 pause

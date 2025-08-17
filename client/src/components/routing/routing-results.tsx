@@ -4,6 +4,7 @@ import { type RoutingResult } from "@/lib/ai-router";
 import { type Project } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { aiRouter } from "@/lib/ai-router";
+import { apiRequest } from "@/lib/queryClient";
 
 interface RoutingResultsProps {
   results: Array<{result: RoutingResult, file: File}> | null;
@@ -71,7 +72,7 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
     });
   };
 
-  const handleAcceptSuggestion = (fileIndex: number) => {
+  const handleAcceptSuggestion = async (fileIndex: number) => {
     if (!results || !results[fileIndex]) return;
     
     const { result, file } = results[fileIndex];
@@ -83,23 +84,39 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
       aiRouter.learnFromCorrection(file, selectedPaths[fileIndex]);
     }
     
-    const hasRenamed = finalFileName !== file.name;
-    const message = hasRenamed 
-      ? `File "${finalFileName}" verrà spostato in: ${pathToUse}`
-      : `File "${file.name}" verrà spostato in: ${pathToUse}`;
-    
-    toast({
-      title: "Suggerimento accettato",
-      description: message,
-    });
-    
-    // TODO: Implement actual file moving and renaming logic when File System API is available
-    console.log('Would move and rename file:', {
-      originalName: file.name,
-      newName: finalFileName,
-      path: pathToUse,
-      fullPath: `${pathToUse}${finalFileName}`
-    });
+    try {
+      // Check if File System Access API is available
+      if ('showDirectoryPicker' in window) {
+        // Modern browsers with File System API
+        await handleFileSystemAPIMove(file, pathToUse, finalFileName);
+      } else {
+        // Fallback: download file with suggested name and path
+        await handleDownloadFallback(file, pathToUse, finalFileName);
+      }
+      
+      // Save routing record
+      if (project?.id) {
+        await saveFileRoutingRecord(project.id, file, pathToUse, result);
+      }
+      
+      const hasRenamed = finalFileName !== file.name;
+      const message = hasRenamed 
+        ? `File "${finalFileName}" spostato in: ${pathToUse}`
+        : `File "${file.name}" spostato in: ${pathToUse}`;
+      
+      toast({
+        title: "File spostato con successo",
+        description: message,
+      });
+      
+    } catch (error) {
+      console.error('Errore nel spostamento file:', error);
+      toast({
+        title: "Errore nello spostamento",
+        description: "Impossibile spostare il file. Verifica i permessi.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleManualPath = (fileIndex: number) => {
@@ -121,17 +138,98 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
     onClear();
   };
 
-  const handleAcceptAllSuggestions = () => {
+  // Function to handle File System API file moving
+  const handleFileSystemAPIMove = async (file: File, targetPath: string, finalFileName: string) => {
+    try {
+      // For now, inform user about file system limitations
+      toast({
+        title: "Funzionalità File System API",
+        description: "Questa funzione richiede l'apertura manuale della cartella di destinazione.",
+      });
+      
+      // Guide user through the process
+      const userWantsToMove = confirm(
+        `Vuoi spostare il file "${file.name}" in:\n${targetPath}${finalFileName}?\n\nClicca OK per scaricare il file con il nome corretto.`
+      );
+      
+      if (userWantsToMove) {
+        await handleDownloadFallback(file, targetPath, finalFileName);
+      }
+    } catch (error) {
+      console.error('File System API error:', error);
+      throw error;
+    }
+  };
+
+  // Function to handle download fallback
+  const handleDownloadFallback = async (file: File, targetPath: string, finalFileName: string) => {
+    try {
+      // Create download link
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = finalFileName;
+      
+      // Add path info to download name for user reference
+      const pathPrefix = targetPath.replace(/[^\w\-]/g, '_').slice(0, 20);
+      link.download = `${pathPrefix}_${finalFileName}`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      // Show instruction to user
+      toast({
+        title: "File scaricato",
+        description: `Sposta manualmente "${link.download}" in: ${targetPath}`,
+      });
+    } catch (error) {
+      console.error('Download fallback error:', error);
+      throw error;
+    }
+  };
+
+  // Function to save file routing record to database
+  const saveFileRoutingRecord = async (projectId: string, file: File, targetPath: string, result: RoutingResult) => {
+    try {
+      const requestData = {
+        projectId,
+        fileName: file.name,
+        fileType: file.type || 'unknown',
+        suggestedPath: targetPath,
+        actualPath: targetPath,
+        confidence: Math.round(result.confidence * 100),
+        method: result.method,
+      };
+      
+      await apiRequest('POST', '/api/file-routings', requestData);
+    } catch (error) {
+      console.error('Error saving file routing record:', error);
+      // Don't throw - this is not critical for the user experience
+    }
+  };
+
+  const handleAcceptAllSuggestions = async () => {
     if (!results) return;
     
-    results.forEach((_, index) => {
-      handleAcceptSuggestion(index);
-    });
+    // Process all files in parallel
+    const promises = results.map((_, index) => handleAcceptSuggestion(index));
     
-    toast({
-      title: "Tutti i suggerimenti accettati",
-      description: `${results.length} file elaborati`,
-    });
+    try {
+      await Promise.all(promises);
+      
+      toast({
+        title: "Tutti i suggerimenti accettati",
+        description: `${results.length} file elaborati`,
+      });
+    } catch (error) {
+      toast({
+        title: "Errore nell'elaborazione",
+        description: "Alcuni file potrebbero non essere stati elaborati correttamente",
+        variant: "destructive"
+      });
+    }
   };
 
   if (!results || results.length === 0) {

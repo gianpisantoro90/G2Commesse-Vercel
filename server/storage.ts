@@ -1,4 +1,7 @@
 import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -228,4 +231,219 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// DatabaseStorage implementation
+export class DatabaseStorage implements IStorage {
+  // Projects
+  async getProject(id: string): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.id, id));
+    return project || undefined;
+  }
+
+  async getProjectByCode(code: string): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.code, code));
+    return project || undefined;
+  }
+
+  async getAllProjects(): Promise<Project[]> {
+    return await db.select().from(projects);
+  }
+
+  async createProject(insertProject: InsertProject): Promise<Project> {
+    const [project] = await db
+      .insert(projects)
+      .values({
+        ...insertProject,
+        fsRoot: insertProject.fsRoot || null,
+        metadata: insertProject.metadata || {},
+      })
+      .returning();
+    
+    // Update client projects count
+    const clientSigla = this.generateSafeAcronym(insertProject.client);
+    const existingClient = await this.getClientBySigla(clientSigla);
+    
+    if (existingClient) {
+      await db
+        .update(clients)
+        .set({ projectsCount: (existingClient.projectsCount || 0) + 1 })
+        .where(eq(clients.id, existingClient.id));
+    } else {
+      // Create new client
+      await this.createClient({
+        sigla: clientSigla,
+        name: insertProject.client,
+        city: insertProject.city,
+        projectsCount: 1,
+      });
+    }
+    
+    return project;
+  }
+
+  async updateProject(id: string, updateData: Partial<InsertProject>): Promise<Project | undefined> {
+    const [updated] = await db
+      .update(projects)
+      .set(updateData)
+      .where(eq(projects.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteProject(id: string): Promise<boolean> {
+    const project = await this.getProject(id);
+    if (!project) return false;
+    
+    await db.delete(projects).where(eq(projects.id, id));
+    
+    // Update client projects count
+    const clientSigla = this.generateSafeAcronym(project.client);
+    const client = await this.getClientBySigla(clientSigla);
+    if (client && (client.projectsCount || 0) > 0) {
+      await db
+        .update(clients)
+        .set({ projectsCount: (client.projectsCount || 0) - 1 })
+        .where(eq(clients.id, client.id));
+    }
+    
+    return true;
+  }
+
+  // Clients
+  async getClient(id: string): Promise<Client | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.id, id));
+    return client || undefined;
+  }
+
+  async getClientBySigla(sigla: string): Promise<Client | undefined> {
+    const [client] = await db.select().from(clients).where(eq(clients.sigla, sigla));
+    return client || undefined;
+  }
+
+  async getAllClients(): Promise<Client[]> {
+    return await db.select().from(clients);
+  }
+
+  async createClient(insertClient: InsertClient): Promise<Client> {
+    const [client] = await db
+      .insert(clients)
+      .values({
+        ...insertClient,
+        city: insertClient.city || null,
+        projectsCount: insertClient.projectsCount || 0,
+      })
+      .returning();
+    return client;
+  }
+
+  async updateClient(id: string, updateData: Partial<InsertClient>): Promise<Client | undefined> {
+    const [updated] = await db
+      .update(clients)
+      .set(updateData)
+      .where(eq(clients.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteClient(id: string): Promise<boolean> {
+    const result = await db.delete(clients).where(eq(clients.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // File Routings
+  async getFileRouting(id: string): Promise<FileRouting | undefined> {
+    const [routing] = await db.select().from(fileRoutings).where(eq(fileRoutings.id, id));
+    return routing || undefined;
+  }
+
+  async getFileRoutingsByProject(projectId: string): Promise<FileRouting[]> {
+    return await db.select().from(fileRoutings).where(eq(fileRoutings.projectId, projectId));
+  }
+
+  async createFileRouting(insertRouting: InsertFileRouting): Promise<FileRouting> {
+    const [routing] = await db
+      .insert(fileRoutings)
+      .values({
+        ...insertRouting,
+        projectId: insertRouting.projectId || null,
+        fileType: insertRouting.fileType || null,
+        actualPath: insertRouting.actualPath || null,
+        confidence: insertRouting.confidence || 0,
+        method: insertRouting.method || null,
+      })
+      .returning();
+    return routing;
+  }
+
+  // System Config
+  async getSystemConfig(key: string): Promise<SystemConfig | undefined> {
+    const [config] = await db.select().from(systemConfig).where(eq(systemConfig.key, key));
+    return config || undefined;
+  }
+
+  async setSystemConfig(key: string, value: any): Promise<SystemConfig> {
+    const existing = await this.getSystemConfig(key);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(systemConfig)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(systemConfig.key, key))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db
+        .insert(systemConfig)
+        .values({ key, value })
+        .returning();
+      return created;
+    }
+  }
+
+  // Bulk operations
+  async exportAllData() {
+    const [projectsData, clientsData, fileRoutingsData, systemConfigData] = await Promise.all([
+      this.getAllProjects(),
+      this.getAllClients(),
+      db.select().from(fileRoutings),
+      db.select().from(systemConfig),
+    ]);
+
+    return {
+      projects: projectsData,
+      clients: clientsData,
+      fileRoutings: fileRoutingsData,
+      systemConfig: systemConfigData,
+    };
+  }
+
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[] }) {
+    await this.clearAllData();
+
+    if (data.clients.length > 0) {
+      await db.insert(clients).values(data.clients);
+    }
+    if (data.projects.length > 0) {
+      await db.insert(projects).values(data.projects);
+    }
+    if (data.fileRoutings.length > 0) {
+      await db.insert(fileRoutings).values(data.fileRoutings);
+    }
+    if (data.systemConfig.length > 0) {
+      await db.insert(systemConfig).values(data.systemConfig);
+    }
+  }
+
+  async clearAllData() {
+    await db.delete(fileRoutings);
+    await db.delete(projects);
+    await db.delete(clients);
+    await db.delete(systemConfig);
+  }
+
+  private generateSafeAcronym(text: string): string {
+    return (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
+  }
+}
+
+// Use database storage in production, memory storage for development
+export const storage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();
