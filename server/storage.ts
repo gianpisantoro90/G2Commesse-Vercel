@@ -446,4 +446,6 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Use database storage in production, memory storage for development
+console.log('🔍 Storage initialization - DATABASE_URL exists:', !!process.env.DATABASE_URL);
 export const storage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();
+console.log('📦 Storage type:', storage.constructor.name);

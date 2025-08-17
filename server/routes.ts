@@ -8,9 +8,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate project code
   app.post("/api/generate-code", async (req, res) => {
     try {
+      console.log('Generate code request body:', req.body);
       const { year, client } = req.body;
       
       if (!year || !client) {
+        console.log('Missing required fields - year:', year, 'client:', client);
         return res.status(400).json({ message: "Anno e cliente sono obbligatori" });
       }
       
@@ -20,12 +22,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       const clientSigla = generateSafeAcronym(client);
+      console.log('Generated client sigla:', clientSigla, 'from client:', client);
       
       // Get current year as 2-digit string
       const yearStr = year.toString().padStart(2, '0');
+      console.log('Year string:', yearStr, 'from year:', year);
       
       // Find highest existing code for this year and client
       const allProjects = await storage.getAllProjects();
+      console.log('Total projects found:', allProjects.length);
+      
       const existingCodes = allProjects
         .map(p => p.code)
         .filter(code => code.startsWith(`${yearStr}${clientSigla}`))
@@ -35,13 +41,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
         .filter(num => !isNaN(num));
       
+      console.log('Existing codes for pattern', `${yearStr}${clientSigla}*:`, existingCodes);
+      
       const nextNumber = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
       const paddedNumber = nextNumber.toString().padStart(3, '0');
       const newCode = `${yearStr}${clientSigla}${paddedNumber}`;
       
+      console.log('Generated new code:', newCode);
       res.json({ code: newCode });
     } catch (error) {
       console.error('Code generation error:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       res.status(500).json({ message: "Errore nella generazione del codice" });
     }
   });
