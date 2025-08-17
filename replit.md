@@ -2,7 +2,18 @@
 
 ## Overview
 
-G2 Ingegneria is a project management system designed for engineering firms to manage "commesse" (projects/jobs). The application provides a comprehensive dashboard for creating, organizing, and tracking engineering projects with intelligent file routing capabilities. It features a modern web interface with local data storage, AI-powered file organization suggestions, and support for different project templates (LUNGO and BREVE) based on project complexity.
+**Data Persistence Fix (August 17, 2025)**
+- Fixed critical issue where project list disappeared in local version
+- Implemented FileStorage class for persistent local data storage using JSON files
+- Projects and clients now persist between application restarts
+- Created `server/storage-local.ts` with file-based storage implementation
+- Added proper storage initialization logic with fallback to memory storage
+- Updated project code generation to include city references (YY+CLIENT+CITY+NN format)
+- Fixed bulk file renaming component error (`selectedFiles` undefined)
+- Cleaned up unnecessary files and improved project structure
+- Created `start-local.bat` for easy Windows deployment
+
+G2 Ingegneria is a project management system designed for engineering firms to manage "commesse" (projects/jobs). The application provides a comprehensive dashboard for creating, organizing, and tracking engineering projects with intelligent file routing capabilities. It features a modern web interface with persistent local data storage, AI-powered file organization suggestions, and support for different project templates (LUNGO and BREVE) based on project complexity.
 
 ## User Preferences
 
@@ -33,9 +44,11 @@ Preferred communication style: Simple, everyday language.
 
 ### Data Persistence Strategy
 - **Production Database**: PostgreSQL with Neon serverless hosting for persistent data storage
-- **Development Fallback**: In-memory storage when DATABASE_URL is not available
+- **Local Development**: File-based JSON storage in `data/` directory for persistent local data
+- **Development Fallback**: In-memory storage when other options fail
 - **File Operations**: Real file routing with download fallback and File System API integration
 - **Data Retention**: All projects, clients, and routing decisions are permanently stored
+- **Local Persistence**: FileStorage class saves data to JSON files for local development
 
 ### AI Integration
 - **File Router**: Intelligent file placement suggestions using Claude AI API

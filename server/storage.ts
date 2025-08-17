@@ -468,13 +468,28 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use database storage in production, memory storage for development
+// Use database storage in production, file storage for local development
 console.log('🔍 Storage initialization - DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('🔍 Environment NODE_ENV:', process.env.NODE_ENV);
 
 let storage: IStorage;
 
 async function initializeStorage(): Promise<IStorage> {
-  if (process.env.DATABASE_URL) {
+  // Check if running locally (no DATABASE_URL or development environment)
+  const isLocal = !process.env.DATABASE_URL || process.env.NODE_ENV === 'local';
+  
+  if (isLocal) {
+    console.log('📁 Using FileStorage for local development with persistence');
+    // Import FileStorage for local development
+    try {
+      const { storage: fileStorage } = await import('./storage-local.ts');
+      return fileStorage;
+    } catch (error) {
+      console.error('❌ Failed to load FileStorage, falling back to MemStorage:', error);
+      return new MemStorage();
+    }
+  } else {
+    // Use database storage for production
     const dbStorage = new DatabaseStorage();
     try {
       const isConnected = await dbStorage.testConnection();
@@ -489,13 +504,10 @@ async function initializeStorage(): Promise<IStorage> {
       console.error('❌ Database connection error, falling back to MemStorage:', error);
       return new MemStorage();
     }
-  } else {
-    console.log('⚠️ Using MemStorage (no DATABASE_URL found)');
-    return new MemStorage();
   }
 }
 
-// Initialize storage with fallback to MemStorage
+// Initialize storage with proper fallback
 storage = new MemStorage();
 
 // Test connection asynchronously and replace if needed
