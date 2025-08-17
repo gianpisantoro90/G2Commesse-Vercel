@@ -11,12 +11,27 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech')) 
   console.log('🔧 Local environment detected, skipping WebSocket config');
 }
 
+let pool: Pool | null = null;
+let db: any = null;
+
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
+  console.warn('⚠️ DATABASE_URL not set, application will use memory storage');
+} else {
+  console.log('🗄️ Connecting to database...');
+  try {
+    pool = new Pool({ 
+      connectionString: process.env.DATABASE_URL,
+      // Add connection pool settings for better reliability
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+    });
+    db = drizzle({ client: pool, schema });
+  } catch (error) {
+    console.error('❌ Failed to create database connection:', error);
+    pool = null;
+    db = null;
+  }
 }
 
-console.log('🗄️ Connecting to database...');
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+export { pool, db };

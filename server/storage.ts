@@ -495,18 +495,15 @@ async function initializeStorage(): Promise<IStorage> {
   }
 }
 
-// Initialize storage synchronously for immediate use
-if (process.env.DATABASE_URL) {
-  storage = new DatabaseStorage();
-} else {
-  storage = new MemStorage();
-}
+// Initialize storage with fallback to MemStorage
+storage = new MemStorage();
 
 // Test connection asynchronously and replace if needed
 initializeStorage().then(initializedStorage => {
   storage = initializedStorage;
+  console.log('💾 Storage initialized successfully');
 }).catch(error => {
-  console.error('Storage initialization failed:', error);
+  console.error('❌ Storage initialization failed, using MemStorage:', error);
   storage = new MemStorage();
 });
 

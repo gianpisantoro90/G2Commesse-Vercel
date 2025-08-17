@@ -251,41 +251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Generate project code
-  app.post("/api/generate-code", async (req, res) => {
-    try {
-      const { client, city, year } = req.body;
-      if (!client || !city || !year) {
-        return res.status(400).json({ message: "Cliente, città e anno sono richiesti" });
-      }
-      
-      const generateSafeAcronym = (text: string): string => {
-        return (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
-      };
-      
-      const CLI = generateSafeAcronym(client);
-      const CIT = generateSafeAcronym(city);
-      const yearStr = String(year).padStart(2, '0');
-      const prefix = `${yearStr}${CLI}${CIT}`;
-      
-      const allProjects = await storage.getAllProjects();
-      const samePrefix = allProjects
-        .filter(p => p.code.startsWith(prefix))
-        .map(p => parseInt(p.code.slice(-2), 10))
-        .sort((a, b) => a - b);
-      
-      let next = 1;
-      while (samePrefix.includes(next)) {
-        next++;
-      }
-      
-      const code = `${prefix}${String(next).padStart(2, '0')}`;
-      
-      res.json({ code });
-    } catch (error) {
-      res.status(500).json({ message: "Errore nella generazione del codice" });
-    }
-  });
+
 
   // Claude AI test endpoint
   app.post("/api/test-claude", async (req, res) => {
