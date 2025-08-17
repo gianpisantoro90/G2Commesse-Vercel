@@ -295,5 +295,6 @@ export class FileStorage implements IStorage {
 }
 
 // Export the storage instance
-console.log('📁 Using FileStorage for local persistence');
+console.log('📁 FileStorage module loaded - local persistence active');
+console.log('📁 Data directory:', path.join(process.cwd(), 'data'));
 export const storage: IStorage = new FileStorage();

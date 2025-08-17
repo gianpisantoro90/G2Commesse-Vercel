@@ -475,14 +475,15 @@ console.log('🔍 Environment NODE_ENV:', process.env.NODE_ENV);
 let storage: IStorage;
 
 async function initializeStorage(): Promise<IStorage> {
-  // Check if running locally (no DATABASE_URL or development environment)
-  const isLocal = !process.env.DATABASE_URL || process.env.NODE_ENV === 'local';
+  // Check if running locally - PRIORITIZE NODE_ENV=local
+  const isLocal = process.env.NODE_ENV === 'local' || (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'production');
   
   if (isLocal) {
     console.log('📁 Using FileStorage for local development with persistence');
+    console.log('📁 Data will be saved in:', process.cwd() + '/data');
     // Import FileStorage for local development
     try {
-      const { storage: fileStorage } = await import('./storage-local.ts');
+      const { storage: fileStorage } = await import('./storage-local.js');
       return fileStorage;
     } catch (error) {
       console.error('❌ Failed to load FileStorage, falling back to MemStorage:', error);
