@@ -5,6 +5,40 @@ import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema } from
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Generate project code
+  app.post("/api/generate-code", async (req, res) => {
+    try {
+      const { year, clientSigla } = req.body;
+      
+      if (!year || !clientSigla) {
+        return res.status(400).json({ message: "Anno e sigla cliente sono obbligatori" });
+      }
+      
+      // Get current year as 2-digit string
+      const yearStr = year.toString().slice(-2);
+      
+      // Find highest existing code for this year and client
+      const allProjects = await storage.getAllProjects();
+      const existingCodes = allProjects
+        .map(p => p.code)
+        .filter(code => code.startsWith(`${yearStr}${clientSigla}`))
+        .map(code => {
+          const match = code.match(/(\d{3})$/);
+          return match ? parseInt(match[1]) : 0;
+        })
+        .filter(num => !isNaN(num));
+      
+      const nextNumber = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
+      const paddedNumber = nextNumber.toString().padStart(3, '0');
+      const newCode = `${yearStr}${clientSigla}${paddedNumber}`;
+      
+      res.json({ code: newCode });
+    } catch (error) {
+      console.error('Code generation error:', error);
+      res.status(500).json({ message: "Errore nella generazione del codice" });
+    }
+  });
+
   // Projects
   app.get("/api/projects", async (req, res) => {
     try {
