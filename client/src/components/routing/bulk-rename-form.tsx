@@ -28,16 +28,27 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
     const lastDotIndex = fileName.lastIndexOf('.');
     
     if (lastDotIndex === -1) {
-      // No extension
+      // No extension - check if already has prefix
+      if (fileName.startsWith(projectCode + '_')) {
+        return fileName; // Already has prefix
+      }
       return `${projectCode}_${fileName}`;
     }
     
     const nameWithoutExt = fileName.substring(0, lastDotIndex);
     const extension = fileName.substring(lastDotIndex);
     
-    // Check if already has project code prefix
+    // Check if already has project code prefix (exact match)
     if (nameWithoutExt.startsWith(projectCode + '_')) {
-      return fileName; // Already has prefix
+      return fileName; // Already has correct prefix
+    }
+    
+    // Check if has any other project code prefix pattern (numbers/letters followed by underscore)
+    const hasAnyPrefix = /^[A-Z0-9]+_/.test(nameWithoutExt);
+    if (hasAnyPrefix) {
+      // Replace existing prefix with correct one
+      const withoutOldPrefix = nameWithoutExt.replace(/^[A-Z0-9]+_/, '');
+      return `${projectCode}_${withoutOldPrefix}${extension}`;
     }
     
     return `${projectCode}_${nameWithoutExt}${extension}`;
@@ -89,10 +100,23 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
     setIsProcessing(true);
 
     try {
-      // Process all files
+      // Process only files that need renaming
       const renameResults: Array<{original: string, renamed: string}> = [];
+      const filesToRename = selectedFiles.filter(file => {
+        const newName = generateNewFileName(file, project.code);
+        return file.name !== newName;
+      });
       
-      for (const file of selectedFiles) {
+      if (filesToRename.length === 0) {
+        toast({
+          title: "Nessuna rinominazione necessaria",
+          description: "Tutti i file hanno già il prefisso corretto",
+        });
+        setIsProcessing(false);
+        return;
+      }
+      
+      for (const file of filesToRename) {
         const newName = generateNewFileName(file, project.code);
         
         // Create download with new name
@@ -114,12 +138,28 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         // Small delay between downloads to avoid browser blocking
         await new Promise(resolve => setTimeout(resolve, 200));
       }
+      
+      // Add files that were already correct (for complete results)
+      const alreadyCorrect = selectedFiles.filter(file => {
+        const newName = generateNewFileName(file, project.code);
+        return file.name === newName;
+      });
+      
+      alreadyCorrect.forEach(file => {
+        renameResults.push({
+          original: file.name,
+          renamed: file.name
+        });
+      });
 
       onRenameComplete(renameResults);
       
+      const renamedCount = filesToRename.length;
+      const alreadyCorrectCount = renameResults.length - renamedCount;
+      
       toast({
-        title: "Rinominazione completata",
-        description: `${renameResults.length} file rinominati e scaricati`,
+        title: "Operazione completata",
+        description: `${renamedCount} file rinominati, ${alreadyCorrectCount} già corretti`,
       });
 
     } catch (error) {
@@ -202,18 +242,35 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         {renamePreview.length > 0 && (
           <div className="space-y-3">
             <h4 className="font-medium text-gray-700">Anteprima rinominazione:</h4>
+            <div className="grid grid-cols-3 gap-2 text-xs font-semibold mb-2">
+              <div className="text-green-600">✓ Già corretti: {renamePreview.filter(r => r.original === r.renamed).length}</div>
+              <div className="text-blue-600">🔄 Da rinominare: {renamePreview.filter(r => r.original !== r.renamed).length}</div>
+              <div className="text-gray-600">📁 Totale: {renamePreview.length}</div>
+            </div>
             <div className="max-h-64 overflow-y-auto bg-white border rounded-lg p-3">
               {renamePreview.map((item, index) => (
                 <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                  <div className="text-sm">
-                    <div className="text-red-600 line-through">{item.original}</div>
-                    <div className="text-green-600 font-medium">→ {item.renamed}</div>
+                  <div className="text-sm flex-1">
+                    {item.original === item.renamed ? (
+                      <div className="text-green-600 font-medium">✓ {item.original}</div>
+                    ) : (
+                      <>
+                        <div className="text-red-600 line-through">{item.original}</div>
+                        <div className="text-green-600 font-medium">→ {item.renamed}</div>
+                      </>
+                    )}
                   </div>
-                  {item.original === item.renamed && (
-                    <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                      ✓ Già corretto
-                    </span>
-                  )}
+                  <div className="ml-2">
+                    {item.original === item.renamed ? (
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        ✓ Già corretto
+                      </span>
+                    ) : (
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        🔄 Da rinominare
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -235,19 +292,29 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
               </>
             ) : (
               <>
-                📝 Rinomina e Scarica ({renamePreview.length} file)
+                📝 Rinomina e Scarica ({renamePreview.filter(r => r.original !== r.renamed).length} file)
               </>
             )}
           </Button>
         </div>
 
         {renamePreview.length > 0 && (
-          <Alert className="border-amber-200 bg-amber-50">
-            <AlertDescription className="text-amber-800">
-              <strong>Nota:</strong> I file rinominati verranno scaricati automaticamente. 
-              Dovrai sostituire manualmente i file originali nella cartella della commessa.
-            </AlertDescription>
-          </Alert>
+          <>
+            <Alert className="border-amber-200 bg-amber-50">
+              <AlertDescription className="text-amber-800">
+                <strong>Nota:</strong> I file rinominati verranno scaricati automaticamente. 
+                Dovrai sostituire manualmente i file originali nella cartella della commessa.
+              </AlertDescription>
+            </Alert>
+            
+            {renamePreview.some(r => r.original !== r.renamed && /^[A-Z0-9]+_/.test(r.original)) && (
+              <Alert className="border-yellow-200 bg-yellow-50">
+                <AlertDescription className="text-yellow-800">
+                  <strong>⚠️ Attenzione:</strong> Alcuni file hanno già prefissi di altre commesse che verranno sostituiti con il codice della commessa selezionata.
+                </AlertDescription>
+              </Alert>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
