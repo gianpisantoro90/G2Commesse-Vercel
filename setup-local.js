@@ -1,10 +1,25 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig } from "@shared/schema";
+// Setup script for local development - fixes database connection issues
+const fs = require('fs');
+const path = require('path');
+
+console.log('🔧 Configurazione ambiente locale...');
+
+// Create local storage.ts that doesn't use WebSocket
+const localStorageContent = `import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig } from "@shared/schema";
 import { projects, clients, fileRoutings, systemConfig } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import * as schema from "@shared/schema";
 
-// Use serverless database for now (local fix will be in exported version)
-import { db } from "./db";
+// Local PostgreSQL configuration (no WebSocket)
+const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false }
+});
+
+const db = drizzle(pool, { schema });
 
 export interface IStorage {
   // Projects
@@ -96,19 +111,7 @@ export class MemStorage implements IStorage {
   }
 
   async deleteProject(id: string): Promise<boolean> {
-    const project = this.projects.get(id);
-    if (!project) return false;
-    
-    this.projects.delete(id);
-    
-    // Update client projects count
-    const clientSigla = this.generateSafeAcronym(project.client);
-    const client = Array.from(this.clients.values()).find(c => c.sigla === clientSigla);
-    if (client && (client.projectsCount || 0) > 0) {
-      client.projectsCount = (client.projectsCount || 0) - 1;
-    }
-    
-    return true;
+    return this.projects.delete(id);
   }
 
   // Clients
@@ -233,7 +236,7 @@ export class MemStorage implements IStorage {
   }
 }
 
-// DatabaseStorage implementation
+// DatabaseStorage implementation with local PostgreSQL
 export class DatabaseStorage implements IStorage {
   // Test database connection
   async testConnection(): Promise<boolean> {
@@ -304,31 +307,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProject(id: string, updateData: Partial<InsertProject>): Promise<Project | undefined> {
-    const [updated] = await db
+    const [project] = await db
       .update(projects)
       .set(updateData)
       .where(eq(projects.id, id))
       .returning();
-    return updated || undefined;
+    return project || undefined;
   }
 
   async deleteProject(id: string): Promise<boolean> {
-    const project = await this.getProject(id);
-    if (!project) return false;
-    
-    await db.delete(projects).where(eq(projects.id, id));
-    
-    // Update client projects count
-    const clientSigla = this.generateSafeAcronym(project.client);
-    const client = await this.getClientBySigla(clientSigla);
-    if (client && (client.projectsCount || 0) > 0) {
-      await db
-        .update(clients)
-        .set({ projectsCount: (client.projectsCount || 0) - 1 })
-        .where(eq(clients.id, client.id));
-    }
-    
-    return true;
+    const result = await db.delete(projects).where(eq(projects.id, id));
+    return result.rowCount > 0;
   }
 
   // Clients
@@ -359,17 +348,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateClient(id: string, updateData: Partial<InsertClient>): Promise<Client | undefined> {
-    const [updated] = await db
+    const [client] = await db
       .update(clients)
       .set(updateData)
       .where(eq(clients.id, id))
       .returning();
-    return updated || undefined;
+    return client || undefined;
   }
 
   async deleteClient(id: string): Promise<boolean> {
     const result = await db.delete(clients).where(eq(clients.id, id));
-    return (result.rowCount || 0) > 0;
+    return result.rowCount > 0;
   }
 
   // File Routings
@@ -468,7 +457,7 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use database storage in production, memory storage for development
+// Use database storage with fallback
 console.log('🔍 Storage initialization - DATABASE_URL exists:', !!process.env.DATABASE_URL);
 
 let storage: IStorage;
@@ -511,3 +500,15 @@ initializeStorage().then(initializedStorage => {
 });
 
 export { storage };
+`;
+
+// Write the local storage file
+fs.writeFileSync(path.join(__dirname, 'server', 'storage-local.ts'), localStorageContent);
+
+console.log('✅ File storage-local.ts creato');
+console.log('🔧 Setup locale completato!');
+console.log('');
+console.log('Per usare la versione locale:');
+console.log('1. Sostituisci server/storage.ts con server/storage-local.ts');
+console.log('2. Installa: npm install pg @types/pg');
+console.log('3. Avvia: npm run dev');

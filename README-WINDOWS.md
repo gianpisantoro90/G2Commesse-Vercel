@@ -66,6 +66,25 @@ Dopo l'avvio, apri il browser su:
 - `http://localhost:3000` (porta predefinita)
 - La porta esatta sarà mostrata nel terminale
 
+## ⚠️ Problemi noti
+
+### Errore generazione codice commessa (ECONNREFUSED)
+Se ricevi errori durante la generazione del codice:
+
+**Soluzione automatica:**
+```cmd
+node setup-local.js
+```
+
+**Soluzione manuale:**
+1. Copia `server\storage-local.ts` su `server\storage.ts`  
+2. Installa: `npm install pg @types/pg`
+3. Riavvia: `npm run dev`
+
+### Altri problemi
+- Il sistema potrebbe richiedere autorizzazione browser per accedere alle cartelle
+- Su alcuni browser la rinomina file potrebbe non essere supportata
+
 ## 🆘 Supporto
 Se i problemi persistono:
 1. Verifica la versione Node.js: `node --version` (deve essere v18+)

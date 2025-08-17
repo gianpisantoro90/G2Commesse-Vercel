@@ -3,7 +3,13 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Configure WebSocket only for serverless environments
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('neon.tech')) {
+  neonConfig.webSocketConstructor = ws;
+  console.log('📡 Configured Neon WebSocket for serverless environment');
+} else {
+  console.log('🔧 Local environment detected, skipping WebSocket config');
+}
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -11,5 +17,6 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+console.log('🗄️ Connecting to database...');
 export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 export const db = drizzle({ client: pool, schema });
