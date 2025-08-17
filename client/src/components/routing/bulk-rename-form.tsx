@@ -14,9 +14,11 @@ interface BulkRenameFormProps {
 
 export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps) {
   const [selectedProject, setSelectedProject] = useState("");
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
+  const [folderFiles, setFolderFiles] = useState<File[]>([]);
   const [renamePreview, setRenamePreview] = useState<Array<{original: string, renamed: string}>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [folderName, setFolderName] = useState("");
   const { toast } = useToast();
 
   const { data: projects = [] } = useQuery<Project[]>({
@@ -57,13 +59,47 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
   const handleProjectChange = (projectId: string) => {
     setSelectedProject(projectId);
     setRenamePreview([]);
-    setSelectedFiles([]);
+    setFolderFiles([]);
+    setDirectoryHandle(null);
+    setFolderName("");
   };
 
-  const handleFolderUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length > 0) {
-      setSelectedFiles(files);
+  const handleSelectFolder = async () => {
+    if (!selectedProject) {
+      toast({
+        title: "Errore",
+        description: "Seleziona prima una commessa",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Check if browser supports File System Access API
+      if (!('showDirectoryPicker' in window)) {
+        toast({
+          title: "Browser non supportato",
+          description: "Il tuo browser non supporta la selezione di cartelle. Usa Chrome/Edge aggiornato.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Open directory picker
+      const dirHandle = await (window as any).showDirectoryPicker();
+      setDirectoryHandle(dirHandle);
+      setFolderName(dirHandle.name);
+      
+      // Read all files from directory (not subdirectories)
+      const files: File[] = [];
+      for await (const [name, handle] of dirHandle.entries()) {
+        if (handle.kind === 'file') {
+          const file = await handle.getFile();
+          files.push(file);
+        }
+      }
+      
+      setFolderFiles(files);
       
       // Generate preview
       const project = projects.find(p => p.id === selectedProject);
@@ -74,14 +110,29 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         }));
         setRenamePreview(preview);
       }
+      
+      toast({
+        title: "Cartella selezionata",
+        description: `Trovati ${files.length} file in "${dirHandle.name}"`,
+      });
+      
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.error('Error selecting folder:', error);
+        toast({
+          title: "Errore nella selezione",
+          description: "Impossibile accedere alla cartella selezionata",
+          variant: "destructive",
+        });
+      }
     }
   };
 
   const handleBulkRename = async () => {
-    if (!selectedProject || selectedFiles.length === 0) {
+    if (!selectedProject || !directoryHandle || folderFiles.length === 0) {
       toast({
         title: "Errore",
-        description: "Seleziona una commessa e i file da rinominare",
+        description: "Seleziona una commessa e una cartella con file da rinominare",
         variant: "destructive",
       });
       return;
@@ -102,7 +153,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
     try {
       // Process only files that need renaming
       const renameResults: Array<{original: string, renamed: string}> = [];
-      const filesToRename = selectedFiles.filter(file => {
+      const filesToRename = folderFiles.filter(file => {
         const newName = generateNewFileName(file, project.code);
         return file.name !== newName;
       });
@@ -116,10 +167,43 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         return;
       }
       
+      // Try to rename files directly in the folder
+      let renamedInPlace = 0;
+      const failedRenames: File[] = [];
+      
       for (const file of filesToRename) {
         const newName = generateNewFileName(file, project.code);
         
-        // Create download with new name
+        try {
+          // Try to create new file with renamed version
+          const fileHandle = await directoryHandle.getFileHandle(file.name);
+          const originalFile = await fileHandle.getFile();
+          
+          // Create new file with new name
+          const newFileHandle = await directoryHandle.getFileHandle(newName, { create: true });
+          const writable = await newFileHandle.createWritable();
+          await writable.write(originalFile);
+          await writable.close();
+          
+          // Remove original file
+          await directoryHandle.removeEntry(file.name);
+          
+          renameResults.push({
+            original: file.name,
+            renamed: newName
+          });
+          renamedInPlace++;
+          
+        } catch (error) {
+          console.warn(`Failed to rename ${file.name} in place, will download instead:`, error);
+          failedRenames.push(file);
+        }
+      }
+      
+      // For files that couldn't be renamed in place, download them
+      for (const file of failedRenames) {
+        const newName = generateNewFileName(file, project.code);
+        
         const url = URL.createObjectURL(file);
         const link = document.createElement('a');
         link.href = url;
@@ -135,12 +219,11 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           renamed: newName
         });
         
-        // Small delay between downloads to avoid browser blocking
         await new Promise(resolve => setTimeout(resolve, 200));
       }
       
       // Add files that were already correct (for complete results)
-      const alreadyCorrect = selectedFiles.filter(file => {
+      const alreadyCorrect = folderFiles.filter(file => {
         const newName = generateNewFileName(file, project.code);
         return file.name === newName;
       });
@@ -154,13 +237,19 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
 
       onRenameComplete(renameResults);
       
-      const renamedCount = filesToRename.length;
-      const alreadyCorrectCount = renameResults.length - renamedCount;
+      const alreadyCorrectCount = renameResults.length - filesToRename.length;
       
-      toast({
-        title: "Operazione completata",
-        description: `${renamedCount} file rinominati, ${alreadyCorrectCount} già corretti`,
-      });
+      if (renamedInPlace > 0) {
+        toast({
+          title: "Rinominazione completata nella cartella",
+          description: `${renamedInPlace} file rinominati direttamente, ${failedRenames.length} scaricati, ${alreadyCorrectCount} già corretti`,
+        });
+      } else {
+        toast({
+          title: "File scaricati per rinominazione",
+          description: `${failedRenames.length} file scaricati, ${alreadyCorrectCount} già corretti. Sostituisci manualmente i file originali.`,
+        });
+      }
 
     } catch (error) {
       console.error('Bulk rename error:', error);
@@ -184,7 +273,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           Rinomina File Esistenti
         </CardTitle>
         <p className="text-sm text-blue-700">
-          Seleziona una cartella di commessa per rinominare tutti i file con il prefisso del codice commessa
+          Seleziona una cartella dal file system per rinominare automaticamente tutti i file contenuti aggiungendo il prefisso della commessa
         </p>
       </CardHeader>
       
@@ -219,23 +308,34 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
 
         {/* Folder Selection */}
         <div className="space-y-2">
-          <Label htmlFor="folder-upload" className="text-sm font-medium">
-            Carica file dalla cartella commessa
+          <Label className="text-sm font-medium">
+            Seleziona cartella commessa
           </Label>
-          <div className="relative">
-            <input
-              id="folder-upload"
-              type="file"
-              multiple
-              onChange={handleFolderUpload}
+          <div className="flex gap-3">
+            <Button
+              onClick={handleSelectFolder}
               disabled={!selectedProject}
-              className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
-              data-testid="folder-upload"
-            />
+              variant="outline"
+              className="flex-1 p-3 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="folder-select-button"
+            >
+              {folderName ? (
+                <>📁 {folderName} ({folderFiles.length} file)</>
+              ) : (
+                <>📁 Scegli cartella...</>
+              )}
+            </Button>
           </div>
           <p className="text-xs text-gray-600">
-            Seleziona tutti i file nella cartella della commessa che vuoi rinominare
+            Il sistema accederà alla cartella e rinominerà tutti i file (non le sottocartelle) aggiungendo il prefisso della commessa
           </p>
+          {!('showDirectoryPicker' in window) && (
+            <Alert className="border-red-200 bg-red-50 mt-2">
+              <AlertDescription className="text-red-800">
+                <strong>⚠️ Browser non compatibile:</strong> Questa funzionalità richiede Chrome/Edge aggiornato per accedere alle cartelle del file system.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         {/* Preview */}
@@ -292,7 +392,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
               </>
             ) : (
               <>
-                📝 Rinomina e Scarica ({renamePreview.filter(r => r.original !== r.renamed).length} file)
+                📝 Rinomina File ({renamePreview.filter(r => r.original !== r.renamed).length} da elaborare)
               </>
             )}
           </Button>
@@ -300,10 +400,10 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
 
         {renamePreview.length > 0 && (
           <>
-            <Alert className="border-amber-200 bg-amber-50">
-              <AlertDescription className="text-amber-800">
-                <strong>Nota:</strong> I file rinominati verranno scaricati automaticamente. 
-                Dovrai sostituire manualmente i file originali nella cartella della commessa.
+            <Alert className="border-green-200 bg-green-50">
+              <AlertDescription className="text-green-800">
+                <strong>✅ Funzionalità avanzata:</strong> Il sistema tenterà di rinominare i file direttamente nella cartella selezionata. 
+                Se non è possibile, i file rinominati verranno scaricati automaticamente.
               </AlertDescription>
             </Alert>
             
