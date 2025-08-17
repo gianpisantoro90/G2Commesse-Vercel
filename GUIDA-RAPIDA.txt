@@ -1,6 +1,22 @@
 🚀 G2 INGEGNERIA - GUIDA RAPIDA INSTALLAZIONE
 
 ═══════════════════════════════════════════════════════════════════
+🆕 NOVITÀ - AUTO-ROUTING FILE AVANZATO:
+   
+✅ NUOVA FUNZIONE: RINOMINA FILE ESISTENTI
+   - Vai nel tab "Auto-Routing"
+   - Sezione "📁 Rinomina File Esistenti"  
+   - Seleziona una commessa e i file dalla sua cartella
+   - Tutti i file verranno rinominati con prefisso codice commessa
+   
+✅ ESEMPIO:
+   - Codice commessa: 24ABC123
+   - File originale: "relazione.pdf"
+   - File rinominato: "24ABC123_relazione.pdf"
+
+═══════════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════════
 
 📋 PASSO 1: INSTALLARE NODE.JS (SOLO LA PRIMA VOLTA)
    1. Fai doppio click su: INSTALLA-TUTTO.bat

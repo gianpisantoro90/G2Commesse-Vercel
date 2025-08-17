@@ -11,6 +11,8 @@ import ProjectsTable from "@/components/projects/projects-table";
 import ClientsTable from "@/components/projects/clients-table";
 import RoutingForm from "@/components/routing/routing-form";
 import RoutingResults from "@/components/routing/routing-results";
+import BulkRenameForm from "@/components/routing/bulk-rename-form";
+import BulkRenameResults from "@/components/routing/bulk-rename-results";
 import StoragePanel from "@/components/system/storage-panel";
 import AiConfigPanel from "@/components/system/ai-config-panel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,6 +30,7 @@ export default function Dashboard() {
   // Routing state
   const [routingResults, setRoutingResults] = useState<Array<{result: RoutingResult, file: File}> | null>(null);
   const [routingProject, setRoutingProject] = useState<Project | null>(null);
+  const [bulkRenameResults, setBulkRenameResults] = useState<Array<{original: string, renamed: string}> | null>(null);
 
   const handleSubTabChange = (mainTab: string, subTab: string) => {
     setActiveSubTab(prev => ({ ...prev, [mainTab]: subTab }));
@@ -41,6 +44,14 @@ export default function Dashboard() {
   const handleClearRouting = () => {
     setRoutingResults(null);
     setRoutingProject(null);
+  };
+
+  const handleBulkRenameComplete = (results: Array<{original: string, renamed: string}>) => {
+    setBulkRenameResults(results);
+  };
+
+  const handleClearBulkRename = () => {
+    setBulkRenameResults(null);
   };
 
   return (
@@ -115,13 +126,24 @@ export default function Dashboard() {
 
             {/* Auto-Routing Panel */}
             {activeTab === "routing" && (
-              <div className="max-w-2xl mx-auto space-y-6" data-testid="routing-panel">
-                <RoutingForm onAnalysisComplete={handleAnalysisComplete} />
+              <div className="max-w-4xl mx-auto space-y-6" data-testid="routing-panel">
+                <div className="grid gap-6 lg:grid-cols-1">
+                  <RoutingForm onAnalysisComplete={handleAnalysisComplete} />
+                  <BulkRenameForm onRenameComplete={handleBulkRenameComplete} />
+                </div>
+                
                 <RoutingResults 
                   results={routingResults}
                   project={routingProject}
                   onClear={handleClearRouting}
                 />
+                
+                {bulkRenameResults && (
+                  <BulkRenameResults 
+                    results={bulkRenameResults}
+                    onClear={handleClearBulkRename}
+                  />
+                )}
               </div>
             )}
 

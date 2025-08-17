@@ -42,6 +42,7 @@ Preferred communication style: Simple, everyday language.
 - **Learning System**: Pattern recognition for improving routing accuracy over time
 - **Confidence Scoring**: 0-100 scale for routing suggestion reliability
 - **Multiple Methods**: AI, rules-based, and learned pattern routing approaches
+- **Bulk File Operations**: Automated renaming of existing project files with proper prefixes
 
 ### Template System
 - **LUNGO Template**: Comprehensive folder structure for complex engineering projects
