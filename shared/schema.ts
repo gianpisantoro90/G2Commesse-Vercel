@@ -11,6 +11,7 @@ export const projects = pgTable("projects", {
   object: text("object").notNull(),
   year: integer("year").notNull(),
   template: text("template").notNull(), // 'LUNGO' or 'BREVE'
+  status: text("status").notNull().default("in_corso"), // 'in_corso', 'conclusa', 'sospesa'
   createdAt: timestamp("created_at").defaultNow(),
   fsRoot: text("fs_root"),
   metadata: jsonb("metadata").default({}),

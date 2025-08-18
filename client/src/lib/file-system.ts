@@ -9,91 +9,115 @@ export interface ProjectTemplate {
   structure: FolderStructure;
 }
 
-// Template definitions
+// Template aggiornato da file ZIP di riferimento
 const TEMPLATE_LUNGO: FolderStructure = {
-  "01_DOCUMENTI_GENERALI": {
-    "01_CONTRATTO": {},
-    "02_CORRISPONDENZA": {},
-    "03_AUTORIZZAZIONI": {},
-  },
-  "02_PROGETTAZIONE": {
-    "ARC": {
-      "01_PIANTE": {},
-      "02_PROSPETTI": {},
-      "03_SEZIONI": {},
-      "04_DETTAGLI": {},
-    },
-    "STR": {
-      "01_CALCOLI": {},
-      "02_ELABORATI": {},
-      "03_RELAZIONI": {},
-    },
-    "IM": {
-      "01_IDRAULICO": {},
-      "02_MECCANICO": {},
-      "03_ANTINCENDIO": {},
-    },
-    "IE": {
-      "01_ELETTRICO": {},
-      "02_ILLUMINAZIONE": {},
-      "03_DOMOTICA": {},
-    },
-    "IS": {
-      "01_SICUREZZA": {},
-      "02_VIDEOSORVEGLIANZA": {},
-    },
-    "REL": {
-      "01_TECNICHE": {},
-      "02_SPECIALISTICHE": {},
-    },
-    "CME": {
-      "01_COMPUTI": {},
-      "02_CAPITOLATI": {},
-    },
-    "SIC": {
-      "01_PSC": {},
-      "02_POS": {},
-    },
-  },
-  "03_CALCOLI": {
-    "01_STRUTTURALI": {},
-    "02_IMPIANTI": {},
-    "03_ENERGETICI": {},
-  },
-  "04_ELABORATI_GRAFICI": {
-    "01_TAVOLE_PROGETTO": {},
-    "02_PARTICOLARI": {},
-    "03_SCHEMI": {},
-  },
-  "05_CORRISPONDENZA": {
+  "01_CORRISPONDENZA": {
     "01_ENTRATA": {},
     "02_USCITA": {},
     "03_INTERNA": {},
+    "04_VERBALI": {},
   },
-  "06_VERBALI": {
-    "01_RIUNIONI": {},
-    "02_SOPRALLUOGHI": {},
-    "03_COMMISSIONI": {},
+  "02_PROGETTAZIONE": {
+    "01_ARCHITETTURA": {
+      "01_PIANTE": {},
+      "02_PROSPETTI": {},
+      "03_SEZIONI": {},
+      "04_DETTAGLI_COSTRUTTIVI": {},
+      "05_RENDER_3D": {},
+    },
+    "02_STRUTTURE": {
+      "01_CALCOLI_STRUTTURALI": {},
+      "02_RELAZIONI_TECNICHE": {},
+      "03_ELABORATI_GRAFICI": {},
+      "04_VERIFICHE": {},
+    },
+    "03_IMPIANTI": {
+      "01_IMPIANTI_MECCANICI": {
+        "01_RISCALDAMENTO": {},
+        "02_CONDIZIONAMENTO": {},
+        "03_VENTILAZIONE": {},
+        "04_GAS": {},
+      },
+      "02_IMPIANTI_ELETTRICI": {
+        "01_FORZA_MOTRICE": {},
+        "02_ILLUMINAZIONE": {},
+        "03_DOMOTICA": {},
+        "04_TELECOMUNICAZIONI": {},
+      },
+      "03_IMPIANTI_SPECIALI": {
+        "01_ANTINCENDIO": {},
+        "02_VIDEOSORVEGLIANZA": {},
+        "03_CONTROLLO_ACCESSI": {},
+        "04_ASCENSORI": {},
+      },
+      "04_IMPIANTI_IDRAULICI": {
+        "01_ACQUA_FREDDA": {},
+        "02_ACQUA_CALDA": {},
+        "03_SCARICHI": {},
+        "04_PLUVIALI": {},
+      },
+    },
+    "04_SOSTENIBILITA": {
+      "01_APE": {},
+      "02_CERTIFICAZIONI": {},
+      "03_ANALISI_ENERGETICHE": {},
+    },
   },
-  "07_SOPRALLUOGHI": {
-    "01_FOTOGRAFICI": {},
-    "02_RILIEVI": {},
-    "03_REPORTS": {},
+  "03_PRATICHE_EDILIZIE": {
+    "01_SCIA": {},
+    "02_PERMESSO_COSTRUIRE": {},
+    "03_DIA": {},
+    "04_AGIBILITA": {},
+    "05_VARIANTI": {},
+    "06_FINE_LAVORI": {},
   },
-  "08_VARIANTI": {
-    "01_RICHIESTE": {},
-    "02_APPROVATE": {},
-    "03_RIFIUTATE": {},
+  "04_DIREZIONE_LAVORI": {
+    "01_VERBALI_CANTIERE": {},
+    "02_STATI_AVANZAMENTO": {},
+    "03_CONTABILITA": {},
+    "04_VARIANTI_IN_CORSO_OPERA": {},
+    "05_COLLAUDI": {},
   },
-  "09_PARCELLA": {
-    "01_PREVENTIVI": {},
-    "02_FATTURE": {},
-    "03_PAGAMENTI": {},
+  "05_COORDINAMENTO_SICUREZZA": {
+    "01_PSC": {},
+    "02_POS": {},
+    "03_NOTIFICA_PRELIMINARE": {},
+    "04_FASCICOLO_OPERA": {},
+    "05_VERBALI_SICUREZZA": {},
   },
-  "10_INCARICO": {
-    "01_NOMINA": {},
-    "02_CONTRATTO": {},
-    "03_POLIZZE": {},
+  "06_AMMINISTRATIVO": {
+    "01_CONTRATTO": {},
+    "02_INCARICO": {},
+    "03_PARCELLE": {},
+    "04_FATTURE": {},
+    "05_PAGAMENTI": {},
+    "06_ASSICURAZIONI": {},
+  },
+  "07_RILIEVI_SOPRALLUOGHI": {
+    "01_RILIEVI_METRICI": {},
+    "02_FOTO_ANTE_OPERAM": {},
+    "03_FOTO_POST_OPERAM": {},
+    "04_VERBALI_SOPRALLUOGO": {},
+    "05_DRONE": {},
+  },
+  "08_CONSULENZE_ESTERNE": {
+    "01_GEOLOGICHE": {},
+    "02_AMBIENTALI": {},
+    "03_ARCHEOLOGICHE": {},
+    "04_ACUSTICHE": {},
+    "05_SPECIALISTICHE": {},
+  },
+  "09_AUTORIZZAZIONI": {
+    "01_ENTI_LOCALI": {},
+    "02_VIGILI_FUOCO": {},
+    "03_ASL": {},
+    "04_SOPRINTENDENZA": {},
+    "05_ENTI_GESTORI": {},
+  },
+  "10_ARCHIVIO_STORICO": {
+    "01_VERSIONI_PRECEDENTI": {},
+    "02_DOCUMENTI_SCADUTI": {},
+    "03_BACKUP": {},
   },
 };
 

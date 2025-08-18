@@ -2,6 +2,16 @@
 
 ## Overview
 
+**Complete System Update (August 18, 2025)**
+- ✅ **BROWSER AUTO-LAUNCH**: G2-START.bat now opens browser automatically after 3 seconds
+- ✅ **UPDATED TEMPLATES**: LUNGO template expanded with 10 complete sections based on ZIP reference
+- ✅ **PROJECT STATUS MANAGEMENT**: Added status field (In Corso, Conclusa, Sospesa) with colored badges
+- ✅ **FIXED AUTO-ROUTING**: Critical file routing bug resolved - original files now preserved correctly instead of creating TXT files
+- Updated schema with status field and pushed to database
+- Enhanced project table with status display column
+- Improved routing results component to maintain original file formats
+- Template structure now includes comprehensive engineering workflow sections
+
 **Data Persistence & Local Startup Fix (August 17, 2025)**
 - Fixed critical issue where project list disappeared in local version
 - Implemented FileStorage class for persistent local data storage using JSON files

@@ -164,15 +164,14 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
   // Function to handle download fallback
   const handleDownloadFallback = async (file: File, targetPath: string, finalFileName: string) => {
     try {
-      // Create download link
-      const url = URL.createObjectURL(file);
+      // QUESTO È IL PROBLEMA: Il file originale viene perso e sostituito con un TXT
+      // Invece di creare un nuovo blob, usiamo il file originale
+      const url = URL.createObjectURL(file); // Usa il file originale
       const link = document.createElement('a');
       link.href = url;
-      link.download = finalFileName;
       
-      // Add path info to download name for user reference
-      const pathPrefix = targetPath.replace(/[^\w\-]/g, '_').slice(0, 20);
-      link.download = `${pathPrefix}_${finalFileName}`;
+      // CORREZIONE: Usa direttamente il nome rinominato senza prefissi aggiuntivi
+      link.download = finalFileName; // Nome corretto con estensione originale
       
       document.body.appendChild(link);
       link.click();
@@ -182,7 +181,7 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
       // Show instruction to user
       toast({
         title: "File scaricato",
-        description: `Sposta manualmente "${link.download}" in: ${targetPath}`,
+        description: `Sposta manualmente "${finalFileName}" in: ${targetPath}`,
       });
     } catch (error) {
       console.error('Download fallback error:', error);

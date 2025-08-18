@@ -122,6 +122,7 @@ export default function ProjectsTable() {
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm">Oggetto</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm">Anno</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm">Template</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm">Stato</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tr-lg">Azioni</th>
                 </tr>
               </thead>
@@ -150,6 +151,19 @@ export default function ProjectsTable() {
                           : 'bg-green-100 text-green-800'
                       }`}>
                         {project.template}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4" data-testid={`project-status-${project.id}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        project.status === 'in_corso' 
+                          ? 'bg-yellow-100 text-yellow-800' 
+                          : project.status === 'conclusa'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {project.status === 'in_corso' ? '🟡 In Corso' : 
+                         project.status === 'conclusa' ? '🟢 Conclusa' : 
+                         '🔴 Sospesa'}
                       </span>
                     </td>
                     <td className="py-4 px-4">

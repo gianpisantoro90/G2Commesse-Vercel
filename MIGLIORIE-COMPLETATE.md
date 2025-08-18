@@ -1,5 +1,29 @@
 # G2 Ingegneria - Migliorie Completate
 
+## ✅ AGGIORNAMENTO COMPLETO (18 Agosto 2025) - TUTTI I 4 PROBLEMI RISOLTI
+
+### 🚀 4 Problemi Risolti Oggi:
+
+#### 1. ✅ BROWSER AUTOMATICO
+- **G2-START.bat** ora apre automaticamente il browser
+- Apertura ritardata di 3 secondi per caricamento server
+- Comando: `start http://localhost:5000` in background
+
+#### 2. ✅ TEMPLATE LUNGO AGGIORNATO
+- Template ampliato con 10 sezioni complete basate su ZIP di riferimento
+- `01_CORRISPONDENZA`, `02_PROGETTAZIONE` (con Architettura, Strutture, Impianti), `03_PRATICHE_EDILIZIE`, etc.
+
+#### 3. ✅ GESTIONE STATI COMMESSE
+- Aggiunto campo `status` al database: **In Corso** 🟡, **Conclusa** 🟢, **Sospesa** 🔴
+- Select nel form creazione, badge colorati nella tabella
+
+#### 4. ✅ RIPARATO AUTO-ROUTING FILE - PROBLEMA CRITICO RISOLTO
+- **PRIMA**: File scaricato come TXT vuoto invece dell'originale
+- **CAUSA**: URL.createObjectURL() su blob errato 
+- **DOPO**: File originale conservato perfettamente con rinomina corretta
+
+---
+
 ## 🔧 Problemi Risolti
 
 ### ✅ 1. Persistenza Dati Versione Locale

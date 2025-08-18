@@ -35,6 +35,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
       object: "",
       year: new Date().getFullYear() % 100,
       template: "LUNGO",
+      status: "in_corso",
       code: "",
       fsRoot: null,
       metadata: {},
@@ -217,6 +218,25 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               <SelectContent>
                 <SelectItem value="LUNGO">LUNGO - Progetti complessi</SelectItem>
                 <SelectItem value="BREVE">BREVE - Progetti semplici</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="block text-sm font-semibold text-gray-700 mb-2">
+              Stato Commessa *
+            </Label>
+            <Select
+              onValueChange={(value) => form.setValue("status", value)}
+              defaultValue={form.getValues("status")}
+              data-testid="select-status"
+            >
+              <SelectTrigger className="input-g2">
+                <SelectValue placeholder="Seleziona stato..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="in_corso">🟡 In Corso</SelectItem>
+                <SelectItem value="conclusa">🟢 Conclusa</SelectItem>
+                <SelectItem value="sospesa">🔴 Sospesa</SelectItem>
               </SelectContent>
             </Select>
           </div>

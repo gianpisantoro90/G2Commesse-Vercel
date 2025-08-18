@@ -7,8 +7,10 @@ Questa è la versione definitiva del sistema G2 Ingegneria con tutte le funziona
 ### 🎯 Caratteristiche Implementate
 - ✅ **Persistenza dati locale** - I progetti vengono salvati permanentemente in `data/`
 - ✅ **Codici commessa corretti** - Formato YY+CLIENT(3)+CITY(3)+NN (2 cifre)
-- ✅ **Rinominazione file in blocco** - Funzionante senza errori
-- ✅ **Templates progetti** - LUNGO e BREVE per diversi tipi di commesse
+- ✅ **Templates aggiornati** - LUNGO ampliato con 10 sezioni complete
+- ✅ **Gestione stati commesse** - In Corso, Conclusa, Sospesa
+- ✅ **Auto-routing file RISOLTO** - File originali conservati correttamente
+- ✅ **Apertura browser automatica** - G2-START.bat apre Chrome/Edge automaticamente
 - ✅ **AI Router** - Suggerimenti intelligenti per organizzazione file
 - ✅ **Interfaccia italiana** - Completamente localizzata
 
@@ -16,6 +18,9 @@ Questa è la versione definitiva del sistema G2 Ingegneria con tutte le funziona
 
 ### 🟢 **G2-START.bat** (CONSIGLIATO)
 Il file principale che funziona sempre:
+- ✅ **Apertura browser automatica**
+- ✅ **Installazione dipendenze automatica**
+- ✅ **Gestione errori completa**
 ```
 Doppio click su: G2-START.bat
 ```
@@ -37,10 +42,10 @@ Doppio click su: G2-START.bat
 1. Estrai tutti i file in una cartella (es: `C:\G2-Ingegneria\`)
 2. Doppio click su `G2-START.bat`
 3. Attendi l'installazione automatica (prima volta: 2-3 minuti)
-4. L'app si aprirà automaticamente
+4. **Il browser si aprirà automaticamente** dopo 3 secondi
 
 ### 3. Accesso
-Apri il browser su: **http://localhost:5000**
+L'app si aprirà su: **http://localhost:5000** automaticamente
 
 ## 📂 STRUTTURA FILE
 

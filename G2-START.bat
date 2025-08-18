@@ -75,11 +75,14 @@ echo.
 echo [AVVIO] G2 Ingegneria in esecuzione...
 echo.
 echo [INFO] Dati salvati in: %cd%\data
-echo [INFO] Apri browser su: http://localhost:5000
+echo [INFO] Apertura browser automatica...
 echo [INFO] Per fermare: Ctrl+C
 echo.
 echo ================================================
 echo.
+
+REM Avvia browser dopo 3 secondi in background
+start "" /b cmd /c "timeout /t 3 /nobreak >nul 2>&1 && start http://localhost:5000" >nul 2>&1
 
 REM Imposta NODE_ENV=local e avvia
 cmd /c "set NODE_ENV=local&& npx tsx server/index.ts"
