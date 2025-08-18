@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Project } from "@shared/schema";
+import EditProjectForm from "./edit-project-form";
 
 export default function ProjectsTable() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -168,15 +169,17 @@ export default function ProjectsTable() {
                     </td>
                     <td className="py-4 px-4">
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          title="Modifica"
-                          data-testid={`edit-project-${project.id}`}
-                        >
-                          ✏️
-                        </Button>
+                        <EditProjectForm project={project}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Modifica"
+                            data-testid={`edit-project-${project.id}`}
+                          >
+                            ✏️
+                          </Button>
+                        </EditProjectForm>
                         <Button
                           size="sm"
                           variant="ghost"

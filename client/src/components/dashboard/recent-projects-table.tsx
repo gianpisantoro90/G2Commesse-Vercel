@@ -13,16 +13,20 @@ export default function RecentProjectsTable() {
     .slice(0, 3);
 
   const getStatusBadge = (project: Project) => {
-    // Simple status logic based on creation date
-    const daysSinceCreated = Math.floor((Date.now() - new Date(project.createdAt || 0).getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysSinceCreated < 7) {
-      return <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Pianificazione</span>;
-    } else if (daysSinceCreated < 30) {
-      return <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">In Corso</span>;
-    } else {
-      return <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Attivo</span>;
-    }
+    // Use the actual status from database to match the Gestione tab
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+        project.status === 'in_corso' 
+          ? 'bg-yellow-100 text-yellow-800' 
+          : project.status === 'conclusa'
+          ? 'bg-green-100 text-green-800'
+          : 'bg-red-100 text-red-800'
+      }`}>
+        {project.status === 'in_corso' ? '🟡 In Corso' : 
+         project.status === 'conclusa' ? '🟢 Conclusa' : 
+         '🔴 Sospesa'}
+      </span>
+    );
   };
 
   return (
