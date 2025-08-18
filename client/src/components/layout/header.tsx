@@ -1,3 +1,5 @@
+import logoUrl from "@assets/G2 - Logo_1755532156423.png";
+
 export default function Header() {
   return (
     <header className="bg-white border-b-2 border-primary sticky top-0 z-50 shadow-sm" data-testid="header">
@@ -5,9 +7,12 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {/* Brand Logo */}
-            <div className="w-12 h-12 bg-gradient-to-br from-primary to-teal-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg" data-testid="brand-logo">
-              G2
-            </div>
+            <img 
+              src={logoUrl} 
+              alt="G2 Ingegneria Logo" 
+              className="w-12 h-12 rounded-xl shadow-lg object-contain" 
+              data-testid="brand-logo"
+            />
             <div>
               <h1 className="text-xl font-bold text-primary tracking-tight" data-testid="brand-title">
                 G2 Ingegneria

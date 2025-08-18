@@ -3,6 +3,7 @@
 ## Overview
 
 **Complete System Update (August 18, 2025)**
+- ✅ **G2 LOGO UPDATE**: Replaced placeholder logo with authentic G2 Ingegneria branding
 - ✅ **LUNGO TEMPLATE FIX**: Fixed folder structure creation using authentic G2 template (1_CONSEGNA, 2_PERMIT, 3_PROGETTO, etc.)
 - ✅ **PORT CONFIGURATION FIX**: Resolved localhost:5000 vs localhost:3000 mismatch in G2-START.bat  
 - ✅ **AUTO-ROUTING IMPROVEMENTS**: Fixed file moving functionality to actually move files instead of downloading
