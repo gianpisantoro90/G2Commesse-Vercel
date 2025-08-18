@@ -62,11 +62,15 @@ if not exist node_modules (
     echo [OK] Dipendenze gia' presenti
 )
 
-REM === CHIUSURA PROCESSI PORTA 5000 ===
-for /f "tokens=5" %%p in ('netstat -ano ^| findstr :5000') do (
+REM === DETERMINA PORTA DA UTILIZZARE ===
+set APP_PORT=5000
+if defined PORT set APP_PORT=%PORT%
+
+REM === CHIUSURA PROCESSI SULLA PORTA ===
+for /f "tokens=5" %%p in ('netstat -ano ^| findstr :%APP_PORT%') do (
     taskkill /F /PID %%p >nul 2>&1
 )
-echo [OK] Porta 5000 liberata
+echo [OK] Porta %APP_PORT% liberata
 
 REM === AVVIO APPLICAZIONE ===
 echo.
@@ -75,6 +79,8 @@ echo.
 echo [AVVIO] G2 Ingegneria in esecuzione...
 echo.
 echo [INFO] Dati salvati in: %cd%\data
+echo [INFO] Porta utilizzata: %APP_PORT%
+echo [INFO] URL: http://localhost:%APP_PORT%
 echo [INFO] Apertura browser automatica...
 echo [INFO] Per fermare: Ctrl+C
 echo.
@@ -82,10 +88,10 @@ echo ================================================
 echo.
 
 REM Avvia browser dopo 3 secondi in background
-start "" /b cmd /c "timeout /t 3 /nobreak >nul 2>&1 && start http://localhost:5000" >nul 2>&1
+start "" /b cmd /c "timeout /t 3 /nobreak >nul 2>&1 && start http://localhost:%APP_PORT%" >nul 2>&1
 
-REM Imposta NODE_ENV=local e avvia
-cmd /c "set NODE_ENV=local&& npx tsx server/index.ts"
+REM Imposta NODE_ENV=local, PORT e avvia
+cmd /c "set NODE_ENV=local&& set PORT=%APP_PORT%&& npx tsx server/index.ts"
 
 REM === APPLICAZIONE FERMATA ===
 echo.

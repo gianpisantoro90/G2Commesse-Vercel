@@ -3,7 +3,11 @@
 ## Overview
 
 **Complete System Update (August 18, 2025)**
-- ✅ **BROWSER AUTO-LAUNCH**: G2-START.bat now opens browser automatically after 3 seconds
+- ✅ **PORT CONFIGURATION FIX**: Resolved localhost:5000 vs localhost:3000 mismatch in G2-START.bat
+- ✅ **AUTO-ROUTING IMPROVEMENTS**: Fixed file moving functionality to actually move files instead of downloading
+- ✅ **RECURSIVE SCANNING**: Enhanced bulk rename to scan all subdirectories recursively
+- ✅ **FILE SYSTEM API**: Implemented proper file moving with File System Access API and fallback
+- ✅ **BROWSER AUTO-LAUNCH**: G2-START.bat now opens browser automatically on correct port
 - ✅ **UPDATED TEMPLATES**: LUNGO template expanded with 10 complete sections based on ZIP reference
 - ✅ **PROJECT STATUS MANAGEMENT**: Added status field (In Corso, Conclusa, Sospesa) with colored badges
 - ✅ **FIXED AUTO-ROUTING**: Critical file routing bug resolved - original files now preserved correctly instead of creating TXT files
@@ -14,6 +18,9 @@
 - Enhanced project table with status display column
 - Improved routing results component to maintain original file formats
 - Template structure now includes comprehensive engineering workflow sections
+- Fixed G2-START.bat to dynamically detect and use correct PORT environment variable
+- Auto-routing now uses File System Access API to actually move files to destination folders
+- Recursive file scanning includes all subdirectories in bulk rename operations
 
 **Data Persistence & Local Startup Fix (August 17, 2025)**
 - Fixed critical issue where project list disappeared in local version
