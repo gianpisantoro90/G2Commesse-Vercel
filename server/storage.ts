@@ -62,6 +62,7 @@ export class MemStorage implements IStorage {
     const project: Project = {
       ...insertProject,
       id,
+      status: insertProject.status || "in_corso",
       createdAt: new Date(),
       fsRoot: insertProject.fsRoot || null,
       metadata: insertProject.metadata || {},
