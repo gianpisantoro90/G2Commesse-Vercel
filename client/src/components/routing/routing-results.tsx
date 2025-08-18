@@ -141,23 +141,68 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
   // Function to handle File System API file moving
   const handleFileSystemAPIMove = async (file: File, targetPath: string, finalFileName: string) => {
     try {
-      // For now, inform user about file system limitations
-      toast({
-        title: "Funzionalità File System API",
-        description: "Questa funzione richiede l'apertura manuale della cartella di destinazione.",
-      });
-      
-      // Guide user through the process
+      // Check if browser supports File System Access API
+      if (!('showDirectoryPicker' in window)) {
+        toast({
+          title: "Browser non supportato",
+          description: "Il tuo browser non supporta lo spostamento diretto dei file. Verrà scaricato invece.",
+          variant: "destructive",
+        });
+        await handleDownloadFallback(file, targetPath, finalFileName);
+        return;
+      }
+
+      // Ask user to select the destination folder where they want to move the file
       const userWantsToMove = confirm(
-        `Vuoi spostare il file "${file.name}" in:\n${targetPath}${finalFileName}?\n\nClicca OK per scaricare il file con il nome corretto.`
+        `Vuoi spostare il file "${file.name}" nella cartella:\n${targetPath}\n\nClicca OK per selezionare la cartella di destinazione e spostare il file.`
       );
       
-      if (userWantsToMove) {
-        await handleDownloadFallback(file, targetPath, finalFileName);
+      if (!userWantsToMove) {
+        return;
       }
-    } catch (error) {
+
+      // Let user select the project root folder
+      const projectRootHandle = await (window as any).showDirectoryPicker();
+      
+      // Navigate or create the target path structure
+      let currentHandle = projectRootHandle;
+      const pathParts = targetPath.split('/').filter(part => part.trim() !== '');
+      
+      for (const part of pathParts) {
+        try {
+          currentHandle = await currentHandle.getDirectoryHandle(part);
+        } catch (error) {
+          // Directory doesn't exist, create it
+          currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
+        }
+      }
+      
+      // Write the file to the destination directory
+      const newFileHandle = await currentHandle.getFileHandle(finalFileName, { create: true });
+      const writable = await newFileHandle.createWritable();
+      await writable.write(file);
+      await writable.close();
+      
+      toast({
+        title: "File spostato con successo",
+        description: `"${finalFileName}" è stato spostato in ${targetPath}`,
+      });
+      
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        // User cancelled directory picker
+        return;
+      }
+      
       console.error('File System API error:', error);
-      throw error;
+      toast({
+        title: "Errore nello spostamento",
+        description: "Impossibile spostare il file. Scaricamento come alternativa.",
+        variant: "destructive",
+      });
+      
+      // Fallback to download
+      await handleDownloadFallback(file, targetPath, finalFileName);
     }
   };
 

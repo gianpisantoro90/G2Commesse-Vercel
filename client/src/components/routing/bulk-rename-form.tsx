@@ -90,14 +90,26 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       setDirectoryHandle(dirHandle);
       setFolderName(dirHandle.name);
       
-      // Read all files from directory (not subdirectories)
+      // Read all files from directory and ALL subdirectories recursively
       const files: File[] = [];
-      for await (const [name, handle] of dirHandle.entries()) {
-        if (handle.kind === 'file') {
-          const file = await handle.getFile();
-          files.push(file);
+      const readDirectoryRecursive = async (dirHandle: any, path: string = '') => {
+        for await (const [name, handle] of dirHandle.entries()) {
+          if (handle.kind === 'file') {
+            const file = await handle.getFile();
+            // Add path information to help identify file location
+            Object.defineProperty(file, 'relativePath', {
+              value: path ? `${path}/${name}` : name,
+              writable: false
+            });
+            files.push(file);
+          } else if (handle.kind === 'directory') {
+            // Recursively scan subdirectory
+            await readDirectoryRecursive(handle, path ? `${path}/${name}` : name);
+          }
         }
-      }
+      };
+      
+      await readDirectoryRecursive(dirHandle);
       
       setFolderFiles(files);
       
@@ -105,15 +117,16 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       const project = projects.find(p => p.id === selectedProject);
       if (project) {
         const preview = files.map(file => ({
-          original: file.name,
+          original: (file as any).relativePath || file.name,
           renamed: generateNewFileName(file, project.code)
         }));
         setRenamePreview(preview);
       }
       
+      const subdirCount = files.filter(f => (f as any).relativePath && (f as any).relativePath.includes('/')).length;
       toast({
         title: "Cartella selezionata",
-        description: `Trovati ${files.length} file in "${dirHandle.name}"`,
+        description: `Trovati ${files.length} file in "${dirHandle.name}" (${subdirCount} nelle sottocartelle)`,
       });
       
     } catch (error: any) {
@@ -167,41 +180,64 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         return;
       }
       
-      // Try to rename files directly in the folder
+      // Navigate to correct subdirectory and rename files
       let renamedInPlace = 0;
       const failedRenames: File[] = [];
       
+      // Helper function to navigate to file's directory
+      const getFileDirectory = async (relativePath: string): Promise<any> => {
+        const pathParts = relativePath.split('/');
+        const fileName = pathParts.pop(); // Remove file name, keep directory path
+        
+        if (pathParts.length === 0) {
+          return directoryHandle; // File is in root directory
+        }
+        
+        let currentHandle = directoryHandle;
+        for (const part of pathParts) {
+          currentHandle = await currentHandle.getDirectoryHandle(part);
+        }
+        return currentHandle;
+      };
+      
       for (const file of filesToRename) {
+        const relativePath = (file as any).relativePath || file.name;
+        const fileName = relativePath.split('/').pop() || file.name;
         const newName = generateNewFileName(file, project.code);
         
         try {
-          // Try to create new file with renamed version
-          const fileHandle = await directoryHandle.getFileHandle(file.name);
+          // Get the correct directory handle for this file
+          const fileDirectory = await getFileDirectory(relativePath);
+          
+          // Get file handle from the correct directory
+          const fileHandle = await fileDirectory.getFileHandle(fileName);
           const originalFile = await fileHandle.getFile();
           
-          // Create new file with new name
-          const newFileHandle = await directoryHandle.getFileHandle(newName, { create: true });
+          // Create new file with new name in the same directory
+          const newFileHandle = await fileDirectory.getFileHandle(newName, { create: true });
           const writable = await newFileHandle.createWritable();
           await writable.write(originalFile);
           await writable.close();
           
           // Remove original file
-          await directoryHandle.removeEntry(file.name);
+          await fileDirectory.removeEntry(fileName);
           
           renameResults.push({
-            original: file.name,
-            renamed: newName
+            original: relativePath,
+            renamed: relativePath.replace(fileName, newName)
           });
           renamedInPlace++;
           
         } catch (error) {
-          console.warn(`Failed to rename ${file.name} in place, will download instead:`, error);
+          console.warn(`Failed to rename ${relativePath} in place, will download instead:`, error);
           failedRenames.push(file);
         }
       }
       
       // For files that couldn't be renamed in place, download them
       for (const file of failedRenames) {
+        const relativePath = (file as any).relativePath || file.name;
+        const fileName = relativePath.split('/').pop() || file.name;
         const newName = generateNewFileName(file, project.code);
         
         const url = URL.createObjectURL(file);
@@ -215,8 +251,8 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         URL.revokeObjectURL(url);
         
         renameResults.push({
-          original: file.name,
-          renamed: newName
+          original: relativePath,
+          renamed: relativePath.replace(fileName, newName)
         });
         
         await new Promise(resolve => setTimeout(resolve, 200));
