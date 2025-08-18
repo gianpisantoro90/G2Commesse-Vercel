@@ -11,136 +11,47 @@ export interface ProjectTemplate {
 
 // Template aggiornato da file ZIP di riferimento
 const TEMPLATE_LUNGO: FolderStructure = {
-  "01_CORRISPONDENZA": {
-    "01_ENTRATA": {},
-    "02_USCITA": {},
-    "03_INTERNA": {},
-    "04_VERBALI": {},
+  "1_CONSEGNA": {},
+  "2_PERMIT": {},
+  "3_PROGETTO": {
+    "ARC": {},
+    "CME": {},
+    "CRONO_CAPITOLATI_MANUT": {},
+    "IE": {},
+    "IM": {},
+    "IS": {},
+    "REL": {},
+    "SIC": {},
+    "STR": {},
+    "X_RIF": {},
   },
-  "02_PROGETTAZIONE": {
-    "01_ARCHITETTURA": {
-      "01_PIANTE": {},
-      "02_PROSPETTI": {},
-      "03_SEZIONI": {},
-      "04_DETTAGLI_COSTRUTTIVI": {},
-      "05_RENDER_3D": {},
-    },
-    "02_STRUTTURE": {
-      "01_CALCOLI_STRUTTURALI": {},
-      "02_RELAZIONI_TECNICHE": {},
-      "03_ELABORATI_GRAFICI": {},
-      "04_VERIFICHE": {},
-    },
-    "03_IMPIANTI": {
-      "01_IMPIANTI_MECCANICI": {
-        "01_RISCALDAMENTO": {},
-        "02_CONDIZIONAMENTO": {},
-        "03_VENTILAZIONE": {},
-        "04_GAS": {},
-      },
-      "02_IMPIANTI_ELETTRICI": {
-        "01_FORZA_MOTRICE": {},
-        "02_ILLUMINAZIONE": {},
-        "03_DOMOTICA": {},
-        "04_TELECOMUNICAZIONI": {},
-      },
-      "03_IMPIANTI_SPECIALI": {
-        "01_ANTINCENDIO": {},
-        "02_VIDEOSORVEGLIANZA": {},
-        "03_CONTROLLO_ACCESSI": {},
-        "04_ASCENSORI": {},
-      },
-      "04_IMPIANTI_IDRAULICI": {
-        "01_ACQUA_FREDDA": {},
-        "02_ACQUA_CALDA": {},
-        "03_SCARICHI": {},
-        "04_PLUVIALI": {},
-      },
-    },
-    "04_SOSTENIBILITA": {
-      "01_APE": {},
-      "02_CERTIFICAZIONI": {},
-      "03_ANALISI_ENERGETICHE": {},
+  "4_MATERIALE_RICEVUTO": {},
+  "5_CANTIERE": {
+    "0_PSC_FE": {},
+    "IMPRESA": {
+      "CONTRATTO": {},
+      "CONTROLLI": {},
+      "DOCUMENTI": {},
     },
   },
-  "03_PRATICHE_EDILIZIE": {
-    "01_SCIA": {},
-    "02_PERMESSO_COSTRUIRE": {},
-    "03_DIA": {},
-    "04_AGIBILITA": {},
-    "05_VARIANTI": {},
-    "06_FINE_LAVORI": {},
+  "6_VERBALI_NOTIFICHE_COMUNICAZIONI": {
+    "COMUNICAZIONI": {},
+    "NP": {},
+    "ODS": {},
+    "VERBALI": {},
   },
-  "04_DIREZIONE_LAVORI": {
-    "01_VERBALI_CANTIERE": {},
-    "02_STATI_AVANZAMENTO": {},
-    "03_CONTABILITA": {},
-    "04_VARIANTI_IN_CORSO_OPERA": {},
-    "05_COLLAUDI": {},
-  },
-  "05_COORDINAMENTO_SICUREZZA": {
-    "01_PSC": {},
-    "02_POS": {},
-    "03_NOTIFICA_PRELIMINARE": {},
-    "04_FASCICOLO_OPERA": {},
-    "05_VERBALI_SICUREZZA": {},
-  },
-  "06_AMMINISTRATIVO": {
-    "01_CONTRATTO": {},
-    "02_INCARICO": {},
-    "03_PARCELLE": {},
-    "04_FATTURE": {},
-    "05_PAGAMENTI": {},
-    "06_ASSICURAZIONI": {},
-  },
-  "07_RILIEVI_SOPRALLUOGHI": {
-    "01_RILIEVI_METRICI": {},
-    "02_FOTO_ANTE_OPERAM": {},
-    "03_FOTO_POST_OPERAM": {},
-    "04_VERBALI_SOPRALLUOGO": {},
-    "05_DRONE": {},
-  },
-  "08_CONSULENZE_ESTERNE": {
-    "01_GEOLOGICHE": {},
-    "02_AMBIENTALI": {},
-    "03_ARCHEOLOGICHE": {},
-    "04_ACUSTICHE": {},
-    "05_SPECIALISTICHE": {},
-  },
-  "09_AUTORIZZAZIONI": {
-    "01_ENTI_LOCALI": {},
-    "02_VIGILI_FUOCO": {},
-    "03_ASL": {},
-    "04_SOPRINTENDENZA": {},
-    "05_ENTI_GESTORI": {},
-  },
-  "10_ARCHIVIO_STORICO": {
-    "01_VERSIONI_PRECEDENTI": {},
-    "02_DOCUMENTI_SCADUTI": {},
-    "03_BACKUP": {},
-  },
+  "7_SOPRALLUOGHI": {},
+  "8_VARIANTI": {},
+  "9_PARCELLA": {},
+  "10_INCARICO": {},
 };
 
+// Template BREVE aggiornato da file ZIP di riferimento
 const TEMPLATE_BREVE: FolderStructure = {
-  "CONSEGNA": {
-    "01_RICHIESTA": {},
-    "02_DOCUMENTI": {},
-  },
-  "ELABORAZIONI": {
-    "01_CALCOLI": {},
-    "02_DISEGNI": {},
-    "03_RELAZIONI": {},
-  },
-  "MATERIALE_RICEVUTO": {
-    "01_DOCUMENTI": {},
-    "02_PLANIMETRIE": {},
-    "03_FOTO": {},
-  },
-  "SOPRALLUOGHI": {
-    "01_VERBALI": {},
-    "02_FOTO": {},
-    "03_RILIEVI": {},
-  },
+  "CONSEGNA": {},
+  "ELABORAZIONI": {},
+  "MATERIALE_RICEVUTO": {},
+  "SOPRALLUOGHI": {},
 };
 
 export const PROJECT_TEMPLATES: Record<string, ProjectTemplate> = {

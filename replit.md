@@ -7,6 +7,9 @@
 - ✅ **UPDATED TEMPLATES**: LUNGO template expanded with 10 complete sections based on ZIP reference
 - ✅ **PROJECT STATUS MANAGEMENT**: Added status field (In Corso, Conclusa, Sospesa) with colored badges
 - ✅ **FIXED AUTO-ROUTING**: Critical file routing bug resolved - original files now preserved correctly instead of creating TXT files
+- ✅ **STATUS SYNCHRONIZATION**: Fixed dashboard "Commesse Recenti" to show actual database status instead of date-based logic
+- ✅ **EDIT FUNCTIONALITY**: Added complete edit form for projects in Gestione tab with working update functionality
+- ✅ **G2 FOLDER TEMPLATES**: Updated both LUNGO and BREVE templates with authentic G2 Ingegneria folder structures from ZIP file
 - Updated schema with status field and pushed to database
 - Enhanced project table with status display column
 - Improved routing results component to maintain original file formats
@@ -70,9 +73,14 @@ Preferred communication style: Simple, everyday language.
 - **Bulk File Operations**: Automated renaming of existing project files with proper prefixes
 
 ### Template System
-- **LUNGO Template**: Comprehensive folder structure for complex engineering projects
-- **BREVE Template**: Simplified structure for smaller projects
+- **LUNGO Template**: Authentic G2 Ingegneria folder structure with 10 main sections:
+  - 1_CONSEGNA, 2_PERMIT, 3_PROGETTO (with ARC, CME, IE, IM, IS, STR, etc.)
+  - 4_MATERIALE_RICEVUTO, 5_CANTIERE, 6_VERBALI_NOTIFICHE_COMUNICAZIONI
+  - 7_SOPRALLUOGHI, 8_VARIANTI, 9_PARCELLA, 10_INCARICO
+- **BREVE Template**: Simplified 4-folder structure: CONSEGNA, ELABORAZIONI, MATERIALE_RICEVUTO, SOPRALLUOGHI
+- **Template Source**: Updated from official G2 Ingegneria ZIP file with authentic folder structures
 - **Dynamic Generation**: Template-based folder creation with customizable structures
+- **Reference Files**: Original templates stored in `/templates/` directory for maintenance
 
 ### File System Integration
 - **Browser API**: File System Access API for direct folder manipulation
