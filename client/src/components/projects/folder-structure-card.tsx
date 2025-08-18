@@ -1,42 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { PROJECT_TEMPLATES } from "@/lib/file-system";
 
 interface FolderStructureCardProps {
   pendingProject: any;
 }
 
 const getTemplateStructure = (template: string) => {
-  if (template === 'LUNGO') {
-    return {
-      "01_DOCUMENTI_GENERALI": {},
-      "02_PROGETTAZIONE": {
-        "ARC": {},
-        "STR": {},
-        "IM": {},
-        "IE": {},
-        "IS": {},
-        "REL": {},
-        "CME": {},
-        "SIC": {},
-      },
-      "03_CALCOLI": {},
-      "04_ELABORATI_GRAFICI": {},
-      "05_CORRISPONDENZA": {},
-      "06_VERBALI": {},
-      "07_SOPRALLUOGHI": {},
-      "08_VARIANTI": {},
-      "09_PARCELLA": {},
-      "10_INCARICO": {}
-    };
-  } else {
-    return {
-      "CONSEGNA": {},
-      "ELABORAZIONI": {},
-      "MATERIALE_RICEVUTO": {},
-      "SOPRALLUOGHI": {}
-    };
-  }
+  const templateData = PROJECT_TEMPLATES[template];
+  return templateData ? templateData.structure : {};
 };
 
 const renderStructurePreview = (structure: any, indent = 0) => {
@@ -74,7 +47,8 @@ export default function FolderStructureCard({ pendingProject }: FolderStructureC
       // Create main project folder
       const projectHandle = await rootHandle.getDirectoryHandle(folderName, { create: true });
       
-      // Create subfolder structure
+      // Create subfolder structure using centralized function
+      const { createFolderStructure } = await import("@/lib/file-system");
       await createFolderStructure(projectHandle, structure);
       
       toast({
@@ -87,19 +61,6 @@ export default function FolderStructureCard({ pendingProject }: FolderStructureC
         description: "Si è verificato un errore durante la creazione della struttura",
         variant: "destructive",
       });
-    }
-  };
-
-  const createFolderStructure = async (parentHandle: any, structure: any) => {
-    for (const [folderName, subStructure] of Object.entries(structure)) {
-      try {
-        const folderHandle = await parentHandle.getDirectoryHandle(folderName, { create: true });
-        if (subStructure && typeof subStructure === 'object' && Object.keys(subStructure).length > 0) {
-          await createFolderStructure(folderHandle, subStructure);
-        }
-      } catch (error) {
-        console.error(`Errore creazione cartella ${folderName}:`, error);
-      }
     }
   };
 
