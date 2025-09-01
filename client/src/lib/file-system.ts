@@ -93,25 +93,48 @@ export const createFolderStructure = async (
       console.log(`Creating folder: ${fullPath} (original: ${folderName})`);
       
       try {
+        console.log(`🔄 Attempting to create folder: "${sanitizedName}"`);
         const folderHandle = await rootHandle.getDirectoryHandle(sanitizedName, { 
           create: true 
         });
         createdFolders.push(fullPath);
-        console.log(`✓ Created folder: ${fullPath}`);
+        console.log(`✅ Successfully created folder: ${fullPath}`);
         
         // Recursively create subfolders
         if (subStructure && typeof subStructure === 'object' && Object.keys(subStructure).length > 0) {
-          console.log(`Creating subfolders for: ${fullPath}`);
+          console.log(`📁 Creating subfolders for: ${fullPath}`);
           await createFolderStructure(folderHandle, subStructure as FolderStructure, fullPath);
         }
       } catch (error: any) {
-        console.error(`❌ Error creating folder ${fullPath}:`, {
-          error,
+        console.error(`❌ SPECIFIC ERROR creating folder "${sanitizedName}":`, {
+          originalName: folderName,
+          sanitizedName: sanitizedName,
+          error: error,
           message: error.message,
           name: error.name,
-          code: error.code
+          code: error.code,
+          stack: error.stack
         });
-        throw new Error(`Impossibile creare la cartella: ${fullPath} - ${error.message}`);
+        
+        // Try with an even more sanitized name
+        const fallbackName = `folder_${Math.random().toString(36).substring(2, 8)}`;
+        console.log(`🔄 Trying fallback name: "${fallbackName}"`);
+        
+        try {
+          const folderHandle = await rootHandle.getDirectoryHandle(fallbackName, { 
+            create: true 
+          });
+          console.log(`✅ Fallback folder created: ${fallbackName}`);
+          createdFolders.push(fallbackName);
+          
+          // Recursively create subfolders with fallback name
+          if (subStructure && typeof subStructure === 'object' && Object.keys(subStructure).length > 0) {
+            await createFolderStructure(folderHandle, subStructure as FolderStructure, fallbackName);
+          }
+        } catch (fallbackError: any) {
+          console.error(`❌ Even fallback failed:`, fallbackError);
+          throw new Error(`Impossibile creare la cartella: "${folderName}" (provato anche: "${fallbackName}") - ${error.message}`);
+        }
       }
     }
   } catch (error: any) {
@@ -219,33 +242,42 @@ export const downloadScriptFiles = (
 
 // Utility functions
 export const sanitizeFileName = (fileName: string): string => {
+  console.log(`⚠️ Original filename: "${fileName}"`);
+  
   // List of reserved names in Windows
   const reservedNames = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
   
+  // Very conservative approach - only allow alphanumeric, underscore, and hyphen
   let sanitized = fileName
-    // Replace invalid characters for File System Access API
+    // First replace problematic characters
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
-    // Remove problematic characters that might cause issues
-    .replace(/[^\w\s\-_.()[\]{}]/g, '_')
-    // Replace multiple spaces/underscores with single underscore
-    .replace(/[\s_]+/g, '_')
-    // Remove leading/trailing dots, spaces, and underscores
-    .replace(/^[.\s_]+|[.\s_]+$/g, '')
-    // Limit length to avoid filesystem limits
-    .substring(0, 100);
+    // Only allow letters, numbers, underscore, and hyphen
+    .replace(/[^a-zA-Z0-9_\-]/g, '_')
+    // Replace multiple underscores with single
+    .replace(/_+/g, '_')
+    // Remove leading/trailing underscores
+    .replace(/^_+|_+$/g, '')
+    // Limit length
+    .substring(0, 50);
+    
+  console.log(`🔧 After basic sanitization: "${sanitized}"`);
     
   // Check if it's a reserved name
   const nameUpper = sanitized.toUpperCase();
   if (reservedNames.includes(nameUpper)) {
-    sanitized = `_${sanitized}`;
+    sanitized = `DIR_${sanitized}`;
+    console.log(`⚠️ Reserved name detected, prefixed: "${sanitized}"`);
   }
   
-  // Ensure it's not empty
+  // Ensure it's not empty and doesn't start with a number (some filesystems don't like this)
   if (!sanitized || sanitized === '_') {
     sanitized = 'folder';
+  } else if (/^\d/.test(sanitized)) {
+    sanitized = `F_${sanitized}`;
+    console.log(`🔧 Started with number, prefixed: "${sanitized}"`);
   }
   
-  console.log(`Sanitized filename: "${fileName}" -> "${sanitized}"`);
+  console.log(`✅ Final sanitized filename: "${fileName}" -> "${sanitized}"`);
   return sanitized;
 };
 
