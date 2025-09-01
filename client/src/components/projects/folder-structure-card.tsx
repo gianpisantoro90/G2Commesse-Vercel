@@ -43,37 +43,57 @@ export default function FolderStructureCard({ pendingProject }: FolderStructureC
     }
 
     try {
-      const folderName = `${pendingProject.code}_${pendingProject.object.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')}`;
+      const { sanitizeFileName } = await import("@/lib/file-system");
+      const folderName = sanitizeFileName(`${pendingProject.code}_${pendingProject.object}`);
       
-      // Debug logging
-      console.log('Creating project folder:', folderName);
-      console.log('Template structure:', structure);
-      console.log('Root handle:', rootHandle);
+      console.log('🚀 Starting folder creation process');
+      console.log('📁 Project folder name:', folderName);
+      console.log('📋 Template structure:', structure);
+      console.log('🎯 Root handle:', rootHandle);
       
-      // Create main project folder
+      // Check if we're in a local environment (detect by checking if we're on localhost)
+      const isLocalEnvironment = window.location.hostname === 'localhost' || 
+                                 window.location.hostname === '127.0.0.1' ||
+                                 window.location.hostname.includes('replit.dev');
+      
+      console.log('🏠 Environment detected:', isLocalEnvironment ? 'Local/Replit' : 'Web');
+      
+      // Create main project folder with extra validation for local environments
       const projectHandle = await rootHandle.getDirectoryHandle(folderName, { create: true });
-      console.log('Project folder created successfully');
+      console.log('✅ Main project folder created:', folderName);
       
       // Create subfolder structure using centralized function
       const { createFolderStructure } = await import("@/lib/file-system");
       await createFolderStructure(projectHandle, structure);
-      console.log('Subfolder structure created successfully');
+      console.log('✅ Complete folder structure created successfully');
       
       toast({
         title: "Struttura creata",
-        description: "La struttura delle cartelle è stata creata con successo",
+        description: `Struttura cartelle creata con successo: ${folderName}`,
       });
     } catch (error: any) {
-      console.error('Folder creation error:', error);
-      console.error('Error details:', {
+      console.error('❌ Folder creation error:', error);
+      console.error('❌ Complete error details:', {
         message: error.message,
         name: error.name,
-        stack: error.stack
+        code: error.code,
+        stack: error.stack,
+        toString: error.toString()
       });
+      
+      // Provide specific error messages based on error type
+      let errorMessage = 'Errore sconosciuto nella creazione cartelle';
+      if (error.message?.includes('Name is not allowed')) {
+        errorMessage = 'Nome cartella non valido per il sistema operativo locale. Prova con un nome progetto più semplice.';
+      } else if (error.message?.includes('permission')) {
+        errorMessage = 'Permessi insufficienti. Assicurati di selezionare una cartella con permessi di scrittura.';
+      } else if (error.message?.includes('not supported')) {
+        errorMessage = 'File System API non supportato in questo browser. Usa Chrome/Edge più recente.';
+      }
       
       toast({
         title: "Errore nella creazione",
-        description: `Dettagli errore: ${error.message || 'Errore sconosciuto'}`,
+        description: errorMessage,
         variant: "destructive",
       });
     }

@@ -11,9 +11,9 @@ export interface ProjectTemplate {
 
 // Template autentico G2 Ingegneria da file ZIP di riferimento
 const TEMPLATE_LUNGO: FolderStructure = {
-  "1_CONSEGNA": {},
-  "2_PERMIT": {},
-  "3_PROGETTO": {
+  "F1_CONSEGNA": {},
+  "F2_PERMIT": {},
+  "F3_PROGETTO": {
     "ARC": {},
     "CME": {},
     "CRONO_CAPITOLATI_MANUT": {},
@@ -25,25 +25,25 @@ const TEMPLATE_LUNGO: FolderStructure = {
     "STR": {},
     "X_RIF": {},
   },
-  "4_MATERIALE_RICEVUTO": {},
-  "5_CANTIERE": {
-    "0_PSC_FE": {},
+  "F4_MATERIALE_RICEVUTO": {},
+  "F5_CANTIERE": {
+    "F0_PSC_FE": {},
     "IMPRESA": {
       "CONTRATTO": {},
       "CONTROLLI": {},
       "DOCUMENTI": {},
     },
   },
-  "6_VERBALI_NOTIF_COMUNICAZIONI": {
+  "F6_VERBALI_NOTIF_COMUNICAZIONI": {
     "COMUNICAZIONI": {},
     "NP": {},
     "ODS": {},
     "VERBALI": {},
   },
-  "7_SOPRALLUOGHI": {},
-  "8_VARIANTI": {},
-  "9_PARCELLA": {},
-  "10_INCARICO": {},
+  "F7_SOPRALLUOGHI": {},
+  "F8_VARIANTI": {},
+  "F9_PARCELLA": {},
+  "F10_INCARICO": {},
 };
 
 // Template BREVE aggiornato da file ZIP di riferimento
@@ -242,42 +242,55 @@ export const downloadScriptFiles = (
 
 // Utility functions
 export const sanitizeFileName = (fileName: string): string => {
-  console.log(`⚠️ Original filename: "${fileName}"`);
+  console.log(`🔍 SANITIZE: Original filename: "${fileName}"`);
   
   // List of reserved names in Windows
   const reservedNames = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
   
-  // Very conservative approach - only allow alphanumeric, underscore, and hyphen
+  // Check if we're likely in a Windows local environment
+  const isWindowsLocal = window.location.hostname === 'localhost' && navigator.platform.toLowerCase().includes('win');
+  
+  // Ultra-conservative approach for local Windows environments
   let sanitized = fileName
-    // First replace problematic characters
+    // First pass: replace known problematic characters
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
-    // Only allow letters, numbers, underscore, and hyphen
-    .replace(/[^a-zA-Z0-9_\-]/g, '_')
+    // Second pass: For Windows local, be extra conservative
+    .replace(isWindowsLocal ? /[^a-zA-Z0-9_]/g : /[^a-zA-Z0-9_\-]/g, '_')
     // Replace multiple underscores with single
     .replace(/_+/g, '_')
     // Remove leading/trailing underscores
     .replace(/^_+|_+$/g, '')
-    // Limit length
-    .substring(0, 50);
+    // Limit length to be safe for all filesystems
+    .substring(0, 30);
     
-  console.log(`🔧 After basic sanitization: "${sanitized}"`);
+  console.log(`🔧 SANITIZE: After basic cleaning: "${sanitized}"`);
     
-  // Check if it's a reserved name
+  // Check if it's a reserved name and handle it
   const nameUpper = sanitized.toUpperCase();
-  if (reservedNames.includes(nameUpper)) {
+  if (reservedNames.includes(nameUpper) || reservedNames.includes(nameUpper.replace(/^\d+_?/, ''))) {
     sanitized = `DIR_${sanitized}`;
-    console.log(`⚠️ Reserved name detected, prefixed: "${sanitized}"`);
+    console.log(`⚠️ SANITIZE: Reserved name detected, prefixed: "${sanitized}"`);
   }
   
-  // Ensure it's not empty and doesn't start with a number (some filesystems don't like this)
+  // Ensure it doesn't start with a number or special character
+  if (/^\d/.test(sanitized)) {
+    sanitized = `F${sanitized}`;
+    console.log(`🔧 SANITIZE: Started with number, prefixed: "${sanitized}"`);
+  }
+  
+  // Ensure it's not empty
   if (!sanitized || sanitized === '_') {
-    sanitized = 'folder';
-  } else if (/^\d/.test(sanitized)) {
-    sanitized = `F_${sanitized}`;
-    console.log(`🔧 Started with number, prefixed: "${sanitized}"`);
+    sanitized = 'FOLDER';
+    console.log(`⚠️ SANITIZE: Empty result, using fallback: "${sanitized}"`);
   }
   
-  console.log(`✅ Final sanitized filename: "${fileName}" -> "${sanitized}"`);
+  // Final validation - make sure it's truly safe
+  if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(sanitized)) {
+    sanitized = `SAFE_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    console.log(`🚨 SANITIZE: Final validation failed, using random: "${sanitized}"`);
+  }
+  
+  console.log(`✅ SANITIZE: Final result: "${fileName}" -> "${sanitized}"`);
   return sanitized;
 };
 
