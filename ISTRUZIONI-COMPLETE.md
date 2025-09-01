@@ -1,51 +1,164 @@
-# 🚀 G2 INGEGNERIA - ISTRUZIONI COMPLETE
+# 🚀 G2 INGEGNERIA - MANUALE DI AVVIO
 
-## ✅ VERSIONE FUNZIONANTE E TESTATA
+## ⚡ AVVIO RAPIDO
 
-Questa è la versione definitiva del sistema G2 Ingegneria con tutte le funzionalità:
+**Per avviare il sistema:**
+1. Doppio click su `G2-START.bat`
+2. Attendere 10-15 secondi
+3. Il browser si aprirà automaticamente su http://localhost:5000
 
-### 🎯 Caratteristiche Implementate
-- ✅ **Persistenza dati locale** - I progetti vengono salvati permanentemente in `data/`
-- ✅ **Codici commessa corretti** - Formato YY+CLIENT(3)+CITY(3)+NN (2 cifre)
-- ✅ **Templates aggiornati** - LUNGO ampliato con 10 sezioni complete
-- ✅ **Gestione stati commesse** - In Corso, Conclusa, Sospesa
-- ✅ **Auto-routing file RISOLTO** - File originali conservati correttamente
-- ✅ **Apertura browser automatica** - G2-START.bat apre Chrome/Edge automaticamente
-- ✅ **AI Router** - Suggerimenti intelligenti per organizzazione file
-- ✅ **Interfaccia italiana** - Completamente localizzata
+## 🎯 FUNZIONALITÀ PRINCIPALI
 
-## 📦 FILE PER L'AVVIO
+### Sistema Completo di Gestione Commesse
+- **Dashboard completa** - Panoramica progetti e statistiche in tempo reale
+- **Gestione progetti** - Creazione, modifica, eliminazione con codici automatici
+- **Template autentici G2** - Strutture cartelle LUNGO e BREVE originali
+- **Auto-routing intelligente** - AI per organizzazione automatica file
+- **File System API** - Spostamento reale dei file nelle cartelle di destinazione
+- **Persistenza database** - Dati salvati permanentemente su PostgreSQL
 
-### 🟢 **G2-START.bat** (CONSIGLIATO)
-Il file principale che funziona sempre:
-- ✅ **Apertura browser automatica**
-- ✅ **Installazione dipendenze automatica**
-- ✅ **Gestione errori completa**
+### Caratteristiche Tecniche
+- **Logo G2 autentico** - Branding ufficiale G2 Ingegneria
+- **Codici commessa YY+SIGLA+CITTÀ+NN** - Formato standardizzato G2
+- **Stati progetto** - In Corso, Conclusa, Sospesa con badge colorati
+- **Scansione ricorsiva** - Rinomina file in tutte le sottocartelle
+- **Template completi** - LUNGO con 10 sezioni, BREVE con 4 sezioni essenziali
+
+## 🔧 REQUISITI SISTEMA
+
+### Minimi
+- **Windows 10/11** o **macOS** o **Linux**
+- **Node.js 18+** (installazione automatica se mancante)
+- **2GB RAM disponibili**
+- **200MB spazio disco**
+- **Browser moderno** (Chrome, Firefox, Edge, Safari)
+
+### Per funzionalità complete
+- **File System Access API** - Chrome/Edge per spostamento file diretto
+- **Connessione internet** - Per AI routing e aggiornamenti database
+
+## ⚙️ CONFIGURAZIONE AUTOMATICA
+
+Il file `G2-START.bat` gestisce automaticamente:
+- **Controllo Node.js** - Verifica versione installata
+- **Installazione dipendenze** - NPM install se necessario
+- **Creazione directory dati** - Cartella `data/` per persistenza locale
+- **Rilevamento porta** - Usa PORT ambiente o default 5000
+- **Avvio server** - Express + Vite development server
+- **Apertura browser** - Automatica dopo 3 secondi
+
+## 🗄️ PERSISTENZA DATI
+
+### Database PostgreSQL (Produzione)
+- **Connessione Neon** - Database cloud per ambiente produzione
+- **Backup automatico** - Gestito da Neon Database
+- **Sincronizzazione** - Dati condivisi tra sessioni
+
+### Storage Locale (Sviluppo)
+- **File JSON** - Backup in cartella `data/` per sviluppo locale
+- **Progetti persistenti** - Mantenuti tra riavvii applicazione
+- **Clienti persistenti** - Registry clienti permanente
+
+## 📁 STRUTTURA PROGETTO PULITA
+
 ```
-Doppio click su: G2-START.bat
+G2-Ingegneria/
+├── G2-START.bat           # 🚀 FILE PRINCIPALE DI AVVIO
+├── client/                # 💻 Frontend React + TypeScript
+├── server/                # 🔧 Backend Express + API
+├── shared/                # 📋 Schemi database condivisi
+├── attached_assets/       # 🖼️ Logo e template di riferimento
+├── templates/             # 📂 Strutture cartelle LUNGO/BREVE
+├── data/                  # 💾 Dati persistenti (creata automaticamente)
+├── package.json           # 📦 Dipendenze Node.js
+└── replit.md             # 📖 Documentazione tecnica
+
+Rimossi file obsoleti:
+- ❌ AVVIA-*.bat (multipli script ridondanti)
+- ❌ README-*.md (manuali obsoleti)
+- ❌ start-*.* (script alternativi non più necessari)
+- ❌ MODELLI*.zip (sostituiti da templates/)
 ```
 
-### Alternative disponibili:
-- `AVVIA-G2-DEFINITIVO.bat` - Versione semplificata
-- `AVVIA-LOCALE-WINDOWS.bat` - Versione con più controlli
-- `INSTALLA-E-AVVIA.bat` - Per prima installazione completa
+## 🚀 TEMPLATE CARTELLE
 
-## 🔧 INSTALLAZIONE DA ZERO
+### LUNGO (Progetti Complessi)
+```
+1_CONSEGNA/
+2_PERMIT/
+3_PROGETTO/
+├── ARC/                   # Architettonico
+├── CME/                   # Impianti elettrici
+├── CRONO_CAPITOLATI_MANUT/
+├── IE/                    # Impianti elettrici
+├── IM/                    # Impianti meccanici
+├── IS/                    # Impianti speciali
+├── REL/                   # Relazioni
+├── SIC/                   # Sicurezza
+├── STR/                   # Strutturale
+└── X_RIF/                 # Riferimenti
 
-### 1. Requisiti
-- **Windows 10/11**
-- **Node.js 18+** (scarica da https://nodejs.org se mancante)
-- **4GB RAM minimo**
-- **500MB spazio disco**
+4_MATERIALE_RICEVUTO/
+5_CANTIERE/
+├── 0_PSC_FE/              # Piano sicurezza
+└── IMPRESA/
+    ├── CONTRATTO/
+    ├── CONTROLLI/
+    └── DOCUMENTI/
 
-### 2. Installazione
-1. Estrai tutti i file in una cartella (es: `C:\G2-Ingegneria\`)
-2. Doppio click su `G2-START.bat`
-3. Attendi l'installazione automatica (prima volta: 2-3 minuti)
-4. **Il browser si aprirà automaticamente** dopo 3 secondi
+6_VERBALI_NOTIFICHE_COMUNICAZIONI/
+├── COMUNICAZIONI/
+├── NP/                    # Notifiche preliminari
+├── ODS/                   # Osservazioni
+└── VERBALI/
 
-### 3. Accesso
-L'app si aprirà su: **http://localhost:5000** automaticamente
+7_SOPRALLUOGHI/
+8_VARIANTI/
+9_PARCELLA/
+10_INCARICO/
+```
+
+### BREVE (Progetti Semplici)
+```
+CONSEGNA/
+ELABORAZIONI/
+MATERIALE_RICEVUTO/
+SOPRALLUOGHI/
+```
+
+## ⚠️ RISOLUZIONE PROBLEMI
+
+### Il browser non si apre
+1. Aprire manualmente http://localhost:5000
+2. Verificare che il server sia avviato (messaggio "G2 Ingegneria avviato con successo!")
+
+### Porta già in uso
+- Il sistema rileva automaticamente la porta e libera 5000
+- Se persiste: riavviare computer o usare G2-START.bat
+
+### Node.js mancante
+1. Scaricare da https://nodejs.org (versione LTS)
+2. Installare e riavviare
+3. Eseguire nuovamente G2-START.bat
+
+### File non si spostano
+- Usare Chrome o Edge per File System Access API completo
+- In altri browser: scaricamento + spostamento manuale
+
+## 🔄 AGGIORNAMENTI
+
+Il sistema è completo e testato. Per supporto tecnico:
+- Verificare versioni: Node.js 18+, Browser aggiornato
+- Controllare log nella console del G2-START.bat
+- Memoria disponibile: minimo 2GB RAM
+
+## 📞 SUPPORTO
+
+Sistema sviluppato per G2 Ingegneria con:
+- Autenticazione logo e template ufficiali
+- Integrazione completa File System API
+- Database PostgreSQL per produzione
+- Interfaccia completamente italiana
 
 ## 📂 STRUTTURA FILE
 
