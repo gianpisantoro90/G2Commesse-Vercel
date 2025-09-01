@@ -78,28 +78,44 @@ export const createFolderStructure = async (
 ): Promise<void> => {
   const createdFolders: string[] = [];
   
+  console.log('createFolderStructure called with:', { structure, basePath });
+  
+  if (!structure || typeof structure !== 'object') {
+    console.error('Invalid structure provided:', structure);
+    throw new Error('Invalid folder structure provided');
+  }
+  
   try {
     for (const [folderName, subStructure] of Object.entries(structure)) {
       const sanitizedName = sanitizeFileName(folderName);
       const fullPath = basePath ? `${basePath}/${sanitizedName}` : sanitizedName;
+      
+      console.log(`Creating folder: ${fullPath} (original: ${folderName})`);
       
       try {
         const folderHandle = await rootHandle.getDirectoryHandle(sanitizedName, { 
           create: true 
         });
         createdFolders.push(fullPath);
+        console.log(`✓ Created folder: ${fullPath}`);
         
         // Recursively create subfolders
-        if (subStructure && Object.keys(subStructure).length > 0) {
+        if (subStructure && typeof subStructure === 'object' && Object.keys(subStructure).length > 0) {
+          console.log(`Creating subfolders for: ${fullPath}`);
           await createFolderStructure(folderHandle, subStructure, fullPath);
         }
-      } catch (error) {
-        console.error(`Errore creazione cartella ${fullPath}:`, error);
-        throw new Error(`Impossibile creare la cartella: ${fullPath}`);
+      } catch (error: any) {
+        console.error(`❌ Error creating folder ${fullPath}:`, {
+          error,
+          message: error.message,
+          name: error.name,
+          code: error.code
+        });
+        throw new Error(`Impossibile creare la cartella: ${fullPath} - ${error.message}`);
       }
     }
-  } catch (error) {
-    console.error("Errore durante la creazione della struttura:", error);
+  } catch (error: any) {
+    console.error("❌ Error during folder structure creation:", error);
     throw error;
   }
 };

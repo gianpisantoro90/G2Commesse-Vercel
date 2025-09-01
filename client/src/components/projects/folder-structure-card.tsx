@@ -9,6 +9,7 @@ interface FolderStructureCardProps {
 
 const getTemplateStructure = (template: string) => {
   const templateData = PROJECT_TEMPLATES[template];
+  console.log('Getting template structure for:', template, 'Found:', templateData);
   return templateData ? templateData.structure : {};
 };
 
@@ -44,21 +45,35 @@ export default function FolderStructureCard({ pendingProject }: FolderStructureC
     try {
       const folderName = `${pendingProject.code}_${pendingProject.object.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')}`;
       
+      // Debug logging
+      console.log('Creating project folder:', folderName);
+      console.log('Template structure:', structure);
+      console.log('Root handle:', rootHandle);
+      
       // Create main project folder
       const projectHandle = await rootHandle.getDirectoryHandle(folderName, { create: true });
+      console.log('Project folder created successfully');
       
       // Create subfolder structure using centralized function
       const { createFolderStructure } = await import("@/lib/file-system");
       await createFolderStructure(projectHandle, structure);
+      console.log('Subfolder structure created successfully');
       
       toast({
         title: "Struttura creata",
         description: "La struttura delle cartelle è stata creata con successo",
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Folder creation error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
+      
       toast({
         title: "Errore nella creazione",
-        description: "Si è verificato un errore durante la creazione della struttura",
+        description: `Dettagli errore: ${error.message || 'Errore sconosciuto'}`,
         variant: "destructive",
       });
     }
