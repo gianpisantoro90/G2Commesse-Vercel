@@ -9,7 +9,7 @@ export interface ProjectTemplate {
   structure: FolderStructure;
 }
 
-// Template aggiornato da file ZIP di riferimento
+// Template autentico G2 Ingegneria da file ZIP di riferimento
 const TEMPLATE_LUNGO: FolderStructure = {
   "1_CONSEGNA": {},
   "2_PERMIT": {},
@@ -34,7 +34,7 @@ const TEMPLATE_LUNGO: FolderStructure = {
       "DOCUMENTI": {},
     },
   },
-  "6_VERBALI_NOTIFICHE_COMUNICAZIONI": {
+  "6_VERBALI_NOTIF_COMUNICAZIONI": {
     "COMUNICAZIONI": {},
     "NP": {},
     "ODS": {},
@@ -102,7 +102,7 @@ export const createFolderStructure = async (
         // Recursively create subfolders
         if (subStructure && typeof subStructure === 'object' && Object.keys(subStructure).length > 0) {
           console.log(`Creating subfolders for: ${fullPath}`);
-          await createFolderStructure(folderHandle, subStructure, fullPath);
+          await createFolderStructure(folderHandle, subStructure as FolderStructure, fullPath);
         }
       } catch (error: any) {
         console.error(`❌ Error creating folder ${fullPath}:`, {
@@ -219,10 +219,34 @@ export const downloadScriptFiles = (
 
 // Utility functions
 export const sanitizeFileName = (fileName: string): string => {
-  return fileName
+  // List of reserved names in Windows
+  const reservedNames = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
+  
+  let sanitized = fileName
+    // Replace invalid characters for File System Access API
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
-    .replace(/\s+/g, '_')
-    .substring(0, 255);
+    // Remove problematic characters that might cause issues
+    .replace(/[^\w\s\-_.()[\]{}]/g, '_')
+    // Replace multiple spaces/underscores with single underscore
+    .replace(/[\s_]+/g, '_')
+    // Remove leading/trailing dots, spaces, and underscores
+    .replace(/^[.\s_]+|[.\s_]+$/g, '')
+    // Limit length to avoid filesystem limits
+    .substring(0, 100);
+    
+  // Check if it's a reserved name
+  const nameUpper = sanitized.toUpperCase();
+  if (reservedNames.includes(nameUpper)) {
+    sanitized = `_${sanitized}`;
+  }
+  
+  // Ensure it's not empty
+  if (!sanitized || sanitized === '_') {
+    sanitized = 'folder';
+  }
+  
+  console.log(`Sanitized filename: "${fileName}" -> "${sanitized}"`);
+  return sanitized;
 };
 
 const getFolderList = (structure: FolderStructure, basePath: string = ""): string[] => {
