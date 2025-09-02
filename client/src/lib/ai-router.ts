@@ -378,42 +378,42 @@ class AIFileRouter {
     return `${ext}:${keywords.join(',')}`;
   }
 
-  // Build AI prompt with detailed template structure
+  // Build AI prompt with detailed template structure optimized for Claude 4.0 Sonnet
   private buildAIPrompt(analysis: FileAnalysis, template: string): string {
     const templateStructure = template === 'LUNGO' ? this.getLungoStructure() : this.getBreveStructure();
     const availableFolders = this.getAvailableFolders(template);
     
-    return `Sei un esperto ingegnere che deve classificare documenti in un sistema di gestione commesse G2 Ingegneria.
+    return `You are an expert Italian structural engineer specializing in G2 Ingegneria project management and document classification.
 
-ANALIZZA QUESTO FILE:
-- Nome: ${analysis.fileName}
-- Estensione: ${analysis.extension}
-- Tipo MIME: ${analysis.fileType}
-- Dimensione: ${analysis.fileSize} bytes
-${analysis.preview ? `- Contenuto (primi 200 caratteri): ${analysis.preview.substring(0, 200)}...` : ''}
+ANALYZE THIS FILE:
+- Filename: ${analysis.fileName}
+- Extension: ${analysis.extension}
+- MIME Type: ${analysis.fileType}
+- Size: ${analysis.fileSize} bytes
+${analysis.preview ? `- Content preview (first 200 chars): ${analysis.preview.substring(0, 200)}...` : ''}
 
-STRUTTURA PROGETTO ${template} G2 INGEGNERIA:
+G2 INGEGNERIA PROJECT TEMPLATE ${template}:
 ${templateStructure}
 
-CARTELLE DISPONIBILI (SCEGLI SOLO DA QUESTE):
+AVAILABLE FOLDERS (CHOOSE ONLY FROM THIS EXACT LIST):
 ${availableFolders.map(folder => `• ${folder}`).join('\n')}
 
-ISTRUZIONI:
-1. Analizza in dettaglio il file (nome, estensione, contenuto se disponibile)
-2. Identifica il tipo di documento ingegneristico (disegno, relazione, calcolo, comunicazione, etc.)
-3. Suggerisci UNA SOLA cartella dalla lista disponibile sopra
-4. Fornisci ragionamento dettagliato basato su best practices ingegneria
-5. Suggerisci 2-3 alternative dalla lista disponibile
+CLASSIFICATION INSTRUCTIONS:
+1. Analyze filename, extension, and content semantically
+2. Identify the engineering document type (drawings, reports, calculations, communications, permits, etc.)
+3. Select EXACTLY ONE folder path from the available list above
+4. Provide detailed technical reasoning based on Italian engineering best practices
+5. Suggest 2-3 alternative folder paths from the available list
 
-FORMATO RISPOSTA (SOLO JSON):
+STRICT JSON RESPONSE FORMAT - NO OTHER TEXT:
 {
-  "suggestedPath": "CARTELLA_ESATTA_DALLA_LISTA/",
+  "suggestedPath": "EXACT_FOLDER_FROM_LIST/",
   "confidence": 0.95,
-  "reasoning": "Analisi dettagliata: tipo documento, contenuto, posizionamento logico nel workflow ingegneristico",
-  "alternatives": ["ALTERNATIVA1/", "ALTERNATIVA2/"]
+  "reasoning": "Detailed analysis: document type, content evaluation, logical placement in engineering workflow",
+  "alternatives": ["ALTERNATIVE1/", "ALTERNATIVE2/"]
 }
 
-IMPORTANTE: Usa SOLO cartelle dalla lista disponibile sopra. Non inventare nuove cartelle.`;
+CRITICAL: Only use folders from the exact available list above. Never create new folder names. Confidence must be 0.0-1.0 decimal.`;
   }
 
   // Get available folders for template
