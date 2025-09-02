@@ -1,6 +1,7 @@
 // AI-powered file routing system for G2 Commesse
 
 import { localStorageHelpers } from "./storage";
+import { PROJECT_TEMPLATES } from "./file-system";
 
 export interface FileAnalysis {
   fileName: string;
@@ -377,30 +378,104 @@ class AIFileRouter {
     return `${ext}:${keywords.join(',')}`;
   }
 
-  // Build AI prompt
+  // Build AI prompt with detailed template structure
   private buildAIPrompt(analysis: FileAnalysis, template: string): string {
-    const templateInfo = template === 'LUNGO' 
-      ? 'progetto complesso con cartelle ARC, STR, IM, IE, IS, REL, CME, SIC'
-      : 'progetto semplice con cartelle CONSEGNA, ELABORAZIONI, MATERIALE_RICEVUTO, SOPRALLUOGHI';
+    const templateStructure = template === 'LUNGO' ? this.getLungoStructure() : this.getBreveStructure();
+    const availableFolders = this.getAvailableFolders(template);
+    
+    return `Sei un esperto ingegnere che deve classificare documenti in un sistema di gestione commesse G2 Ingegneria.
 
-    return `Analizza questo file per un progetto di ingegneria civile.
+ANALIZZA QUESTO FILE:
+- Nome: ${analysis.fileName}
+- Estensione: ${analysis.extension}
+- Tipo MIME: ${analysis.fileType}
+- Dimensione: ${analysis.fileSize} bytes
+${analysis.preview ? `- Contenuto (primi 200 caratteri): ${analysis.preview.substring(0, 200)}...` : ''}
 
-File: ${analysis.fileName}
-Tipo: ${analysis.fileType}
-Estensione: ${analysis.extension}
-Dimensione: ${Math.round(analysis.fileSize / 1024)}KB
-Template: ${template} (${templateInfo})
-${analysis.preview ? `Anteprima contenuto: ${analysis.preview.substring(0, 200)}...` : ''}
+STRUTTURA PROGETTO ${template} G2 INGEGNERIA:
+${templateStructure}
 
-Suggerisci il percorso più appropriato per questo file nella struttura del progetto.
+CARTELLE DISPONIBILI (SCEGLI SOLO DA QUESTE):
+${availableFolders.map(folder => `• ${folder}`).join('\n')}
 
-Rispondi SOLO con un JSON nel formato:
+ISTRUZIONI:
+1. Analizza in dettaglio il file (nome, estensione, contenuto se disponibile)
+2. Identifica il tipo di documento ingegneristico (disegno, relazione, calcolo, comunicazione, etc.)
+3. Suggerisci UNA SOLA cartella dalla lista disponibile sopra
+4. Fornisci ragionamento dettagliato basato su best practices ingegneria
+5. Suggerisci 2-3 alternative dalla lista disponibile
+
+FORMATO RISPOSTA (SOLO JSON):
 {
-  "suggestedPath": "percorso/cartella/",
-  "confidence": 0.0-1.0,
-  "reasoning": "spiegazione breve",
-  "alternatives": ["percorso1/", "percorso2/"]
-}`;
+  "suggestedPath": "CARTELLA_ESATTA_DALLA_LISTA/",
+  "confidence": 0.95,
+  "reasoning": "Analisi dettagliata: tipo documento, contenuto, posizionamento logico nel workflow ingegneristico",
+  "alternatives": ["ALTERNATIVA1/", "ALTERNATIVA2/"]
+}
+
+IMPORTANTE: Usa SOLO cartelle dalla lista disponibile sopra. Non inventare nuove cartelle.`;
+  }
+
+  // Get available folders for template
+  private getAvailableFolders(template: string): string[] {
+    const folders: string[] = [];
+    const structure = template === 'LUNGO' ? PROJECT_TEMPLATES.LUNGO.structure : PROJECT_TEMPLATES.BREVE.structure;
+    
+    const extractFolders = (obj: any, path: string = '') => {
+      for (const [key, value] of Object.entries(obj)) {
+        const currentPath = path ? `${path}/${key}` : key;
+        folders.push(currentPath);
+        
+        if (value && typeof value === 'object' && Object.keys(value).length > 0) {
+          extractFolders(value, currentPath);
+        }
+      }
+    };
+    
+    extractFolders(structure);
+    return folders;
+  }
+
+  // Get template structure as text
+  private getLungoStructure(): string {
+    return `
+1_CONSEGNA/ - Documenti cliente e brief progetto
+2_PERMIT/ - Permessi e autorizzazioni
+3_PROGETTO/ - Elaborati tecnici principali
+  ├── ARC/ - Architettonici (piante, prospetti, sezioni)
+  ├── CME/ - Cronoprogramma e materiali edili
+  ├── CRONO_CAPITOLATI_MANUT/ - Cronoprogramma e capitolati
+  ├── IE/ - Impianti elettrici
+  ├── IM/ - Impianti meccanici
+  ├── IS/ - Impianti speciali
+  ├── REL/ - Relazioni tecniche
+  ├── SIC/ - Sicurezza cantiere
+  ├── STR/ - Strutturali (calcoli, carpenteria)
+  └── X_RIF/ - Riferimenti e standard
+4_MATERIALE_RICEVUTO/ - Documenti ricevuti da terzi
+5_CANTIERE/ - Documentazione cantiere
+  ├── 0_PSC_FE/ - Piano sicurezza cantiere
+  └── IMPRESA/ - Documentazione impresa
+      ├── CONTRATTO/ - Contratti
+      ├── CONTROLLI/ - Controlli qualità
+      └── DOCUMENTI/ - Altri documenti impresa
+6_VERBALI_NOTIFICHE_COMUNICAZIONI/ - Comunicazioni ufficiali
+  ├── COMUNICAZIONI/ - Comunicazioni generali
+  ├── NP/ - Note e promemoria
+  ├── ODS/ - Ordini di servizio
+  └── VERBALI/ - Verbali riunioni
+7_SOPRALLUOGHI/ - Report sopralluoghi
+8_VARIANTI/ - Varianti progettuali
+9_PARCELLA/ - Fatturazione e parcelle
+10_INCARICO/ - Documenti incarico`;
+  }
+
+  private getBreveStructure(): string {
+    return `
+CONSEGNA/ - Documenti cliente e brief
+ELABORAZIONI/ - Elaborati tecnici
+MATERIALE_RICEVUTO/ - Documenti terzi
+SOPRALLUOGHI/ - Report sopralluoghi`;
   }
 
   // Parse AI response
