@@ -52,8 +52,8 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
       const template = selectedTemplate || project?.template || 'LUNGO';
       
       toast({
-        title: "Analisi in corso",
-        description: `Il sistema AI sta analizzando ${selectedFiles.length} file...`,
+        title: "Analisi AI in corso",
+        description: `Claude AI sta analizzando ${selectedFiles.length} file con algoritmi avanzati...`,
       });
       
       // Analyze all files in parallel
@@ -68,15 +68,15 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
       onAnalysisComplete(results, project);
       
       toast({
-        title: "Analisi completata",
-        description: `${selectedFiles.length} file analizzati con successo`,
+        title: "Analisi AI completata",
+        description: `${selectedFiles.length} file classificati dall'AI con successo`,
       });
       
     } catch (error) {
       console.error('Routing analysis failed:', error);
       toast({
-        title: "Errore nell'analisi",
-        description: "Si è verificato un errore durante l'analisi dei file",
+        title: "Errore analisi AI",
+        description: error instanceof Error ? error.message : "Errore durante l'analisi AI dei file",
         variant: "destructive",
       });
     } finally {
@@ -89,8 +89,8 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">🤖</span>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Auto-Routing Intelligente</h2>
-          <p className="text-gray-600">Sistema di suggerimento automatico per posizionamento file</p>
+          <h2 className="text-2xl font-bold text-gray-900">Auto-Routing AI-Only</h2>
+          <p className="text-gray-600">Sistema intelligente Claude AI per classificazione automatica file</p>
         </div>
       </div>
       

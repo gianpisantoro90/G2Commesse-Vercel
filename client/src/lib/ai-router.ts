@@ -147,30 +147,34 @@ class AIFileRouter {
       this.loadConfiguration();
     }
 
-
+    console.log('🤖 AI-ONLY ROUTING: Starting file analysis...');
     const analysis = await this.analyzeFile(file);
     
     // Try learned patterns first (highest priority)
     const learnedResult = this.checkLearnedPatterns(analysis);
     if (learnedResult.confidence > 0.9) {
+      console.log('✅ Using learned pattern with high confidence');
       return { ...learnedResult, method: 'learned' };
     }
 
-    // Try AI routing if available
-    if (this.apiKey) {
+    // Force AI routing - use environment API key if available
+    const environmentApiKey = await this.getEnvironmentApiKey();
+    const activeApiKey = environmentApiKey || this.apiKey;
+    
+    if (activeApiKey) {
       try {
-        const aiResult = await this.aiRouting(analysis, projectTemplate);
-        if (aiResult.confidence > 0.7) {
-          return { ...aiResult, method: 'ai' };
-        }
+        console.log('🧠 Using AI routing with environment API key');
+        const aiResult = await this.aiRouting(analysis, projectTemplate, activeApiKey);
+        console.log('✅ AI routing successful:', aiResult);
+        return { ...aiResult, method: 'ai' };
       } catch (error) {
-        console.warn('AI routing failed, falling back to rules:', error);
+        console.error('❌ AI routing failed:', error);
+        throw new Error(`AI routing non disponibile: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
       }
     }
 
-    // Fallback to rules-based routing
-    const rulesResult = this.rulesBasedRouting(analysis, projectTemplate);
-    return { ...rulesResult, method: 'rules' };
+    // No fallback - require AI
+    throw new Error('Configurazione AI richiesta: nessuna API key disponibile per il routing intelligente');
   }
 
   // Analyze file properties
@@ -220,17 +224,34 @@ class AIFileRouter {
     };
   }
 
+  // Get API key from environment variables via backend
+  private async getEnvironmentApiKey(): Promise<string | null> {
+    try {
+      const response = await fetch('/api/get-env-api-key');
+      if (response.ok) {
+        const data = await response.json();
+        return data.apiKey || null;
+      }
+    } catch (error) {
+      console.log('No environment API key available');
+    }
+    return null;
+  }
+
   // AI-powered routing using Claude via backend proxy
   private async aiRouting(
     analysis: FileAnalysis,
-    template: string
+    template: string,
+    apiKeyOverride?: string
   ): Promise<RoutingResult> {
-    if (!this.apiKey) {
+    const activeApiKey = apiKeyOverride || this.apiKey;
+    if (!activeApiKey) {
       throw new Error('API Key non configurata');
     }
 
     const prompt = this.buildAIPrompt(analysis, template);
     
+    console.log('🌐 Making AI routing request...');
     try {
       const response = await fetch('/api/ai-routing', {
         method: 'POST',
@@ -238,13 +259,14 @@ class AIFileRouter {
           'content-type': 'application/json',
         },
         body: JSON.stringify({
-          apiKey: this.apiKey,
+          apiKey: activeApiKey,
           prompt: prompt,
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('❌ AI routing API error:', errorData);
         throw new Error(errorData.message || `API Error: ${response.status}`);
       }
 
@@ -259,7 +281,7 @@ class AIFileRouter {
         alternatives: result.alternatives,
       };
     } catch (error) {
-      console.error('AI routing error:', error);
+      console.error('❌ AI routing error:', error);
       throw error;
     }
   }

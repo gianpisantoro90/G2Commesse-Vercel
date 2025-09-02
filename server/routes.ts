@@ -258,6 +258,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Get environment API key
+  app.get("/api/get-env-api-key", async (req, res) => {
+    try {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (apiKey) {
+        res.json({ apiKey });
+      } else {
+        res.status(404).json({ message: "API Key non trovata nelle variabili d'ambiente" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero API key" });
+    }
+  });
+
   // Claude AI test endpoint
   app.post("/api/test-claude", async (req, res) => {
     try {
