@@ -231,8 +231,8 @@ export default function AiConfigPanel() {
               <SelectItem value="claude-sonnet-4-20250514">Claude 4.0 Sonnet (Ultimo modello)</SelectItem>
               <SelectItem value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</SelectItem>
               <SelectItem value="claude-3-haiku-20240307">Claude 3 Haiku (Veloce, Economico)</SelectItem>
-              <SelectItem value="deepseek-r1">DeepSeek R1 (Ragionamento avanzato)</SelectItem>
-              <SelectItem value="deepseek-chat">DeepSeek Chat</SelectItem>
+              <SelectItem value="deepseek-reasoner">DeepSeek V3.1 Reasoner (Ragionamento avanzato)</SelectItem>
+              <SelectItem value="deepseek-chat">DeepSeek V3.1 Chat</SelectItem>
             </SelectContent>
           </Select>
         </div>

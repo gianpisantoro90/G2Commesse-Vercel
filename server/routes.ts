@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Determine provider based on model or API key format
-      const isDeepSeek = model?.includes('deepseek') || apiKey.startsWith('sk-');
+      const isDeepSeek = model?.includes('deepseek') || (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-ant-'));
       
       let response;
       if (isDeepSeek && !apiKey.startsWith('sk-ant-')) {
@@ -293,7 +293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: model || 'deepseek-chat',
+            model: model || 'deepseek-reasoner',
             messages: [{ role: 'user', content: 'test' }],
             max_tokens: 10,
           }),
@@ -362,7 +362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: model || 'deepseek-r1',
+            model: model || 'deepseek-reasoner',
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 800,
           }),
