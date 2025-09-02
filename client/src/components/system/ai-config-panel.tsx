@@ -72,7 +72,7 @@ export default function AiConfigPanel() {
     
     try {
       // API key is stored directly without additional encoding
-      const connected = await testClaudeConnection(aiConfig.apiKey);
+      const connected = await testClaudeConnection(aiConfig.apiKey, aiConfig.model);
       setIsConnected(connected);
       if (connected) {
         setLastSync(new Date().toLocaleString("it-IT"));
@@ -96,7 +96,8 @@ export default function AiConfigPanel() {
 
     setIsTesting(true);
     try {
-      const connected = await testClaudeConnection(apiKey);
+      const model = form.getValues("model");
+      const connected = await testClaudeConnection(apiKey, model);
       setIsConnected(connected);
       
       if (connected) {
@@ -173,9 +174,9 @@ export default function AiConfigPanel() {
         <div className="flex items-start gap-3">
           <span className="text-2xl">✨</span>
           <div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Integrazione Claude AI</h4>
+            <h4 className="text-lg font-semibold text-gray-900 mb-2">Integrazione AI Multi-Modello</h4>
             <p className="text-gray-600 text-sm">
-              Configura l'integrazione con Claude AI per funzionalità avanzate di routing e analisi documenti.
+              Configura l'integrazione con Claude AI o DeepSeek per funzionalità avanzate di routing e analisi documenti.
             </p>
           </div>
         </div>
@@ -184,13 +185,13 @@ export default function AiConfigPanel() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div>
           <Label htmlFor="apiKey" className="block text-sm font-semibold text-gray-700 mb-2">
-            API Key Claude
+            API Key AI (Claude/DeepSeek)
           </Label>
           <div className="relative">
             <Input
               id="apiKey"
               type={showApiKey ? "text" : "password"}
-              placeholder="sk-ant-api..."
+              placeholder="sk-ant-api... or sk-xxx... (DeepSeek)"
               className="input-g2 pr-12 font-mono"
               data-testid="input-api-key"
               {...form.register("apiKey")}
@@ -227,9 +228,11 @@ export default function AiConfigPanel() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="claude-sonnet-4-20250514">Claude 4.0 Sonnet (Ultimo modello)</SelectItem>
+              <SelectItem value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</SelectItem>
               <SelectItem value="claude-3-haiku-20240307">Claude 3 Haiku (Veloce, Economico)</SelectItem>
-              <SelectItem value="claude-3-5-sonnet-latest">Claude 3.5 Sonnet Latest</SelectItem>
-              <SelectItem value="claude-3-opus-20240229">Claude 3 Opus (Massima qualità)</SelectItem>
+              <SelectItem value="deepseek-r1">DeepSeek R1 (Ragionamento avanzato)</SelectItem>
+              <SelectItem value="deepseek-chat">DeepSeek Chat</SelectItem>
             </SelectContent>
           </Select>
         </div>

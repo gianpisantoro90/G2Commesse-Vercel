@@ -272,27 +272,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Claude AI test endpoint
+  // AI test endpoint (supports multiple providers)
   app.post("/api/test-claude", async (req, res) => {
     try {
-      const { apiKey } = req.body;
+      const { apiKey, model } = req.body;
       if (!apiKey) {
         return res.status(400).json({ message: "API Key mancante" });
       }
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 10,
-          messages: [{ role: 'user', content: 'test' }],
-        }),
-      });
+      // Determine provider based on model or API key format
+      const isDeepSeek = model?.includes('deepseek') || apiKey.startsWith('sk-');
+      
+      let response;
+      if (isDeepSeek && !apiKey.startsWith('sk-ant-')) {
+        // DeepSeek API
+        response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: model || 'deepseek-chat',
+            messages: [{ role: 'user', content: 'test' }],
+            max_tokens: 10,
+          }),
+        });
+      } else {
+        // Claude API (default)
+        const claudeModel = model?.startsWith('claude-') ? model : 'claude-sonnet-4-20250514';
+        response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: claudeModel,
+            max_tokens: 10,
+            messages: [{ role: 'user', content: 'test' }],
+          }),
+        });
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -305,9 +327,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      res.json({ success: true, message: "Connessione Claude API riuscita" });
+      const provider = isDeepSeek && !apiKey.startsWith('sk-ant-') ? 'DeepSeek' : 'Claude';
+      res.json({ success: true, message: `Connessione ${provider} API riuscita` });
     } catch (error) {
-      console.error('Claude API test error:', error);
+      console.error('AI API test error:', error);
       res.status(500).json({ 
         message: "Errore nel test della connessione",
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -315,10 +338,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Claude AI routing endpoint
+  // AI routing endpoint (supports multiple providers)
   app.post("/api/ai-routing", async (req, res) => {
     try {
-      const { apiKey, prompt } = req.body;
+      const { apiKey, prompt, model } = req.body;
       if (!apiKey) {
         return res.status(400).json({ message: "API Key mancante" });
       }
@@ -326,19 +349,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Prompt mancante" });
       }
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 800,
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      });
+      // Determine provider based on model or API key format
+      const isDeepSeek = model?.includes('deepseek') || (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-ant-'));
+      
+      let response;
+      if (isDeepSeek) {
+        // DeepSeek API
+        response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: model || 'deepseek-r1',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 800,
+          }),
+        });
+      } else {
+        // Claude API (default)
+        const claudeModel = model?.startsWith('claude-') ? model : 'claude-sonnet-4-20250514';
+        response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: claudeModel,
+            max_tokens: 800,
+            messages: [{ role: 'user', content: prompt }],
+          }),
+        });
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -352,7 +397,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const data = await response.json();
-      res.json({ content: data.content[0].text });
+      
+      // Handle different response formats
+      let content;
+      if (isDeepSeek) {
+        content = data.choices?.[0]?.message?.content || '';
+      } else {
+        content = data.content?.[0]?.text || '';
+      }
+      
+      res.json({ content });
     } catch (error) {
       console.error('AI routing error:', error);
       res.status(500).json({ 

@@ -94,15 +94,30 @@ class AIFileRouter {
     this.isInitialized = true;
   }
 
-  // Test Claude API connection via backend proxy
-  async testConnection(apiKey?: string): Promise<boolean> {
+  // Test AI API connection via backend proxy
+  async testConnection(apiKey?: string, model?: string): Promise<boolean> {
     const keyToTest = apiKey || this.apiKey;
     if (!keyToTest) {
-      console.error('Claude API test failed: No API key provided');
+      console.error('AI API test failed: No API key provided');
       return false;
     }
 
-    console.log('Testing Claude API connection via backend...');
+    console.log('Testing AI API connection via backend...');
+    
+    // Get current model from localStorage if not provided
+    let modelToTest = model;
+    if (!modelToTest) {
+      try {
+        const storedConfig = localStorage.getItem('ai_config');
+        if (storedConfig) {
+          const config = JSON.parse(storedConfig);
+          modelToTest = config.model || 'claude-sonnet-4-20250514';
+        }
+      } catch (error) {
+        console.warn('Could not load model from config:', error);
+        modelToTest = 'claude-sonnet-4-20250514';
+      }
+    }
     
     try {
       const response = await fetch('/api/test-claude', {
@@ -112,6 +127,7 @@ class AIFileRouter {
         },
         body: JSON.stringify({
           apiKey: keyToTest,
+          model: modelToTest,
         }),
       });
 
@@ -126,14 +142,14 @@ class AIFileRouter {
         return false;
       }
       
-      console.log('Claude API test successful:', data.message);
+      console.log('AI API test successful:', data.message);
       return true;
     } catch (error) {
       const errorDetails = {
         message: error instanceof Error ? error.message : 'Unknown error',
         name: error instanceof Error ? error.name : 'UnknownError',
       };
-      console.error('Claude API test failed with exception:', errorDetails);
+      console.error('AI API test failed with exception:', errorDetails);
       return false;
     }
   }
@@ -239,7 +255,7 @@ class AIFileRouter {
     return null;
   }
 
-  // AI-powered routing using Claude via backend proxy
+  // AI-powered routing using multiple providers via backend proxy
   private async aiRouting(
     analysis: FileAnalysis,
     template: string,
@@ -248,6 +264,18 @@ class AIFileRouter {
     const activeApiKey = apiKeyOverride || this.apiKey;
     if (!activeApiKey) {
       throw new Error('API Key non configurata');
+    }
+
+    // Get current model from localStorage
+    let currentModel = 'claude-sonnet-4-20250514';
+    try {
+      const storedConfig = localStorage.getItem('ai_config');
+      if (storedConfig) {
+        const config = JSON.parse(storedConfig);
+        currentModel = config.model || currentModel;
+      }
+    } catch (error) {
+      console.warn('Could not load model from config:', error);
     }
 
     const prompt = this.buildAIPrompt(analysis, template);
@@ -262,6 +290,7 @@ class AIFileRouter {
         body: JSON.stringify({
           apiKey: activeApiKey,
           prompt: prompt,
+          model: currentModel,
         }),
       });
 
@@ -616,8 +645,8 @@ SOPRALLUOGHI/ - Report sopralluoghi`;
 // Export singleton instance
 export const aiRouter = new AIFileRouter();
 
-// Export helper function for testing Claude connection
-export const testClaudeConnection = async (apiKey: string): Promise<boolean> => {
-  return aiRouter.testConnection(apiKey);
+// Export helper function for testing AI connection (supports multiple providers)
+export const testClaudeConnection = async (apiKey: string, model?: string): Promise<boolean> => {
+  return aiRouter.testConnection(apiKey, model);
 };
 
