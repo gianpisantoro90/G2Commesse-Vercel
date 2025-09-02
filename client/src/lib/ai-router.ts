@@ -28,6 +28,7 @@ export interface LearnedPattern {
 
 class AIFileRouter {
   private apiKey: string | null = null;
+  private currentModel: string = 'claude-sonnet-4-20250514';
   private learnedPatterns: Record<string, string> = {};
   private isInitialized = false;
 
@@ -36,57 +37,42 @@ class AIFileRouter {
   }
 
   private loadConfiguration(): void {
-    // Load AI configuration from encrypted localStorage
+    // Load AI configuration from localStorage
     try {
       const storedConfig = localStorage.getItem('ai_config');
       
       if (storedConfig) {
         let config;
         
-        // Check if it's base64 encoded or plain JSON
+        // Parse configuration (handle different storage formats)
         if (storedConfig.startsWith('{')) {
-          // It's already JSON, parse directly
           config = JSON.parse(storedConfig);
         } else {
           try {
-            // It's base64 encoded, decode first
             const decoded = atob(storedConfig);
             config = JSON.parse(decoded);
           } catch (error) {
             console.warn('Config decoding failed, trying as JSON:', error);
-            // Fallback: try parsing as JSON directly
             config = JSON.parse(storedConfig);
           }
         }
         
-        // The API key might be base64 encoded within the config
-        if (config.apiKey) {
-          try {
-            // Check if API key itself is base64 encoded
-            if (config.apiKey.startsWith('c2stYW50LWFwaTA')) {
-              // It's base64 encoded, decode it
-              this.apiKey = atob(config.apiKey);
-            } else {
-              // It's already plain text
-              this.apiKey = config.apiKey;
-            }
-          } catch (error) {
-            console.warn('API Key decoding failed in ai-router, using as-is:', error);
-            this.apiKey = config.apiKey;
-          }
-        } else {
-          this.apiKey = null;
-        }
+        // Store the API key directly
+        this.apiKey = config.apiKey || null;
         
-        if (!this.apiKey) {
-          this.apiKey = null;
-        }
+        // Store model preference for routing
+        this.currentModel = config.model || 'claude-sonnet-4-20250514';
+        
+        console.log(`🔧 AI Config loaded: ${this.apiKey ? 'API key configured' : 'No API key'}, Model: ${this.currentModel}`);
+        
       } else {
         this.apiKey = null;
+        this.currentModel = 'claude-sonnet-4-20250514';
       }
     } catch (error) {
       console.error('Error loading AI config:', error);
       this.apiKey = null;
+      this.currentModel = 'claude-sonnet-4-20250514';
     }
     
     // Load learned patterns
@@ -174,13 +160,19 @@ class AIFileRouter {
       return { ...learnedResult, method: 'learned' };
     }
 
-    // Force AI routing - use environment API key if available
-    const environmentApiKey = await this.getEnvironmentApiKey();
-    const activeApiKey = environmentApiKey || this.apiKey;
+    // Force AI routing - prioritize user-configured key over environment
+    let activeApiKey = this.apiKey;
+    let keySource = 'user-configured';
+    
+    // Only fall back to environment API key if user hasn't configured one
+    if (!activeApiKey) {
+      activeApiKey = await this.getEnvironmentApiKey();
+      keySource = 'environment';
+    }
     
     if (activeApiKey) {
       try {
-        console.log('🧠 Using AI routing with environment API key');
+        console.log(`🧠 Using AI routing with ${keySource} API key`);
         const aiResult = await this.aiRouting(analysis, projectTemplate, activeApiKey);
         console.log('✅ AI routing successful:', aiResult);
         return { ...aiResult, method: 'ai' };
@@ -266,17 +258,8 @@ class AIFileRouter {
       throw new Error('API Key non configurata');
     }
 
-    // Get current model from localStorage
-    let currentModel = 'claude-sonnet-4-20250514';
-    try {
-      const storedConfig = localStorage.getItem('ai_config');
-      if (storedConfig) {
-        const config = JSON.parse(storedConfig);
-        currentModel = config.model || currentModel;
-      }
-    } catch (error) {
-      console.warn('Could not load model from config:', error);
-    }
+    // Use stored model configuration
+    const currentModel = this.currentModel;
 
     const prompt = this.buildAIPrompt(analysis, template);
     
