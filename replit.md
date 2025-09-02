@@ -16,6 +16,9 @@
 - ✅ **STATUS SYNCHRONIZATION**: Fixed dashboard "Commesse Recenti" to show actual database status instead of date-based logic
 - ✅ **EDIT FUNCTIONALITY**: Added complete edit form for projects in Gestione tab with working update functionality
 - ✅ **G2 FOLDER TEMPLATES**: Updated both LUNGO and BREVE templates with authentic G2 Ingegneria folder structures from ZIP file
+- ✅ **AI MODEL CONFIGURATION**: Claude 3 Haiku (claude-3-haiku-20240307) confirmed working with current API key setup
+- ✅ **AI TOKEN OPTIMIZATION**: Increased to 800 tokens for detailed engineering analysis and reasoning
+- ✅ **AI-ONLY ROUTING**: Enhanced prompt system restricts suggestions to existing template folders only
 - Updated schema with status field and pushed to database
 - Enhanced project table with status display column
 - Improved routing results component to maintain original file formats
