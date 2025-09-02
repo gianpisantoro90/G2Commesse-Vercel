@@ -11,9 +11,9 @@ export interface ProjectTemplate {
 
 // Template autentico G2 Ingegneria da file ZIP di riferimento
 const TEMPLATE_LUNGO: FolderStructure = {
-  "F1_CONSEGNA": {},
-  "F2_PERMIT": {},
-  "F3_PROGETTO": {
+  "1_CONSEGNA": {},
+  "2_PERMIT": {},
+  "3_PROGETTO": {
     "ARC": {},
     "CME": {},
     "CRONO_CAPITOLATI_MANUT": {},
@@ -25,25 +25,25 @@ const TEMPLATE_LUNGO: FolderStructure = {
     "STR": {},
     "X_RIF": {},
   },
-  "F4_MATERIALE_RICEVUTO": {},
-  "F5_CANTIERE": {
-    "F0_PSC_FE": {},
+  "4_MATERIALE_RICEVUTO": {},
+  "5_CANTIERE": {
+    "0_PSC_FE": {},
     "IMPRESA": {
       "CONTRATTO": {},
       "CONTROLLI": {},
       "DOCUMENTI": {},
     },
   },
-  "F6_VERBALI_NOTIF_COMUNICAZIONI": {
+  "6_VERBALI_NOTIFICHE_COMUNICAZIONI": {
     "COMUNICAZIONI": {},
     "NP": {},
     "ODS": {},
     "VERBALI": {},
   },
-  "F7_SOPRALLUOGHI": {},
-  "F8_VARIANTI": {},
-  "F9_PARCELLA": {},
-  "F10_INCARICO": {},
+  "7_SOPRALLUOGHI": {},
+  "8_VARIANTI": {},
+  "9_PARCELLA": {},
+  "10_INCARICO": {},
 };
 
 // Template BREVE aggiornato da file ZIP di riferimento
@@ -116,25 +116,9 @@ export const createFolderStructure = async (
           stack: error.stack
         });
         
-        // Try with an even more sanitized name
-        const fallbackName = `folder_${Math.random().toString(36).substring(2, 8)}`;
-        console.log(`🔄 Trying fallback name: "${fallbackName}"`);
-        
-        try {
-          const folderHandle = await rootHandle.getDirectoryHandle(fallbackName, { 
-            create: true 
-          });
-          console.log(`✅ Fallback folder created: ${fallbackName}`);
-          createdFolders.push(fallbackName);
-          
-          // Recursively create subfolders with fallback name
-          if (subStructure && typeof subStructure === 'object' && Object.keys(subStructure).length > 0) {
-            await createFolderStructure(folderHandle, subStructure as FolderStructure, fallbackName);
-          }
-        } catch (fallbackError: any) {
-          console.error(`❌ Even fallback failed:`, fallbackError);
-          throw new Error(`Impossibile creare la cartella: "${folderName}" (provato anche: "${fallbackName}") - ${error.message}`);
-        }
+        // Skip this folder and continue with others rather than failing completely
+        console.log(`⚠️ Skipping problematic folder: "${folderName}"`);
+        // Don't throw error, just continue with next folders
       }
     }
   } catch (error: any) {
