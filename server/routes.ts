@@ -156,6 +156,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/clients/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteClient(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Cliente non trovato" });
+      }
+      res.json({ message: "Cliente eliminato con successo" });
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      res.status(500).json({ message: "Errore nell'eliminazione del cliente" });
+    }
+  });
+
   // File Routing
   app.post("/api/file-routing", async (req, res) => {
     try {

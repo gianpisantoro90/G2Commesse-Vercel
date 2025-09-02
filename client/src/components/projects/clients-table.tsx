@@ -26,18 +26,34 @@ export default function ClientsTable() {
 
   // Delete client mutation
   const deleteClientMutation = useMutation({
-    mutationFn: (clientId: string) => apiRequest(`/api/clients/${clientId}`, { method: 'DELETE' }),
+    mutationFn: async (clientId: string) => {
+      const response = await fetch(`/api/clients/${clientId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Errore sconosciuto' }));
+        throw new Error(errorData.message || `Errore HTTP ${response.status}`);
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       toast({
         title: "Cliente eliminato",
         description: "Il cliente è stato eliminato con successo",
       });
     },
     onError: (error: any) => {
+      console.error("Delete client error:", error);
       toast({
         title: "Errore nell'eliminazione",
-        description: error.message || "Impossibile eliminare il cliente",
+        description: error?.message || "Impossibile eliminare il cliente",
         variant: "destructive",
       });
     },
