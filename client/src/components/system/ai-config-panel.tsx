@@ -42,15 +42,29 @@ export default function AiConfigPanel() {
   });
 
   useEffect(() => {
-    // Load current config and update form
+    // Load current config and update form with improved error handling
     let decodedApiKey = '';
     if (aiConfig.apiKey) {
       try {
-        // Check if it's a valid base64 string before decoding
-        decodedApiKey = atob(aiConfig.apiKey);
+        // Check if it looks like base64 (no spaces and proper format)
+        if (typeof aiConfig.apiKey === 'string' && !aiConfig.apiKey.includes(' ') && aiConfig.apiKey.length > 10) {
+          try {
+            decodedApiKey = atob(aiConfig.apiKey);
+            // Validate that decoded result looks like an API key
+            if (!decodedApiKey.startsWith('sk-') && !decodedApiKey.includes('ant-')) {
+              throw new Error('Decoded key format invalid');
+            }
+          } catch (decodeError) {
+            // If base64 decoding fails, assume it's already plain text
+            console.warn('API Key appears to be plain text or invalid base64, using as-is');
+            decodedApiKey = aiConfig.apiKey;
+          }
+        } else {
+          // Use as-is if it doesn't look like base64
+          decodedApiKey = aiConfig.apiKey;
+        }
       } catch (error) {
-        // If decoding fails, the apiKey might already be in plain text or invalid
-        console.warn('API Key decoding failed, using as-is:', error);
+        console.warn('API Key processing failed, using as-is:', error);
         decodedApiKey = aiConfig.apiKey;
       }
     }

@@ -271,16 +271,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-  // Get environment API key
+  // Get environment API key with enhanced local development support
   app.get("/api/get-env-api-key", async (req, res) => {
     try {
-      const apiKey = process.env.ANTHROPIC_API_KEY;
+      // Check multiple possible environment variables for flexibility
+      const apiKey = process.env.ANTHROPIC_API_KEY || 
+                    process.env.CLAUDE_API_KEY || 
+                    process.env.AI_API_KEY;
+      
       if (apiKey) {
+        console.log('✅ Environment API key found, providing fallback support');
         res.json({ apiKey });
       } else {
-        res.status(404).json({ message: "API Key non trovata nelle variabili d'ambiente" });
+        console.log('⚠️ No environment API key found - user must configure manually');
+        res.status(404).json({ 
+          message: "API Key non trovata nelle variabili d'ambiente", 
+          suggestion: "Configura manualmente l'API Key nelle impostazioni AI" 
+        });
       }
     } catch (error) {
+      console.error('❌ Error retrieving environment API key:', error);
       res.status(500).json({ message: "Errore nel recupero API key" });
     }
   });
