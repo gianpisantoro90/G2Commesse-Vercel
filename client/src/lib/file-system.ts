@@ -258,8 +258,8 @@ export const sanitizeFileName = (fileName: string): string => {
     .replace(/_+/g, '_')
     // Remove leading/trailing underscores
     .replace(/^_+|_+$/g, '')
-    // Limit length to be safe for all filesystems
-    .substring(0, 30);
+    // Limit length to be safe for all filesystems (increased for project names)
+    .substring(0, 100);
     
   console.log(`🔧 SANITIZE: After basic cleaning: "${sanitized}"`);
     

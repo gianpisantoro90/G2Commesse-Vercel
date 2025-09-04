@@ -225,7 +225,7 @@ export class FolderManager {
         .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
         .replace(/_{2,}/g, '_')
         .replace(/^_+|_+$/g, '')
-        .substring(0, 50); // Limita lunghezza ma non troppo
+        .substring(0, 150); // Limite aumentato per nomi completi dei progetti
       const folderName = `${projectCode}_${sanitizedName}`;
 
       const projectHandle = await this.rootHandle.getDirectoryHandle(folderName, { 
