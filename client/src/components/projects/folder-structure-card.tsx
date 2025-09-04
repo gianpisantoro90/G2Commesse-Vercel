@@ -203,7 +203,7 @@ export default function FolderStructureCard({ pendingProject }: FolderStructureC
         <div className="font-mono text-xs text-gray-700 space-y-1 max-h-60 overflow-y-auto" data-testid="structure-preview">
           {pendingProject ? (
             <>
-              <div>📁 {pendingProject.code}_{pendingProject.object}/</div>
+              <div>📁 {pendingProject.code}_{pendingProject.object.replace(/\s+/g, '_')}/</div>
               <div className="ml-4">
                 {renderStructurePreview(structure, 1)}
               </div>
