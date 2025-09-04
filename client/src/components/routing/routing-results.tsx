@@ -5,6 +5,7 @@ import { type Project } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { aiRouter } from "@/lib/ai-router";
 import { apiRequest } from "@/lib/queryClient";
+import { folderManager } from "@/lib/folder-manager";
 
 interface RoutingResultsProps {
   results: Array<{result: RoutingResult, file: File}> | null;
@@ -152,20 +153,57 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
         return;
       }
 
-      // Ask user to select the destination folder where they want to move the file
-      const userWantsToMove = confirm(
-        `Vuoi spostare il file "${file.name}" nella cartella:\n${targetPath}\n\nClicca OK per selezionare la cartella di destinazione e spostare il file.`
-      );
+      // Check if root folder is configured
+      const isConfigured = folderManager.isConfigured();
+      let projectRootHandle = folderManager.getRootHandle();
       
-      if (!userWantsToMove) {
-        return;
+      if (!isConfigured || !projectRootHandle) {
+        // Ask user to select the destination folder (legacy behavior)
+        const userWantsToMove = confirm(
+          `Cartella radice non configurata. Vuoi spostare il file "${file.name}" nella cartella:\n${targetPath}\n\nClicca OK per selezionare la cartella di destinazione.`
+        );
+        
+        if (!userWantsToMove) {
+          return;
+        }
+
+        // Let user select the project root folder
+        projectRootHandle = await (window as any).showDirectoryPicker();
+      } else {
+        // Use configured root folder - just confirm with user
+        const userWantsToMove = confirm(
+          `Vuoi spostare il file "${file.name}" nella cartella:\n${targetPath}\n\nIl file verrà spostato automaticamente nella cartella configurata.`
+        );
+        
+        if (!userWantsToMove) {
+          return;
+        }
       }
 
-      // Let user select the project root folder
-      const projectRootHandle = await (window as any).showDirectoryPicker();
-      
-      // Navigate or create the target path structure
+      // Find project folder automatically if project code is available
       let currentHandle = projectRootHandle;
+      
+      if (project?.code && isConfigured) {
+        // Try to find the project folder automatically
+        const projectFolderHandle = await folderManager.findProjectFolder(project.code);
+        if (projectFolderHandle) {
+          currentHandle = projectFolderHandle;
+          console.log(`✅ Trovata cartella progetto automaticamente: ${project.code}`);
+        } else {
+          // Project folder not found, create it
+          const newProjectHandle = await folderManager.createProjectFolder(project.code, project.object);
+          if (newProjectHandle) {
+            currentHandle = newProjectHandle;
+            console.log(`✅ Creata nuova cartella progetto: ${project.code}`);
+          }
+        }
+      }
+      
+      // Navigate or create the target path structure within the project folder
+      if (!currentHandle) {
+        throw new Error('Impossibile accedere alla cartella di destinazione');
+      }
+      
       const pathParts = targetPath.split('/').filter(part => part.trim() !== '');
       
       for (const part of pathParts) {
@@ -178,14 +216,22 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
       }
       
       // Write the file to the destination directory
+      if (!currentHandle) {
+        throw new Error('Errore nella navigazione delle cartelle');
+      }
+      
       const newFileHandle = await currentHandle.getFileHandle(finalFileName, { create: true });
       const writable = await newFileHandle.createWritable();
       await writable.write(file);
       await writable.close();
       
+      const locationDescription = isConfigured && project?.code 
+        ? `${project.code}/${targetPath}`
+        : targetPath;
+      
       toast({
         title: "File spostato con successo",
-        description: `"${finalFileName}" è stato spostato in ${targetPath}`,
+        description: `"${finalFileName}" è stato spostato in ${locationDescription}`,
       });
       
     } catch (error: any) {
