@@ -194,7 +194,8 @@ export const downloadScriptFiles = (
     throw new Error(`Template non trovato: ${template}`);
   }
 
-  const projectFolderName = `${projectCode}_${sanitizeFileName(projectObject)}`;
+  const cleanObjectName = projectObject.replace(/\s+/g, '_').replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+  const projectFolderName = `${projectCode}_${cleanObjectName}`;
   const { batch, shell } = generateScriptCommands(templateData.structure, projectFolderName);
 
   // Create batch file content

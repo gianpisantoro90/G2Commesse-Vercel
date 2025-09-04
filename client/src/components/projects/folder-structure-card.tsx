@@ -74,8 +74,9 @@ export default function FolderStructureCard({ pendingProject }: FolderStructureC
     }
 
     try {
-      const { sanitizeFileName } = await import("@/lib/file-system");
-      const folderName = sanitizeFileName(`${pendingProject.code}_${pendingProject.object}`);
+      // Create folder name without sanitization since project codes are already valid
+      const cleanObjectName = pendingProject.object.replace(/\s+/g, '_').replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+      const folderName = `${pendingProject.code}_${cleanObjectName}`;
       
       console.log('🚀 Starting folder creation process');
       console.log('📁 Project folder name:', folderName);
