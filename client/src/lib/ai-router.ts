@@ -528,12 +528,12 @@ SOPRALLUOGHI/ - Report sopralluoghi`;
           suggestedPath: closestMatch,
           confidence: Math.min(Math.max(parsed.confidence || 0, 0), 1) * 0.8, // Reduce confidence for corrected paths
           reasoning: `${parsed.reasoning || 'Analisi AI'} (Percorso corretto automaticamente)`,
-          alternatives: (parsed.alternatives || []).filter(alt => availableFolders.includes(alt.replace(/\/$/, ''))),
+          alternatives: (parsed.alternatives || []).filter((alt: string) => availableFolders.includes(alt.replace(/\/$/, ''))),
         };
       }
       
       // Validate alternatives too
-      const validAlternatives = (parsed.alternatives || []).filter(alt => 
+      const validAlternatives = (parsed.alternatives || []).filter((alt: string) => 
         availableFolders.includes(alt.replace(/\/$/, ''))
       );
       
