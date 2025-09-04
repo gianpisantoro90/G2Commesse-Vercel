@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { PROJECT_TEMPLATES } from "@/lib/file-system";
+import { folderManager } from "@/lib/folder-manager";
+import { CheckCircle, AlertCircle, Settings } from "lucide-react";
 
 interface FolderStructureCardProps {
   pendingProject: any;
@@ -28,9 +30,38 @@ const renderStructurePreview = (structure: any, indent = 0) => {
 
 export default function FolderStructureCard({ pendingProject }: FolderStructureCardProps) {
   const [rootHandle, setRootHandle] = useState<any>(null);
+  const [isRootConfigured, setIsRootConfigured] = useState(false);
+  const [rootFolderName, setRootFolderName] = useState<string>('');
   const { toast } = useToast();
 
   const structure = pendingProject ? getTemplateStructure(pendingProject.template) : {};
+
+  useEffect(() => {
+    // Check if root folder is configured
+    const checkRootConfig = () => {
+      const isConfigured = folderManager.isConfigured();
+      const handle = folderManager.getRootHandle();
+      const config = folderManager.getConfig();
+      
+      setIsRootConfigured(isConfigured);
+      setRootHandle(handle);
+      setRootFolderName(config?.rootPath || '');
+      
+      if (isConfigured && handle) {
+        console.log('✅ Cartella radice già configurata:', config?.rootPath);
+      }
+    };
+    
+    checkRootConfig();
+    
+    // Listen for storage changes (when user configures folder in another tab)
+    const handleStorageChange = () => {
+      checkRootConfig();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   const handleCreateStructure = async () => {
     if (!pendingProject || !rootHandle) {
@@ -161,24 +192,6 @@ export default function FolderStructureCard({ pendingProject }: FolderStructureC
     });
   };
 
-  const handleSelectFolder = async () => {
-    if (!('showDirectoryPicker' in window)) {
-      toast({
-        title: "API non supportata",
-        description: "File System Access API non disponibile in questo browser",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      // @ts-ignore - showDirectoryPicker is not in types yet
-      const dirHandle = await showDirectoryPicker({ mode: 'readwrite' });
-      setRootHandle(dirHandle);
-    } catch (error) {
-      // User cancelled the picker
-    }
-  };
 
   return (
     <div className="card-g2" data-testid="folder-structure-card">
@@ -200,25 +213,51 @@ export default function FolderStructureCard({ pendingProject }: FolderStructureC
         </div>
       </div>
       
-      <div className="flex flex-wrap gap-3 mb-4">
-        <Button
-          onClick={handleSelectFolder}
-          className="button-g2-secondary"
-          data-testid="button-select-root-folder"
-        >
-          📁 Seleziona Cartella Radice
-        </Button>
-        {rootHandle && (
-          <span className="text-sm text-gray-600 flex items-center" data-testid="selected-root-folder">
-            Cartella selezionata: <strong>{rootHandle.name}</strong>
-          </span>
-        )}
+      {/* Stato Cartella Radice */}
+      <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {isRootConfigured ? (
+              <>
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <div>
+                  <span className="text-sm font-medium text-green-700">Cartella radice configurata</span>
+                  <div className="text-xs text-gray-600">📁 {rootFolderName}</div>
+                </div>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <div>
+                  <span className="text-sm font-medium text-yellow-700">Cartella radice non configurata</span>
+                  <div className="text-xs text-gray-600">Vai in Sistema - Cartelle per configurare</div>
+                </div>
+              </>
+            )}
+          </div>
+          {!isRootConfigured && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-xs"
+              onClick={() => {
+                toast({
+                  title: "Configurazione richiesta",
+                  description: "Vai in Sistema > Cartelle per configurare la cartella radice delle commesse.",
+                });
+              }}
+            >
+              <Settings className="w-3 h-3 mr-1" />
+              Configura
+            </Button>
+          )}
+        </div>
       </div>
       
       <div className="flex flex-wrap gap-3">
         <Button
           onClick={handleCreateStructure}
-          disabled={!pendingProject || !rootHandle}
+          disabled={!pendingProject || !isRootConfigured}
           className="button-g2-primary disabled:opacity-50"
           data-testid="button-create-structure"
         >
