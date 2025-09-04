@@ -158,26 +158,21 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
       let projectRootHandle = folderManager.getRootHandle();
       
       if (!isConfigured || !projectRootHandle) {
-        // Ask user to select the destination folder (legacy behavior)
-        const userWantsToMove = confirm(
-          `Cartella radice non configurata. Vuoi spostare il file "${file.name}" nella cartella:\n${targetPath}\n\nClicca OK per selezionare la cartella di destinazione.`
-        );
-        
-        if (!userWantsToMove) {
-          return;
-        }
-
-        // Let user select the project root folder
-        projectRootHandle = await (window as any).showDirectoryPicker();
-      } else {
-        // Use configured root folder - just confirm with user
-        const userWantsToMove = confirm(
-          `Vuoi spostare il file "${file.name}" nella cartella:\n${targetPath}\n\nIl file verrà spostato automaticamente nella cartella configurata.`
-        );
-        
-        if (!userWantsToMove) {
-          return;
-        }
+        toast({
+          title: "Cartella radice non configurata",
+          description: "Vai in Sistema > Cartelle per configurare la cartella radice prima di usare l'auto-routing.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Use configured root folder - just confirm with user
+      const userWantsToMove = confirm(
+        `Vuoi spostare il file "${file.name}" nella cartella:\n${targetPath}\n\nIl file verrà spostato automaticamente nella cartella configurata.`
+      );
+      
+      if (!userWantsToMove) {
+        return;
       }
 
       // Find project folder automatically if project code is available

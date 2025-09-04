@@ -220,8 +220,12 @@ export class FolderManager {
     }
 
     try {
-      // Sanitizza il nome progetto
-      const sanitizedName = projectName.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+      // Sanitizza il nome progetto preservando la maggior parte dei caratteri
+      const sanitizedName = projectName
+        .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+        .replace(/_{2,}/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .substring(0, 50); // Limita lunghezza ma non troppo
       const folderName = `${projectCode}_${sanitizedName}`;
 
       const projectHandle = await this.rootHandle.getDirectoryHandle(folderName, { 

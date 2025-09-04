@@ -257,9 +257,9 @@ export const sanitizeFileName = (fileName: string): string => {
     console.log(`⚠️ SANITIZE: Reserved name detected, prefixed: "${sanitized}"`);
   }
   
-  // Ensure it doesn't start with a number or special character
+  // Ensure it doesn't start with a number - prefix with a letter instead of PROJ_
   if (/^\d/.test(sanitized)) {
-    sanitized = `PROJ_${sanitized}`;
+    sanitized = `F_${sanitized}`;
     console.log(`🔧 SANITIZE: Started with number, prefixed: "${sanitized}"`);
   }
   

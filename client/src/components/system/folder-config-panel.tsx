@@ -57,10 +57,20 @@ export default function FolderConfigPanel() {
   }, [folderConfig]);
 
   const handleSelectRootFolder = async () => {
+    // Verifica dettagliata del browser e ambiente
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isChrome = userAgent.includes('chrome') && !userAgent.includes('edg');
+    const isEdge = userAgent.includes('edg');
+    const isLocalhost = window.location.hostname === 'localhost';
+    
+    console.log(`🔍 Browser check: Chrome=${isChrome}, Edge=${isEdge}, Localhost=${isLocalhost}`);
+    console.log(`🔍 showDirectoryPicker available: ${'showDirectoryPicker' in window}`);
+    
     if (!isFileSystemAccessSupported()) {
+      const browserInfo = isChrome ? 'Chrome' : isEdge ? 'Edge' : 'Browser sconosciuto';
       toast({
         title: "Browser non supportato",
-        description: "Il tuo browser non supporta l'accesso diretto alle cartelle. Usa Chrome, Edge o un browser compatibile.",
+        description: `Il tuo browser (${browserInfo}) non supporta l'accesso diretto alle cartelle. Verifica di usare Chrome o Edge aggiornato.`,
         variant: "destructive",
       });
       return;
@@ -70,7 +80,7 @@ export default function FolderConfigPanel() {
     if (!('showDirectoryPicker' in window)) {
       toast({
         title: "API non disponibile",
-        description: "L'API File System Access non è disponibile. Usa un browser aggiornato (Chrome 86+, Edge 86+).",
+        description: `L'API File System Access non è disponibile. ${isLocalhost ? 'In ambiente localhost potrebbe essere necessario abilitare flag sperimentali.' : 'Usa un browser aggiornato (Chrome 86+, Edge 86+).'}`,
         variant: "destructive",
       });
       return;
