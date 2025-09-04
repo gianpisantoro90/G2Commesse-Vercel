@@ -404,10 +404,16 @@ ANALYZE THIS FILE:
 - Size: ${analysis.fileSize} bytes
 ${analysis.preview ? `- Content preview (first 200 chars): ${analysis.preview.substring(0, 200)}...` : ''}
 
-G2 INGEGNERIA PROJECT TEMPLATE ${template}:
+PROJECT TEMPLATE: ${template}
 ${templateStructure}
 
-AVAILABLE FOLDERS (CHOOSE ONLY FROM THIS EXACT LIST):
+CRITICAL TEMPLATE CONSTRAINT: 
+- This project uses the ${template} template
+- ONLY suggest folders that exist in the ${template} template structure
+- NEVER suggest folders from other templates
+- If template is BREVE, DO NOT suggest folders like "4_MATERIALE_RICEVUTO" (which is only in LUNGO)
+
+AVAILABLE FOLDERS FOR ${template} TEMPLATE (CHOOSE ONLY FROM THIS EXACT LIST):
 ${availableFolders.map(folder => `• ${folder}`).join('\n')}
 
 CLASSIFICATION INSTRUCTIONS:
@@ -515,7 +521,7 @@ SOPRALLUOGHI/ - Report sopralluoghi`;
     } catch (error) {
       console.error('Failed to parse AI response:', error);
       return {
-        suggestedPath: '04_ELABORATI_GRAFICI/',
+        suggestedPath: 'ELABORAZIONI/',
         confidence: 0.5,
         reasoning: 'Errore nell\'analisi AI - usando fallback',
       };
@@ -527,40 +533,42 @@ SOPRALLUOGHI/ - Report sopralluoghi`;
     return {
       'dwg|dxf|skp': {
         patterns: [
-          { keywords: ['pianta', 'planimetria', 'plan'], folder: '02_PROGETTAZIONE/ARC/01_PIANTE/' },
-          { keywords: ['prospetto', 'prospetti'], folder: '02_PROGETTAZIONE/ARC/02_PROSPETTI/' },
-          { keywords: ['sezione', 'sezioni'], folder: '02_PROGETTAZIONE/ARC/03_SEZIONI/' },
-          { keywords: ['struttura', 'strutturale', 'trave', 'pilastro'], folder: '02_PROGETTAZIONE/STR/' },
-          { keywords: ['impianto', 'idraulico', 'termico'], folder: '02_PROGETTAZIONE/IM/' },
-          { keywords: ['elettrico', 'illuminazione'], folder: '02_PROGETTAZIONE/IE/' },
+          { keywords: ['pianta', 'planimetria', 'plan'], folder: '3_PROGETTO/ARC/' },
+          { keywords: ['prospetto', 'prospetti'], folder: '3_PROGETTO/ARC/' },
+          { keywords: ['sezione', 'sezioni'], folder: '3_PROGETTO/ARC/' },
+          { keywords: ['struttura', 'strutturale', 'trave', 'pilastro'], folder: '3_PROGETTO/STR/' },
+          { keywords: ['impianto', 'idraulico', 'termico'], folder: '3_PROGETTO/IM/' },
+          { keywords: ['elettrico', 'illuminazione'], folder: '3_PROGETTO/IE/' },
         ],
-        default: '04_ELABORATI_GRAFICI/01_TAVOLE_PROGETTO/',
+        default: '3_PROGETTO/',
       },
       'pdf|doc|docx': {
         patterns: [
-          { keywords: ['relazione', 'relaz', 'tecnica'], folder: '02_PROGETTAZIONE/REL/01_TECNICHE/' },
-          { keywords: ['calcolo', 'calcoli'], folder: '03_CALCOLI/' },
-          { keywords: ['computo', 'metrico', 'capitolato'], folder: '02_PROGETTAZIONE/CME/' },
-          { keywords: ['verbale', 'riunione'], folder: '06_VERBALI/01_RIUNIONI/' },
-          { keywords: ['corrispondenza', 'lettera'], folder: '05_CORRISPONDENZA/' },
+          { keywords: ['relazione', 'relaz', 'tecnica'], folder: '3_PROGETTO/REL/' },
+          { keywords: ['calcolo', 'calcoli'], folder: '3_PROGETTO/' },
+          { keywords: ['computo', 'metrico', 'capitolato'], folder: '3_PROGETTO/CME/' },
+          { keywords: ['verbale', 'riunione'], folder: '6_VERBALI_NOTIFICHE_COMUNICAZIONI/VERBALI/' },
+          { keywords: ['corrispondenza', 'lettera'], folder: '6_VERBALI_NOTIFICHE_COMUNICAZIONI/COMUNICAZIONI/' },
           { keywords: ['contratto', 'incarico'], folder: '10_INCARICO/' },
-          { keywords: ['sicurezza', 'psc'], folder: '02_PROGETTAZIONE/SIC/' },
+          { keywords: ['sicurezza', 'psc'], folder: '3_PROGETTO/SIC/' },
+          { keywords: ['consegna', 'richiesta'], folder: '1_CONSEGNA/' },
+          { keywords: ['materiale', 'ricevuto'], folder: '4_MATERIALE_RICEVUTO/' },
         ],
-        default: '01_DOCUMENTI_GENERALI/',
+        default: '3_PROGETTO/',
       },
       'jpg|jpeg|png|tiff|bmp': {
         patterns: [
-          { keywords: ['sopralluogo', 'foto', 'cantiere'], folder: '07_SOPRALLUOGHI/01_FOTOGRAFICI/' },
-          { keywords: ['rilievo', 'survey'], folder: '07_SOPRALLUOGHI/02_RILIEVI/' },
+          { keywords: ['sopralluogo', 'foto', 'cantiere'], folder: '7_SOPRALLUOGHI/' },
+          { keywords: ['rilievo', 'survey'], folder: '7_SOPRALLUOGHI/' },
         ],
-        default: '07_SOPRALLUOGHI/01_FOTOGRAFICI/',
+        default: '7_SOPRALLUOGHI/',
       },
       'xls|xlsx|csv': {
         patterns: [
-          { keywords: ['computo', 'metrico', 'cme'], folder: '02_PROGETTAZIONE/CME/01_COMPUTI/' },
-          { keywords: ['parcella', 'fattura', 'preventivo'], folder: '09_PARCELLA/' },
+          { keywords: ['computo', 'metrico', 'cme'], folder: '3_PROGETTO/CME/' },
+          { keywords: ['parcella', 'fattura', 'preventivo'], folder: '9_PARCELLA/' },
         ],
-        default: '02_PROGETTAZIONE/CME/01_COMPUTI/',
+        default: '3_PROGETTO/CME/',
       },
     };
   }

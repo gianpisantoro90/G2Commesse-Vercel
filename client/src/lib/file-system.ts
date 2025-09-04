@@ -139,8 +139,9 @@ export const createProjectStructure = async (
     throw new Error(`Template non trovato: ${template}`);
   }
 
-  // Create main project folder
-  const projectFolderName = `${projectCode}_${sanitizeFileName(projectObject)}`;
+  // Create main project folder with underscore separation and preserve spaces as underscores
+  const cleanObjectName = projectObject.replace(/\s+/g, '_').replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+  const projectFolderName = `${projectCode}_${cleanObjectName}`;
   const projectHandle = await rootHandle.getDirectoryHandle(projectFolderName, { 
     create: true 
   });
@@ -258,7 +259,7 @@ export const sanitizeFileName = (fileName: string): string => {
   
   // Ensure it doesn't start with a number or special character
   if (/^\d/.test(sanitized)) {
-    sanitized = `F${sanitized}`;
+    sanitized = `PROJ_${sanitized}`;
     console.log(`🔧 SANITIZE: Started with number, prefixed: "${sanitized}"`);
   }
   
