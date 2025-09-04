@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { isFileSystemAccessSupported } from "@/lib/file-system";
+import { folderManager } from "@/lib/folder-manager";
 import { FolderOpen, Check, AlertCircle, Settings } from "lucide-react";
 
 interface FolderConfigState {
@@ -37,6 +38,22 @@ export default function FolderConfigPanel() {
       setValidationStatus("warning");
       setValidationMessage("Cartella configurata. Clicca 'Verifica' per controllare l'accesso.");
     }
+    
+    // Sincronizza con il FolderManager
+    const managerConfigured = folderManager.isConfigured();
+    if (managerConfigured && !folderConfig.isConfigured) {
+      // Il FolderManager ha una configurazione che il componente non ha
+      const config = folderManager.getConfig();
+      const managerConfig = {
+        rootPath: config?.rootPath || 'Cartella configurata',
+        rootHandle: null,
+        isConfigured: true,
+        lastVerified: config?.lastVerified || new Date().toLocaleString("it-IT"),
+      };
+      setFolderConfig(managerConfig);
+      setValidationStatus("warning");
+      setValidationMessage("Cartella configurata. Clicca 'Verifica' per controllare l'accesso.");
+    }
   }, [folderConfig]);
 
   const handleSelectRootFolder = async () => {
@@ -48,16 +65,33 @@ export default function FolderConfigPanel() {
       });
       return;
     }
+    
+    // Controlli aggiuntivi per sicurezza
+    if (!('showDirectoryPicker' in window)) {
+      toast({
+        title: "API non disponibile",
+        description: "L'API File System Access non è disponibile. Usa un browser aggiornato (Chrome 86+, Edge 86+).",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsSelecting(true);
     try {
       // Usa l'API File System Access per selezionare la cartella radice
+      console.log('🔍 Tentativo di apertura directory picker...');
+      
       const dirHandle = await (window as any).showDirectoryPicker({
         mode: 'readwrite',
         startIn: 'documents'
       });
+      
+      console.log('✅ Directory picker completato:', dirHandle?.name);
 
-      // Salva la configurazione
+      // Salva la configurazione nel FolderManager
+      folderManager.setRootFolder(dirHandle);
+      
+      // Salva anche nel localStorage locale per il componente
       const newConfig = {
         rootPath: dirHandle.name,
         rootHandle: null, // Non possiamo serializzare questo
@@ -77,13 +111,35 @@ export default function FolderConfigPanel() {
 
     } catch (error: any) {
       console.error('Error selecting folder:', error);
-      if (error?.name !== 'AbortError') {
+      
+      // Gestione dettagliata degli errori
+      if (error?.name === 'AbortError') {
+        // Utente ha annullato la selezione - non mostrare errore
+        return;
+      } else if (error?.name === 'NotAllowedError') {
+        toast({
+          title: "Permesso negato",
+          description: "Il browser ha negato l'accesso alle cartelle. Verifica le impostazioni del browser.",
+          variant: "destructive",
+        });
+      } else if (error?.name === 'SecurityError') {
+        toast({
+          title: "Errore di sicurezza",
+          description: "Il browser non consente l'accesso a questa cartella per motivi di sicurezza.",
+          variant: "destructive",
+        });
+      } else {
+        // Errore generico o sconosciuto
+        const errorMessage = error?.message || 'Errore sconosciuto nella selezione della cartella';
         toast({
           title: "Errore selezione cartella",
-          description: "Non è stato possibile selezionare la cartella. Riprova.",
+          description: `${errorMessage}. Assicurati di usare un browser compatibile (Chrome, Edge).`,
           variant: "destructive",
         });
       }
+      
+      setValidationStatus("error");
+      setValidationMessage("Errore nella selezione della cartella radice.");
     } finally {
       setIsSelecting(false);
     }
@@ -138,14 +194,21 @@ export default function FolderConfigPanel() {
         description: `Accesso alla cartella "${handle?.name}" verificato con successo.`,
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error verifying folder:', error);
+      
+      // Gestione dettagliata degli errori di verifica
+      if (error?.name === 'AbortError') {
+        return; // Utente ha annullato
+      }
+      
       setValidationStatus("error");
       setValidationMessage("Errore nell'accesso alla cartella. Seleziona nuovamente la cartella.");
       
+      const errorMessage = error?.message || 'Impossibile verificare l\'accesso alla cartella';
       toast({
         title: "Errore verifica",
-        description: "Non è possibile accedere alla cartella. Potrebbe essere necessario riselezionarla.",
+        description: `${errorMessage}. Potrebbe essere necessario riselezionare la cartella.`,
         variant: "destructive",
       });
     } finally {
