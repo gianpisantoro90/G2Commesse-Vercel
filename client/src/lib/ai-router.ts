@@ -284,7 +284,7 @@ class AIFileRouter {
       }
 
       const data = await response.json();
-      const result = this.parseAIResponse(data.content);
+      const result = this.parseAIResponse(data.content, template);
       
       return {
         suggestedPath: result.suggestedPath,
@@ -496,8 +496,8 @@ MATERIALE_RICEVUTO/ - Documenti terzi
 SOPRALLUOGHI/ - Report sopralluoghi`;
   }
 
-  // Parse AI response
-  private parseAIResponse(response: string): {
+  // Parse AI response and validate against template structure
+  private parseAIResponse(response: string, template: string): {
     suggestedPath: string;
     confidence: number;
     reasoning: string;
@@ -511,21 +511,82 @@ SOPRALLUOGHI/ - Report sopralluoghi`;
       }
       
       const parsed = JSON.parse(jsonMatch[0]);
+      const availableFolders = this.getAvailableFolders(template);
+      
+      // Validate that suggested path exists in template
+      const suggestedPath = parsed.suggestedPath || '';
+      const cleanPath = suggestedPath.replace(/\/$/, '');
+      const isValidPath = availableFolders.includes(cleanPath);
+      
+      if (!isValidPath && suggestedPath) {
+        console.warn(`⚠️ AI suggested invalid path: ${suggestedPath}. Available paths:`, availableFolders);
+        // Try to find closest match
+        const closestMatch = this.findClosestPath(suggestedPath, availableFolders);
+        console.log(`🔄 Using closest match: ${closestMatch}`);
+        
+        return {
+          suggestedPath: closestMatch,
+          confidence: Math.min(Math.max(parsed.confidence || 0, 0), 1) * 0.8, // Reduce confidence for corrected paths
+          reasoning: `${parsed.reasoning || 'Analisi AI'} (Percorso corretto automaticamente)`,
+          alternatives: (parsed.alternatives || []).filter(alt => availableFolders.includes(alt.replace(/\/$/, ''))),
+        };
+      }
+      
+      // Validate alternatives too
+      const validAlternatives = (parsed.alternatives || []).filter(alt => 
+        availableFolders.includes(alt.replace(/\/$/, ''))
+      );
       
       return {
-        suggestedPath: parsed.suggestedPath || '',
+        suggestedPath: suggestedPath,
         confidence: Math.min(Math.max(parsed.confidence || 0, 0), 1),
         reasoning: parsed.reasoning || 'Analisi AI',
-        alternatives: parsed.alternatives || [],
+        alternatives: validAlternatives,
       };
     } catch (error) {
       console.error('Failed to parse AI response:', error);
+      const defaultPath = template === 'LUNGO' ? '1_CONSEGNA/' : 'CONSEGNA/';
       return {
-        suggestedPath: 'ELABORAZIONI/',
+        suggestedPath: defaultPath,
         confidence: 0.5,
         reasoning: 'Errore nell\'analisi AI - usando fallback',
       };
     }
+  }
+
+  // Find closest matching path in case AI suggests invalid folder
+  private findClosestPath(suggestedPath: string, availableFolders: string[]): string {
+    const suggested = suggestedPath.toLowerCase().replace(/\/$/, '');
+    
+    // Try exact match first
+    for (const folder of availableFolders) {
+      if (folder.toLowerCase() === suggested) {
+        return folder + '/';
+      }
+    }
+    
+    // Try partial match - look for folders containing key terms from suggested path
+    const keyTerms = suggested.split(/[_\/]/).filter(term => term.length > 2);
+    let bestMatch = availableFolders[0]; // Default fallback
+    let maxMatches = 0;
+    
+    for (const folder of availableFolders) {
+      const folderLower = folder.toLowerCase();
+      let matches = 0;
+      
+      for (const term of keyTerms) {
+        if (folderLower.includes(term)) {
+          matches++;
+        }
+      }
+      
+      if (matches > maxMatches) {
+        maxMatches = matches;
+        bestMatch = folder;
+      }
+    }
+    
+    return bestMatch + '/';
   }
 
   // Get routing rules for LUNGO template
