@@ -30,7 +30,7 @@ export default function AiConfigPanel() {
 
   const [aiConfig, setAiConfig] = useLocalStorage("ai_config", {
     apiKey: "",
-    model: "claude-3-5-sonnet-latest",
+    model: "claude-sonnet-4-20250514",
     autoRouting: true,
     contentAnalysis: true,
     learningMode: true,
@@ -221,20 +221,25 @@ export default function AiConfigPanel() {
           </Label>
           <Select
             onValueChange={(value) => form.setValue("model", value)}
-            defaultValue={form.getValues("model")}
+            value={form.watch("model")}
             data-testid="select-ai-model"
           >
             <SelectTrigger className="input-g2">
-              <SelectValue />
+              <SelectValue placeholder="Seleziona modello AI" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="claude-sonnet-4-20250514">Claude 4.0 Sonnet (Ultimo modello)</SelectItem>
-              <SelectItem value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</SelectItem>
-              <SelectItem value="claude-3-haiku-20240307">Claude 3 Haiku (Veloce, Economico)</SelectItem>
-              <SelectItem value="deepseek-reasoner">DeepSeek V3.1 Reasoner (Ragionamento avanzato)</SelectItem>
-              <SelectItem value="deepseek-chat">DeepSeek V3.1 Chat</SelectItem>
+              <SelectItem value="claude-sonnet-4-20250514">🤖 Claude 4.0 Sonnet (Ultimo modello)</SelectItem>
+              <SelectItem value="claude-3-5-sonnet-20241022">🤖 Claude 3.5 Sonnet</SelectItem>
+              <SelectItem value="claude-3-haiku-20240307">⚡ Claude 3 Haiku (Veloce, Economico)</SelectItem>
+              <SelectItem value="deepseek-reasoner">🧠 DeepSeek V3.1 Reasoner (Ragionamento avanzato)</SelectItem>
+              <SelectItem value="deepseek-chat">💬 DeepSeek V3.1 Chat</SelectItem>
             </SelectContent>
           </Select>
+          <div className="mt-2 text-sm text-gray-500">
+            🎯 Modello attuale: <span className="font-mono bg-gray-100 px-2 py-1 rounded">
+              {form.watch("model")?.includes("deepseek") ? "🧠 DeepSeek" : "🤖 Claude"}
+            </span>
+          </div>
         </div>
         
         <div>
