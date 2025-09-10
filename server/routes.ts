@@ -505,6 +505,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Extended OneDrive API for full navigation
+  app.get("/api/onedrive/browse", async (req, res) => {
+    try {
+      const folderPath = req.query.path as string || '/';
+      const files = await serverOneDriveService.listFiles(folderPath);
+      res.json(files);
+    } catch (error) {
+      console.error('OneDrive browse failed:', error);
+      res.status(500).json({ error: 'Failed to browse OneDrive' });
+    }
+  });
+
+  app.get("/api/onedrive/hierarchy", async (req, res) => {
+    try {
+      const folders = await serverOneDriveService.getFolderHierarchy();
+      res.json(folders);
+    } catch (error) {
+      console.error('OneDrive hierarchy failed:', error);
+      res.status(500).json({ error: 'Failed to get folder hierarchy' });
+    }
+  });
+
+  app.get("/api/onedrive/search", async (req, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query) {
+        return res.status(400).json({ error: 'Search query is required' });
+      }
+      const files = await serverOneDriveService.searchFiles(query);
+      res.json(files);
+    } catch (error) {
+      console.error('OneDrive search failed:', error);
+      res.status(500).json({ error: 'Failed to search OneDrive' });
+    }
+  });
+
+  app.get("/api/onedrive/content/:fileId", async (req, res) => {
+    try {
+      const fileId = req.params.fileId;
+      const content = await serverOneDriveService.getFileContent(fileId);
+      
+      if (content === null) {
+        return res.status(400).json({ error: 'File content not available (binary or unsupported type)' });
+      }
+      
+      res.json({ content });
+    } catch (error) {
+      console.error('OneDrive file content failed:', error);
+      res.status(500).json({ error: 'Failed to get file content' });
+    }
+  });
+
+  app.post("/api/onedrive/link-project", async (req, res) => {
+    try {
+      const { projectCode, oneDriveFolderId } = req.body;
+      
+      if (!projectCode || !oneDriveFolderId) {
+        return res.status(400).json({ error: 'Project code and OneDrive folder ID are required' });
+      }
+      
+      const success = await serverOneDriveService.linkProjectToFolder(projectCode, oneDriveFolderId);
+      res.json({ success });
+    } catch (error) {
+      console.error('OneDrive project link failed:', error);
+      res.status(500).json({ error: 'Failed to link project to OneDrive folder' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

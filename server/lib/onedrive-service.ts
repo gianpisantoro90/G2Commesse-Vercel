@@ -61,12 +61,21 @@ class ServerOneDriveService {
     try {
       const client = await this.getClient();
 
-      // Create G2_Progetti folder if it doesn't exist
-      await this.ensureG2ProjectsFolder();
+      // Only create G2_Progetti folder if we're accessing it specifically
+      if (folderPath === '/G2_Progetti') {
+        await this.ensureG2ProjectsFolder();
+      }
 
-      const response = await client
-        .api(`/me/drive/root:${folderPath}:/children`)
-        .get();
+      let apiUrl;
+      if (folderPath === '/' || folderPath === '') {
+        // Root directory
+        apiUrl = '/me/drive/root/children';
+      } else {
+        // Specific folder path
+        apiUrl = `/me/drive/root:${folderPath}:/children`;
+      }
+
+      const response = await client.api(apiUrl).get();
 
       return response.value.map((item: any) => ({
         id: item.id,
@@ -161,6 +170,88 @@ class ServerOneDriveService {
     } catch (error) {
       console.error('❌ Failed to download file from OneDrive (Server):', error);
       return null;
+    }
+  }
+
+  async getFolderHierarchy(): Promise<OneDriveFile[]> {
+    try {
+      const client = await this.getClient();
+      
+      // Get root folders first
+      const response = await client.api('/me/drive/root/children').get();
+      
+      return response.value
+        .filter((item: any) => !!item.folder)
+        .map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          size: 0,
+          downloadUrl: '',
+          lastModified: item.lastModifiedDateTime,
+          webUrl: item.webUrl,
+          folder: true,
+          parentPath: '/'
+        }));
+    } catch (error) {
+      console.error('❌ Failed to get OneDrive folder hierarchy (Server):', error);
+      return [];
+    }
+  }
+
+  async searchFiles(query: string): Promise<OneDriveFile[]> {
+    try {
+      const client = await this.getClient();
+      
+      const response = await client
+        .api(`/me/drive/root/search(q='${query}')`)
+        .get();
+
+      return response.value.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        size: item.size || 0,
+        downloadUrl: item['@microsoft.graph.downloadUrl'] || '',
+        lastModified: item.lastModifiedDateTime,
+        webUrl: item.webUrl,
+        folder: !!item.folder,
+        parentPath: item.parentReference?.path?.replace('/drive/root:', '') || '/'
+      }));
+    } catch (error) {
+      console.error('❌ Failed to search OneDrive files (Server):', error);
+      return [];
+    }
+  }
+
+  async getFileContent(fileId: string): Promise<string | null> {
+    try {
+      const client = await this.getClient();
+      
+      // Get file info first
+      const fileInfo = await client.api(`/me/drive/items/${fileId}`).get();
+      const mimeType = fileInfo.file?.mimeType || '';
+      
+      // Only try to get text content for text files
+      if (!mimeType.startsWith('text/') && !mimeType.includes('json') && !mimeType.includes('xml')) {
+        return null;
+      }
+      
+      const content = await client.api(`/me/drive/items/${fileId}/content`).get();
+      return content.toString('utf-8');
+    } catch (error) {
+      console.error('❌ Failed to get file content (Server):', error);
+      return null;
+    }
+  }
+
+  async linkProjectToFolder(projectCode: string, oneDriveFolderId: string): Promise<boolean> {
+    try {
+      // This would be implemented to create a mapping between projects and OneDrive folders
+      // For now, we'll just log it
+      console.log(`🔗 Linking project ${projectCode} to OneDrive folder ${oneDriveFolderId}`);
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to link project to OneDrive folder (Server):', error);
+      return false;
     }
   }
 }
