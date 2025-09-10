@@ -18,6 +18,7 @@ import AiConfigPanel from "@/components/system/ai-config-panel";
 import FolderConfigPanel from "@/components/system/folder-config-panel";
 import OneDrivePanel from "@/components/system/onedrive-panel";
 import OneDriveFileRouter from "@/components/onedrive/onedrive-file-router";
+import OneDriveBrowser from "@/components/onedrive/onedrive-browser";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type RoutingResult } from "@/lib/ai-router";
 import { type Project } from "@shared/schema";
@@ -191,7 +192,14 @@ export default function Dashboard() {
                         className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
                         data-testid="tab-onedrive"
                       >
-                        ☁️ OneDrive
+                        ☁️ OneDrive Config
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="browser" 
+                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                        data-testid="tab-onedrive-browser"
+                      >
+                        📁 OneDrive Browser
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -210,6 +218,10 @@ export default function Dashboard() {
                   
                   <TabsContent value="onedrive" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
                     <OneDrivePanel />
+                  </TabsContent>
+                  
+                  <TabsContent value="browser" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                    <OneDriveBrowser />
                   </TabsContent>
                 </Tabs>
               </div>
