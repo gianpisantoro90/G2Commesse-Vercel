@@ -14,7 +14,7 @@ async function getAccessToken() {
     ? 'depl ' + process.env.WEB_REPL_RENEWAL 
     : null;
 
-  console.log('🔍 OneDrive Environment Check:', {
+  console.log('🔍 OneDrive Environment Check (Server):', {
     hasHostname: !!hostname,
     hasReplIdentity: !!process.env.REPL_IDENTITY,
     hasWebReplRenewal: !!process.env.WEB_REPL_RENEWAL,
@@ -43,7 +43,7 @@ async function getAccessToken() {
     const data = await response.json();
     connectionSettings = data.items?.[0];
 
-    console.log('🔍 OneDrive Connection Data:', {
+    console.log('🔍 OneDrive Connection Data (Server):', {
       hasData: !!data,
       itemsCount: data.items?.length || 0,
       hasConnection: !!connectionSettings,
@@ -57,7 +57,7 @@ async function getAccessToken() {
     }
     return accessToken;
   } catch (error) {
-    console.error('❌ OneDrive connection error:', error);
+    console.error('❌ OneDrive connection error (Server):', error);
     throw error;
   }
 }

@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema } from "@shared/schema";
+import serverOneDriveService from "./lib/onedrive-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -436,6 +437,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Errore nell'analisi AI",
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // OneDrive integration endpoints
+  app.get("/api/onedrive/test", async (req, res) => {
+    try {
+      const isConnected = await serverOneDriveService.testConnection();
+      res.json({ connected: isConnected });
+    } catch (error) {
+      console.error('OneDrive test failed:', error);
+      res.status(500).json({ error: 'Failed to test OneDrive connection' });
+    }
+  });
+
+  app.get("/api/onedrive/user", async (req, res) => {
+    try {
+      const userInfo = await serverOneDriveService.getUserInfo();
+      res.json(userInfo);
+    } catch (error) {
+      console.error('OneDrive user info failed:', error);
+      res.status(500).json({ error: 'Failed to get user info' });
+    }
+  });
+
+  app.get("/api/onedrive/files", async (req, res) => {
+    try {
+      const folderPath = req.query.path as string || '/G2_Progetti';
+      const files = await serverOneDriveService.listFiles(folderPath);
+      res.json(files);
+    } catch (error) {
+      console.error('OneDrive list files failed:', error);
+      res.status(500).json({ error: 'Failed to list files' });
+    }
+  });
+
+  app.post("/api/onedrive/sync-project", async (req, res) => {
+    try {
+      const { projectCode, projectDescription } = req.body;
+      
+      if (!projectCode) {
+        return res.status(400).json({ error: 'Project code is required' });
+      }
+
+      const success = await serverOneDriveService.syncProjectFolder(projectCode, projectDescription || '');
+      res.json({ success });
+    } catch (error) {
+      console.error('OneDrive sync project failed:', error);
+      res.status(500).json({ error: 'Failed to sync project folder' });
+    }
+  });
+
+  app.get("/api/onedrive/download/:fileId", async (req, res) => {
+    try {
+      const { fileId } = req.params;
+      const fileBuffer = await serverOneDriveService.downloadFile(fileId);
+      
+      if (!fileBuffer) {
+        return res.status(404).json({ error: 'File not found' });
+      }
+
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.send(fileBuffer);
+    } catch (error) {
+      console.error('OneDrive download failed:', error);
+      res.status(500).json({ error: 'Failed to download file' });
     }
   });
 
