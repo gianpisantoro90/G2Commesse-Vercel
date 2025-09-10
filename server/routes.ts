@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema } from "@shared/schema";
 import serverOneDriveService from "./lib/onedrive-service";
 import { z } from "zod";
 
@@ -464,11 +464,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/onedrive/files", async (req, res) => {
     try {
       const folderPath = req.query.path as string || '/G2_Progetti';
+      
+      // Input validation
+      if (typeof folderPath !== 'string' || folderPath.length > 500) {
+        return res.status(400).json({ error: 'Invalid folder path parameter' });
+      }
+      
       const files = await serverOneDriveService.listFiles(folderPath);
       res.json(files);
-    } catch (error) {
+    } catch (error: any) {
       console.error('OneDrive list files failed:', error);
-      res.status(500).json({ error: 'Failed to list files' });
+      const isAuthError = error.message?.includes('401') || error.message?.includes('403');
+      const statusCode = isAuthError ? 401 : 500;
+      const errorMessage = isAuthError ? 'OneDrive access denied or expired' : 'Failed to list files';
+      res.status(statusCode).json({ error: errorMessage, details: error.message });
     }
   });
 
@@ -491,17 +500,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/onedrive/download/:fileId", async (req, res) => {
     try {
       const { fileId } = req.params;
+      
+      // Input validation
+      if (!fileId || typeof fileId !== 'string') {
+        return res.status(400).json({ error: 'File ID is required and must be a string' });
+      }
+      
+      if (fileId.length > 200) {
+        return res.status(400).json({ error: 'File ID too long' });
+      }
+      
       const fileBuffer = await serverOneDriveService.downloadFile(fileId);
       
       if (!fileBuffer) {
-        return res.status(404).json({ error: 'File not found' });
+        return res.status(404).json({ error: 'File not found or could not be downloaded' });
       }
 
       res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', 'attachment');
       res.send(fileBuffer);
-    } catch (error) {
+    } catch (error: any) {
       console.error('OneDrive download failed:', error);
-      res.status(500).json({ error: 'Failed to download file' });
+      const isAuthError = error.message?.includes('401') || error.message?.includes('403');
+      const isNotFound = error.message?.includes('404') || error.message?.includes('not found');
+      const isBadRequest = error.message?.includes('Invalid') || error.message?.includes('invalid characters');
+      const statusCode = isAuthError ? 401 : (isNotFound ? 404 : (isBadRequest ? 400 : 500));
+      const errorMessage = isAuthError ? 'OneDrive access denied' : (isNotFound ? 'File not found' : (isBadRequest ? 'Invalid file ID' : 'Failed to download file'));
+      res.status(statusCode).json({ error: errorMessage, details: error.message });
     }
   });
 
@@ -509,11 +534,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/onedrive/browse", async (req, res) => {
     try {
       const folderPath = req.query.path as string || '/';
+      
+      // Input validation
+      if (typeof folderPath !== 'string' || folderPath.length > 500) {
+        return res.status(400).json({ error: 'Invalid folder path parameter' });
+      }
+      
       const files = await serverOneDriveService.listFiles(folderPath);
       res.json(files);
-    } catch (error) {
+    } catch (error: any) {
       console.error('OneDrive browse failed:', error);
-      res.status(500).json({ error: 'Failed to browse OneDrive' });
+      const isAuthError = error.message?.includes('401') || error.message?.includes('403');
+      const isNotFound = error.message?.includes('404') || error.message?.includes('not found');
+      const statusCode = isAuthError ? 401 : (isNotFound ? 404 : 500);
+      const errorMessage = isAuthError ? 'OneDrive access denied' : (isNotFound ? 'Folder not found' : 'Failed to browse OneDrive');
+      res.status(statusCode).json({ error: errorMessage, details: error.message });
     }
   });
 
@@ -530,44 +565,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/onedrive/search", async (req, res) => {
     try {
       const query = req.query.q as string;
-      if (!query) {
-        return res.status(400).json({ error: 'Search query is required' });
+      
+      // Input validation
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: 'Search query is required and must be a string' });
       }
+      
+      if (query.trim().length < 2) {
+        return res.status(400).json({ error: 'Search query must be at least 2 characters' });
+      }
+      
+      if (query.length > 255) {
+        return res.status(400).json({ error: 'Search query too long (max 255 characters)' });
+      }
+      
       const files = await serverOneDriveService.searchFiles(query);
       res.json(files);
-    } catch (error) {
+    } catch (error: any) {
       console.error('OneDrive search failed:', error);
-      res.status(500).json({ error: 'Failed to search OneDrive' });
+      const isAuthError = error.message?.includes('401') || error.message?.includes('403');
+      const isBadRequest = error.message?.includes('Invalid') || error.message?.includes('too long');
+      const statusCode = isAuthError ? 401 : (isBadRequest ? 400 : 500);
+      const errorMessage = isAuthError ? 'OneDrive access denied' : (isBadRequest ? 'Invalid search request' : 'Failed to search OneDrive');
+      res.status(statusCode).json({ error: errorMessage, details: error.message });
     }
   });
 
   app.get("/api/onedrive/content/:fileId", async (req, res) => {
     try {
       const fileId = req.params.fileId;
+      
+      // Input validation
+      if (!fileId || typeof fileId !== 'string') {
+        return res.status(400).json({ error: 'File ID is required and must be a string' });
+      }
+      
+      if (fileId.length > 200) {
+        return res.status(400).json({ error: 'File ID too long' });
+      }
+      
       const content = await serverOneDriveService.getFileContent(fileId);
       
       if (content === null) {
-        return res.status(400).json({ error: 'File content not available (binary or unsupported type)' });
+        return res.status(422).json({ error: 'File content not available (binary or unsupported type)' });
       }
       
       res.json({ content });
-    } catch (error) {
+    } catch (error: any) {
       console.error('OneDrive file content failed:', error);
-      res.status(500).json({ error: 'Failed to get file content' });
+      const isAuthError = error.message?.includes('401') || error.message?.includes('403');
+      const isNotFound = error.message?.includes('404') || error.message?.includes('not found');
+      const isBadRequest = error.message?.includes('Invalid') || error.message?.includes('invalid characters');
+      const statusCode = isAuthError ? 401 : (isNotFound ? 404 : (isBadRequest ? 400 : 500));
+      const errorMessage = isAuthError ? 'OneDrive access denied' : (isNotFound ? 'File not found' : (isBadRequest ? 'Invalid file ID' : 'Failed to get file content'));
+      res.status(statusCode).json({ error: errorMessage, details: error.message });
     }
   });
 
   app.post("/api/onedrive/link-project", async (req, res) => {
     try {
-      const { projectCode, oneDriveFolderId } = req.body;
+      // Validate request body with Zod
+      const validatedData = insertOneDriveMappingSchema.parse(req.body);
+      const { projectCode, oneDriveFolderId, oneDriveFolderName, oneDriveFolderPath } = validatedData;
       
-      if (!projectCode || !oneDriveFolderId) {
-        return res.status(400).json({ error: 'Project code and OneDrive folder ID are required' });
+      // Check if project exists
+      const project = await storage.getProjectByCode(projectCode);
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
       }
       
-      const success = await serverOneDriveService.linkProjectToFolder(projectCode, oneDriveFolderId);
-      res.json({ success });
+      // Check if mapping already exists
+      const existingMapping = await storage.getOneDriveMapping(projectCode);
+      if (existingMapping) {
+        return res.status(409).json({ error: 'Project is already linked to a OneDrive folder' });
+      }
+      
+      // Validate OneDrive folder exists and save mapping
+      const success = await serverOneDriveService.linkProjectToFolder(projectCode, oneDriveFolderId, oneDriveFolderName, oneDriveFolderPath);
+      
+      if (success) {
+        // Save mapping to database
+        const mapping = await storage.createOneDriveMapping(validatedData);
+        console.log('✅ Created OneDrive mapping:', mapping.id);
+        res.json({ success: true, mapping });
+      } else {
+        res.status(400).json({ error: 'Failed to validate OneDrive folder' });
+      }
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+      }
       console.error('OneDrive project link failed:', error);
       res.status(500).json({ error: 'Failed to link project to OneDrive folder' });
     }

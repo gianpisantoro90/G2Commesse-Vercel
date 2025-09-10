@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -32,9 +32,15 @@ export interface IStorage {
   getSystemConfig(key: string): Promise<SystemConfig | undefined>;
   setSystemConfig(key: string, value: any): Promise<SystemConfig>;
   
+  // OneDrive Mappings
+  getOneDriveMapping(projectCode: string): Promise<OneDriveMapping | undefined>;
+  getAllOneDriveMappings(): Promise<OneDriveMapping[]>;
+  createOneDriveMapping(mapping: InsertOneDriveMapping): Promise<OneDriveMapping>;
+  deleteOneDriveMapping(projectCode: string): Promise<boolean>;
+  
   // Bulk operations
-  exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[] }>;
-  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[] }): Promise<void>;
+  exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }>;
+  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }): Promise<void>;
   clearAllData(): Promise<void>;
 }
 
@@ -43,6 +49,7 @@ export class MemStorage implements IStorage {
   private clients: Map<string, Client> = new Map();
   private fileRoutings: Map<string, FileRouting> = new Map();
   private systemConfig: Map<string, SystemConfig> = new Map();
+  private oneDriveMappings: Map<string, OneDriveMapping> = new Map();
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -200,6 +207,31 @@ export class MemStorage implements IStorage {
     }
   }
 
+  // OneDrive Mappings
+  async getOneDriveMapping(projectCode: string): Promise<OneDriveMapping | undefined> {
+    return this.oneDriveMappings.get(projectCode);
+  }
+
+  async getAllOneDriveMappings(): Promise<OneDriveMapping[]> {
+    return Array.from(this.oneDriveMappings.values());
+  }
+
+  async createOneDriveMapping(insertMapping: InsertOneDriveMapping): Promise<OneDriveMapping> {
+    const id = randomUUID();
+    const mapping: OneDriveMapping = {
+      ...insertMapping,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.oneDriveMappings.set(insertMapping.projectCode, mapping);
+    return mapping;
+  }
+
+  async deleteOneDriveMapping(projectCode: string): Promise<boolean> {
+    return this.oneDriveMappings.delete(projectCode);
+  }
+
   // Bulk operations
   async exportAllData() {
     return {
@@ -207,19 +239,22 @@ export class MemStorage implements IStorage {
       clients: Array.from(this.clients.values()),
       fileRoutings: Array.from(this.fileRoutings.values()),
       systemConfig: Array.from(this.systemConfig.values()),
+      oneDriveMappings: Array.from(this.oneDriveMappings.values()),
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[] }) {
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }) {
     this.projects.clear();
     this.clients.clear();
     this.fileRoutings.clear();
     this.systemConfig.clear();
+    this.oneDriveMappings.clear();
 
     data.projects.forEach(p => this.projects.set(p.id, p));
     data.clients.forEach(c => this.clients.set(c.id, c));
     data.fileRoutings.forEach(fr => this.fileRoutings.set(fr.id, fr));
     data.systemConfig.forEach(sc => this.systemConfig.set(sc.id, sc));
+    data.oneDriveMappings.forEach(odm => this.oneDriveMappings.set(odm.projectCode, odm));
   }
 
   async clearAllData() {
@@ -227,6 +262,7 @@ export class MemStorage implements IStorage {
     this.clients.clear();
     this.fileRoutings.clear();
     this.systemConfig.clear();
+    this.oneDriveMappings.clear();
   }
 
   private generateSafeAcronym(text: string): string {
@@ -423,13 +459,34 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // OneDrive Mappings
+  async getOneDriveMapping(projectCode: string): Promise<OneDriveMapping | undefined> {
+    const [mapping] = await db.select().from(oneDriveMappings).where(eq(oneDriveMappings.projectCode, projectCode));
+    return mapping || undefined;
+  }
+
+  async getAllOneDriveMappings(): Promise<OneDriveMapping[]> {
+    return await db.select().from(oneDriveMappings);
+  }
+
+  async createOneDriveMapping(insertMapping: InsertOneDriveMapping): Promise<OneDriveMapping> {
+    const [mapping] = await db.insert(oneDriveMappings).values(insertMapping).returning();
+    return mapping;
+  }
+
+  async deleteOneDriveMapping(projectCode: string): Promise<boolean> {
+    const result = await db.delete(oneDriveMappings).where(eq(oneDriveMappings.projectCode, projectCode));
+    return result.rowCount > 0;
+  }
+
   // Bulk operations
   async exportAllData() {
-    const [projectsData, clientsData, fileRoutingsData, systemConfigData] = await Promise.all([
+    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData] = await Promise.all([
       this.getAllProjects(),
       this.getAllClients(),
       db.select().from(fileRoutings),
       db.select().from(systemConfig),
+      db.select().from(oneDriveMappings),
     ]);
 
     return {
@@ -437,10 +494,11 @@ export class DatabaseStorage implements IStorage {
       clients: clientsData,
       fileRoutings: fileRoutingsData,
       systemConfig: systemConfigData,
+      oneDriveMappings: oneDriveMappingsData,
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[] }) {
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }) {
     await this.clearAllData();
 
     if (data.clients.length > 0) {
@@ -455,10 +513,14 @@ export class DatabaseStorage implements IStorage {
     if (data.systemConfig.length > 0) {
       await db.insert(systemConfig).values(data.systemConfig);
     }
+    if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
+      await db.insert(oneDriveMappings).values(data.oneDriveMappings);
+    }
   }
 
   async clearAllData() {
     await db.delete(fileRoutings);
+    await db.delete(oneDriveMappings);
     await db.delete(projects);
     await db.delete(clients);
     await db.delete(systemConfig);

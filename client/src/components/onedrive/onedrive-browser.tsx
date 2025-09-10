@@ -60,38 +60,91 @@ export default function OneDriveBrowser() {
   }) as { data: Project[] | undefined };
 
   // Get current folder files
-  const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles } = useQuery({
+  const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles, error: browseError } = useQuery({
     queryKey: ['onedrive-browse', currentPath],
     queryFn: async () => {
       const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(currentPath)}`);
-      if (!response.ok) throw new Error('Failed to browse OneDrive');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Errore ${response.status}: ${response.statusText}`);
+      }
       return response.json() as Promise<OneDriveFile[]>;
     },
-    enabled: isConnected
+    enabled: isConnected,
+    retry: (failureCount, error) => {
+      // Retry up to 2 times for network errors, but not for 404/403
+      if (failureCount >= 2) return false;
+      const isNetworkError = !error.message.includes('4') && !error.message.includes('401') && !error.message.includes('403');
+      return isNetworkError;
+    }
   });
 
   // Search files
-  const { data: searchResults, isLoading: isSearching } = useQuery({
+  const { data: searchResults, isLoading: isSearching, error: searchError } = useQuery({
     queryKey: ['onedrive-search', searchQuery],
     queryFn: async () => {
       if (!searchQuery.trim()) return [];
       const response = await fetch(`/api/onedrive/search?q=${encodeURIComponent(searchQuery)}`);
-      if (!response.ok) throw new Error('Failed to search OneDrive');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Errore ricerca ${response.status}`);
+      }
       return response.json() as Promise<OneDriveFile[]>;
     },
-    enabled: isConnected && searchQuery.length > 2
+    enabled: isConnected && searchQuery.length > 2,
+    retry: false // Don't retry search queries
   });
 
   // Get folder hierarchy for tree view
-  const { data: folderHierarchy } = useQuery({
+  const { data: folderHierarchy, error: hierarchyError } = useQuery({
     queryKey: ['onedrive-hierarchy'],
     queryFn: async () => {
       const response = await fetch('/api/onedrive/hierarchy');
-      if (!response.ok) throw new Error('Failed to get folder hierarchy');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Errore nel recupero cartelle');
+      }
       return response.json() as Promise<OneDriveFile[]>;
     },
-    enabled: isConnected
+    enabled: isConnected,
+    retry: 1
   });
+
+  // Handle browse errors
+  useEffect(() => {
+    if (browseError) {
+      console.error('OneDrive browse error:', browseError);
+      toast({
+        title: "Errore navigazione OneDrive",
+        description: `Impossibile accedere alla cartella: ${browseError.message}`,
+        variant: "destructive",
+      });
+    }
+  }, [browseError, toast]);
+
+  // Handle search errors
+  useEffect(() => {
+    if (searchError) {
+      console.error('OneDrive search error:', searchError);
+      toast({
+        title: "Errore ricerca OneDrive",
+        description: `Impossibile eseguire la ricerca: ${searchError.message}`,
+        variant: "destructive",
+      });
+    }
+  }, [searchError, toast]);
+
+  // Handle hierarchy errors
+  useEffect(() => {
+    if (hierarchyError) {
+      console.error('OneDrive hierarchy error:', hierarchyError);
+      toast({
+        title: "Errore struttura cartelle",
+        description: `Impossibile caricare l'elenco delle cartelle: ${hierarchyError.message}`,
+        variant: "destructive",
+      });
+    }
+  }, [hierarchyError, toast]);
 
   // Initialize tree data
   useEffect(() => {
@@ -107,11 +160,21 @@ export default function OneDriveBrowser() {
 
   // Link project mutation
   const linkProjectMutation = useMutation({
-    mutationFn: async ({ projectCode, folderId }: { projectCode: string; folderId: string }) => {
+    mutationFn: async ({ projectCode, folderId, folderName, folderPath }: { 
+      projectCode: string; 
+      folderId: string;
+      folderName: string;
+      folderPath: string;
+    }) => {
       const response = await fetch('/api/onedrive/link-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectCode, oneDriveFolderId: folderId })
+        body: JSON.stringify({ 
+          projectCode, 
+          oneDriveFolderId: folderId,
+          oneDriveFolderName: folderName,
+          oneDriveFolderPath: folderPath
+        })
       });
       
       if (!response.ok) throw new Error('Failed to link project');
@@ -124,11 +187,16 @@ export default function OneDriveBrowser() {
       });
       setLinkingFile(null);
       setSelectedProject("");
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['onedrive-mappings'] });
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('Project linking error:', error);
+      const errorMessage = error?.response?.data?.error || error?.message || 'Errore sconosciuto';
       toast({
         title: "Errore collegamento",
-        description: `Impossibile collegare il progetto: ${error.message}`,
+        description: `Impossibile collegare il progetto: ${errorMessage}`,
         variant: "destructive",
       });
     }
@@ -281,9 +349,15 @@ export default function OneDriveBrowser() {
   const handleLinkProject = () => {
     if (!selectedProject || !linkingFile) return;
     
+    const folderPath = linkingFile.parentPath === '/' 
+      ? `/${linkingFile.name}` 
+      : `${linkingFile.parentPath}/${linkingFile.name}`;
+    
     linkProjectMutation.mutate({
       projectCode: selectedProject,
-      folderId: linkingFile.id
+      folderId: linkingFile.id,
+      folderName: linkingFile.name,
+      folderPath: folderPath
     });
   };
 
@@ -297,6 +371,7 @@ export default function OneDriveBrowser() {
         <div 
           className="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 rounded cursor-pointer"
           onClick={() => navigateToFolder(nodePath)}
+          data-testid={`tree-node-${node.file.id}`}
         >
           <button
             onClick={(e) => {
@@ -304,7 +379,7 @@ export default function OneDriveBrowser() {
               toggleTreeNode(node, path);
             }}
             className="p-1"
-            data-testid={`tree-toggle-${node.file.name}`}
+            data-testid={`button-tree-toggle-${node.file.id}`}
           >
             {node.children && node.children.length > 0 ? (
               isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />
@@ -313,7 +388,7 @@ export default function OneDriveBrowser() {
             )}
           </button>
           <Folder className="w-4 h-4 text-blue-500" />
-          <span className="text-sm truncate" data-testid={`tree-folder-${node.file.name}`}>
+          <span className="text-sm truncate" data-testid={`text-tree-folder-${node.file.id}`}>
             {node.file.name}
           </span>
         </div>
@@ -385,14 +460,14 @@ export default function OneDriveBrowser() {
                 <div key={item.path} className="flex items-center">
                   <BreadcrumbItem>
                     {index === array.length - 1 ? (
-                      <BreadcrumbPage data-testid={`breadcrumb-current-${item.name}`}>
+                      <BreadcrumbPage data-testid={`text-breadcrumb-current-${item.name}`}>
                         {item.name}
                       </BreadcrumbPage>
                     ) : (
                       <BreadcrumbLink 
                         onClick={() => navigateToFolder(item.path)}
                         className="cursor-pointer"
-                        data-testid={`breadcrumb-link-${item.name}`}
+                        data-testid={`link-breadcrumb-${item.name}`}
                       >
                         {item.name}
                       </BreadcrumbLink>
@@ -455,7 +530,7 @@ export default function OneDriveBrowser() {
                       key={file.id}
                       className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => handleFileClick(file)}
-                      data-testid={`file-item-${file.name}`}
+                      data-testid={`file-item-${file.id}`}
                     >
                       <div className="flex items-center gap-3 min-w-0 flex-1">
                         {getFileIcon(file)}
@@ -490,12 +565,12 @@ export default function OneDriveBrowser() {
                                   e.stopPropagation();
                                   setSelectedFile(file);
                                 }}
-                                data-testid={`button-preview-${file.name}`}
+                                data-testid={`button-preview-${file.id}`}
                               >
                                 <Eye className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-4xl max-h-[80vh]">
+                            <DialogContent className="max-w-4xl max-h-[80vh]" data-testid={`dialog-preview-${file.id}`}>
                               <DialogHeader>
                                 <DialogTitle className="flex items-center gap-2">
                                   {getFileIcon(file)}
@@ -504,11 +579,11 @@ export default function OneDriveBrowser() {
                               </DialogHeader>
                               <div className="mt-4">
                                 {previewContent ? (
-                                  <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-auto max-h-96 whitespace-pre-wrap">
+                                  <pre className="bg-gray-50 p-4 rounded-lg text-sm overflow-auto max-h-96 whitespace-pre-wrap" data-testid={`text-preview-content-${file.id}`}>
                                     {previewContent}
                                   </pre>
                                 ) : (
-                                  <div className="text-center py-8 text-gray-500">
+                                  <div className="text-center py-8 text-gray-500" data-testid={`text-preview-unavailable-${file.id}`}>
                                     <File className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                                     <p>Anteprima non disponibile per questo tipo di file</p>
                                   </div>
@@ -528,19 +603,19 @@ export default function OneDriveBrowser() {
                                   e.stopPropagation();
                                   setLinkingFile(file);
                                 }}
-                                data-testid={`button-link-${file.name}`}
+                                data-testid={`button-link-${file.id}`}
                               >
                                 <Link className="w-4 h-4" />
                               </Button>
                             </DialogTrigger>
-                            <DialogContent>
+                            <DialogContent data-testid={`dialog-link-project-${file.id}`}>
                               <DialogHeader>
                                 <DialogTitle>Collega cartella a progetto</DialogTitle>
                               </DialogHeader>
                               <div className="space-y-4 mt-4">
                                 <div>
                                   <label className="text-sm font-medium">Cartella OneDrive:</label>
-                                  <div className="mt-1 p-2 bg-gray-50 rounded flex items-center gap-2">
+                                  <div className="mt-1 p-2 bg-gray-50 rounded flex items-center gap-2" data-testid={`text-selected-folder-${linkingFile?.id}`}>
                                     <Folder className="w-4 h-4 text-blue-500" />
                                     {linkingFile?.name}
                                   </div>
@@ -549,12 +624,12 @@ export default function OneDriveBrowser() {
                                 <div>
                                   <label className="text-sm font-medium">Seleziona progetto:</label>
                                   <Select value={selectedProject} onValueChange={setSelectedProject}>
-                                    <SelectTrigger data-testid="select-project">
+                                    <SelectTrigger data-testid={`select-project-${linkingFile?.id}`}>
                                       <SelectValue placeholder="Scegli un progetto..." />
                                     </SelectTrigger>
                                     <SelectContent>
                                       {projects?.map((project: Project) => (
-                                        <SelectItem key={project.id} value={project.code}>
+                                        <SelectItem key={project.id} value={project.code} data-testid={`option-project-${project.code}`}>
                                           {project.code} - {project.object}
                                         </SelectItem>
                                       ))}
@@ -566,7 +641,7 @@ export default function OneDriveBrowser() {
                                   onClick={handleLinkProject}
                                   disabled={!selectedProject || linkProjectMutation.isPending}
                                   className="w-full"
-                                  data-testid="button-confirm-link"
+                                  data-testid={`button-confirm-link-${linkingFile?.id}`}
                                 >
                                   {linkProjectMutation.isPending ? (
                                     <>
@@ -592,7 +667,7 @@ export default function OneDriveBrowser() {
                             e.stopPropagation();
                             window.open(file.webUrl, '_blank');
                           }}
-                          data-testid={`button-external-${file.name}`}
+                          data-testid={`button-external-${file.id}`}
                         >
                           <ExternalLink className="w-4 h-4" />
                         </Button>
@@ -601,7 +676,7 @@ export default function OneDriveBrowser() {
                   ))}
                   
                   {(searchQuery ? searchResults : currentFiles)?.length === 0 && (
-                    <div className="text-center py-8 text-gray-500" data-testid="empty-state">
+                    <div className="text-center py-8 text-gray-500" data-testid={searchQuery ? "text-empty-search" : "text-empty-folder"}>
                       <Folder className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                       <p>
                         {searchQuery 

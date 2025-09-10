@@ -44,6 +44,16 @@ export const systemConfig = pgTable("system_config", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const oneDriveMappings = pgTable("onedrive_mappings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectCode: text("project_code").notNull().references(() => projects.code),
+  oneDriveFolderId: text("onedrive_folder_id").notNull(),
+  oneDriveFolderName: text("onedrive_folder_name").notNull(),
+  oneDriveFolderPath: text("onedrive_folder_path").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
@@ -64,6 +74,12 @@ export const insertSystemConfigSchema = createInsertSchema(systemConfig).omit({
   updatedAt: true,
 });
 
+export const insertOneDriveMappingSchema = createInsertSchema(oneDriveMappings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
@@ -76,3 +92,6 @@ export type FileRouting = typeof fileRoutings.$inferSelect;
 
 export type InsertSystemConfig = z.infer<typeof insertSystemConfigSchema>;
 export type SystemConfig = typeof systemConfig.$inferSelect;
+
+export type InsertOneDriveMapping = z.infer<typeof insertOneDriveMappingSchema>;
+export type OneDriveMapping = typeof oneDriveMappings.$inferSelect;
