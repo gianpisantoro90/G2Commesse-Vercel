@@ -16,6 +16,8 @@ import BulkRenameResults from "@/components/routing/bulk-rename-results";
 import StoragePanel from "@/components/system/storage-panel";
 import AiConfigPanel from "@/components/system/ai-config-panel";
 import FolderConfigPanel from "@/components/system/folder-config-panel";
+import OneDrivePanel from "@/components/system/onedrive-panel";
+import OneDriveFileRouter from "@/components/onedrive/onedrive-file-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type RoutingResult } from "@/lib/ai-router";
 import { type Project } from "@shared/schema";
@@ -131,6 +133,15 @@ export default function Dashboard() {
                 <div className="grid gap-6 lg:grid-cols-1">
                   <RoutingForm onAnalysisComplete={handleAnalysisComplete} />
                   <BulkRenameForm onRenameComplete={handleBulkRenameComplete} />
+                  
+                  {/* OneDrive AI Router */}
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">☁️ Routing AI con OneDrive</h3>
+                    <p className="text-gray-600 mb-4">
+                      Analizza e organizza automaticamente i file da OneDrive utilizzando l'intelligenza artificiale.
+                    </p>
+                    <OneDriveFileRouter />
+                  </div>
                 </div>
                 
                 <RoutingResults 
@@ -175,6 +186,13 @@ export default function Dashboard() {
                       >
                         📁 Cartelle
                       </TabsTrigger>
+                      <TabsTrigger 
+                        value="onedrive" 
+                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                        data-testid="tab-onedrive"
+                      >
+                        ☁️ OneDrive
+                      </TabsTrigger>
                     </TabsList>
                   </div>
                   
@@ -188,6 +206,10 @@ export default function Dashboard() {
                   
                   <TabsContent value="folders" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
                     <FolderConfigPanel />
+                  </TabsContent>
+                  
+                  <TabsContent value="onedrive" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                    <OneDrivePanel />
                   </TabsContent>
                 </Tabs>
               </div>
