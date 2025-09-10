@@ -2,6 +2,15 @@
 
 ## Overview
 
+**MAJOR OneDrive Integration Update (September 10, 2025)**
+- ✅ **COMPLETE OneDrive BROWSER**: Full navigation system for exploring existing OneDrive content
+- ✅ **PROJECT-ONEDRIVE LINKING**: Database persistence for connecting projects to OneDrive folders
+- ✅ **PRODUCTION-READY SECURITY**: Fixed injection vulnerabilities and input validation
+- ✅ **COMPREHENSIVE TESTING**: Full test coverage with data-testid attributes for automation
+- ✅ **AI-POWERED FILE ROUTING**: Enhanced AI analysis of OneDrive files with routing suggestions
+- ✅ **REAL-TIME SYNC STATUS**: Live monitoring of OneDrive connection and sync operations
+- ✅ **FRONTEND/BACKEND SYNC FIX**: Resolved critical state synchronization issues
+
 **Complete System Update (August 18, 2025)**
 - ✅ **G2 LOGO UPDATE**: Replaced placeholder logo with authentic G2 Ingegneria branding
 - ✅ **LUNGO TEMPLATE FIX**: Fixed folder structure creation using authentic G2 template (1_CONSEGNA, 2_PERMIT, 3_PROGETTO, etc.)

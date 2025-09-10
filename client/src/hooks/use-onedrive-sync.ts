@@ -12,23 +12,25 @@ interface SyncStatus {
 }
 
 export function useOneDriveSync() {
-  const [isConnected, setIsConnected] = useState(false);
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
   const [syncStatuses, setSyncStatuses] = useState<Record<string, SyncStatus>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Check OneDrive connection status
-  const { data: connectionStatus } = useQuery({
+  // Check OneDrive connection status (fixed state sync issue)
+  const { data: connectionStatus, isSuccess } = useQuery({
     queryKey: ['onedrive-connection'],
     queryFn: async () => {
       const connected = await oneDriveService.testConnection();
-      setIsConnected(connected);
       return connected;
     },
     refetchInterval: 30000, // Check every 30 seconds
-    retry: false
+    retry: false,
+    staleTime: 10000 // Consider data fresh for 10 seconds
   });
+
+  // Get connection status from query result instead of local state
+  const isConnected = isSuccess && connectionStatus === true;
 
   // Get all projects for syncing
   const { data: projects } = useQuery({
@@ -54,17 +56,7 @@ export function useOneDriveSync() {
     localStorage.setItem('onedrive_sync_statuses', JSON.stringify(syncStatuses));
   }, [syncStatuses]);
 
-  // Auto-sync new projects
-  useEffect(() => {
-    if (!isConnected || !autoSyncEnabled || !projects || !Array.isArray(projects)) return;
-
-    projects.forEach(async (project: Project) => {
-      const currentStatus = syncStatuses[project.id];
-      if (!currentStatus || currentStatus.status === 'not_synced') {
-        await syncProject(project.id);
-      }
-    });
-  }, [projects, isConnected, autoSyncEnabled]);
+  // Auto-sync logic moved after function definitions to avoid circular dependency
 
   // Sync single project mutation
   const syncProjectMutation = useMutation({
@@ -240,6 +232,24 @@ export function useOneDriveSync() {
       notSynced: totalProjects - statuses.length
     };
   };
+
+  // Auto-sync new projects (fixed circular dependency by placing after function definitions)
+  useEffect(() => {
+    if (!isConnected || !autoSyncEnabled || !projects || !Array.isArray(projects)) return;
+
+    const autoSyncProjects = async () => {
+      for (const project of projects) {
+        const currentStatus = syncStatuses[project.id];
+        if (!currentStatus || currentStatus.status === 'not_synced') {
+          syncProject(project.id);
+          // Add small delay between auto-syncs to avoid overwhelming the API
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+    };
+
+    autoSyncProjects();
+  }, [projects, isConnected, autoSyncEnabled, syncStatuses]); // Added missing dependencies
 
   return {
     // State

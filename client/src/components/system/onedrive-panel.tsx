@@ -16,7 +16,7 @@ export default function OneDrivePanel() {
   const [selectedProject, setSelectedProject] = useState("");
   const { toast } = useToast();
   
-  // Use the sync hook
+  // Use the sync hook (fixed: removed duplicate connection testing)
   const { 
     isConnected, 
     autoSyncEnabled, 
@@ -26,9 +26,24 @@ export default function OneDrivePanel() {
     getOverallSyncStats
   } = useOneDriveSync();
 
+  // Load user info and files when connected (fixed state management)
   useEffect(() => {
-    checkConnection();
-  }, []);
+    if (isConnected && !userInfo) {
+      loadUserInfo();
+    }
+    if (isConnected) {
+      loadFiles();
+    }
+  }, [isConnected]);
+
+  const loadUserInfo = async () => {
+    try {
+      const user = await oneDriveService.getUserInfo();
+      setUserInfo(user);
+    } catch (error) {
+      console.error('Failed to load user info:', error);
+    }
+  };
 
   const checkConnection = async () => {
     setIsLoading(true);
@@ -36,8 +51,7 @@ export default function OneDrivePanel() {
       const connected = await oneDriveService.testConnection();
       
       if (connected) {
-        const user = await oneDriveService.getUserInfo();
-        setUserInfo(user);
+        await loadUserInfo();
         await loadFiles();
       }
     } catch (error) {
@@ -179,7 +193,7 @@ export default function OneDrivePanel() {
             data-testid="button-test-connection"
           >
             {isLoading ? <RotateCw className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle className="w-4 h-4 mr-2" />}
-            Testa Connessione
+            Ricarica Dati
           </Button>
         </div>
 
