@@ -10,6 +10,10 @@ export interface OneDriveFile {
   webUrl: string;
   folder?: boolean;
   parentPath?: string;
+  // Additional properties added by scanFolderRecursive
+  path?: string;
+  mimeType?: string;
+  parentFolderId?: string;
 }
 
 export interface OneDriveUploadResult {
@@ -305,6 +309,259 @@ class ServerOneDriveService {
     } catch (error) {
       console.error('❌ Failed to link project to OneDrive folder (Server):', error);
       return false;
+    }
+  }
+
+  async validateFolder(folderIdOrPath: string): Promise<boolean> {
+    try {
+      const client = await this.getClient();
+      
+      // Security: Validate parameter
+      if (!folderIdOrPath || typeof folderIdOrPath !== 'string') {
+        throw new Error('Invalid folder ID or path provided');
+      }
+      
+      // Check if it's a path or ID
+      if (folderIdOrPath.startsWith('/')) {
+        // It's a path
+        const sanitizedPath = folderIdOrPath.replace(/\.\./g, '').replace(/\/+/g, '/');
+        if (sanitizedPath !== folderIdOrPath) {
+          throw new Error('Invalid characters in folder path');
+        }
+        await client.api(`/me/drive/root:${sanitizedPath}`).get();
+      } else {
+        // It's an ID
+        if (!/^[a-zA-Z0-9!\-_\.~]+$/.test(folderIdOrPath)) {
+          throw new Error('Folder ID contains invalid characters');
+        }
+        await client.api(`/me/drive/items/${folderIdOrPath}`).get();
+      }
+      
+      console.log('✅ OneDrive folder validation successful:', folderIdOrPath);
+      return true;
+    } catch (error) {
+      console.error('❌ OneDrive folder validation failed:', error);
+      return false;
+    }
+  }
+
+  async createProjectWithTemplate(rootPath: string, projectCode: string, template: string): Promise<{id: string, name: string, path: string} | null> {
+    try {
+      const client = await this.getClient();
+      
+      // Security: Validate parameters
+      if (!rootPath || !projectCode || !template) {
+        throw new Error('Missing required parameters for project creation');
+      }
+      
+      if (!['LUNGO', 'BREVE'].includes(template)) {
+        throw new Error('Invalid template specified. Must be LUNGO or BREVE');
+      }
+      
+      // Sanitize inputs
+      const sanitizedRootPath = rootPath.replace(/\.\./g, '').replace(/\/+/g, '/');
+      const sanitizedProjectCode = projectCode.replace(/[^a-zA-Z0-9_-]/g, '');
+      
+      if (sanitizedRootPath !== rootPath || sanitizedProjectCode !== projectCode) {
+        throw new Error('Invalid characters in parameters');
+      }
+      
+      // Create project folder
+      const projectFolderData = {
+        name: sanitizedProjectCode,
+        folder: {}
+      };
+      
+      const projectFolder = await client
+        .api(`/me/drive/root:${sanitizedRootPath}:/children`)
+        .post(projectFolderData);
+      
+      // Copy template structure based on template type
+      const projectPath = `${sanitizedRootPath}/${sanitizedProjectCode}`;
+      
+      try {
+        // Create basic folder structure based on template
+        await this.copyTemplateStructure(projectPath, template);
+      } catch (templateError) {
+        console.warn('⚠️ Template structure copy failed, project folder created without template:', templateError);
+      }
+      
+      console.log(`✅ Created OneDrive project folder with ${template} template:`, projectPath);
+      return {
+        id: projectFolder.id,
+        name: projectFolder.name,
+        path: projectPath
+      };
+    } catch (error) {
+      console.error('❌ Failed to create OneDrive project folder:', error);
+      return null;
+    }
+  }
+
+  async scanFolderRecursive(folderPath: string, options: {includeSubfolders: boolean, maxDepth: number}): Promise<OneDriveFile[]> {
+    try {
+      const client = await this.getClient();
+      
+      // Security: Validate parameters
+      if (!folderPath || typeof folderPath !== 'string') {
+        throw new Error('Invalid folder path provided');
+      }
+      
+      const maxDepth = Math.min(options.maxDepth || 3, 10); // Limit max depth to prevent infinite recursion
+      const sanitizedPath = folderPath.replace(/\.\./g, '').replace(/\/+/g, '/');
+      
+      if (sanitizedPath !== folderPath) {
+        throw new Error('Invalid characters in folder path');
+      }
+      
+      return await this.scanFolderRecursiveInternal(sanitizedPath, 0, maxDepth, options.includeSubfolders);
+    } catch (error) {
+      console.error('❌ Failed to scan OneDrive folder recursively:', error);
+      return [];
+    }
+  }
+
+  async moveFile(fileId: string, targetFolderIdOrPath: string): Promise<{name: string, path: string, parentFolderId: string} | null> {
+    try {
+      const client = await this.getClient();
+      
+      // Security: Validate parameters
+      if (!fileId || !targetFolderIdOrPath) {
+        throw new Error('Missing required parameters for file move');
+      }
+      
+      if (!/^[a-zA-Z0-9!\-_\.~]+$/.test(fileId)) {
+        throw new Error('File ID contains invalid characters');
+      }
+      
+      // Get target folder info
+      let targetFolderId: string;
+      let targetPath: string;
+      
+      if (targetFolderIdOrPath.startsWith('/')) {
+        // It's a path
+        const sanitizedPath = targetFolderIdOrPath.replace(/\.\./g, '').replace(/\/+/g, '/');
+        if (sanitizedPath !== targetFolderIdOrPath) {
+          throw new Error('Invalid characters in target path');
+        }
+        
+        const targetFolder = await client.api(`/me/drive/root:${sanitizedPath}`).get();
+        targetFolderId = targetFolder.id;
+        targetPath = sanitizedPath;
+      } else {
+        // It's an ID
+        if (!/^[a-zA-Z0-9!\-_\.~]+$/.test(targetFolderIdOrPath)) {
+          throw new Error('Target folder ID contains invalid characters');
+        }
+        
+        const targetFolder = await client.api(`/me/drive/items/${targetFolderIdOrPath}`).get();
+        targetFolderId = targetFolder.id;
+        targetPath = targetFolder.parentReference?.path?.replace('/drive/root:', '') + '/' + targetFolder.name || '/';
+      }
+      
+      // Move the file
+      const moveData = {
+        parentReference: {
+          id: targetFolderId
+        }
+      };
+      
+      const movedFile = await client
+        .api(`/me/drive/items/${fileId}`)
+        .patch(moveData);
+      
+      console.log('✅ Moved OneDrive file:', movedFile.name);
+      return {
+        name: movedFile.name,
+        path: targetPath + '/' + movedFile.name,
+        parentFolderId: targetFolderId
+      };
+    } catch (error) {
+      console.error('❌ Failed to move OneDrive file:', error);
+      return null;
+    }
+  }
+
+  private async scanFolderRecursiveInternal(folderPath: string, currentDepth: number, maxDepth: number, includeSubfolders: boolean): Promise<OneDriveFile[]> {
+    const client = await this.getClient();
+    const allFiles: OneDriveFile[] = [];
+    
+    // Get items in current folder
+    let apiUrl: string;
+    if (folderPath === '/' || folderPath === '') {
+      apiUrl = '/me/drive/root/children';
+    } else {
+      apiUrl = `/me/drive/root:${folderPath}:/children`;
+    }
+    
+    const response = await client.api(apiUrl).get();
+    
+    for (const item of response.value) {
+      const fileInfo: OneDriveFile = {
+        id: item.id,
+        name: item.name,
+        size: item.size || 0,
+        downloadUrl: item['@microsoft.graph.downloadUrl'] || '',
+        lastModified: item.lastModifiedDateTime,
+        webUrl: item.webUrl,
+        folder: !!item.folder,
+        parentPath: folderPath
+      };
+      
+      // Add additional properties for better indexing
+      if (item.file) {
+        (fileInfo as any).mimeType = item.file.mimeType;
+      }
+      if (item.parentReference) {
+        (fileInfo as any).parentFolderId = item.parentReference.id;
+      }
+      (fileInfo as any).path = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
+      
+      allFiles.push(fileInfo);
+      
+      // Recursively scan subfolders if enabled and within depth limit
+      if (item.folder && includeSubfolders && currentDepth < maxDepth) {
+        const subFolderPath = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
+        const subFiles = await this.scanFolderRecursiveInternal(subFolderPath, currentDepth + 1, maxDepth, includeSubfolders);
+        allFiles.push(...subFiles);
+      }
+    }
+    
+    return allFiles;
+  }
+
+  private async copyTemplateStructure(projectPath: string, template: string): Promise<void> {
+    // Create basic folder structure based on template type
+    const client = await this.getClient();
+    
+    if (template === 'LUNGO') {
+      const lungoFolders = [
+        '1_CONSEGNA', '2_PERMIT', '3_PROGETTO', '4_MATERIALE_RICEVUTO',
+        '5_CANTIERE', '6_VERBALI_NOTIFICHE_COMUNICAZIONI', '7_SOPRALLUOGHI',
+        '8_VARIANTI', '9_PARCELLA', '10_INCARICO'
+      ];
+      
+      for (const folderName of lungoFolders) {
+        try {
+          await client
+            .api(`/me/drive/root:${projectPath}:/children`)
+            .post({ name: folderName, folder: {} });
+        } catch (error) {
+          console.warn(`⚠️ Failed to create folder ${folderName}:`, error);
+        }
+      }
+    } else if (template === 'BREVE') {
+      const breveFolders = ['CONSEGNA', 'ELABORAZIONI', 'MATERIALE_RICEVUTO', 'SOPRALLUOGHI'];
+      
+      for (const folderName of breveFolders) {
+        try {
+          await client
+            .api(`/me/drive/root:${projectPath}:/children`)
+            .post({ name: folderName, folder: {} });
+        } catch (error) {
+          console.warn(`⚠️ Failed to create folder ${folderName}:`, error);
+        }
+      }
     }
   }
 }

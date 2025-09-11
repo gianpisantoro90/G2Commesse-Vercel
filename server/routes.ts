@@ -1,9 +1,26 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema } from "@shared/schema";
 import serverOneDriveService from "./lib/onedrive-service";
 import { z } from "zod";
+
+// OneDrive endpoint validation schemas
+const setRootFolderSchema = z.object({
+  folderPath: z.string().min(1, "Folder path is required"),
+  folderId: z.string().optional(),
+});
+
+const createProjectFolderSchema = z.object({
+  projectCode: z.string().min(1, "Project code is required"),
+  template: z.enum(["LUNGO", "BREVE"], { required_error: "Template must be LUNGO or BREVE" }),
+});
+
+const scanFilesSchema = z.object({
+  folderPath: z.string().min(1, "Folder path is required"),
+  projectCode: z.string().optional(),
+  includeSubfolders: z.boolean().default(true),
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Generate project code
@@ -657,6 +674,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error('OneDrive project link failed:', error);
       res.status(500).json({ error: 'Failed to link project to OneDrive folder' });
+    }
+  });
+
+  // OneDrive-centric system endpoints
+  app.post("/api/onedrive/set-root-folder", async (req, res) => {
+    try {
+      const validatedData = setRootFolderSchema.parse(req.body);
+      const { folderPath, folderId } = validatedData;
+
+      // Validate folder exists on OneDrive
+      const isValid = await serverOneDriveService.validateFolder(folderId || folderPath);
+      if (!isValid) {
+        return res.status(400).json({ error: 'OneDrive folder not found or inaccessible' });
+      }
+
+      // Save root folder configuration
+      const config = await storage.setSystemConfig('onedrive_root_folder', {
+        path: folderPath,
+        folderId: folderId || null,
+        configuredAt: new Date().toISOString()
+      });
+
+      console.log('✅ OneDrive root folder configured:', folderPath);
+      res.json({ success: true, config });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      console.error('Set root folder failed:', error);
+      res.status(500).json({ error: 'Failed to set OneDrive root folder' });
+    }
+  });
+
+  app.get("/api/onedrive/root-folder", async (req, res) => {
+    try {
+      const config = await storage.getSystemConfig('onedrive_root_folder');
+      res.json(config || { configured: false });
+    } catch (error) {
+      console.error('Get root folder failed:', error);
+      res.status(500).json({ error: 'Failed to get root folder configuration' });
+    }
+  });
+
+  app.post("/api/onedrive/create-project-folder", async (req, res) => {
+    try {
+      const validatedData = createProjectFolderSchema.parse(req.body);
+      const { projectCode, template } = validatedData;
+
+      // Get root folder configuration
+      const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
+      if (!rootConfig || !rootConfig.value || !(rootConfig.value as any).path) {
+        return res.status(400).json({ error: 'OneDrive root folder not configured' });
+      }
+
+      const rootPath = (rootConfig.value as any).path;
+
+      // Create project folder with template
+      const folderInfo = await serverOneDriveService.createProjectWithTemplate(
+        rootPath, 
+        projectCode, 
+        template
+      );
+
+      if (folderInfo) {
+        // Save OneDrive mapping
+        const mapping = await storage.createOneDriveMapping({
+          projectCode,
+          oneDriveFolderId: folderInfo.id,
+          oneDriveFolderName: folderInfo.name,
+          oneDriveFolderPath: folderInfo.path
+        });
+
+        console.log('✅ Created OneDrive project folder:', folderInfo.path);
+        res.json({ success: true, folder: folderInfo, mapping });
+      } else {
+        res.status(500).json({ error: 'Failed to create OneDrive project folder' });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      console.error('Create project folder failed:', error);
+      res.status(500).json({ error: 'Failed to create project folder on OneDrive' });
+    }
+  });
+
+  app.post("/api/onedrive/scan-files", async (req, res) => {
+    try {
+      const validatedData = scanFilesSchema.parse(req.body);
+      const { folderPath, projectCode, includeSubfolders } = validatedData;
+
+      // Scan OneDrive folder
+      const files = await serverOneDriveService.scanFolderRecursive(folderPath, {
+        includeSubfolders,
+        maxDepth: includeSubfolders ? 5 : 1
+      });
+
+      // Index files in database
+      const indexed = [];
+      for (const file of files) {
+        try {
+          const fileIndex = await storage.createOrUpdateFileIndex({
+            driveItemId: file.id,
+            name: file.name,
+            path: file.path || folderPath + '/' + file.name,
+            size: file.size || 0,
+            mimeType: file.mimeType || 'application/octet-stream',
+            lastModified: file.lastModified ? new Date(file.lastModified) : new Date(),
+            projectCode: projectCode || null,
+            parentFolderId: file.parentFolderId || null,
+            isFolder: file.folder || false,
+            webUrl: file.webUrl || null,
+            downloadUrl: file.downloadUrl || null
+          });
+          indexed.push(fileIndex);
+        } catch (indexError) {
+          console.error('Failed to index file:', file.name, indexError);
+        }
+      }
+
+      console.log(`✅ Scanned and indexed ${indexed.length} files from ${folderPath}`);
+      res.json({ 
+        success: true, 
+        scanned: files.length, 
+        indexed: indexed.length,
+        files: indexed 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      console.error('Scan files failed:', error);
+      res.status(500).json({ error: 'Failed to scan OneDrive files' });
+    }
+  });
+
+  app.post("/api/onedrive/move-file", async (req, res) => {
+    try {
+      const { fileId, targetFolderId, targetPath } = req.body;
+      
+      if (!fileId || (!targetFolderId && !targetPath)) {
+        return res.status(400).json({ error: 'File ID and target folder ID or path required' });
+      }
+
+      // Move file on OneDrive
+      const result = await serverOneDriveService.moveFile(fileId, targetFolderId || targetPath);
+      
+      if (result) {
+        // Update file index
+        const updated = await storage.updateFileIndex(fileId, {
+          path: result.path,
+          parentFolderId: result.parentFolderId
+        });
+
+        console.log('✅ Moved OneDrive file:', result.name);
+        res.json({ success: true, file: result, updated });
+      } else {
+        res.status(400).json({ error: 'Failed to move file on OneDrive' });
+      }
+    } catch (error) {
+      console.error('Move file failed:', error);
+      res.status(500).json({ error: 'Failed to move OneDrive file' });
+    }
+  });
+
+  // Files Index management
+  app.get("/api/files-index", async (req, res) => {
+    try {
+      const { projectCode, path, limit = 100 } = req.query;
+      const files = await storage.getFilesIndex({
+        projectCode: projectCode as string,
+        path: path as string,
+        limit: parseInt(limit as string) || 100
+      });
+      res.json(files);
+    } catch (error) {
+      console.error('Get files index failed:', error);
+      res.status(500).json({ error: 'Failed to get files index' });
+    }
+  });
+
+  app.delete("/api/files-index/:driveItemId", async (req, res) => {
+    try {
+      const { driveItemId } = req.params;
+      const deleted = await storage.deleteFileIndex(driveItemId);
+      res.json({ success: !!deleted, deleted });
+    } catch (error) {
+      console.error('Delete file index failed:', error);
+      res.status(500).json({ error: 'Failed to delete file index' });
     }
   });
 

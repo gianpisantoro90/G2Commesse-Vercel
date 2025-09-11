@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -38,9 +38,15 @@ export interface IStorage {
   createOneDriveMapping(mapping: InsertOneDriveMapping): Promise<OneDriveMapping>;
   deleteOneDriveMapping(projectCode: string): Promise<boolean>;
   
+  // Files Index  
+  createOrUpdateFileIndex(fileIndex: InsertFilesIndex): Promise<FilesIndex>;
+  getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]>;
+  updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined>;
+  deleteFileIndex(driveItemId: string): Promise<boolean>;
+  
   // Bulk operations
-  exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }>;
-  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }): Promise<void>;
+  exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
+  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }): Promise<void>;
   clearAllData(): Promise<void>;
 }
 
@@ -50,6 +56,7 @@ export class MemStorage implements IStorage {
   private fileRoutings: Map<string, FileRouting> = new Map();
   private systemConfig: Map<string, SystemConfig> = new Map();
   private oneDriveMappings: Map<string, OneDriveMapping> = new Map();
+  private filesIndex: Map<string, FilesIndex> = new Map();
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -232,6 +239,68 @@ export class MemStorage implements IStorage {
     return this.oneDriveMappings.delete(projectCode);
   }
 
+  // Files Index
+  async createOrUpdateFileIndex(insertFileIndex: InsertFilesIndex): Promise<FilesIndex> {
+    const existing = this.filesIndex.get(insertFileIndex.driveItemId);
+    
+    if (existing) {
+      // Update existing
+      const updated: FilesIndex = {
+        ...existing,
+        ...insertFileIndex,
+        updatedAt: new Date(),
+      };
+      this.filesIndex.set(insertFileIndex.driveItemId, updated);
+      return updated;
+    } else {
+      // Create new
+      const id = randomUUID();
+      const fileIndex: FilesIndex = {
+        ...insertFileIndex,
+        id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.filesIndex.set(insertFileIndex.driveItemId, fileIndex);
+      return fileIndex;
+    }
+  }
+
+  async getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]> {
+    let results = Array.from(this.filesIndex.values());
+    
+    if (filters.projectCode) {
+      results = results.filter(f => f.projectCode === filters.projectCode);
+    }
+    
+    if (filters.path) {
+      results = results.filter(f => f.path?.includes(filters.path!));
+    }
+    
+    if (filters.limit) {
+      results = results.slice(0, filters.limit);
+    }
+    
+    return results;
+  }
+
+  async updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined> {
+    const existing = this.filesIndex.get(driveItemId);
+    if (!existing) return undefined;
+    
+    const updated: FilesIndex = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.filesIndex.set(driveItemId, updated);
+    return updated;
+  }
+
+  async deleteFileIndex(driveItemId: string): Promise<boolean> {
+    return this.filesIndex.delete(driveItemId);
+  }
+
   // Bulk operations
   async exportAllData() {
     return {
@@ -240,21 +309,26 @@ export class MemStorage implements IStorage {
       fileRoutings: Array.from(this.fileRoutings.values()),
       systemConfig: Array.from(this.systemConfig.values()),
       oneDriveMappings: Array.from(this.oneDriveMappings.values()),
+      filesIndex: Array.from(this.filesIndex.values()),
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }) {
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }) {
     this.projects.clear();
     this.clients.clear();
     this.fileRoutings.clear();
     this.systemConfig.clear();
     this.oneDriveMappings.clear();
+    this.filesIndex.clear();
 
     data.projects.forEach(p => this.projects.set(p.id, p));
     data.clients.forEach(c => this.clients.set(c.id, c));
     data.fileRoutings.forEach(fr => this.fileRoutings.set(fr.id, fr));
     data.systemConfig.forEach(sc => this.systemConfig.set(sc.id, sc));
     data.oneDriveMappings.forEach(odm => this.oneDriveMappings.set(odm.projectCode, odm));
+    if (data.filesIndex) {
+      data.filesIndex.forEach(fi => this.filesIndex.set(fi.driveItemId, fi));
+    }
   }
 
   async clearAllData() {
@@ -263,6 +337,7 @@ export class MemStorage implements IStorage {
     this.fileRoutings.clear();
     this.systemConfig.clear();
     this.oneDriveMappings.clear();
+    this.filesIndex.clear();
   }
 
   private generateSafeAcronym(text: string): string {
@@ -479,14 +554,87 @@ export class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
+  // Files Index
+  async createOrUpdateFileIndex(insertFileIndex: InsertFilesIndex): Promise<FilesIndex> {
+    // Try to find existing by driveItemId
+    const [existing] = await db.select().from(filesIndex).where(eq(filesIndex.driveItemId, insertFileIndex.driveItemId));
+    
+    if (existing) {
+      // Update existing
+      const [updated] = await db
+        .update(filesIndex)
+        .set({
+          ...insertFileIndex,
+          updatedAt: new Date(),
+        })
+        .where(eq(filesIndex.driveItemId, insertFileIndex.driveItemId))
+        .returning();
+      return updated;
+    } else {
+      // Create new
+      const [fileIndex] = await db
+        .insert(filesIndex)
+        .values({
+          ...insertFileIndex,
+          size: insertFileIndex.size || 0,
+          mimeType: insertFileIndex.mimeType || null,
+          lastModified: insertFileIndex.lastModified || null,
+          projectCode: insertFileIndex.projectCode || null,
+          parentFolderId: insertFileIndex.parentFolderId || null,
+          isFolder: insertFileIndex.isFolder || false,
+          webUrl: insertFileIndex.webUrl || null,
+          downloadUrl: insertFileIndex.downloadUrl || null,
+        })
+        .returning();
+      return fileIndex;
+    }
+  }
+
+  async getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]> {
+    let query = db.select().from(filesIndex);
+    
+    // Apply filters
+    if (filters.projectCode) {
+      query = query.where(eq(filesIndex.projectCode, filters.projectCode));
+    }
+    
+    if (filters.path) {
+      query = query.where(sql`${filesIndex.path} LIKE ${`%${filters.path}%`}`);
+    }
+    
+    if (filters.limit) {
+      query = query.limit(filters.limit);
+    }
+    
+    return await query;
+  }
+
+  async updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined> {
+    const [updated] = await db
+      .update(filesIndex)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(filesIndex.driveItemId, driveItemId))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteFileIndex(driveItemId: string): Promise<boolean> {
+    const result = await db.delete(filesIndex).where(eq(filesIndex.driveItemId, driveItemId));
+    return (result.rowCount || 0) > 0;
+  }
+
   // Bulk operations
   async exportAllData() {
-    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData] = await Promise.all([
+    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData] = await Promise.all([
       this.getAllProjects(),
       this.getAllClients(),
       db.select().from(fileRoutings),
       db.select().from(systemConfig),
       db.select().from(oneDriveMappings),
+      db.select().from(filesIndex),
     ]);
 
     return {
@@ -495,10 +643,11 @@ export class DatabaseStorage implements IStorage {
       fileRoutings: fileRoutingsData,
       systemConfig: systemConfigData,
       oneDriveMappings: oneDriveMappingsData,
+      filesIndex: filesIndexData,
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }) {
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }) {
     await this.clearAllData();
 
     if (data.clients.length > 0) {
@@ -516,9 +665,13 @@ export class DatabaseStorage implements IStorage {
     if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
       await db.insert(oneDriveMappings).values(data.oneDriveMappings);
     }
+    if (data.filesIndex && data.filesIndex.length > 0) {
+      await db.insert(filesIndex).values(data.filesIndex);
+    }
   }
 
   async clearAllData() {
+    await db.delete(filesIndex);
     await db.delete(fileRoutings);
     await db.delete(oneDriveMappings);
     await db.delete(projects);
