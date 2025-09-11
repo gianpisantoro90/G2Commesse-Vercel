@@ -717,6 +717,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // OneDrive Mappings CRUD endpoints
+  app.get("/api/onedrive-mappings", async (req, res) => {
+    try {
+      const mappings = await storage.getAllOneDriveMappings();
+      res.json(mappings);
+    } catch (error) {
+      console.error('Get OneDrive mappings failed:', error);
+      res.status(500).json({ error: 'Failed to retrieve OneDrive mappings' });
+    }
+  });
+
+  app.get("/api/onedrive-mappings/:projectCode", async (req, res) => {
+    try {
+      const mapping = await storage.getOneDriveMapping(req.params.projectCode);
+      if (!mapping) {
+        return res.status(404).json({ error: 'OneDrive mapping not found' });
+      }
+      res.json(mapping);
+    } catch (error) {
+      console.error('Get OneDrive mapping failed:', error);
+      res.status(500).json({ error: 'Failed to retrieve OneDrive mapping' });
+    }
+  });
+
+  app.delete("/api/onedrive-mappings/:projectCode", async (req, res) => {
+    try {
+      const deleted = await storage.deleteOneDriveMapping(req.params.projectCode);
+      if (!deleted) {
+        return res.status(404).json({ error: 'OneDrive mapping not found' });
+      }
+      res.json({ message: 'OneDrive mapping deleted successfully' });
+    } catch (error) {
+      console.error('Delete OneDrive mapping failed:', error);
+      res.status(500).json({ error: 'Failed to delete OneDrive mapping' });
+    }
+  });
+
+  app.post("/api/onedrive/validate-folder", async (req, res) => {
+    try {
+      const { folderIdOrPath } = req.body;
+      if (!folderIdOrPath) {
+        return res.status(400).json({ error: 'Folder ID or path is required' });
+      }
+      
+      const isValid = await serverOneDriveService.validateFolder(folderIdOrPath);
+      res.json({ valid: isValid });
+    } catch (error) {
+      console.error('OneDrive folder validation failed:', error);
+      res.status(500).json({ error: 'Failed to validate OneDrive folder' });
+    }
+  });
+
   app.post("/api/onedrive/create-project-folder", async (req, res) => {
     try {
       const validatedData = createProjectFolderSchema.parse(req.body);
