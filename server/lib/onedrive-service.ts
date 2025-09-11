@@ -51,10 +51,12 @@ async function readGraphErrorBody(error: any): Promise<{ body: string; bodyType:
       }, null, 2));
       return { body: `No readable body. Message: ${error.message}`, bodyType: 'none', rawError: error };
     }
-  } catch (readError) {
+  } catch (readError: unknown) {
+    const errorMessage = readError instanceof Error ? readError.message : String(readError);
+    const errorStack = readError instanceof Error ? readError.stack : undefined;
     console.error('❌ Failed to read GraphError body:', {
-      readErrorMessage: readError.message,
-      readErrorStack: readError.stack,
+      readErrorMessage: errorMessage,
+      readErrorStack: errorStack,
       originalError: {
         message: error.message,
         statusCode: error.statusCode,
@@ -62,7 +64,7 @@ async function readGraphErrorBody(error: any): Promise<{ body: string; bodyType:
       }
     });
     return { 
-      body: `Failed to read error body: ${readError.message}`, 
+      body: `Failed to read error body: ${errorMessage}`, 
       bodyType: 'error', 
       rawError: { originalError: error, readError } 
     };
@@ -119,8 +121,9 @@ async function handleGraphError(error: any, operation: string, details: any = {}
         console.log(`🔍 Inner error details:`, parsedBody.error.innerError);
       }
     }
-  } catch (parseError) {
-    console.log(`⚠️ Failed to parse error body as JSON:`, parseError.message);
+  } catch (parseError: unknown) {
+    const parseMessage = parseError instanceof Error ? parseError.message : String(parseError);
+    console.log(`⚠️ Failed to parse error body as JSON:`, parseMessage);
     // If body is not JSON, use the raw body
     if (errorBody && errorBody !== 'Unable to read error body' && errorBody !== 'Failed to read error body') {
       specificError = errorBody;
@@ -309,6 +312,15 @@ class ServerOneDriveService {
         throw new Error('Invalid folder path provided');
       }
       
+      // Check for problematic characters that cause Microsoft Graph API errors
+      const problematicChars = ['%', '<', '>', '|', '*', '?', '"', ':', '\\'];
+      const hasProblematicChars = problematicChars.some(char => folderPath.includes(char));
+      
+      if (hasProblematicChars) {
+        console.warn(`⚠️ Skipping folder with problematic characters: ${folderPath}`);
+        return [];
+      }
+      
       // Prevent path traversal attacks
       const sanitizedPath = folderPath.replace(/\.\./g, '').replace(/\/+/g, '/');
       if (sanitizedPath !== folderPath) {
@@ -388,6 +400,7 @@ class ServerOneDriveService {
           apiUrl,
           operation: 'POST /me/drive/root:parentPath:/children'
         });
+        return false; // This line should never be reached due to handleGraphError throwing
       }
     } catch (error) {
       console.error('❌ Failed to create OneDrive folder (Server):', error);
