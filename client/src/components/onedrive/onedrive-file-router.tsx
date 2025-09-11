@@ -28,16 +28,20 @@ export default function OneDriveFileRouter({ onRouteComplete }: OneDriveFileRout
   const { isConnected } = useOneDriveSync();
 
   // Get projects for selection
-  const { data: projects } = useQuery({
-    queryKey: ['projects']
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: () => fetch('/api/projects').then(r => r.json())
   });
 
-  // Get OneDrive files
-  const { data: oneDriveFiles, refetch: refetchFiles } = useQuery({
+  // Get OneDrive files using browse endpoint (files only)
+  const { data: allFiles = [], refetch: refetchFiles } = useQuery({
     queryKey: ['onedrive-files'],
-    queryFn: () => oneDriveService.listFiles(),
+    queryFn: () => oneDriveService.getAllFiles(),
     enabled: isConnected
   });
+
+  // Filter only files (not folders) for the file router
+  const oneDriveFiles = allFiles.filter(file => !file.folder);
 
   const handleFileSelect = (file: OneDriveFile, selected: boolean) => {
     if (selected) {

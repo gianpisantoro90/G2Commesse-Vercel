@@ -136,6 +136,70 @@ class OneDriveService {
     }
   }
 
+  async getAllFiles(): Promise<OneDriveFile[]> {
+    try {
+      // Get all folders from root
+      const rootResponse = await fetch('/api/onedrive/browse');
+      if (!rootResponse.ok) {
+        console.error('❌ Failed to get root folders:', rootResponse.statusText);
+        return [];
+      }
+      
+      const rootItems = await rootResponse.json() as OneDriveFile[];
+      const allFiles: OneDriveFile[] = [];
+      
+      // For each folder, get its contents recursively
+      for (const item of rootItems) {
+        if (item.folder) {
+          const folderFiles = await this.getFilesFromFolder(item.id, item.name);
+          allFiles.push(...folderFiles);
+        } else {
+          // If it's a file in root, add it
+          allFiles.push(item);
+        }
+      }
+      
+      return allFiles;
+    } catch (error) {
+      console.error('❌ Failed to get all OneDrive files:', error);
+      return [];
+    }
+  }
+
+  private async getFilesFromFolder(folderId: string, folderPath: string): Promise<OneDriveFile[]> {
+    try {
+      const response = await fetch(`/api/onedrive/browse?folderId=${encodeURIComponent(folderId)}`);
+      if (!response.ok) {
+        console.error(`❌ Failed to browse folder ${folderPath}:`, response.statusText);
+        return [];
+      }
+      
+      const items = await response.json() as OneDriveFile[];
+      const files: OneDriveFile[] = [];
+      
+      for (const item of items) {
+        if (item.folder) {
+          // Recursively get files from subfolders (limited depth to avoid infinite loops)
+          if (folderPath.split('/').length < 5) { // Max 5 levels deep
+            const subFiles = await this.getFilesFromFolder(item.id, `${folderPath}/${item.name}`);
+            files.push(...subFiles);
+          }
+        } else {
+          // Add file with updated parent path
+          files.push({
+            ...item,
+            parentPath: folderPath
+          });
+        }
+      }
+      
+      return files;
+    } catch (error) {
+      console.error(`❌ Failed to browse folder ${folderPath}:`, error);
+      return [];
+    }
+  }
+
   async getStatus(): Promise<{ connected: boolean; initialized: boolean }> {
     const connected = await this.testConnection();
     return {
