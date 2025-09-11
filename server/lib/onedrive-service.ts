@@ -1,6 +1,154 @@
 import { Client } from '@microsoft/microsoft-graph-client';
 import { getUncachableOneDriveClient } from './onedrive-client';
 
+// Utility to read GraphError body content
+async function readGraphErrorBody(error: any): Promise<string> {
+  try {
+    if (error.body && typeof error.body.getReader === 'function') {
+      const reader = error.body.getReader();
+      const decoder = new TextDecoder();
+      let result = '';
+      
+      let done = false;
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          result += decoder.decode(value, { stream: !done });
+        }
+      }
+      
+      return result;
+    } else if (error.body && typeof error.body === 'string') {
+      return error.body;
+    } else if (error.body && typeof error.body === 'object') {
+      return JSON.stringify(error.body);
+    }
+  } catch (readError) {
+    console.error('❌ Failed to read GraphError body:', readError);
+  }
+  return 'Unable to read error body';
+}
+
+// Enhanced error handler for Microsoft Graph API calls
+async function handleGraphError(error: any, operation: string, details: any = {}): Promise<never> {
+  const errorBody = await readGraphErrorBody(error);
+  
+  const errorDetails = {
+    operation,
+    statusCode: error.statusCode || error.status,
+    code: error.code,
+    requestId: error.requestId,
+    date: error.date,
+    message: error.message,
+    body: errorBody,
+    details,
+    stack: error.stack
+  };
+  
+  console.error(`❌ Microsoft Graph API Error [${operation}]:`, errorDetails);
+  
+  // Parse error body to extract specific error information
+  let specificError = error.message || 'Microsoft Graph API error';
+  try {
+    const parsedBody = JSON.parse(errorBody);
+    if (parsedBody.error) {
+      if (parsedBody.error.message) {
+        specificError = parsedBody.error.message;
+      }
+      if (parsedBody.error.code) {
+        specificError = `[${parsedBody.error.code}] ${specificError}`;
+      }
+    }
+  } catch (parseError) {
+    // If body is not JSON, use the raw body
+    if (errorBody && errorBody !== 'Unable to read error body') {
+      specificError = errorBody;
+    }
+  }
+  
+  throw new Error(`${operation} failed: ${specificError} (Status: ${error.statusCode || error.status})`);
+}
+
+// Log Microsoft Graph API requests for debugging
+function logGraphRequest(operation: string, apiPath: string, method: string = 'GET', body?: any) {
+  console.log(`📡 Microsoft Graph API Request [${operation}]:`, {
+    method,
+    path: apiPath,
+    body: body ? JSON.stringify(body, null, 2) : undefined,
+    timestamp: new Date().toISOString()
+  });
+}
+
+// Validate OneDrive folder name according to Microsoft Graph API restrictions
+function validateOneDriveFolderName(name: string): { isValid: boolean; error?: string } {
+  if (!name || typeof name !== 'string') {
+    return { isValid: false, error: 'Folder name is required' };
+  }
+
+  // Microsoft Graph/OneDrive restrictions
+  const invalidChars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
+  const reservedNames = ['CON', 'PRN', 'AUX', 'NUL', 'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9', 'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'];
+  
+  // Check length (OneDrive has 256 character limit for names)
+  if (name.length > 256) {
+    return { isValid: false, error: 'Folder name cannot exceed 256 characters' };
+  }
+  
+  // Check for empty or whitespace-only names
+  if (name.trim().length === 0) {
+    return { isValid: false, error: 'Folder name cannot be empty or contain only whitespace' };
+  }
+  
+  // Check for invalid characters
+  const foundInvalidChar = invalidChars.find(char => name.includes(char));
+  if (foundInvalidChar) {
+    return { isValid: false, error: `Folder name cannot contain "${foundInvalidChar}" character` };
+  }
+  
+  // Check for reserved names (case-insensitive)
+  const upperName = name.toUpperCase();
+  if (reservedNames.includes(upperName)) {
+    return { isValid: false, error: `"${name}" is a reserved name and cannot be used` };
+  }
+  
+  // Check for names that end with a period or space (not allowed)
+  if (name.endsWith('.') || name.endsWith(' ')) {
+    return { isValid: false, error: 'Folder name cannot end with a period or space' };
+  }
+  
+  // Check for names that start with a period (not recommended)
+  if (name.startsWith('.')) {
+    return { isValid: false, error: 'Folder name cannot start with a period' };
+  }
+  
+  return { isValid: true };
+}
+
+// Validate OneDrive path according to Microsoft Graph API restrictions
+function validateOneDrivePath(path: string): { isValid: boolean; error?: string } {
+  if (!path || typeof path !== 'string') {
+    return { isValid: false, error: 'Path is required' };
+  }
+
+  // OneDrive has a 400 character limit for full paths
+  if (path.length > 400) {
+    return { isValid: false, error: 'Path cannot exceed 400 characters' };
+  }
+  
+  // Validate each segment of the path
+  const segments = path.split('/').filter(segment => segment.length > 0);
+  
+  for (const segment of segments) {
+    const validation = validateOneDriveFolderName(segment);
+    if (!validation.isValid) {
+      return { isValid: false, error: `Invalid path segment "${segment}": ${validation.error}` };
+    }
+  }
+  
+  return { isValid: true };
+}
+
 export interface OneDriveFile {
   id: string;
   name: string;
@@ -349,6 +497,8 @@ class ServerOneDriveService {
     try {
       const client = await this.getClient();
       
+      console.log(`🚀 Starting project creation with template:`, { rootPath, projectCode, template });
+      
       // Security: Validate parameters
       if (!rootPath || !projectCode || !template) {
         throw new Error('Missing required parameters for project creation');
@@ -362,6 +512,13 @@ class ServerOneDriveService {
       const sanitizedRootPath = rootPath.replace(/\.\./g, '').replace(/\/+/g, '/');
       const sanitizedProjectCode = projectCode.replace(/[^a-zA-Z0-9_-]/g, '');
       
+      console.log(`🔧 After sanitization:`, { 
+        originalRootPath: rootPath, 
+        sanitizedRootPath, 
+        originalProjectCode: projectCode, 
+        sanitizedProjectCode 
+      });
+      
       if (sanitizedRootPath !== rootPath || sanitizedProjectCode !== projectCode) {
         throw new Error('Invalid characters in parameters');
       }
@@ -372,9 +529,29 @@ class ServerOneDriveService {
         folder: {}
       };
       
-      const projectFolder = await client
-        .api(`/me/drive/root:${sanitizedRootPath}:/children`)
-        .post(projectFolderData);
+      const apiPath = `/me/drive/root:${sanitizedRootPath}:/children`;
+      logGraphRequest('Create Project Folder', apiPath, 'POST', projectFolderData);
+      
+      let projectFolder;
+      try {
+        projectFolder = await client
+          .api(apiPath)
+          .post(projectFolderData);
+          
+        console.log(`✅ Successfully created project folder:`, {
+          id: projectFolder.id,
+          name: projectFolder.name,
+          size: projectFolder.size,
+          webUrl: projectFolder.webUrl
+        });
+      } catch (error: any) {
+        await handleGraphError(error, 'Create Project Folder', {
+          rootPath: sanitizedRootPath,
+          projectCode: sanitizedProjectCode,
+          template,
+          apiPath
+        });
+      }
       
       // Copy template structure based on template type
       const projectPath = `${sanitizedRootPath}/${sanitizedProjectCode}`;
@@ -382,8 +559,12 @@ class ServerOneDriveService {
       try {
         // Create basic folder structure based on template
         await this.copyTemplateStructure(projectPath, template);
-      } catch (templateError) {
-        console.warn('⚠️ Template structure copy failed, project folder created without template:', templateError);
+      } catch (templateError: any) {
+        console.warn('⚠️ Template structure copy failed, project folder created without template:', {
+          error: templateError.message || templateError,
+          projectPath,
+          template
+        });
       }
       
       console.log(`✅ Created OneDrive project folder with ${template} template:`, projectPath);
@@ -392,8 +573,14 @@ class ServerOneDriveService {
         name: projectFolder.name,
         path: projectPath
       };
-    } catch (error) {
-      console.error('❌ Failed to create OneDrive project folder:', error);
+    } catch (error: any) {
+      console.error('❌ Failed to create OneDrive project folder:', {
+        message: error.message,
+        stack: error.stack,
+        rootPath,
+        projectCode,
+        template
+      });
       return null;
     }
   }
@@ -531,8 +718,11 @@ class ServerOneDriveService {
   }
 
   private async copyTemplateStructure(projectPath: string, template: string): Promise<void> {
+    console.log(`🔄 Creating ${template} template structure at: ${projectPath}`);
+    
     // Create basic folder structure based on template type
     const client = await this.getClient();
+    const errors: string[] = [];
     
     if (template === 'LUNGO') {
       const lungoFolders = [
@@ -541,28 +731,85 @@ class ServerOneDriveService {
         '8_VARIANTI', '9_PARCELLA', '10_INCARICO'
       ];
       
+      console.log(`📁 Creating ${lungoFolders.length} LUNGO template folders...`);
+      
       for (const folderName of lungoFolders) {
+        const folderData = { name: folderName, folder: {} };
+        const apiPath = `/me/drive/root:${projectPath}:/children`;
+        
+        logGraphRequest('Create Template Folder (LUNGO)', apiPath, 'POST', folderData);
+        
         try {
-          await client
-            .api(`/me/drive/root:${projectPath}:/children`)
-            .post({ name: folderName, folder: {} });
-        } catch (error) {
-          console.warn(`⚠️ Failed to create folder ${folderName}:`, error);
+          const response = await client
+            .api(apiPath)
+            .post(folderData);
+            
+          console.log(`✅ Successfully created template folder: ${folderName}`, {
+            id: response.id,
+            name: response.name,
+            webUrl: response.webUrl
+          });
+        } catch (error: any) {
+          try {
+            await handleGraphError(error, `Create Template Folder (LUNGO) - ${folderName}`, {
+              projectPath,
+              folderName,
+              template: 'LUNGO',
+              apiPath
+            });
+          } catch (handledError: any) {
+            const errorMsg = `Failed to create folder ${folderName}: ${handledError.message}`;
+            console.error(`❌ ${errorMsg}`);
+            errors.push(errorMsg);
+          }
         }
       }
     } else if (template === 'BREVE') {
       const breveFolders = ['CONSEGNA', 'ELABORAZIONI', 'MATERIALE_RICEVUTO', 'SOPRALLUOGHI'];
       
+      console.log(`📁 Creating ${breveFolders.length} BREVE template folders...`);
+      
       for (const folderName of breveFolders) {
+        const folderData = { name: folderName, folder: {} };
+        const apiPath = `/me/drive/root:${projectPath}:/children`;
+        
+        logGraphRequest('Create Template Folder (BREVE)', apiPath, 'POST', folderData);
+        
         try {
-          await client
-            .api(`/me/drive/root:${projectPath}:/children`)
-            .post({ name: folderName, folder: {} });
-        } catch (error) {
-          console.warn(`⚠️ Failed to create folder ${folderName}:`, error);
+          const response = await client
+            .api(apiPath)
+            .post(folderData);
+            
+          console.log(`✅ Successfully created template folder: ${folderName}`, {
+            id: response.id,
+            name: response.name,
+            webUrl: response.webUrl
+          });
+        } catch (error: any) {
+          try {
+            await handleGraphError(error, `Create Template Folder (BREVE) - ${folderName}`, {
+              projectPath,
+              folderName,
+              template: 'BREVE',
+              apiPath
+            });
+          } catch (handledError: any) {
+            const errorMsg = `Failed to create folder ${folderName}: ${handledError.message}`;
+            console.error(`❌ ${errorMsg}`);
+            errors.push(errorMsg);
+          }
         }
       }
+    } else {
+      throw new Error(`Unknown template type: ${template}`);
     }
+    
+    if (errors.length > 0) {
+      console.warn(`⚠️  Template structure partially failed. Errors:`, errors);
+      throw new Error(`Template structure creation failed: ${errors.join(', ')}`);
+    }
+    
+    console.log(`✅ Successfully created all ${template} template folders`);
   }
 }
 

@@ -4,8 +4,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
+import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { FolderOpen, Check, AlertCircle, Settings, Folder, ChevronRight, RefreshCw, Home, Cloud } from "lucide-react";
 import oneDriveService, { OneDriveFile } from "@/lib/onedrive-service";
 
@@ -26,19 +27,17 @@ export default function FolderConfigPanel() {
   const queryClient = useQueryClient();
   const { isConnected } = useOneDriveSync();
 
-  // Get current OneDrive root folder configuration
-  const { data: rootConfig, isLoading: isLoadingConfig, refetch: refetchConfig } = useQuery({
-    queryKey: ['onedrive-root-folder'],
-    queryFn: async () => {
-      const response = await fetch('/api/onedrive/root-folder');
-      if (response.ok) {
-        const data = await response.json();
-        return data.config as OneDriveRootConfig | null;
-      }
-      return null;
-    },
-    enabled: isConnected
-  });
+  // Use shared OneDrive root folder configuration hook
+  const {
+    rootConfig,
+    isConfigured,
+    isLoading: isLoadingConfig,
+    setRootFolder,
+    resetRootFolder,
+    isConfiguring,
+    isResetting,
+    refetch: refetchConfig,
+  } = useOneDriveRootConfig();
 
   // Get current folder files for browsing
   const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles } = useQuery({
@@ -54,41 +53,6 @@ export default function FolderConfigPanel() {
     enabled: isConnected && showBrowser
   });
 
-  // Mutation for setting OneDrive root folder
-  const setRootFolderMutation = useMutation({
-    mutationFn: async ({ folderId, folderPath }: { folderId: string; folderPath: string }) => {
-      const response = await fetch('/api/onedrive/set-root-folder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ folderId, folderPath })
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to set root folder');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Cartella radice configurata",
-        description: "La cartella OneDrive è stata impostata come radice per i progetti G2",
-      });
-      setShowBrowser(false);
-      setSelectedFolder(null);
-      refetchConfig();
-      queryClient.invalidateQueries({ queryKey: ['onedrive-root-folder'] });
-    },
-    onError: (error: any) => {
-      console.error('Set root folder error:', error);
-      const errorMessage = error?.message || 'Errore sconosciuto';
-      toast({
-        title: "Errore configurazione",
-        description: `Impossibile configurare la cartella radice: ${errorMessage}`,
-        variant: "destructive",
-      });
-    }
-  });
 
   // Navigate to folder
   const navigateToFolder = (folderPath: string) => {
@@ -125,10 +89,27 @@ export default function FolderConfigPanel() {
       ? `/${selectedFolder.name}` 
       : `${selectedFolder.parentPath}/${selectedFolder.name}`;
 
-    setRootFolderMutation.mutate({
-      folderId: selectedFolder.id,
-      folderPath: folderPath
-    });
+    try {
+      await setRootFolder({
+        folderId: selectedFolder.id,
+        folderPath: folderPath
+      });
+      
+      toast({
+        title: "Cartella radice configurata",
+        description: "La cartella OneDrive è stata impostata come radice per i progetti G2",
+      });
+      setShowBrowser(false);
+      setSelectedFolder(null);
+    } catch (error: any) {
+      console.error('Set root folder error:', error);
+      const errorMessage = error?.message || 'Errore sconosciuto';
+      toast({
+        title: "Errore configurazione",
+        description: `Impossibile configurare la cartella radice: ${errorMessage}`,
+        variant: "destructive",
+      });
+    }
   };
 
   // Generate breadcrumb items
@@ -151,20 +132,14 @@ export default function FolderConfigPanel() {
   const handleResetConfig = async () => {
     if (confirm("Sei sicuro di voler resettare la configurazione della cartella radice OneDrive?")) {
       try {
-        const response = await fetch('/api/onedrive/root-folder', {
-          method: 'DELETE',
-        });
+        await resetRootFolder();
         
-        if (response.ok) {
-          refetchConfig();
-          toast({
-            title: "Configurazione resettata",
-            description: "La configurazione della cartella radice OneDrive è stata rimossa.",
-          });
-        } else {
-          throw new Error('Failed to reset configuration');
-        }
-      } catch (error) {
+        toast({
+          title: "Configurazione resettata",
+          description: "La configurazione della cartella radice OneDrive è stata rimossa.",
+        });
+      } catch (error: any) {
+        console.error('Reset root folder error:', error);
         toast({
           title: "Errore reset",
           description: "Impossibile resettare la configurazione",

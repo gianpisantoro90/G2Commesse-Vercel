@@ -689,15 +689,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'OneDrive folder not found or inaccessible' });
       }
 
-      // Save root folder configuration
-      const config = await storage.setSystemConfig('onedrive_root_folder', {
-        path: folderPath,
+      // Extract folder name from path
+      const folderName = folderPath.split('/').pop() || 'Root';
+
+      // Save root folder configuration with correct field names
+      const configData = {
+        folderPath: folderPath,
         folderId: folderId || null,
-        configuredAt: new Date().toISOString()
-      });
+        folderName: folderName,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      const config = await storage.setSystemConfig('onedrive_root_folder', configData);
 
       console.log('✅ OneDrive root folder configured:', folderPath);
-      res.json({ success: true, config });
+      res.json({ success: true, config: { ...config, value: configData } });
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: "Invalid request data", details: error.errors });
@@ -709,8 +715,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/onedrive/root-folder", async (req, res) => {
     try {
-      const config = await storage.getSystemConfig('onedrive_root_folder');
-      res.json(config || { configured: false });
+      const systemConfig = await storage.getSystemConfig('onedrive_root_folder');
+      
+      if (systemConfig && systemConfig.value) {
+        const rawConfig = systemConfig.value;
+        
+        // Transform the data to match frontend interface format
+        const transformedConfig = {
+          folderPath: rawConfig.folderPath || rawConfig.path || '',
+          folderId: rawConfig.folderId || '',
+          folderName: rawConfig.folderName || (rawConfig.folderPath || rawConfig.path || '').split('/').pop() || 'Root',
+          lastUpdated: rawConfig.lastUpdated || rawConfig.configuredAt || new Date().toISOString()
+        };
+        
+        res.json({ 
+          config: transformedConfig,
+          configured: true 
+        });
+      } else {
+        res.json({ configured: false });
+      }
     } catch (error) {
       console.error('Get root folder failed:', error);
       res.status(500).json({ error: 'Failed to get root folder configuration' });
@@ -771,18 +795,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/onedrive/create-project-folder", async (req, res) => {
     try {
+      console.log('🚀 Starting OneDrive project folder creation...');
       const validatedData = createProjectFolderSchema.parse(req.body);
       const { projectCode, template } = validatedData;
+      
+      console.log(`📋 Request details: projectCode=${projectCode}, template=${template}`);
 
       // Get root folder configuration
       const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
       if (!rootConfig || !rootConfig.value || !(rootConfig.value as any).path) {
-        return res.status(400).json({ error: 'OneDrive root folder not configured' });
+        console.error('❌ OneDrive root folder not configured');
+        return res.status(400).json({ 
+          success: false,
+          error: 'OneDrive root folder not configured. Please configure the root folder in system settings.' 
+        });
       }
 
       const rootPath = (rootConfig.value as any).path;
+      console.log(`📁 Using root path: ${rootPath}`);
 
       // Create project folder with template
+      console.log(`🔄 Creating project folder: ${rootPath}/${projectCode} with ${template} template`);
       const folderInfo = await serverOneDriveService.createProjectWithTemplate(
         rootPath, 
         projectCode, 
@@ -790,6 +823,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       if (folderInfo) {
+        console.log(`✅ OneDrive folder created successfully: ${folderInfo.path}`);
+        
         // Save OneDrive mapping
         const mapping = await storage.createOneDriveMapping({
           projectCode,
@@ -798,17 +833,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
           oneDriveFolderPath: folderInfo.path
         });
 
-        console.log('✅ Created OneDrive project folder:', folderInfo.path);
-        res.json({ success: true, folder: folderInfo, mapping });
+        console.log('📝 OneDrive mapping saved to database:', folderInfo.path);
+        res.json({ 
+          success: true, 
+          folder: folderInfo, 
+          mapping,
+          message: `Project folder created successfully at ${folderInfo.path}`
+        });
       } else {
-        res.status(500).json({ error: 'Failed to create OneDrive project folder' });
+        console.error('❌ OneDrive folder creation returned null');
+        res.status(500).json({ 
+          success: false,
+          error: 'Failed to create OneDrive project folder. Check server logs for details.' 
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+        console.error('❌ Validation error:', error.errors);
+        return res.status(400).json({ 
+          success: false,
+          error: "Invalid request data", 
+          details: error.errors 
+        });
       }
-      console.error('Create project folder failed:', error);
-      res.status(500).json({ error: 'Failed to create project folder on OneDrive' });
+      
+      console.error('❌ Create project folder failed:', {
+        message: error.message,
+        stack: error.stack,
+        cause: error.cause,
+        statusCode: error.statusCode,
+        requestId: error.requestId
+      });
+      
+      // Enhanced error classification based on Microsoft Graph errors
+      let statusCode = 500;
+      let errorMessage = 'Failed to create project folder on OneDrive';
+      let errorCode = 'FOLDER_CREATION_FAILED';
+      
+      const errorText = (error.message || '').toLowerCase();
+      
+      // Microsoft Graph specific errors
+      if (errorText.includes('status: 400')) {
+        statusCode = 400;
+        if (errorText.includes('invalidrequest') || errorText.includes('badrequest')) {
+          errorMessage = 'Invalid folder name or path. Please use only letters, numbers, hyphens, and underscores.';
+          errorCode = 'INVALID_FOLDER_NAME';
+        } else if (errorText.includes('conflictingitemname') || errorText.includes('nameconflict')) {
+          errorMessage = 'A folder with this name already exists. Please choose a different project code.';
+          errorCode = 'FOLDER_EXISTS';
+        } else if (errorText.includes('quotaexceeded') || errorText.includes('insufficientstorage')) {
+          errorMessage = 'OneDrive storage quota exceeded. Please free up space or contact administrator.';
+          errorCode = 'STORAGE_QUOTA_EXCEEDED';
+        } else {
+          errorMessage = 'Invalid request to OneDrive. Please check the project code and try again.';
+          errorCode = 'BAD_REQUEST';
+        }
+      } else if (errorText.includes('status: 401') || errorText.includes('authentication')) {
+        statusCode = 401;
+        errorMessage = 'OneDrive authentication expired. Please reconnect OneDrive in system settings.';
+        errorCode = 'AUTHENTICATION_FAILED';
+      } else if (errorText.includes('status: 403') || errorText.includes('forbidden')) {
+        statusCode = 403;
+        errorMessage = 'Insufficient permissions to create folders in OneDrive. Please check OneDrive permissions.';
+        errorCode = 'PERMISSIONS_DENIED';
+      } else if (errorText.includes('status: 404') || errorText.includes('not found')) {
+        statusCode = 404;
+        errorMessage = 'OneDrive root folder not found. Please reconfigure the OneDrive root folder.';
+        errorCode = 'ROOT_FOLDER_NOT_FOUND';
+      } else if (errorText.includes('status: 429') || errorText.includes('throttled')) {
+        statusCode = 429;
+        errorMessage = 'OneDrive API rate limit exceeded. Please wait a moment and try again.';
+        errorCode = 'RATE_LIMITED';
+      } else if (errorText.includes('template structure creation failed')) {
+        errorMessage = 'Project folder created but template structure failed. Some subfolders may be missing.';
+        errorCode = 'TEMPLATE_STRUCTURE_FAILED';
+      } else if (errorText.includes('invalid characters')) {
+        statusCode = 400;
+        errorMessage = 'Project code contains invalid characters. Please use only letters, numbers, hyphens, and underscores.';
+        errorCode = 'INVALID_PROJECT_CODE';
+      } else if (errorText.includes('root folder') && errorText.includes('not configured')) {
+        statusCode = 400;
+        errorMessage = 'OneDrive root folder not configured. Please configure it in system settings.';
+        errorCode = 'ROOT_FOLDER_NOT_CONFIGURED';
+      }
+      
+      res.status(statusCode).json({ 
+        success: false,
+        error: errorMessage,
+        code: errorCode,
+        details: error.message || 'Unknown error occurred',
+        timestamp: new Date().toISOString()
+      });
     }
   });
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertProjectSchema, type InsertProject } from "@shared/schema";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
+import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { Cloud, CheckCircle, AlertCircle, Loader2, FolderOpen, ExternalLink, Settings } from "lucide-react";
 import { z } from "zod";
 
@@ -46,21 +47,12 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
     },
   });
 
-  // Check OneDrive root folder configuration
-  const { data: rootConfig, isLoading: isLoadingConfig } = useQuery({
-    queryKey: ['onedrive-root-folder'],
-    queryFn: async () => {
-      const response = await fetch('/api/onedrive/root-folder');
-      if (response.ok) {
-        const data = await response.json();
-        return data.config;
-      }
-      return null;
-    },
-    enabled: isConnected
-  });
-
-  const isRootConfigured = rootConfig && rootConfig.path;
+  // Use shared OneDrive root folder configuration hook
+  const {
+    rootConfig,
+    isConfigured: isRootConfigured,
+    isLoading: isLoadingConfig,
+  } = useOneDriveRootConfig();
 
   const generateCodeMutation = useMutation({
     mutationFn: async (data: { client: string; city: string; year: number }) => {

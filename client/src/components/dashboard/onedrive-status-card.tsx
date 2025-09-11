@@ -33,7 +33,9 @@ export default function OneDriveStatusCard() {
       const response = await fetch('/api/system-config/onedrive_root_folder');
       if (response.ok) {
         const config = await response.json();
-        return config.value || '/G2_Progetti';
+        // Extract path from the config object, handle both direct object and wrapped formats
+        const configValue = config.value || config;
+        return configValue?.path || '/G2_Progetti';
       }
       return '/G2_Progetti'; // Default
     },
