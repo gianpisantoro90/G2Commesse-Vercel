@@ -372,11 +372,17 @@ class ServerOneDriveService {
     }
   }
 
-  async createFolder(folderName: string, parentPath = '/G2_Progetti'): Promise<boolean> {
+  async createFolder(folderName: string, parentPath?: string): Promise<boolean> {
     try {
       const client = await this.getClient();
 
-      await this.ensureG2ProjectsFolder();
+      // If no parent path provided, use configured root folder
+      if (!parentPath) {
+        const rootConfig = await this.getRootFolderPath();
+        parentPath = rootConfig || '/G2_Progetti'; // fallback to legacy path
+      }
+
+      await this.ensureRootFolder(parentPath);
 
       const folderData = {
         name: folderName,
@@ -410,20 +416,90 @@ class ServerOneDriveService {
 
   async syncProjectFolder(projectCode: string, projectDescription: string): Promise<boolean> {
     try {
-      // Ensure main G2_Progetti folder exists
-      await this.ensureG2ProjectsFolder();
+      // Get configured root folder path
+      const rootConfig = await this.getRootFolderPath();
+      const rootPath = rootConfig || '/G2_Progetti'; // fallback to legacy path
+      
+      // Ensure root folder exists
+      await this.ensureRootFolder(rootPath);
 
-      // Create project folder
-      const success = await this.createFolder(projectCode);
+      // Create project folder in the configured root path
+      const success = await this.createFolder(projectCode, rootPath);
       
       if (success) {
-        console.log(`✅ Synced project folder to OneDrive (Server): ${projectCode}`);
+        console.log(`✅ Synced project folder to OneDrive (Server): ${rootPath}/${projectCode}`);
       }
       
       return success;
     } catch (error) {
       console.error('❌ Failed to sync project folder (Server):', error);
       return false;
+    }
+  }
+
+  private async getRootFolderPath(): Promise<string | null> {
+    try {
+      // Import storage dynamically to avoid circular dependency
+      const { storage } = await import('../storage');
+      const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
+      
+      if (rootConfig && rootConfig.value && (rootConfig.value as any).folderPath) {
+        return (rootConfig.value as any).folderPath;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Failed to get root folder path:', error);
+      return null;
+    }
+  }
+
+  private async ensureRootFolder(rootPath: string): Promise<void> {
+    try {
+      const client = await this.getClient();
+      
+      // Check if root folder exists
+      const checkUrl = `/me/drive/root:${rootPath}`;
+      logGraphRequest('Check Root Folder', checkUrl, 'GET');
+      
+      try {
+        const checkResponse = await client.api(checkUrl).get();
+        logGraphResponse('Check Root Folder', checkResponse);
+        console.log(`✅ Root folder already exists (Server): ${rootPath}`);
+      } catch (checkError: any) {
+        logGraphResponse('Check Root Folder', null, checkError);
+        
+        // Folder doesn't exist, create it
+        console.log(`📁 Root folder does not exist, creating it: ${rootPath}`);
+        const folderName = rootPath.split('/').pop() || 'G2_Progetti';
+        const parentPath = rootPath.substring(0, rootPath.lastIndexOf('/')) || '/';
+        
+        const client = await this.getClient();
+        const folderData = {
+          name: folderName,
+          folder: {}
+        };
+
+        const createUrl = parentPath === '/' ? '/me/drive/root/children' : `/me/drive/root:${parentPath}:/children`;
+        logGraphRequest('Create Root Folder', createUrl, 'POST', folderData);
+        
+        try {
+          const createResponse = await client.api(createUrl).post(folderData);
+          logGraphResponse('Create Root Folder', createResponse);
+          console.log(`✅ Created root folder in OneDrive (Server): ${rootPath}`);
+        } catch (createError: any) {
+          logGraphResponse('Create Root Folder', null, createError);
+          await handleGraphError(createError, 'Create Root Folder', {
+            folderData,
+            createUrl,
+            rootPath,
+            operation: `POST ${createUrl}`
+          });
+        }
+      }
+    } catch (error) {
+      console.error(`❌ Failed to ensure root folder (Server): ${rootPath}`, error);
+      throw error;
     }
   }
 
