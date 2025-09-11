@@ -428,10 +428,10 @@ export default function FolderConfigPanel() {
               </Button>
               <Button
                 onClick={handleConfirmSelection}
-                disabled={!selectedFolder || setRootFolderMutation.isPending}
+                disabled={!selectedFolder || isConfiguring}
                 data-testid="button-confirm-selection"
               >
-                {setRootFolderMutation.isPending ? "Configurando..." : "Conferma Selezione"}
+                {isConfiguring ? "Configurando..." : "Conferma Selezione"}
               </Button>
             </div>
           </div>
