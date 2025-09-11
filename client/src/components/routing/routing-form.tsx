@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { type Project } from "@shared/schema";
 import { aiRouter, type RoutingResult } from "@/lib/ai-router";
 import { useToast } from "@/hooks/use-toast";
-import { folderManager } from "@/lib/folder-manager";
-import { AlertCircle, CheckCircle, Settings } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 interface RoutingFormProps {
   onAnalysisComplete: (results: Array<{result: RoutingResult, file: File}>, project: Project | null) => void;
@@ -18,30 +17,11 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [rootFolderStatus, setRootFolderStatus] = useState<'configured' | 'not-configured' | 'checking'>('checking');
   const { toast } = useToast();
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
-
-  useEffect(() => {
-    // Check root folder configuration status
-    const checkRootFolderStatus = () => {
-      const isConfigured = folderManager.isConfigured();
-      setRootFolderStatus(isConfigured ? 'configured' : 'not-configured');
-    };
-    
-    checkRootFolderStatus();
-    
-    // Listen for storage changes (when user configures folder in another tab)
-    const handleStorageChange = () => {
-      checkRootFolderStatus();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -113,35 +93,10 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
           <h2 className="text-2xl font-bold text-gray-900">Auto-Routing AI-Only</h2>
           <p className="text-gray-600">Sistema intelligente Claude AI per classificazione automatica file</p>
           
-          {/* Root Folder Status */}
+          {/* OneDrive Status */}
           <div className="mt-2 flex items-center gap-2">
-            {rootFolderStatus === 'configured' ? (
-              <>
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-700 font-medium">Cartella radice configurata</span>
-              </>
-            ) : rootFolderStatus === 'not-configured' ? (
-              <>
-                <AlertCircle className="w-4 h-4 text-yellow-600" />
-                <span className="text-sm text-yellow-700 font-medium">Cartella radice non configurata</span>
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="p-0 h-auto text-xs text-blue-600 hover:text-blue-800"
-                  onClick={() => {
-                    toast({
-                      title: "Configurazione cartella",
-                      description: "Vai in Sistema > Cartelle per configurare la cartella radice delle commesse.",
-                    });
-                  }}
-                >
-                  <Settings className="w-3 h-3 mr-1" />
-                  Configura ora
-                </Button>
-              </>
-            ) : (
-              <span className="text-sm text-gray-500">Verifica configurazione...</span>
-            )}
+            <CheckCircle className="w-4 h-4 text-green-600" />
+            <span className="text-sm text-green-700 font-medium">Sistema OneDrive integrato</span>
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-// File System Access API utilities for G2 Commesse
+// Project templates and utilities for G2 Commesse
 
 export interface FolderStructure {
   [folderName: string]: FolderStructure | {};
@@ -65,95 +65,6 @@ export const PROJECT_TEMPLATES: Record<string, ProjectTemplate> = {
   },
 };
 
-// File System Access API support check
-export const isFileSystemAccessSupported = (): boolean => {
-  return 'showDirectoryPicker' in window;
-};
-
-// Create folder structure recursively
-export const createFolderStructure = async (
-  rootHandle: FileSystemDirectoryHandle,
-  structure: FolderStructure,
-  basePath: string = ""
-): Promise<void> => {
-  const createdFolders: string[] = [];
-  
-  console.log('createFolderStructure called with:', { structure, basePath });
-  
-  if (!structure || typeof structure !== 'object') {
-    console.error('Invalid structure provided:', structure);
-    throw new Error('Invalid folder structure provided');
-  }
-  
-  try {
-    for (const [folderName, subStructure] of Object.entries(structure)) {
-      const sanitizedName = sanitizeFileName(folderName);
-      const fullPath = basePath ? `${basePath}/${sanitizedName}` : sanitizedName;
-      
-      console.log(`Creating folder: ${fullPath} (original: ${folderName})`);
-      
-      try {
-        console.log(`🔄 Attempting to create folder: "${sanitizedName}"`);
-        const folderHandle = await rootHandle.getDirectoryHandle(sanitizedName, { 
-          create: true 
-        });
-        createdFolders.push(fullPath);
-        console.log(`✅ Successfully created folder: ${fullPath}`);
-        
-        // Recursively create subfolders
-        if (subStructure && typeof subStructure === 'object' && Object.keys(subStructure).length > 0) {
-          console.log(`📁 Creating subfolders for: ${fullPath}`);
-          await createFolderStructure(folderHandle, subStructure as FolderStructure, fullPath);
-        }
-      } catch (error: any) {
-        console.error(`❌ SPECIFIC ERROR creating folder "${sanitizedName}":`, {
-          originalName: folderName,
-          sanitizedName: sanitizedName,
-          error: error,
-          message: error.message,
-          name: error.name,
-          code: error.code,
-          stack: error.stack
-        });
-        
-        // Skip this folder and continue with others rather than failing completely
-        console.log(`⚠️ Skipping problematic folder: "${folderName}"`);
-        // Don't throw error, just continue with next folders
-      }
-    }
-  } catch (error: any) {
-    console.error("❌ Error during folder structure creation:", error);
-    throw error;
-  }
-};
-
-// Create complete project structure
-export const createProjectStructure = async (
-  rootHandle: FileSystemDirectoryHandle,
-  projectCode: string,
-  projectObject: string,
-  template: string
-): Promise<{ projectHandle: FileSystemDirectoryHandle; createdFolders: string[] }> => {
-  const templateData = PROJECT_TEMPLATES[template];
-  if (!templateData) {
-    throw new Error(`Template non trovato: ${template}`);
-  }
-
-  // Create main project folder with underscore separation and preserve spaces as underscores
-  const cleanObjectName = projectObject.replace(/\s+/g, '_').replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
-  const projectFolderName = `${projectCode}_${cleanObjectName}`;
-  const projectHandle = await rootHandle.getDirectoryHandle(projectFolderName, { 
-    create: true 
-  });
-
-  // Create structure inside project folder
-  await createFolderStructure(projectHandle, templateData.structure);
-
-  // Get list of created folders for reporting
-  const createdFolders = getFolderList(templateData.structure, projectFolderName);
-
-  return { projectHandle, createdFolders };
-};
 
 // Generate script commands for fallback
 export const generateScriptCommands = (
@@ -328,38 +239,3 @@ const downloadFile = (filename: string, content: string): void => {
   URL.revokeObjectURL(url);
 };
 
-// Check if we can write to a directory
-export const checkDirectoryWritePermission = async (
-  dirHandle: FileSystemDirectoryHandle
-): Promise<boolean> => {
-  try {
-    // Try to create a temporary file to test write permission
-    const testFileName = `.g2_write_test_${Date.now()}`;
-    const testFileHandle = await dirHandle.getFileHandle(testFileName, { 
-      create: true 
-    });
-    
-    // Clean up test file
-    await dirHandle.removeEntry(testFileName);
-    return true;
-  } catch (error) {
-    console.error('Write permission check failed:', error);
-    return false;
-  }
-};
-
-// Get directory info
-export const getDirectoryInfo = async (
-  dirHandle: FileSystemDirectoryHandle
-): Promise<{
-  name: string;
-  path?: string;
-  canWrite: boolean;
-}> => {
-  const canWrite = await checkDirectoryWritePermission(dirHandle);
-  
-  return {
-    name: dirHandle.name,
-    canWrite,
-  };
-};

@@ -5,7 +5,6 @@ import { type Project } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { aiRouter } from "@/lib/ai-router";
 import { apiRequest } from "@/lib/queryClient";
-import { folderManager } from "@/lib/folder-manager";
 
 interface RoutingResultsProps {
   results: Array<{result: RoutingResult, file: File}> | null;
@@ -86,14 +85,8 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
     }
     
     try {
-      // Check if File System Access API is available
-      if ('showDirectoryPicker' in window) {
-        // Modern browsers with File System API
-        await handleFileSystemAPIMove(file, pathToUse, finalFileName);
-      } else {
-        // Fallback: download file with suggested name and path
-        await handleDownloadFallback(file, pathToUse, finalFileName);
-      }
+      // OneDrive-centric system: download file with suggested name and path
+      await handleDownloadFallback(file, pathToUse, finalFileName);
       
       // Save routing record
       if (project?.id) {
@@ -139,113 +132,6 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
     onClear();
   };
 
-  // Function to handle File System API file moving
-  const handleFileSystemAPIMove = async (file: File, targetPath: string, finalFileName: string) => {
-    try {
-      // Check if browser supports File System Access API
-      if (!('showDirectoryPicker' in window)) {
-        toast({
-          title: "Browser non supportato",
-          description: "Il tuo browser non supporta lo spostamento diretto dei file. Verrà scaricato invece.",
-          variant: "destructive",
-        });
-        await handleDownloadFallback(file, targetPath, finalFileName);
-        return;
-      }
-
-      // Check if root folder is configured
-      const isConfigured = folderManager.isConfigured();
-      let projectRootHandle = folderManager.getRootHandle();
-      
-      if (!isConfigured || !projectRootHandle) {
-        toast({
-          title: "Cartella radice non configurata",
-          description: "Vai in Sistema > Cartelle per configurare la cartella radice prima di usare l'auto-routing.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Use configured root folder - just confirm with user
-      const userWantsToMove = confirm(
-        `Vuoi spostare il file "${file.name}" nella cartella:\n${targetPath}\n\nIl file verrà spostato automaticamente nella cartella configurata.`
-      );
-      
-      if (!userWantsToMove) {
-        return;
-      }
-
-      // Find project folder automatically if project code is available
-      let currentHandle = projectRootHandle;
-      
-      if (project?.code && isConfigured) {
-        // Try to find the project folder automatically
-        const projectFolderHandle = await folderManager.findProjectFolder(project.code);
-        if (projectFolderHandle) {
-          currentHandle = projectFolderHandle;
-          console.log(`✅ Trovata cartella progetto automaticamente: ${project.code}`);
-        } else {
-          // Project folder not found, create it
-          const newProjectHandle = await folderManager.createProjectFolder(project.code, project.object);
-          if (newProjectHandle) {
-            currentHandle = newProjectHandle;
-            console.log(`✅ Creata nuova cartella progetto: ${project.code}`);
-          }
-        }
-      }
-      
-      // Navigate or create the target path structure within the project folder
-      if (!currentHandle) {
-        throw new Error('Impossibile accedere alla cartella di destinazione');
-      }
-      
-      const pathParts = targetPath.split('/').filter(part => part.trim() !== '');
-      
-      for (const part of pathParts) {
-        try {
-          currentHandle = await currentHandle.getDirectoryHandle(part);
-        } catch (error) {
-          // Directory doesn't exist, create it
-          currentHandle = await currentHandle.getDirectoryHandle(part, { create: true });
-        }
-      }
-      
-      // Write the file to the destination directory
-      if (!currentHandle) {
-        throw new Error('Errore nella navigazione delle cartelle');
-      }
-      
-      const newFileHandle = await currentHandle.getFileHandle(finalFileName, { create: true });
-      const writable = await newFileHandle.createWritable();
-      await writable.write(file);
-      await writable.close();
-      
-      const locationDescription = isConfigured && project?.code 
-        ? `${project.code}/${targetPath}`
-        : targetPath;
-      
-      toast({
-        title: "File spostato con successo",
-        description: `"${finalFileName}" è stato spostato in ${locationDescription}`,
-      });
-      
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        // User cancelled directory picker
-        return;
-      }
-      
-      console.error('File System API error:', error);
-      toast({
-        title: "Errore nello spostamento",
-        description: "Impossibile spostare il file. Scaricamento come alternativa.",
-        variant: "destructive",
-      });
-      
-      // Fallback to download
-      await handleDownloadFallback(file, targetPath, finalFileName);
-    }
-  };
 
   // Function to handle download fallback
   const handleDownloadFallback = async (file: File, targetPath: string, finalFileName: string) => {
