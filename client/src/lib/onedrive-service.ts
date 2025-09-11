@@ -139,7 +139,7 @@ class OneDriveService {
   async getAllFiles(): Promise<OneDriveFile[]> {
     try {
       // Get all folders from root
-      const rootResponse = await fetch('/api/onedrive/browse');
+      const rootResponse = await fetch('/api/onedrive/browse?path=/');
       if (!rootResponse.ok) {
         console.error('❌ Failed to get root folders:', rootResponse.statusText);
         return [];
@@ -151,11 +151,14 @@ class OneDriveService {
       // For each folder, get its contents recursively
       for (const item of rootItems) {
         if (item.folder) {
-          const folderFiles = await this.getFilesFromFolder(item.id, item.name);
+          const folderFiles = await this.getFilesFromFolder(`/${item.name}`, item.name, 1);
           allFiles.push(...folderFiles);
         } else {
           // If it's a file in root, add it
-          allFiles.push(item);
+          allFiles.push({
+            ...item,
+            parentPath: '/'
+          });
         }
       }
       
@@ -166,11 +169,17 @@ class OneDriveService {
     }
   }
 
-  private async getFilesFromFolder(folderId: string, folderPath: string): Promise<OneDriveFile[]> {
+  private async getFilesFromFolder(folderPath: string, displayPath: string, depth: number): Promise<OneDriveFile[]> {
     try {
-      const response = await fetch(`/api/onedrive/browse?folderId=${encodeURIComponent(folderId)}`);
+      // Limit recursion depth to avoid infinite loops and API limits
+      if (depth > 3) {
+        console.log(`⚠️  Skipping deep folder: ${displayPath} (depth ${depth})`);
+        return [];
+      }
+      
+      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(folderPath)}`);
       if (!response.ok) {
-        console.error(`❌ Failed to browse folder ${folderPath}:`, response.statusText);
+        console.error(`❌ Failed to browse folder ${displayPath}:`, response.statusText);
         return [];
       }
       
@@ -179,23 +188,22 @@ class OneDriveService {
       
       for (const item of items) {
         if (item.folder) {
-          // Recursively get files from subfolders (limited depth to avoid infinite loops)
-          if (folderPath.split('/').length < 5) { // Max 5 levels deep
-            const subFiles = await this.getFilesFromFolder(item.id, `${folderPath}/${item.name}`);
-            files.push(...subFiles);
-          }
+          // Recursively get files from subfolders
+          const subFiles = await this.getFilesFromFolder(`${folderPath}/${item.name}`, `${displayPath}/${item.name}`, depth + 1);
+          files.push(...subFiles);
         } else {
           // Add file with updated parent path
           files.push({
             ...item,
-            parentPath: folderPath
+            parentPath: displayPath
           });
         }
       }
       
+      console.log(`📁 Found ${files.length} files in ${displayPath}`);
       return files;
     } catch (error) {
-      console.error(`❌ Failed to browse folder ${folderPath}:`, error);
+      console.error(`❌ Failed to browse folder ${displayPath}:`, error);
       return [];
     }
   }

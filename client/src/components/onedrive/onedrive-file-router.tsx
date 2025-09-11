@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -8,9 +8,17 @@ import oneDriveService, { OneDriveFile } from "@/lib/onedrive-service";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { aiRouter } from "@/lib/ai-router";
 import { type Project } from '@shared/schema';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 interface OneDriveFileRouterProps {
   onRouteComplete?: (results: Array<{file: OneDriveFile, suggestedPath: string, confidence: number}>) => void;
+}
+
+interface FolderConfigState {
+  rootPath: string;
+  rootHandle: any;
+  isConfigured: boolean;
+  lastVerified: string;
 }
 
 export default function OneDriveFileRouter({ onRouteComplete }: OneDriveFileRouterProps) {
@@ -27,6 +35,17 @@ export default function OneDriveFileRouter({ onRouteComplete }: OneDriveFileRout
   const { toast } = useToast();
   const { isConnected } = useOneDriveSync();
 
+  // Check folder configuration from localStorage (same key as FolderConfigPanel)
+  const [folderConfig] = useLocalStorage<FolderConfigState>("folder_config", {
+    rootPath: "",
+    rootHandle: null,
+    isConfigured: false,
+    lastVerified: "",
+  });
+
+  // Both OneDrive connection AND folder configuration must be ready
+  const isReady = isConnected && folderConfig.isConfigured;
+
   // Get projects for selection
   const { data: projects = [] } = useQuery({
     queryKey: ['projects'],
@@ -37,7 +56,7 @@ export default function OneDriveFileRouter({ onRouteComplete }: OneDriveFileRout
   const { data: allFiles = [], refetch: refetchFiles } = useQuery({
     queryKey: ['onedrive-files'],
     queryFn: () => oneDriveService.getAllFiles(),
-    enabled: isConnected
+    enabled: isReady // Both OneDrive connected AND folder configured
   });
 
   // Filter only files (not folders) for the file router
@@ -170,6 +189,16 @@ export default function OneDriveFileRouter({ onRouteComplete }: OneDriveFileRout
         <FolderOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
         <p>OneDrive non connesso</p>
         <p className="text-sm">Configura OneDrive nelle impostazioni per utilizzare questa funzionalità</p>
+      </div>
+    );
+  }
+
+  if (!folderConfig.isConfigured) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <FolderOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+        <p>Cartella radice non configurata</p>
+        <p className="text-sm">Configura la cartella radice in Sistema → Cartelle per utilizzare il routing AI</p>
       </div>
     );
   }
