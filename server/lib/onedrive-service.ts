@@ -1,38 +1,87 @@
 import { Client } from '@microsoft/microsoft-graph-client';
 import { getUncachableOneDriveClient } from './onedrive-client';
 
-// Utility to read GraphError body content
-async function readGraphErrorBody(error: any): Promise<string> {
+// Enhanced utility to read GraphError body content with better debugging
+async function readGraphErrorBody(error: any): Promise<{ body: string; bodyType: string; rawError: any }> {
+  console.log('🔍 Reading GraphError body. Error properties:', {
+    hasBody: !!error.body,
+    bodyType: error.body ? typeof error.body : 'undefined',
+    bodyConstructor: error.body?.constructor?.name,
+    isReadableStream: error.body && typeof error.body.getReader === 'function',
+    statusCode: error.statusCode || error.status,
+    message: error.message,
+    code: error.code
+  });
+
   try {
     if (error.body && typeof error.body.getReader === 'function') {
+      console.log('📖 Attempting to read ReadableStream body...');
       const reader = error.body.getReader();
       const decoder = new TextDecoder();
       let result = '';
       
       let done = false;
+      let chunkCount = 0;
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
         if (value) {
-          result += decoder.decode(value, { stream: !done });
+          chunkCount++;
+          const chunk = decoder.decode(value, { stream: !done });
+          result += chunk;
+          console.log(`📄 Read chunk ${chunkCount}: ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
         }
       }
       
-      return result;
+      console.log(`✅ Successfully read ReadableStream body (${result.length} characters):`, result);
+      return { body: result, bodyType: 'ReadableStream', rawError: error };
     } else if (error.body && typeof error.body === 'string') {
-      return error.body;
+      console.log('📄 String body found:', error.body);
+      return { body: error.body, bodyType: 'string', rawError: error };
     } else if (error.body && typeof error.body === 'object') {
-      return JSON.stringify(error.body);
+      const jsonBody = JSON.stringify(error.body);
+      console.log('📄 Object body found:', jsonBody);
+      return { body: jsonBody, bodyType: 'object', rawError: error };
+    } else {
+      console.log('⚠️ No readable body found. Error object:', JSON.stringify({
+        message: error.message,
+        statusCode: error.statusCode || error.status,
+        code: error.code,
+        name: error.name
+      }, null, 2));
+      return { body: `No readable body. Message: ${error.message}`, bodyType: 'none', rawError: error };
     }
   } catch (readError) {
-    console.error('❌ Failed to read GraphError body:', readError);
+    console.error('❌ Failed to read GraphError body:', {
+      readErrorMessage: readError.message,
+      readErrorStack: readError.stack,
+      originalError: {
+        message: error.message,
+        statusCode: error.statusCode,
+        code: error.code
+      }
+    });
+    return { 
+      body: `Failed to read error body: ${readError.message}`, 
+      bodyType: 'error', 
+      rawError: { originalError: error, readError } 
+    };
   }
-  return 'Unable to read error body';
 }
 
 // Enhanced error handler for Microsoft Graph API calls
 async function handleGraphError(error: any, operation: string, details: any = {}): Promise<never> {
-  const errorBody = await readGraphErrorBody(error);
+  console.log(`🚨 Handling Microsoft Graph API Error [${operation}] - Initial error object:`, {
+    name: error.name,
+    message: error.message,
+    statusCode: error.statusCode || error.status,
+    code: error.code,
+    requestId: error.requestId,
+    date: error.date
+  });
+
+  const errorResult = await readGraphErrorBody(error);
+  const { body: errorBody, bodyType, rawError } = errorResult;
   
   const errorDetails = {
     operation,
@@ -42,42 +91,84 @@ async function handleGraphError(error: any, operation: string, details: any = {}
     date: error.date,
     message: error.message,
     body: errorBody,
+    bodyType: bodyType,
     details,
-    stack: error.stack
+    stack: error.stack,
+    timestamp: new Date().toISOString()
   };
   
-  console.error(`❌ Microsoft Graph API Error [${operation}]:`, errorDetails);
+  console.error(`❌ Microsoft Graph API Error [${operation}]:`, JSON.stringify(errorDetails, null, 2));
   
   // Parse error body to extract specific error information
   let specificError = error.message || 'Microsoft Graph API error';
+  let errorCode = error.code;
+  
   try {
     const parsedBody = JSON.parse(errorBody);
     if (parsedBody.error) {
       if (parsedBody.error.message) {
         specificError = parsedBody.error.message;
+        console.log(`🔍 Parsed error message: ${specificError}`);
       }
       if (parsedBody.error.code) {
+        errorCode = parsedBody.error.code;
         specificError = `[${parsedBody.error.code}] ${specificError}`;
+        console.log(`🔍 Parsed error code: ${errorCode}`);
+      }
+      if (parsedBody.error.innerError) {
+        console.log(`🔍 Inner error details:`, parsedBody.error.innerError);
       }
     }
   } catch (parseError) {
+    console.log(`⚠️ Failed to parse error body as JSON:`, parseError.message);
     // If body is not JSON, use the raw body
-    if (errorBody && errorBody !== 'Unable to read error body') {
+    if (errorBody && errorBody !== 'Unable to read error body' && errorBody !== 'Failed to read error body') {
       specificError = errorBody;
     }
   }
+
+  console.log(`🚨 Final error details for ${operation}:`, {
+    specificError,
+    errorCode,
+    statusCode: error.statusCode || error.status,
+    operation,
+    details
+  });
   
   throw new Error(`${operation} failed: ${specificError} (Status: ${error.statusCode || error.status})`);
 }
 
-// Log Microsoft Graph API requests for debugging
-function logGraphRequest(operation: string, apiPath: string, method: string = 'GET', body?: any) {
-  console.log(`📡 Microsoft Graph API Request [${operation}]:`, {
-    method,
+// Enhanced Microsoft Graph API request/response logging
+function logGraphRequest(operation: string, apiPath: string, method: string = 'GET', body?: any, headers?: any) {
+  console.log(`🚀 Microsoft Graph API Request [${operation}]:`, {
+    method: method.toUpperCase(),
     path: apiPath,
+    fullUrl: `https://graph.microsoft.com/v1.0${apiPath}`,
     body: body ? JSON.stringify(body, null, 2) : undefined,
+    hasBody: !!body,
+    headers: headers ? JSON.stringify(headers, null, 2) : 'default',
     timestamp: new Date().toISOString()
   });
+}
+
+function logGraphResponse(operation: string, response: any, error?: any) {
+  if (error) {
+    console.error(`❌ Microsoft Graph API Response Error [${operation}]:`, {
+      hasError: true,
+      errorType: error.constructor?.name,
+      statusCode: error.statusCode || error.status,
+      errorMessage: error.message,
+      timestamp: new Date().toISOString()
+    });
+  } else {
+    console.log(`✅ Microsoft Graph API Response Success [${operation}]:`, {
+      hasError: false,
+      responseType: response?.constructor?.name || typeof response,
+      hasData: !!response,
+      dataSize: response ? (Array.isArray(response.value) ? response.value.length : 'single-item') : 'no-data',
+      timestamp: new Date().toISOString()
+    });
+  }
 }
 
 // Validate OneDrive folder name according to Microsoft Graph API restrictions
@@ -238,7 +329,20 @@ class ServerOneDriveService {
         apiUrl = `/me/drive/root:${sanitizedPath}:/children`;
       }
 
-      const response = await client.api(apiUrl).get();
+      logGraphRequest('List Files', apiUrl, 'GET');
+      
+      let response;
+      try {
+        response = await client.api(apiUrl).get();
+        logGraphResponse('List Files', response);
+      } catch (apiError: any) {
+        logGraphResponse('List Files', null, apiError);
+        await handleGraphError(apiError, 'List Files', {
+          folderPath: sanitizedPath,
+          apiUrl,
+          operation: 'GET /me/drive/root:path:/children'
+        });
+      }
 
       return response.value.map((item: any) => ({
         id: item.id,
@@ -267,12 +371,24 @@ class ServerOneDriveService {
         folder: {}
       };
 
-      await client
-        .api(`/me/drive/root:${parentPath}:/children`)
-        .post(folderData);
+      const apiUrl = `/me/drive/root:${parentPath}:/children`;
+      logGraphRequest('Create Folder', apiUrl, 'POST', folderData);
 
-      console.log(`✅ Created OneDrive folder (Server): ${parentPath}/${folderName}`);
-      return true;
+      try {
+        const response = await client.api(apiUrl).post(folderData);
+        logGraphResponse('Create Folder', response);
+        console.log(`✅ Created OneDrive folder (Server): ${parentPath}/${folderName}`);
+        return true;
+      } catch (apiError: any) {
+        logGraphResponse('Create Folder', null, apiError);
+        await handleGraphError(apiError, 'Create Folder', {
+          folderName,
+          parentPath,
+          folderData,
+          apiUrl,
+          operation: 'POST /me/drive/root:parentPath:/children'
+        });
+      }
     } catch (error) {
       console.error('❌ Failed to create OneDrive folder (Server):', error);
       return false;
@@ -303,21 +419,42 @@ class ServerOneDriveService {
       const client = await this.getClient();
 
       // Check if G2_Progetti folder exists
-      await client.api('/me/drive/root:/G2_Progetti').get();
-    } catch (error) {
-      // Folder doesn't exist, create it
+      const checkUrl = '/me/drive/root:/G2_Progetti';
+      logGraphRequest('Check G2_Progetti Folder', checkUrl, 'GET');
+      
       try {
+        const checkResponse = await client.api(checkUrl).get();
+        logGraphResponse('Check G2_Progetti Folder', checkResponse);
+        console.log('✅ G2_Progetti folder already exists (Server)');
+      } catch (checkError: any) {
+        logGraphResponse('Check G2_Progetti Folder', null, checkError);
+        
+        // Folder doesn't exist, create it
+        console.log('📁 G2_Progetti folder does not exist, creating it...');
         const client = await this.getClient();
         const folderData = {
           name: 'G2_Progetti',
           folder: {}
         };
 
-        await client.api('/me/drive/root/children').post(folderData);
-        console.log('✅ Created G2_Progetti folder in OneDrive (Server)');
-      } catch (createError) {
-        console.error('❌ Failed to create G2_Progetti folder (Server):', createError);
+        const createUrl = '/me/drive/root/children';
+        logGraphRequest('Create G2_Progetti Folder', createUrl, 'POST', folderData);
+        
+        try {
+          const createResponse = await client.api(createUrl).post(folderData);
+          logGraphResponse('Create G2_Progetti Folder', createResponse);
+          console.log('✅ Created G2_Progetti folder in OneDrive (Server)');
+        } catch (createError: any) {
+          logGraphResponse('Create G2_Progetti Folder', null, createError);
+          await handleGraphError(createError, 'Create G2_Progetti Folder', {
+            folderData,
+            createUrl,
+            operation: 'POST /me/drive/root/children'
+          });
+        }
       }
+    } catch (outerError) {
+      console.error('❌ Failed in ensureG2ProjectsFolder (Server):', outerError);
     }
   }
 
