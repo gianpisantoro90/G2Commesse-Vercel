@@ -54,6 +54,23 @@ export const oneDriveMappings = pgTable("onedrive_mappings", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const filesIndex = pgTable("files_index", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  driveItemId: text("drive_item_id").notNull().unique(), // OneDrive unique ID
+  name: text("name").notNull(),
+  path: text("path").notNull(), // Full OneDrive path
+  size: integer("size").default(0),
+  mimeType: text("mime_type"),
+  lastModified: timestamp("last_modified"),
+  projectCode: text("project_code").references(() => projects.code),
+  parentFolderId: text("parent_folder_id"), // OneDrive parent folder ID
+  isFolder: boolean("is_folder").default(false),
+  webUrl: text("web_url"), // OneDrive web URL for direct access
+  downloadUrl: text("download_url"), // OneDrive download URL
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
@@ -80,6 +97,12 @@ export const insertOneDriveMappingSchema = createInsertSchema(oneDriveMappings).
   updatedAt: true,
 });
 
+export const insertFilesIndexSchema = createInsertSchema(filesIndex).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;
@@ -95,3 +118,6 @@ export type SystemConfig = typeof systemConfig.$inferSelect;
 
 export type InsertOneDriveMapping = z.infer<typeof insertOneDriveMappingSchema>;
 export type OneDriveMapping = typeof oneDriveMappings.$inferSelect;
+
+export type InsertFilesIndex = z.infer<typeof insertFilesIndexSchema>;
+export type FilesIndex = typeof filesIndex.$inferSelect;
