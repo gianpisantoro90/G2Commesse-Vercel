@@ -803,7 +803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get root folder configuration
       const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
-      if (!rootConfig || !rootConfig.value || !(rootConfig.value as any).path) {
+      if (!rootConfig || !rootConfig.value || !(rootConfig.value as any).folderPath) {
         console.error('❌ OneDrive root folder not configured');
         return res.status(400).json({ 
           success: false,
@@ -811,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const rootPath = (rootConfig.value as any).path;
+      const rootPath = (rootConfig.value as any).folderPath;
       console.log(`📁 Using root path: ${rootPath}`);
 
       // Create project folder with template
