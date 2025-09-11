@@ -13,6 +13,7 @@ import RoutingForm from "@/components/routing/routing-form";
 import RoutingResults from "@/components/routing/routing-results";
 import BulkRenameForm from "@/components/routing/bulk-rename-form";
 import BulkRenameResults from "@/components/routing/bulk-rename-results";
+import OneDriveAutoRouting from "@/components/routing/onedrive-auto-routing";
 import StoragePanel from "@/components/system/storage-panel";
 import AiConfigPanel from "@/components/system/ai-config-panel";
 import FolderConfigPanel from "@/components/system/folder-config-panel";
@@ -130,26 +131,40 @@ export default function Dashboard() {
 
             {/* Auto-Routing Panel */}
             {activeTab === "routing" && (
-              <div className="max-w-4xl mx-auto space-y-6" data-testid="routing-panel">
+              <div className="max-w-6xl mx-auto space-y-6" data-testid="routing-panel">
                 <div className="grid gap-6 lg:grid-cols-1">
-                  <RoutingForm onAnalysisComplete={handleAnalysisComplete} />
-                  <BulkRenameForm onRenameComplete={handleBulkRenameComplete} />
+                  {/* New OneDrive Auto-Routing System */}
+                  <OneDriveAutoRouting />
                   
-                  {/* OneDrive AI Router */}
-                  <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">☁️ Routing AI con OneDrive</h3>
+                  {/* Legacy File Upload System */}
+                  <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">📁 Routing File Upload (Legacy)</h3>
                     <p className="text-gray-600 mb-4">
-                      Analizza e organizza automaticamente i file da OneDrive utilizzando l'intelligenza artificiale.
+                      Sistema tradizionale per upload e classificazione file locali.
                     </p>
-                    <OneDriveFileRouter />
+                    <div className="space-y-4">
+                      <RoutingForm onAnalysisComplete={handleAnalysisComplete} />
+                    </div>
+                  </div>
+                  
+                  {/* Bulk Rename Tool */}
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">🔄 Rinomina File in Massa</h3>
+                    <p className="text-gray-600 mb-4">
+                      Strumento per rinominare file in massa con pattern personalizzati.
+                    </p>
+                    <BulkRenameForm onRenameComplete={handleBulkRenameComplete} />
                   </div>
                 </div>
                 
-                <RoutingResults 
-                  results={routingResults}
-                  project={routingProject}
-                  onClear={handleClearRouting}
-                />
+                {/* Legacy Results */}
+                {routingResults && (
+                  <RoutingResults 
+                    results={routingResults}
+                    project={routingProject}
+                    onClear={handleClearRouting}
+                  />
+                )}
                 
                 {bulkRenameResults && (
                   <BulkRenameResults 
