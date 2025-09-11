@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import fs from "fs";
@@ -37,9 +37,15 @@ export interface IStorage {
   createOneDriveMapping(mapping: InsertOneDriveMapping): Promise<OneDriveMapping>;
   deleteOneDriveMapping(projectCode: string): Promise<boolean>;
   
+  // Files Index  
+  createOrUpdateFileIndex(fileIndex: InsertFilesIndex): Promise<FilesIndex>;
+  getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]>;
+  updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined>;
+  deleteFileIndex(driveItemId: string): Promise<boolean>;
+  
   // Bulk operations
-  exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }>;
-  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }): Promise<void>;
+  exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
+  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }): Promise<void>;
   clearAllData(): Promise<void>;
 }
 
@@ -51,6 +57,7 @@ export class FileStorage implements IStorage {
   private fileRoutingsFile = path.join(this.dataDir, 'file-routings.json');
   private systemConfigFile = path.join(this.dataDir, 'system-config.json');
   private oneDriveMappingsFile = path.join(this.dataDir, 'onedrive-mappings.json');
+  private filesIndexFile = path.join(this.dataDir, 'files-index.json');
 
   constructor() {
     this.ensureDataDir();
@@ -312,6 +319,96 @@ export class FileStorage implements IStorage {
     return false;
   }
 
+  // Files Index
+  async createOrUpdateFileIndex(insertFileIndex: InsertFilesIndex): Promise<FilesIndex> {
+    const filesIndex = this.readJsonFile<FilesIndex>(this.filesIndexFile, []);
+    const existingIndex = filesIndex.findIndex(f => f.driveItemId === insertFileIndex.driveItemId);
+    
+    if (existingIndex >= 0) {
+      // Update existing
+      const updated: FilesIndex = {
+        ...filesIndex[existingIndex],
+        ...insertFileIndex,
+        projectCode: insertFileIndex.projectCode || null,
+        size: insertFileIndex.size || 0,
+        mimeType: insertFileIndex.mimeType || null,
+        lastModified: insertFileIndex.lastModified || null,
+        parentFolderId: insertFileIndex.parentFolderId || null,
+        isFolder: insertFileIndex.isFolder || false,
+        webUrl: insertFileIndex.webUrl || null,
+        downloadUrl: insertFileIndex.downloadUrl || null,
+        updatedAt: new Date(),
+      };
+      filesIndex[existingIndex] = updated;
+      this.writeJsonFile(this.filesIndexFile, filesIndex);
+      return updated;
+    } else {
+      // Create new
+      const id = randomUUID();
+      const fileIndex: FilesIndex = {
+        ...insertFileIndex,
+        id,
+        projectCode: insertFileIndex.projectCode || null,
+        size: insertFileIndex.size || 0,
+        mimeType: insertFileIndex.mimeType || null,
+        lastModified: insertFileIndex.lastModified || null,
+        parentFolderId: insertFileIndex.parentFolderId || null,
+        isFolder: insertFileIndex.isFolder || false,
+        webUrl: insertFileIndex.webUrl || null,
+        downloadUrl: insertFileIndex.downloadUrl || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      filesIndex.push(fileIndex);
+      this.writeJsonFile(this.filesIndexFile, filesIndex);
+      return fileIndex;
+    }
+  }
+
+  async getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]> {
+    let results = this.readJsonFile<FilesIndex>(this.filesIndexFile, []);
+    
+    if (filters.projectCode) {
+      results = results.filter(f => f.projectCode === filters.projectCode);
+    }
+    
+    if (filters.path) {
+      results = results.filter(f => f.path?.includes(filters.path!));
+    }
+    
+    if (filters.limit) {
+      results = results.slice(0, filters.limit);
+    }
+    
+    return results;
+  }
+
+  async updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined> {
+    const filesIndex = this.readJsonFile<FilesIndex>(this.filesIndexFile, []);
+    const index = filesIndex.findIndex(f => f.driveItemId === driveItemId);
+    if (index === -1) return undefined;
+    
+    const updated: FilesIndex = {
+      ...filesIndex[index],
+      ...updates,
+      updatedAt: new Date(),
+    };
+    filesIndex[index] = updated;
+    this.writeJsonFile(this.filesIndexFile, filesIndex);
+    return updated;
+  }
+
+  async deleteFileIndex(driveItemId: string): Promise<boolean> {
+    const filesIndex = this.readJsonFile<FilesIndex>(this.filesIndexFile, []);
+    const initialLength = filesIndex.length;
+    const filtered = filesIndex.filter(f => f.driveItemId !== driveItemId);
+    if (filtered.length < initialLength) {
+      this.writeJsonFile(this.filesIndexFile, filtered);
+      return true;
+    }
+    return false;
+  }
+
   // Bulk operations
   async exportAllData() {
     return {
@@ -320,15 +417,17 @@ export class FileStorage implements IStorage {
       fileRoutings: this.readJsonFile<FileRouting>(this.fileRoutingsFile, []),
       systemConfig: this.readJsonFile<SystemConfig>(this.systemConfigFile, []),
       oneDriveMappings: this.readJsonFile<OneDriveMapping>(this.oneDriveMappingsFile, []),
+      filesIndex: this.readJsonFile<FilesIndex>(this.filesIndexFile, []),
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[] }) {
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }) {
     this.writeJsonFile(this.projectsFile, data.projects);
     this.writeJsonFile(this.clientsFile, data.clients);
     this.writeJsonFile(this.fileRoutingsFile, data.fileRoutings);
     this.writeJsonFile(this.systemConfigFile, data.systemConfig);
     this.writeJsonFile(this.oneDriveMappingsFile, data.oneDriveMappings || []);
+    this.writeJsonFile(this.filesIndexFile, data.filesIndex || []);
   }
 
   async clearAllData() {
@@ -337,6 +436,7 @@ export class FileStorage implements IStorage {
     this.writeJsonFile(this.fileRoutingsFile, []);
     this.writeJsonFile(this.systemConfigFile, []);
     this.writeJsonFile(this.oneDriveMappingsFile, []);
+    this.writeJsonFile(this.filesIndexFile, []);
   }
 }
 

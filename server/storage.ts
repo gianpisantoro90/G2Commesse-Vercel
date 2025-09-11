@@ -1,6 +1,6 @@
 import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex } from "@shared/schema";
 import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 // Use serverless database for now (local fix will be in exported version)
@@ -37,6 +37,7 @@ export interface IStorage {
   getAllOneDriveMappings(): Promise<OneDriveMapping[]>;
   createOneDriveMapping(mapping: InsertOneDriveMapping): Promise<OneDriveMapping>;
   deleteOneDriveMapping(projectCode: string): Promise<boolean>;
+  getOrphanedProjects(): Promise<Project[]>;
   
   // Files Index  
   createOrUpdateFileIndex(fileIndex: InsertFilesIndex): Promise<FilesIndex>;
@@ -239,6 +240,15 @@ export class MemStorage implements IStorage {
     return this.oneDriveMappings.delete(projectCode);
   }
 
+  async getOrphanedProjects(): Promise<Project[]> {
+    // For MemStorage, find projects that don't have corresponding OneDrive mappings
+    const allProjects = Array.from(this.projects.values());
+    const allMappings = Array.from(this.oneDriveMappings.values());
+    const mappedProjectCodes = new Set(allMappings.map(m => m.projectCode));
+    
+    return allProjects.filter(project => !mappedProjectCodes.has(project.code));
+  }
+
   // Files Index
   async createOrUpdateFileIndex(insertFileIndex: InsertFilesIndex): Promise<FilesIndex> {
     const existing = this.filesIndex.get(insertFileIndex.driveItemId);
@@ -258,6 +268,14 @@ export class MemStorage implements IStorage {
       const fileIndex: FilesIndex = {
         ...insertFileIndex,
         id,
+        projectCode: insertFileIndex.projectCode || null,
+        size: insertFileIndex.size || 0,
+        mimeType: insertFileIndex.mimeType || null,
+        lastModified: insertFileIndex.lastModified || null,
+        parentFolderId: insertFileIndex.parentFolderId || null,
+        isFolder: insertFileIndex.isFolder || false,
+        webUrl: insertFileIndex.webUrl || null,
+        downloadUrl: insertFileIndex.downloadUrl || null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -552,6 +570,17 @@ export class DatabaseStorage implements IStorage {
   async deleteOneDriveMapping(projectCode: string): Promise<boolean> {
     const result = await db.delete(oneDriveMappings).where(eq(oneDriveMappings.projectCode, projectCode));
     return result.rowCount > 0;
+  }
+
+  async getOrphanedProjects(): Promise<Project[]> {
+    // Find projects that don't have corresponding OneDrive mappings
+    const orphanedProjects = await db
+      .select({ project: projects })
+      .from(projects)
+      .leftJoin(oneDriveMappings, eq(projects.code, oneDriveMappings.projectCode))
+      .where(sql`${oneDriveMappings.projectCode} IS NULL`);
+    
+    return orphanedProjects.map((row: { project: Project }) => row.project);
   }
 
   // Files Index

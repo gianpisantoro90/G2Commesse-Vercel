@@ -1006,6 +1006,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // OneDrive reconciliation endpoint
+  app.post("/api/onedrive/reconcile", async (req, res) => {
+    try {
+      console.log('🔄 Starting OneDrive reconciliation...');
+      
+      // Get orphaned projects (projects without OneDrive mappings)
+      const orphanedProjects = await storage.getOrphanedProjects();
+      console.log(`📋 Found ${orphanedProjects.length} orphaned projects`);
+      
+      if (orphanedProjects.length === 0) {
+        return res.json({ 
+          success: true, 
+          message: 'No orphaned projects found. All projects have OneDrive mappings.',
+          processed: 0,
+          results: []
+        });
+      }
+
+      // Get root folder configuration
+      const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
+      if (!rootConfig || !rootConfig.value || !(rootConfig.value as any).folderPath) {
+        console.error('❌ OneDrive root folder not configured');
+        return res.status(400).json({ 
+          success: false,
+          error: 'OneDrive root folder not configured. Please configure the root folder in system settings.' 
+        });
+      }
+
+      const rootPath = (rootConfig.value as any).folderPath;
+      console.log(`📁 Using root path: ${rootPath}`);
+
+      const results = [];
+      
+      for (const project of orphanedProjects) {
+        console.log(`🔍 Processing project: ${project.code}`);
+        
+        try {
+          // Try to find existing OneDrive folder for this project
+          const folderPath = `${rootPath}/${project.code}`;
+          const existingFolder = await serverOneDriveService.findFolderByPath(folderPath);
+          
+          if (existingFolder) {
+            // Folder exists - create mapping
+            console.log(`✅ Found existing folder for ${project.code}, creating mapping`);
+            const mapping = await storage.createOneDriveMapping({
+              projectCode: project.code,
+              oneDriveFolderId: existingFolder.id,
+              oneDriveFolderName: existingFolder.name,
+              oneDriveFolderPath: folderPath
+            });
+            
+            results.push({
+              projectCode: project.code,
+              status: 'mapped_existing',
+              message: `Mapped to existing folder: ${folderPath}`,
+              folderId: existingFolder.id
+            });
+          } else {
+            // Folder doesn't exist - create it with template
+            console.log(`📁 Creating new OneDrive folder for ${project.code} with ${project.template} template`);
+            const folderInfo = await serverOneDriveService.createProjectWithTemplate(
+              rootPath, 
+              project.code, 
+              project.template
+            );
+
+            if (folderInfo) {
+              // Create mapping for new folder
+              const mapping = await storage.createOneDriveMapping({
+                projectCode: project.code,
+                oneDriveFolderId: folderInfo.id,
+                oneDriveFolderName: folderInfo.name,
+                oneDriveFolderPath: folderInfo.path
+              });
+
+              results.push({
+                projectCode: project.code,
+                status: 'created_new',
+                message: `Created new folder with ${project.template} template: ${folderInfo.path}`,
+                folderId: folderInfo.id
+              });
+            } else {
+              results.push({
+                projectCode: project.code,
+                status: 'error',
+                message: 'Failed to create OneDrive folder'
+              });
+            }
+          }
+        } catch (error: any) {
+          console.error(`❌ Error processing project ${project.code}:`, error);
+          results.push({
+            projectCode: project.code,
+            status: 'error',
+            message: error.message || 'Unknown error occurred'
+          });
+        }
+      }
+
+      const successCount = results.filter(r => r.status !== 'error').length;
+      console.log(`✅ Reconciliation completed: ${successCount}/${results.length} projects processed successfully`);
+
+      res.json({ 
+        success: true, 
+        message: `Reconciliation completed: ${successCount}/${results.length} projects processed successfully`,
+        processed: results.length,
+        results
+      });
+    } catch (error: any) {
+      console.error('❌ OneDrive reconciliation failed:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Reconciliation failed. Check server logs for details.',
+        details: error.message
+      });
+    }
+  });
+
   // Files Index management
   app.get("/api/files-index", async (req, res) => {
     try {
