@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
+import { Cloud, RefreshCw, Settings } from "lucide-react";
 
 interface QuickActionsCardProps {
   onNewProject: () => void;
@@ -8,6 +10,7 @@ interface QuickActionsCardProps {
 
 export default function QuickActionsCard({ onNewProject }: QuickActionsCardProps) {
   const { toast } = useToast();
+  const { isConnected, syncAllProjects, isSyncingAll } = useOneDriveSync();
 
   const handleExportData = async () => {
     try {
@@ -67,6 +70,46 @@ export default function QuickActionsCard({ onNewProject }: QuickActionsCardProps
     input.click();
   };
 
+  const handleOneDriveSync = async () => {
+    if (!isConnected) {
+      toast({
+        title: "OneDrive non connesso",
+        description: "Configura prima la connessione OneDrive",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await syncAllProjects();
+      toast({
+        title: "Sincronizzazione avviata",
+        description: "La sincronizzazione di tutti i progetti è stata avviata",
+      });
+    } catch (error) {
+      toast({
+        title: "Errore sincronizzazione",
+        description: "Impossibile avviare la sincronizzazione",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const navigateToOneDriveSettings = () => {
+    // Navigate to OneDrive settings tab
+    const systemTab = document.querySelector('[data-testid="tab-sistema"]') as HTMLElement;
+    const oneDriveTab = document.querySelector('[data-testid="tab-onedrive"]') as HTMLElement;
+    
+    if (systemTab) {
+      systemTab.click();
+      setTimeout(() => {
+        if (oneDriveTab) {
+          oneDriveTab.click();
+        }
+      }, 100);
+    }
+  };
+
   return (
     <div className="card-g2" data-testid="quick-actions-card">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Azioni Rapide</h3>
@@ -94,6 +137,53 @@ export default function QuickActionsCard({ onNewProject }: QuickActionsCardProps
         >
           Importa Dati (.json)
         </Button>
+        
+        {/* OneDrive Actions */}
+        <div className="border-t pt-3 mt-3">
+          <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+            🌟 OneDrive
+          </div>
+          {isConnected ? (
+            <Button
+              variant="outline"
+              className="w-full border-2 border-blue-300 text-blue-700 py-3 px-4 rounded-xl font-semibold hover:border-blue-400 hover:bg-blue-50 transition-colors duration-200"
+              onClick={handleOneDriveSync}
+              disabled={isSyncingAll}
+              data-testid="button-onedrive-sync"
+            >
+              {isSyncingAll ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Sincronizzazione...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Sincronizza Progetti
+                </>
+              )}
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full border-2 border-orange-300 text-orange-700 py-3 px-4 rounded-xl font-semibold hover:border-orange-400 hover:bg-orange-50 transition-colors duration-200"
+              onClick={navigateToOneDriveSettings}
+              data-testid="button-setup-onedrive"
+            >
+              <Cloud className="h-4 w-4 mr-2" />
+              Configura OneDrive
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            className="w-full text-sm text-gray-600 hover:text-gray-800 py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 mt-1"
+            onClick={navigateToOneDriveSettings}
+            data-testid="button-onedrive-settings"
+          >
+            <Settings className="h-3 w-3 mr-2" />
+            Impostazioni OneDrive
+          </Button>
+        </div>
       </div>
     </div>
   );

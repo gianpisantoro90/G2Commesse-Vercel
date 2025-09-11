@@ -5,6 +5,8 @@ import StatsCard from "@/components/dashboard/stats-card";
 import QuickActionsCard from "@/components/dashboard/quick-actions-card";
 import SystemInfoCard from "@/components/dashboard/system-info-card";
 import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
+import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
+import OneDriveSyncStatsCard from "@/components/dashboard/onedrive-sync-stats-card";
 import NewProjectForm from "@/components/projects/new-project-form";
 import FolderStructureCard from "@/components/projects/folder-structure-card";
 import ProjectsTable from "@/components/projects/projects-table";
@@ -74,11 +76,20 @@ export default function Dashboard() {
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
               <div className="space-y-8" data-testid="dashboard-panel">
+                {/* First Row - Core System Info */}
                 <div className="grid gap-6 lg:grid-cols-3">
                   <StatsCard />
                   <QuickActionsCard onNewProject={() => setActiveTab("nuova")} />
                   <SystemInfoCard />
                 </div>
+                
+                {/* Second Row - OneDrive Integration Status */}
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <OneDriveStatusCard />
+                  <OneDriveSyncStatsCard />
+                </div>
+                
+                {/* Third Row - Recent Projects with OneDrive Status */}
                 <RecentProjectsTable />
               </div>
             )}

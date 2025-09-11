@@ -1,11 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { type Project } from "@shared/schema";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
+import { Cloud, CloudOff, RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
 
 export default function RecentProjectsTable() {
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
+
+  const { isConnected, getSyncStatus } = useOneDriveSync();
 
   // Get the 3 most recent projects
   const recentProjects = projects
@@ -27,6 +32,48 @@ export default function RecentProjectsTable() {
          '🔴 Sospesa'}
       </span>
     );
+  };
+
+  const getOneDriveSyncIndicator = (project: Project) => {
+    if (!isConnected) {
+      return (
+        <div className="flex items-center space-x-1 text-gray-400" title="OneDrive disconnesso">
+          <CloudOff className="h-3 w-3" />
+        </div>
+      );
+    }
+
+    const syncStatus = getSyncStatus(project.id);
+    
+    switch (syncStatus.status) {
+      case 'synced':
+        return (
+          <div className="flex items-center space-x-1 text-green-600" title="Sincronizzato con OneDrive">
+            <Cloud className="h-3 w-3" />
+            <CheckCircle className="h-3 w-3" />
+          </div>
+        );
+      case 'pending':
+        return (
+          <div className="flex items-center space-x-1 text-blue-600" title="Sincronizzazione in corso">
+            <Cloud className="h-3 w-3" />
+            <RefreshCw className="h-3 w-3 animate-spin" />
+          </div>
+        );
+      case 'error':
+        return (
+          <div className="flex items-center space-x-1 text-red-600" title={`Errore: ${syncStatus.error || 'Sincronizzazione fallita'}`}>
+            <Cloud className="h-3 w-3" />
+            <AlertTriangle className="h-3 w-3" />
+          </div>
+        );
+      default:
+        return (
+          <div className="flex items-center space-x-1 text-gray-400" title="Non ancora sincronizzato">
+            <CloudOff className="h-3 w-3" />
+          </div>
+        );
+    }
   };
 
   return (
@@ -54,6 +101,7 @@ export default function RecentProjectsTable() {
                 <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Città</th>
                 <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Oggetto</th>
                 <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
+                <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm">☁️</th>
               </tr>
             </thead>
             <tbody>
@@ -73,6 +121,9 @@ export default function RecentProjectsTable() {
                   </td>
                   <td className="py-3 px-4" data-testid={`project-status-${project.id}`}>
                     {getStatusBadge(project)}
+                  </td>
+                  <td className="py-3 px-4 text-center" data-testid={`project-onedrive-${project.id}`}>
+                    {getOneDriveSyncIndicator(project)}
                   </td>
                 </tr>
               ))}
