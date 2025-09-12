@@ -91,18 +91,18 @@ export default function Dashboard() {
                   <div className="bg-white rounded-t-2xl border-b border-gray-200">
                     <TabsList className="flex w-full bg-transparent border-0 p-0">
                       <TabsTrigger 
-                        value="progetti" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
-                        data-testid="tab-progetti"
-                      >
-                        Gestione Commesse
-                      </TabsTrigger>
-                      <TabsTrigger 
                         value="nuova" 
                         className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
                         data-testid="tab-nuova"
                       >
                         Nuova Commessa
+                      </TabsTrigger>
+                      <TabsTrigger 
+                        value="progetti" 
+                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                        data-testid="tab-progetti"
+                      >
+                        Gestione Commesse
                       </TabsTrigger>
                       <TabsTrigger 
                         value="clienti" 
