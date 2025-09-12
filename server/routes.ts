@@ -819,7 +819,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const folderInfo = await serverOneDriveService.createProjectWithTemplate(
         rootPath, 
         projectCode, 
-        template
+        template,
+        req.body.object // Pass project object (description) for folder naming
       );
 
       if (folderInfo) {
@@ -1069,7 +1070,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const folderInfo = await serverOneDriveService.createProjectWithTemplate(
               rootPath, 
               project.code, 
-              project.template
+              project.template,
+              project.object // Pass project object (description) for folder naming
             );
 
             if (folderInfo) {

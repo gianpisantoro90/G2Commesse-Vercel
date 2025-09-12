@@ -719,11 +719,11 @@ class ServerOneDriveService {
     }
   }
 
-  async createProjectWithTemplate(rootPath: string, projectCode: string, template: string): Promise<{id: string, name: string, path: string} | null> {
+  async createProjectWithTemplate(rootPath: string, projectCode: string, template: string, description?: string): Promise<{id: string, name: string, path: string} | null> {
     try {
       const client = await this.getClient();
       
-      console.log(`🚀 Starting project creation with template:`, { rootPath, projectCode, template });
+      console.log(`🚀 Starting project creation with template:`, { rootPath, projectCode, template, description });
       
       // Security: Validate parameters
       if (!rootPath || !projectCode || !template) {
@@ -738,11 +738,25 @@ class ServerOneDriveService {
       const sanitizedRootPath = rootPath.replace(/\.\./g, '').replace(/\/+/g, '/');
       const sanitizedProjectCode = projectCode.replace(/[^a-zA-Z0-9_-]/g, '');
       
+      // Create folder name: CODICE_OGGETTO (replace spaces with underscores)
+      let folderName = sanitizedProjectCode;
+      if (description && description.trim()) {
+        const sanitizedDescription = description.trim()
+          .replace(/\s+/g, '_')  // Replace spaces with underscores
+          .replace(/[^a-zA-Z0-9_\-àáèéìíòóùúÀÁÈÉÌÍÒÓÙÚçÇñÑ]/g, ''); // Keep only safe characters + accented letters
+        
+        if (sanitizedDescription) {
+          folderName = `${sanitizedProjectCode}_${sanitizedDescription}`;
+        }
+      }
+      
       console.log(`🔧 After sanitization:`, { 
         originalRootPath: rootPath, 
         sanitizedRootPath, 
         originalProjectCode: projectCode, 
-        sanitizedProjectCode 
+        sanitizedProjectCode,
+        originalDescription: description,
+        finalFolderName: folderName
       });
       
       if (sanitizedRootPath !== rootPath || sanitizedProjectCode !== projectCode) {
@@ -751,7 +765,7 @@ class ServerOneDriveService {
       
       // Create project folder
       const projectFolderData = {
-        name: sanitizedProjectCode,
+        name: folderName,
         folder: {}
       };
       
@@ -780,7 +794,7 @@ class ServerOneDriveService {
       }
       
       // Copy template structure based on template type
-      const projectPath = `${sanitizedRootPath}/${sanitizedProjectCode}`;
+      const projectPath = `${sanitizedRootPath}/${folderName}`;
       
       try {
         // Create basic folder structure based on template
