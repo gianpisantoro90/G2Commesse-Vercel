@@ -741,12 +741,24 @@ async function initializeStorage(): Promise<IStorage> {
         console.log('✅ Using DatabaseStorage - connection verified');
         return dbStorage;
       } else {
-        console.log('❌ Database connection failed, falling back to MemStorage');
-        return new MemStorage();
+        console.log('💾 Database connection failed, using FileStorage for permanent data persistence');
+        try {
+          const { storage: fileStorage } = await import('./storage-local.js');
+          return fileStorage;
+        } catch (fileError) {
+          console.error('❌ FileStorage also failed, using MemStorage as last resort:', fileError);
+          return new MemStorage();
+        }
       }
     } catch (error) {
-      console.error('❌ Database connection error, falling back to MemStorage:', error);
-      return new MemStorage();
+      console.error('💾 Database connection error, using FileStorage for permanent data persistence:', error);
+      try {
+        const { storage: fileStorage } = await import('./storage-local.js');
+        return fileStorage;
+      } catch (fileError) {
+        console.error('❌ FileStorage also failed, using MemStorage as last resort:', fileError);
+        return new MemStorage();
+      }
     }
   }
 }

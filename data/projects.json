@@ -1,0 +1,15 @@
+[
+  {
+    "code": "25TEST01",
+    "client": "TEST CLIENT",
+    "city": "ROMA",
+    "object": "Test permanenza dati",
+    "year": 25,
+    "template": "BREVE",
+    "status": "in_corso",
+    "id": "871573eb-6ab5-4480-af39-b58347641a5d",
+    "createdAt": "2025-09-12T13:07:41.528Z",
+    "fsRoot": null,
+    "metadata": {}
+  }
+]
