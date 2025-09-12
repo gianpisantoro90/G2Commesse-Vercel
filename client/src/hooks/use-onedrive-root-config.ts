@@ -12,6 +12,38 @@ export interface OneDriveRootConfig {
 // Query key for OneDrive root folder configuration
 const ONEDRIVE_ROOT_CONFIG_KEY = ['onedrive-root-folder'] as const;
 
+// localStorage key for OneDrive root config backup
+const LOCALSTORAGE_ROOT_CONFIG_KEY = 'g2-onedrive-root-config';
+
+// Helper functions for localStorage persistence
+function saveConfigToLocalStorage(config: OneDriveRootConfig | null) {
+  try {
+    if (config) {
+      localStorage.setItem(LOCALSTORAGE_ROOT_CONFIG_KEY, JSON.stringify(config));
+      console.log('💾 OneDrive root config saved to localStorage:', config.folderPath);
+    } else {
+      localStorage.removeItem(LOCALSTORAGE_ROOT_CONFIG_KEY);
+      console.log('🗑️ OneDrive root config removed from localStorage');
+    }
+  } catch (error) {
+    console.warn('⚠️ Failed to save OneDrive config to localStorage:', error);
+  }
+}
+
+function loadConfigFromLocalStorage(): OneDriveRootConfig | null {
+  try {
+    const saved = localStorage.getItem(LOCALSTORAGE_ROOT_CONFIG_KEY);
+    if (saved) {
+      const config = JSON.parse(saved) as OneDriveRootConfig;
+      console.log('📱 OneDrive root config loaded from localStorage:', config.folderPath);
+      return config;
+    }
+  } catch (error) {
+    console.warn('⚠️ Failed to load OneDrive config from localStorage:', error);
+  }
+  return null;
+}
+
 /**
  * Custom hook for managing OneDrive root folder configuration
  * Provides consistent data access, cache management, and invalidation across all components
@@ -29,21 +61,36 @@ export function useOneDriveRootConfig() {
   } = useQuery({
     queryKey: ONEDRIVE_ROOT_CONFIG_KEY,
     queryFn: async () => {
-      const response = await fetch('/api/onedrive/root-folder');
-      if (response.ok) {
-        const data = await response.json();
-        return data.config as OneDriveRootConfig | null;
+      try {
+        const response = await fetch('/api/onedrive/root-folder');
+        if (response.ok) {
+          const data = await response.json();
+          const config = data.config as OneDriveRootConfig | null;
+          
+          // Save to localStorage when successfully fetched from backend
+          saveConfigToLocalStorage(config);
+          
+          return config;
+        }
+        if (response.status === 404) {
+          // No backend config, try localStorage
+          const localConfig = loadConfigFromLocalStorage();
+          return localConfig;
+        }
+        throw new Error(`Failed to fetch root config: ${response.statusText}`);
+      } catch (fetchError) {
+        // Network or backend error, fallback to localStorage
+        console.warn('🔄 Backend unavailable, using localStorage fallback');
+        const localConfig = loadConfigFromLocalStorage();
+        return localConfig;
       }
-      if (response.status === 404) {
-        return null; // No configuration found
-      }
-      throw new Error(`Failed to fetch root config: ${response.statusText}`);
     },
     enabled: isConnected,
+    initialData: null, // Fix "Query data cannot be undefined" warning
     staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
     retry: (failureCount, error: any) => {
-      // Don't retry on 404 (no config found)
-      if (error?.message?.includes('404')) return false;
+      // Don't retry on 404 (no config found) or network errors (use localStorage instead)
+      if (error?.message?.includes('404') || error?.message?.includes('Failed to fetch')) return false;
       return failureCount < 2;
     },
   });
@@ -63,7 +110,12 @@ export function useOneDriveRootConfig() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Save successful configuration to localStorage immediately
+      if (data && data.config) {
+        saveConfigToLocalStorage(data.config);
+      }
+      
       // Invalidate and refetch all OneDrive root config queries
       queryClient.invalidateQueries({ queryKey: ONEDRIVE_ROOT_CONFIG_KEY });
       
@@ -89,6 +141,9 @@ export function useOneDriveRootConfig() {
       return response.json();
     },
     onSuccess: () => {
+      // Remove configuration from localStorage when reset
+      saveConfigToLocalStorage(null);
+      
       // Invalidate and refetch all OneDrive root config queries
       queryClient.invalidateQueries({ queryKey: ONEDRIVE_ROOT_CONFIG_KEY });
       

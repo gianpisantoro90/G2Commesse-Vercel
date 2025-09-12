@@ -144,15 +144,51 @@ export default function OneDriveStatusCard() {
 
         {/* Root Folder Configuration */}
         {isConnected && (
-          <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+          <div className={`flex items-center justify-between p-3 rounded-lg ${
+            rootConfig?.folderPath 
+              ? 'bg-blue-50' 
+              : 'bg-amber-50 border-l-4 border-amber-400'
+          }`}>
             <div className="flex items-center space-x-3">
-              <FolderOpen className="h-5 w-5 text-blue-600" />
-              <div>
-                <div className="font-medium text-blue-900">Cartella Progetti</div>
-                <div className="text-sm text-blue-700 font-mono">
-                  {rootConfig?.folderPath || '/G2_Progetti'}
+              <FolderOpen className={`h-5 w-5 ${
+                rootConfig?.folderPath ? 'text-blue-600' : 'text-amber-600'
+              }`} />
+              <div className="flex-1">
+                <div className={`font-medium ${
+                  rootConfig?.folderPath ? 'text-blue-900' : 'text-amber-900'
+                }`}>
+                  Cartella Progetti
+                </div>
+                <div className={`text-sm font-mono ${
+                  rootConfig?.folderPath ? 'text-blue-700' : 'text-amber-700'
+                }`}>
+                  {rootConfig?.folderPath || 'Non configurata'}
                 </div>
               </div>
+              {!rootConfig?.folderPath && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-amber-700 border-amber-300 hover:bg-amber-100"
+                  onClick={() => {
+                    // Navigate to OneDrive configuration
+                    const systemTab = document.querySelector('[data-testid="tab-sistema"]') as HTMLElement;
+                    const oneDriveTab = document.querySelector('[data-testid="tab-onedrive"]') as HTMLElement;
+                    
+                    if (systemTab) {
+                      systemTab.click();
+                      setTimeout(() => {
+                        if (oneDriveTab) {
+                          oneDriveTab.click();
+                        }
+                      }, 100);
+                    }
+                  }}
+                  data-testid="button-configure-root"
+                >
+                  Configura
+                </Button>
+              )}
             </div>
           </div>
         )}
