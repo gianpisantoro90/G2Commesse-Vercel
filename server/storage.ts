@@ -717,8 +717,6 @@ export class DatabaseStorage implements IStorage {
 console.log('🔍 Storage initialization - DATABASE_URL exists:', !!process.env.DATABASE_URL);
 console.log('🔍 Environment NODE_ENV:', process.env.NODE_ENV);
 
-let storage: IStorage;
-
 async function initializeStorage(): Promise<IStorage> {
   // Check if running locally - PRIORITIZE NODE_ENV=local
   const isLocal = process.env.NODE_ENV === 'local' || (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'production');
@@ -753,16 +751,165 @@ async function initializeStorage(): Promise<IStorage> {
   }
 }
 
-// Initialize storage with proper fallback
-storage = new MemStorage();
+// Create a fallback-aware storage wrapper
+class FallbackStorage implements IStorage {
+  private currentStorage: IStorage;
+  private fallbackStorage: IStorage;
 
-// Test connection asynchronously and replace if needed
+  constructor() {
+    this.currentStorage = new MemStorage();
+    this.fallbackStorage = new MemStorage();
+  }
+
+  setStorage(storage: IStorage) {
+    this.currentStorage = storage;
+  }
+
+  private async executeWithFallback<T>(operation: (storage: IStorage) => Promise<T>): Promise<T> {
+    try {
+      return await operation(this.currentStorage);
+    } catch (error: any) {
+      // Check if it's a database connection error
+      if (error?.code === 'XX000' || error?.message?.includes('endpoint has been disabled') || error?.message?.includes('database')) {
+        console.warn('⚠️ Database operation failed, falling back to MemStorage:', error.message);
+        
+        // Switch to fallback storage permanently
+        this.currentStorage = this.fallbackStorage;
+        
+        return await operation(this.fallbackStorage);
+      }
+      throw error;
+    }
+  }
+
+  // Forward all methods with fallback support
+  async getProject(id: string): Promise<Project | undefined> {
+    return this.executeWithFallback(storage => storage.getProject(id));
+  }
+
+  async getProjectByCode(code: string): Promise<Project | undefined> {
+    return this.executeWithFallback(storage => storage.getProjectByCode(code));
+  }
+
+  async getAllProjects(): Promise<Project[]> {
+    return this.executeWithFallback(storage => storage.getAllProjects());
+  }
+
+  async createProject(project: InsertProject): Promise<Project> {
+    return this.executeWithFallback(storage => storage.createProject(project));
+  }
+
+  async updateProject(id: string, project: Partial<InsertProject>): Promise<Project | undefined> {
+    return this.executeWithFallback(storage => storage.updateProject(id, project));
+  }
+
+  async deleteProject(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteProject(id));
+  }
+
+  async getClient(id: string): Promise<Client | undefined> {
+    return this.executeWithFallback(storage => storage.getClient(id));
+  }
+
+  async getClientBySigla(sigla: string): Promise<Client | undefined> {
+    return this.executeWithFallback(storage => storage.getClientBySigla(sigla));
+  }
+
+  async getAllClients(): Promise<Client[]> {
+    return this.executeWithFallback(storage => storage.getAllClients());
+  }
+
+  async createClient(client: InsertClient): Promise<Client> {
+    return this.executeWithFallback(storage => storage.createClient(client));
+  }
+
+  async updateClient(id: string, client: Partial<InsertClient>): Promise<Client | undefined> {
+    return this.executeWithFallback(storage => storage.updateClient(id, client));
+  }
+
+  async deleteClient(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteClient(id));
+  }
+
+  async getFileRouting(id: string): Promise<FileRouting | undefined> {
+    return this.executeWithFallback(storage => storage.getFileRouting(id));
+  }
+
+  async getFileRoutingsByProject(projectId: string): Promise<FileRouting[]> {
+    return this.executeWithFallback(storage => storage.getFileRoutingsByProject(projectId));
+  }
+
+  async createFileRouting(routing: InsertFileRouting): Promise<FileRouting> {
+    return this.executeWithFallback(storage => storage.createFileRouting(routing));
+  }
+
+  async getSystemConfig(key: string): Promise<SystemConfig | undefined> {
+    return this.executeWithFallback(storage => storage.getSystemConfig(key));
+  }
+
+  async setSystemConfig(key: string, value: any): Promise<SystemConfig> {
+    return this.executeWithFallback(storage => storage.setSystemConfig(key, value));
+  }
+
+  async getOneDriveMapping(projectCode: string): Promise<OneDriveMapping | undefined> {
+    return this.executeWithFallback(storage => storage.getOneDriveMapping(projectCode));
+  }
+
+  async getAllOneDriveMappings(): Promise<OneDriveMapping[]> {
+    return this.executeWithFallback(storage => storage.getAllOneDriveMappings());
+  }
+
+  async createOneDriveMapping(mapping: InsertOneDriveMapping): Promise<OneDriveMapping> {
+    return this.executeWithFallback(storage => storage.createOneDriveMapping(mapping));
+  }
+
+  async deleteOneDriveMapping(projectCode: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteOneDriveMapping(projectCode));
+  }
+
+  async getOrphanedProjects(): Promise<Project[]> {
+    return this.executeWithFallback(storage => storage.getOrphanedProjects());
+  }
+
+  async createOrUpdateFileIndex(fileIndex: InsertFilesIndex): Promise<FilesIndex> {
+    return this.executeWithFallback(storage => storage.createOrUpdateFileIndex(fileIndex));
+  }
+
+  async getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]> {
+    return this.executeWithFallback(storage => storage.getFilesIndex(filters));
+  }
+
+  async updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined> {
+    return this.executeWithFallback(storage => storage.updateFileIndex(driveItemId, updates));
+  }
+
+  async deleteFileIndex(driveItemId: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteFileIndex(driveItemId));
+  }
+
+  async exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }> {
+    return this.executeWithFallback(storage => storage.exportAllData());
+  }
+
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }): Promise<void> {
+    return this.executeWithFallback(storage => storage.importAllData(data));
+  }
+
+  async clearAllData(): Promise<void> {
+    return this.executeWithFallback(storage => storage.clearAllData());
+  }
+}
+
+// Initialize fallback-aware storage
+const storage = new FallbackStorage();
+
+// Test connection asynchronously and set the preferred storage
 initializeStorage().then(initializedStorage => {
-  storage = initializedStorage;
-  console.log('💾 Storage initialized successfully');
+  storage.setStorage(initializedStorage);
+  console.log('💾 Storage initialized successfully with fallback protection');
 }).catch(error => {
-  console.error('❌ Storage initialization failed, using MemStorage:', error);
-  storage = new MemStorage();
+  console.error('❌ Storage initialization failed, using MemStorage with fallback protection:', error);
+  storage.setStorage(new MemStorage());
 });
 
 export { storage };
