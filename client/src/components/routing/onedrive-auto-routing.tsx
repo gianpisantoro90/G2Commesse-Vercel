@@ -151,7 +151,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           fileId, 
-          targetFolderIdOrPath: targetPath,
+          targetPath: targetPath,
           fileName 
         })
       });
@@ -199,8 +199,8 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       const projectCode = useRootPath ? undefined : projects.find(p => p.id === selectedProject)?.code;
       
       await scanFilesMutation.mutateAsync({
-        folderPath: useRootPath ? scanPath : undefined,
-        projectCode,
+        folderPath: useRootPath ? scanPath : '',
+        projectCode: projectCode || '',
         includeSubfolders
       });
     } finally {
@@ -268,17 +268,13 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
 
       for (const oneDriveFile of selectedFiles) {
         try {
-          // Download file from OneDrive for AI analysis
-          const blob = await oneDriveService.downloadFile(oneDriveFile.id);
-          if (!blob) {
-            throw new Error('Failed to download file');
-          }
+          // Create fake File object for AI analysis (no need to download the actual content)
+          const fakeFile = new File([''], oneDriveFile.name, { 
+            type: oneDriveFile.mimeType || 'application/octet-stream' 
+          });
 
-          // Create File object for AI analysis
-          const file = new File([blob], oneDriveFile.name, { type: blob.type });
-
-          // Analyze with AI router
-          const routingResult = await aiRouter.routeFile(file, project.template, project.id);
+          // Analyze with AI router (AI only needs filename and metadata, not file content)
+          const routingResult = await aiRouter.routeFile(fakeFile, project.template, project.id);
 
           results.push({
             file: oneDriveFile,
