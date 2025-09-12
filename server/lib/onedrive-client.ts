@@ -7,7 +7,7 @@ async function getAccessToken() {
     return connectionSettings.settings.access_token;
   }
   
-  const hostname = process.env.CONNECTORS_HOSTNAME
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
   const xReplitToken = process.env.REPL_IDENTITY 
     ? 'repl ' + process.env.REPL_IDENTITY 
     : process.env.WEB_REPL_RENEWAL 
@@ -31,8 +31,7 @@ async function getAccessToken() {
       {
         headers: {
           'Accept': 'application/json',
-          'X-REPLIT-TOKEN': xReplitToken,
-          'Authorization': xReplitToken
+          'X_REPLIT_TOKEN': xReplitToken
         }
       }
     );
