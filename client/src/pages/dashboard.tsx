@@ -27,8 +27,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeSubTab, setActiveSubTab] = useState({
     gestione: "progetti",
-    sistema: "storage",
-    onedrive: "folders"
+    sistema: "storage"
   });
   const [pendingProject, setPendingProject] = useState(null);
   
@@ -230,34 +229,23 @@ export default function Dashboard() {
                   
                   
                   <TabsContent value="onedrive" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
-                    <Tabs value={activeSubTab.onedrive} onValueChange={(value) => handleSubTabChange("onedrive", value)}>
-                      <div className="bg-gray-50 rounded-t-xl border-b border-gray-200 mb-6">
-                        <TabsList className="flex w-full bg-transparent border-0 p-0">
-                          <TabsTrigger 
-                            value="folders" 
-                            className="px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-100 transition-colors rounded-none"
-                            data-testid="tab-onedrive-folders"
-                          >
-                            📁 Cartelle
-                          </TabsTrigger>
-                          <TabsTrigger 
-                            value="config" 
-                            className="px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-100 transition-colors rounded-none"
-                            data-testid="tab-onedrive-config"
-                          >
-                            ⚙️ Configurazione
-                          </TabsTrigger>
-                        </TabsList>
+                    <div className="space-y-8">
+                      {/* Sezione Cartelle */}
+                      <div className="border-b border-gray-200 pb-8">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          📁 Gestione Cartelle
+                        </h3>
+                        <FolderConfigPanel />
                       </div>
                       
-                      <TabsContent value="folders" className="mt-0">
-                        <FolderConfigPanel />
-                      </TabsContent>
-                      
-                      <TabsContent value="config" className="mt-0">
+                      {/* Sezione Configurazione OneDrive */}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                          ⚙️ Configurazione OneDrive
+                        </h3>
                         <OneDrivePanel />
-                      </TabsContent>
-                    </Tabs>
+                      </div>
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
