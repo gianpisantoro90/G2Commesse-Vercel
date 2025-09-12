@@ -525,10 +525,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const success = await serverOneDriveService.syncProjectFolder(projectCode, projectDescription || '');
+      
+      // If sync was successful, create or update the mapping
+      if (success) {
+        try {
+          const rootConfig = await serverOneDriveService.getRootFolderPath();
+          const rootPath = rootConfig || '/G2_Progetti';
+          const folderPath = `${rootPath}/${projectCode}`;
+          
+          // Check if mapping already exists
+          const existingMapping = await storage.getOneDriveMapping(projectCode);
+          
+          if (!existingMapping) {
+            // Create new mapping
+            await storage.createOneDriveMapping({
+              projectCode,
+              oneDriveFolderId: '', // Will be populated when we have the folder ID
+              oneDriveFolderPath: folderPath,
+              oneDriveFolderName: projectCode,
+              syncStatus: 'synced',
+              lastSyncAt: new Date()
+            });
+            console.log(`✅ Created OneDrive mapping for project: ${projectCode}`);
+          }
+        } catch (mappingError) {
+          console.warn(`⚠️ Could not create OneDrive mapping for project ${projectCode}:`, mappingError);
+          // Don't fail the sync operation if mapping creation fails
+        }
+      }
+      
       res.json({ success });
     } catch (error) {
       console.error('OneDrive sync project failed:', error);
       res.status(500).json({ error: 'Failed to sync project folder' });
+    }
+  });
+
+  // OneDrive Mappings Management API
+  app.get("/api/onedrive/mappings", async (req, res) => {
+    try {
+      const mappings = await storage.getAllOneDriveMappings();
+      res.json(mappings);
+    } catch (error) {
+      console.error('Failed to get OneDrive mappings:', error);
+      res.status(500).json({ error: 'Failed to retrieve OneDrive mappings' });
+    }
+  });
+
+  app.get("/api/onedrive/mappings/:projectCode", async (req, res) => {
+    try {
+      const { projectCode } = req.params;
+      
+      if (!projectCode) {
+        return res.status(400).json({ error: 'Project code is required' });
+      }
+
+      const mapping = await storage.getOneDriveMapping(projectCode);
+      
+      if (!mapping) {
+        return res.status(404).json({ error: 'OneDrive mapping not found for this project' });
+      }
+
+      res.json(mapping);
+    } catch (error) {
+      console.error('Failed to get OneDrive mapping:', error);
+      res.status(500).json({ error: 'Failed to retrieve OneDrive mapping' });
+    }
+  });
+
+  app.post("/api/onedrive/mappings", async (req, res) => {
+    try {
+      const validatedData = insertOneDriveMappingSchema.parse(req.body);
+      
+      // Check if mapping already exists
+      const existingMapping = await storage.getOneDriveMapping(validatedData.projectCode);
+      if (existingMapping) {
+        return res.status(400).json({ error: 'OneDrive mapping already exists for this project' });
+      }
+
+      const mapping = await storage.createOneDriveMapping(validatedData);
+      res.status(201).json(mapping);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      console.error('Failed to create OneDrive mapping:', error);
+      res.status(500).json({ error: 'Failed to create OneDrive mapping' });
+    }
+  });
+
+  app.delete("/api/onedrive/mappings/:projectCode", async (req, res) => {
+    try {
+      const { projectCode } = req.params;
+      
+      if (!projectCode) {
+        return res.status(400).json({ error: 'Project code is required' });
+      }
+
+      const success = await storage.deleteOneDriveMapping(projectCode);
+      
+      if (!success) {
+        return res.status(404).json({ error: 'OneDrive mapping not found for this project' });
+      }
+
+      res.json({ message: 'OneDrive mapping deleted successfully' });
+    } catch (error) {
+      console.error('Failed to delete OneDrive mapping:', error);
+      res.status(500).json({ error: 'Failed to delete OneDrive mapping' });
     }
   });
 

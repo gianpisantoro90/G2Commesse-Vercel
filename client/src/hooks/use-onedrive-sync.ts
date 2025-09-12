@@ -93,6 +93,8 @@ export function useOneDriveSync() {
         title: "Progetto sincronizzato",
         description: `Il progetto ${project?.code} è stato sincronizzato con OneDrive`,
       });
+      // Invalidate OneDrive mappings to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
     },
     onError: (error, projectId) => {
       setSyncStatuses(prev => ({
@@ -158,6 +160,8 @@ export function useOneDriveSync() {
         title: "Sincronizzazione completata",
         description: `${results?.success}/${results?.total} progetti sincronizzati con successo`,
       });
+      // Invalidate OneDrive mappings to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
     },
     onError: (error) => {
       toast({

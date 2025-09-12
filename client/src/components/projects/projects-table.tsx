@@ -19,7 +19,7 @@ export default function ProjectsTable() {
 
   // OneDrive integration
   const { data: oneDriveMappings = [] } = useQuery<OneDriveMapping[]>({
-    queryKey: ["/api/onedrive-mappings"],
+    queryKey: ["/api/onedrive/mappings"],
   });
 
   const {
@@ -41,7 +41,7 @@ export default function ProjectsTable() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/onedrive-mappings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
     },
     onError: () => {
       toast({
