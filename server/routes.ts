@@ -1174,8 +1174,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // OneDrive Integration Setup endpoint
   app.post("/api/integration/setup-onedrive", async (req, res) => {
     try {
-      // Check if OneDrive is already configured
-      const isConfigured = await serverOneDriveService.testConnection();
+      // Check if OneDrive is already configured (handle errors gracefully)
+      let isConfigured = false;
+      try {
+        isConfigured = await serverOneDriveService.testConnection();
+      } catch (connectionError) {
+        // Expected when OneDrive is not configured - not an error for setup
+        console.log('OneDrive not configured (expected for setup):', connectionError.message);
+        isConfigured = false;
+      }
       
       if (isConfigured) {
         return res.json({ 
@@ -1194,10 +1201,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: "Configura OneDrive",
           steps: [
             "1. Vai nelle impostazioni del progetto Replit",
-            "2. Nella sezione 'Secrets', aggiungi le variabili di ambiente necessarie",
-            "3. Nella sezione 'Integrations', cerca e attiva 'OneDrive'",
-            "4. Autorizza l'accesso al tuo account Microsoft quando richiesto",
-            "5. Torna qui e clicca 'Ricarica Dati' per verificare la connessione"
+            "2. Nella sezione 'Integrations', cerca e attiva 'OneDrive'", 
+            "3. Autorizza l'accesso al tuo account Microsoft quando richiesto",
+            "4. Torna qui e clicca 'Ricarica Dati' per verificare la connessione"
           ],
           setupUrl: `${process.env.REPL_SLUG ? `https://replit.com/@${process.env.REPL_OWNER}/${process.env.REPL_SLUG}` : ''}/settings/integrations`,
           note: "L'integrazione OneDrive permette di sincronizzare automaticamente i tuoi progetti con il cloud storage Microsoft."
