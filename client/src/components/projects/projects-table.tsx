@@ -41,6 +41,7 @@ export default function ProjectsTable() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/onedrive-mappings"] });
     },
     onError: () => {
       toast({
