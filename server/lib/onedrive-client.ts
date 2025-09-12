@@ -31,12 +31,15 @@ async function getAccessToken() {
       {
         headers: {
           'Accept': 'application/json',
-          'X_REPLIT_TOKEN': xReplitToken
+          'X-REPLIT-TOKEN': xReplitToken,
+          'Authorization': xReplitToken
         }
       }
     );
 
     if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(`❌ Connection API error details: ${errorBody}`);
       throw new Error(`Connection API returned ${response.status}: ${response.statusText}`);
     }
 
