@@ -231,6 +231,15 @@ export function useOneDriveSync() {
     return syncStatuses[projectId] || { projectId, status: 'not_synced' };
   };
 
+  // Function to manually reset a project's sync status (for debugging/cleanup)
+  const resetProjectSyncStatus = (projectId: string) => {
+    const newStatuses = { ...syncStatuses };
+    delete newStatuses[projectId];
+    setSyncStatuses(newStatuses);
+    localStorage.setItem('onedrive_sync_statuses', JSON.stringify(newStatuses));
+    console.log(`🧹 Reset sync status for project: ${projectId}`);
+  };
+
   const getOverallSyncStats = () => {
     const statuses = Object.values(syncStatuses);
     const totalProjects = projects && Array.isArray(projects) ? projects.length : 0;
@@ -287,6 +296,7 @@ export function useOneDriveSync() {
     syncAllProjects,
     uploadFile,
     toggleAutoSync,
+    resetProjectSyncStatus,
     
     // Utilities
     getSyncStatus,

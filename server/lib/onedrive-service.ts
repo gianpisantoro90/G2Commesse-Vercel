@@ -400,12 +400,20 @@ class ServerOneDriveService {
       } catch (apiError: any) {
         logGraphResponse('Create Folder', null, apiError);
         
+        // Debug log to check error properties
+        console.log(`🔍 Debug apiError properties:`, {
+          statusCode: apiError.statusCode,
+          code: apiError.code,
+          message: apiError.message
+        });
+        
         // Handle "folder already exists" as success, not error
         if (apiError.statusCode === 409 && apiError.code === 'nameAlreadyExists') {
           console.log(`✅ OneDrive folder already exists (Server): ${parentPath}/${folderName}`);
           return true;
         }
         
+        console.log(`🚨 Condition not met, calling handleGraphError...`);
         await handleGraphError(apiError, 'Create Folder', {
           folderName,
           parentPath,
