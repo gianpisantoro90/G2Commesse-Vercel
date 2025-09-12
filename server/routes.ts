@@ -1125,28 +1125,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/onedrive/move-file", async (req, res) => {
     try {
-      console.log(`🚀 Move file endpoint called:`, {
-        timestamp: new Date().toISOString(),
-        body: req.body,
-        headers: Object.fromEntries(Object.entries(req.headers).filter(([k]) => !k.startsWith('x-')))
-      });
-      
       const { fileId, targetFolderId, targetPath } = req.body;
       
-      console.log(`📤 Extracted parameters:`, {
-        fileId,
-        targetFolderId,
-        targetPath,
-        hasFileId: !!fileId,
-        hasTargetFolderId: !!targetFolderId,
-        hasTargetPath: !!targetPath
-      });
-      
       if (!fileId || (!targetFolderId && !targetPath)) {
-        console.log(`❌ Validation failed:`, {
-          fileIdMissing: !fileId,
-          targetMissing: !targetFolderId && !targetPath
-        });
         return res.status(400).json({ error: 'File ID and target folder ID or path required' });
       }
 

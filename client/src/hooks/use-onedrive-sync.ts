@@ -38,6 +38,12 @@ export function useOneDriveSync() {
     enabled: isConnected
   }) as { data: Project[] | undefined };
 
+  // Get OneDrive mappings to include in sync stats
+  const { data: oneDriveMappings } = useQuery({
+    queryKey: ['/api/onedrive/mappings'],
+    enabled: isConnected
+  }) as { data: any[] | undefined };
+
   // Load sync settings
   useEffect(() => {
     const savedAutoSync = localStorage.getItem('onedrive_auto_sync');
@@ -228,12 +234,27 @@ export function useOneDriveSync() {
   const getOverallSyncStats = () => {
     const statuses = Object.values(syncStatuses);
     const totalProjects = projects && Array.isArray(projects) ? projects.length : 0;
+    
+    // Get projects with existing OneDrive mappings
+    const mappedProjectCodes = oneDriveMappings && Array.isArray(oneDriveMappings) 
+      ? oneDriveMappings.map(m => m.projectCode) 
+      : [];
+    
+    // Find projects that have mappings but no status tracked locally
+    const projectsWithMappings = projects && Array.isArray(projects) 
+      ? projects.filter(p => mappedProjectCodes.includes(p.code) && !syncStatuses[p.id])
+      : [];
+    
+    const syncedFromStatus = statuses.filter(s => s.status === 'synced').length;
+    const syncedFromMappings = projectsWithMappings.length;
+    const totalSynced = syncedFromStatus + syncedFromMappings;
+    
     return {
       total: totalProjects,
-      synced: statuses.filter(s => s.status === 'synced').length,
+      synced: totalSynced,
       pending: statuses.filter(s => s.status === 'pending').length,
       errors: statuses.filter(s => s.status === 'error').length,
-      notSynced: totalProjects - statuses.length
+      notSynced: totalProjects - totalSynced - statuses.filter(s => s.status === 'pending' || s.status === 'error').length
     };
   };
 
