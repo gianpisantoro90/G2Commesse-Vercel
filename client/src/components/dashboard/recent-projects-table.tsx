@@ -37,8 +37,8 @@ export default function RecentProjectsTable() {
   const getOneDriveSyncIndicator = (project: Project) => {
     if (!isConnected) {
       return (
-        <div className="flex items-center space-x-1 text-gray-400" title="OneDrive disconnesso">
-          <CloudOff className="h-3 w-3" />
+        <div className="flex items-center space-x-1 text-gray-400" title="OneDrive non configurato">
+          <Cloud className="h-3 w-3 opacity-50" />
         </div>
       );
     }
