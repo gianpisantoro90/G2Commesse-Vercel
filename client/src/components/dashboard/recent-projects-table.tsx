@@ -11,6 +11,12 @@ export default function RecentProjectsTable() {
   });
 
   const { isConnected, getSyncStatus } = useOneDriveSync();
+  
+  // Get OneDrive mappings to check if projects are already synced
+  const { data: oneDriveMappings } = useQuery({
+    queryKey: ["/api/onedrive/mappings"],
+    enabled: isConnected
+  }) as { data: any[] | undefined };
 
   // Get the 3 most recent projects
   const recentProjects = projects
@@ -45,6 +51,11 @@ export default function RecentProjectsTable() {
 
     const syncStatus = getSyncStatus(project.id);
     
+    // Check if project has OneDrive mapping (already synced on server)
+    const hasOneDriveMapping = oneDriveMappings && Array.isArray(oneDriveMappings) 
+      ? oneDriveMappings.some(mapping => mapping.projectCode === project.code)
+      : false;
+    
     switch (syncStatus.status) {
       case 'synced':
         return (
@@ -68,9 +79,19 @@ export default function RecentProjectsTable() {
           </div>
         );
       default:
+        // If no local sync status but has OneDrive mapping, show as synced
+        if (hasOneDriveMapping) {
+          return (
+            <div className="flex items-center space-x-1 text-green-600" title="Sincronizzato con OneDrive">
+              <Cloud className="h-3 w-3" />
+              <CheckCircle className="h-3 w-3" />
+            </div>
+          );
+        }
+        // Otherwise, not synced yet
         return (
           <div className="flex items-center space-x-1 text-gray-400" title="Non ancora sincronizzato">
-            <CloudOff className="h-3 w-3" />
+            <Cloud className="h-3 w-3 opacity-50" />
           </div>
         );
     }
