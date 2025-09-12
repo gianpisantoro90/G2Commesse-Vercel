@@ -164,6 +164,60 @@ export default function OneDrivePanel() {
     });
   };
 
+  const handleSetupOneDrive = async () => {
+    try {
+      // Trigger OneDrive integration setup through API
+      const response = await fetch('/api/integration/setup-onedrive', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.alreadyConfigured) {
+          toast({
+            title: "OneDrive già configurato",
+            description: "OneDrive è già connesso e funzionante!",
+          });
+          await checkConnection();
+        } else if (data.instructions) {
+          // Show setup instructions
+          const instructions = data.instructions;
+          const instructionsText = instructions.steps.join('\n');
+          
+          toast({
+            title: instructions.title,
+            description: `${instructions.note}\n\nPassaggi:\n${instructionsText}`,
+            duration: 10000, // Show for longer
+          });
+
+          // Open settings page if URL is available
+          if (instructions.setupUrl) {
+            const openSettings = confirm(
+              `Per configurare OneDrive:\n\n${instructions.steps.join('\n')}\n\nVuoi aprire le impostazioni del progetto ora?`
+            );
+            
+            if (openSettings) {
+              window.open(instructions.setupUrl, '_blank');
+            }
+          }
+        }
+      } else {
+        throw new Error('Setup failed');
+      }
+    } catch (error) {
+      console.error('OneDrive setup failed:', error);
+      toast({
+        title: "Errore configurazione",
+        description: "Impossibile avviare la configurazione OneDrive. Riprova più tardi.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="max-w-4xl" data-testid="onedrive-panel">
       <h3 className="text-2xl font-bold text-gray-900 mb-6">☁️ Integrazione OneDrive</h3>
@@ -377,14 +431,26 @@ export default function OneDrivePanel() {
       )}
 
       {!isConnected && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
-            <div>
-              <h4 className="font-medium text-yellow-800 mb-1">OneDrive non configurato</h4>
-              <p className="text-sm text-yellow-700">
-                Per utilizzare l'integrazione OneDrive, assicurati che la connessione sia configurata correttamente nelle impostazioni del progetto.
+            <Cloud className="w-5 h-5 text-blue-600 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-medium text-blue-800 mb-2">Configura Accesso OneDrive</h4>
+              <p className="text-sm text-blue-700 mb-4">
+                Per utilizzare l'integrazione OneDrive per gestire i tuoi progetti, devi prima configurare l'accesso al tuo account Microsoft.
               </p>
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleSetupOneDrive}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  data-testid="button-setup-onedrive"
+                >
+                  🔑 Configura OneDrive
+                </Button>
+                <div className="text-xs text-blue-600">
+                  ✨ La configurazione è semplice e sicura: ti verrà richiesto di autorizzare l'accesso al tuo account Microsoft OneDrive.
+                </div>
+              </div>
             </div>
           </div>
         </div>
