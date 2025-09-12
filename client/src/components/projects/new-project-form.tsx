@@ -84,7 +84,8 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
       setCreationStep("☁️ Creando cartella OneDrive...");
       const folderResponse = await apiRequest("POST", "/api/onedrive/create-project-folder", {
         projectCode: data.code,
-        template: data.template
+        template: data.template,
+        object: data.object // Pass project object for folder naming
       });
       const folderResult = await folderResponse.json();
       

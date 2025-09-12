@@ -14,6 +14,7 @@ const setRootFolderSchema = z.object({
 const createProjectFolderSchema = z.object({
   projectCode: z.string().min(1, "Project code is required"),
   template: z.enum(["LUNGO", "BREVE"], { required_error: "Template must be LUNGO or BREVE" }),
+  object: z.string().optional(), // Project description for folder naming
 });
 
 const scanFilesSchema = z.object({

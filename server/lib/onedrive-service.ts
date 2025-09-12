@@ -743,10 +743,20 @@ class ServerOneDriveService {
       if (description && description.trim()) {
         const sanitizedDescription = description.trim()
           .replace(/\s+/g, '_')  // Replace spaces with underscores
-          .replace(/[^a-zA-Z0-9_\-àáèéìíòóùúÀÁÈÉÌÍÒÓÙÚçÇñÑ]/g, ''); // Keep only safe characters + accented letters
+          .replace(/[^a-zA-Z0-9_\-àáèéìíòóùúÀÁÈÉÌÍÒÓÙÚçÇñÑ]/g, '') // Keep only safe characters + accented letters
+          .replace(/_+/g, '_')  // Collapse multiple underscores to single
+          .replace(/^_+|_+$/g, ''); // Remove leading/trailing underscores
         
-        if (sanitizedDescription) {
+        // Only append if we have meaningful content after sanitization
+        if (sanitizedDescription && sanitizedDescription.length > 0) {
           folderName = `${sanitizedProjectCode}_${sanitizedDescription}`;
+          
+          // Enforce OneDrive folder name limit (255 chars max)
+          if (folderName.length > 255) {
+            const availableLength = 255 - sanitizedProjectCode.length - 1; // -1 for underscore
+            const truncatedDescription = sanitizedDescription.substring(0, Math.max(0, availableLength));
+            folderName = truncatedDescription ? `${sanitizedProjectCode}_${truncatedDescription}` : sanitizedProjectCode;
+          }
         }
       }
       
