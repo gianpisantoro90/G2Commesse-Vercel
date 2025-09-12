@@ -11,7 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertProjectSchema, type InsertProject } from "@shared/schema";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
-import { Cloud, CheckCircle, AlertCircle, Loader2, FolderOpen, ExternalLink, Settings } from "lucide-react";
+import { Cloud, CheckCircle, AlertCircle, Loader2, FolderOpen, ExternalLink, Settings, Save } from "lucide-react";
 import { z } from "zod";
 
 const formSchema = insertProjectSchema.extend({
@@ -72,7 +72,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
     },
   });
 
-  // Comprehensive OneDrive project creation mutation
+  // OneDrive project creation mutation
   const createProjectMutation = useMutation({
     mutationFn: async (data: InsertProject) => {
       // Step 1: Create project in database
@@ -129,6 +129,36 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
     },
   });
 
+  // Simple project creation without OneDrive
+  const createProjectOnlyMutation = useMutation({
+    mutationFn: async (data: InsertProject) => {
+      setCreationStep("💾 Creando commessa nel database...");
+      const projectResponse = await apiRequest("POST", "/api/projects", data);
+      const project = await projectResponse.json();
+      return { project };
+    },
+    onSuccess: ({ project }) => {
+      setCreationStep("");
+      toast({
+        title: "Commessa creata con successo",
+        description: `Progetto ${project.code} creato. Potrai associare OneDrive successivamente.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      onProjectSaved(project);
+    },
+    onError: (error: any) => {
+      setCreationStep("");
+      console.error('Project creation error:', error);
+      
+      toast({
+        title: "Errore nella creazione",
+        description: "Si è verificato un errore durante la creazione della commessa",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleGenerateCode = () => {
     const { client, city, year } = form.getValues();
     if (!client || !city || !year) {
@@ -148,7 +178,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
     window.location.href = '/#sistema';
   };
 
-  const onSubmit = (data: FormData) => {
+  const onSubmitWithOneDrive = (data: FormData) => {
     if (!generatedCode) {
       toast({
         title: "Codice mancante",
@@ -179,11 +209,32 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
     createProjectMutation.mutate(data);
   };
 
+  const onSubmitWithoutOneDrive = (data: FormData) => {
+    if (!generatedCode) {
+      toast({
+        title: "Codice mancante",
+        description: "Generare prima il codice commessa",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    createProjectOnlyMutation.mutate(data);
+  };
+
+  const handleCreateWithOneDrive = () => {
+    form.handleSubmit(onSubmitWithOneDrive)();
+  };
+
+  const handleCreateWithoutOneDrive = () => {
+    form.handleSubmit(onSubmitWithoutOneDrive)();
+  };
+
   return (
     <div className="card-g2" data-testid="new-project-form">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">Crea Nuova Commessa</h2>
       
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div>
             <Label htmlFor="client" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -380,7 +431,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
                 <p className="text-green-800 text-sm flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
-                  OneDrive configurato correttamente. La commessa sarà creata in: <span className="font-mono text-xs">{rootConfig?.path}</span>
+                  OneDrive configurato correttamente. La commessa sarà creata in: <span className="font-mono text-xs">{rootConfig?.folderPath}</span>
                 </p>
               </div>
             )}
@@ -418,11 +469,13 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
         <div className="border-t pt-6">
           <div className="flex flex-wrap gap-3">
+            {/* OneDrive Creation Button */}
             <Button
-              type="submit"
-              disabled={createProjectMutation.isPending || !generatedCode || !isConnected || !isRootConfigured}
+              type="button"
+              onClick={handleCreateWithOneDrive}
+              disabled={createProjectMutation.isPending || createProjectOnlyMutation.isPending || !generatedCode || !isConnected || !isRootConfigured}
               className="px-8 py-3 bg-g2-success text-white rounded-xl font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
-              data-testid="button-save-project"
+              data-testid="button-save-project-onedrive"
             >
               {createProjectMutation.isPending ? (
                 <>
@@ -436,10 +489,33 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                 </>
               )}
             </Button>
+            
+            {/* Database Only Creation Button */}
+            <Button
+              type="button"
+              onClick={handleCreateWithoutOneDrive}
+              disabled={createProjectMutation.isPending || createProjectOnlyMutation.isPending || !generatedCode}
+              className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              data-testid="button-save-project-only"
+            >
+              {createProjectOnlyMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creando...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Crea Commessa
+                </>
+              )}
+            </Button>
+            
+            {/* Reset Button */}
             <Button
               type="reset"
               variant="outline"
-              disabled={createProjectMutation.isPending}
+              disabled={createProjectMutation.isPending || createProjectOnlyMutation.isPending}
               onClick={() => {
                 form.reset();
                 setGeneratedCode("");
@@ -451,6 +527,16 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             >
               Cancella
             </Button>
+          </div>
+          
+          {/* Help Text */}
+          <div className="mt-4 text-sm text-gray-600">
+            <p className="mb-2">
+              <strong>Crea Commessa OneDrive:</strong> Crea la commessa con cartella OneDrive automatica (richiede OneDrive configurato)
+            </p>
+            <p>
+              <strong>Crea Commessa:</strong> Crea solo la commessa nel database, potrai associare OneDrive successivamente
+            </p>
           </div>
         </div>
       </form>
