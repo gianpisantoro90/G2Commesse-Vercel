@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
+import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { useToast } from "@/hooks/use-toast";
 import oneDriveService from "@/lib/onedrive-service";
 import { useState } from "react";
@@ -26,21 +27,8 @@ export default function OneDriveStatusCard() {
     refetchInterval: 60000 // Refresh every minute
   });
 
-  // Get root folder configuration
-  const { data: rootConfig } = useQuery({
-    queryKey: ['system-config', 'onedrive_root_folder'],
-    queryFn: async () => {
-      const response = await fetch('/api/system-config/onedrive_root_folder');
-      if (response.ok) {
-        const config = await response.json();
-        // Extract path from the config object, handle both direct object and wrapped formats
-        const configValue = config.value || config;
-        return configValue?.path || '/G2_Progetti';
-      }
-      return '/G2_Progetti'; // Default
-    },
-    refetchInterval: 30000
-  });
+  // Get root folder configuration using the dedicated hook
+  const { rootConfig } = useOneDriveRootConfig();
 
   // Get sync statistics
   const syncStats = getOverallSyncStats();
@@ -162,7 +150,7 @@ export default function OneDriveStatusCard() {
               <div>
                 <div className="font-medium text-blue-900">Cartella Progetti</div>
                 <div className="text-sm text-blue-700 font-mono">
-                  {rootConfig || '/G2_Progetti'}
+                  {rootConfig?.folderPath || '/G2_Progetti'}
                 </div>
               </div>
             </div>
