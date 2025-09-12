@@ -62,9 +62,26 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
   const queryClient = useQueryClient();
   const { isConnected } = useOneDriveSync();
 
+  // Helper function to get OneDrive mapping for a project
+  const getOneDriveMapping = (projectCode: string) => {
+    return oneDriveMappings.find((mapping: any) => mapping.projectCode === projectCode);
+  };
+
   // Get projects for selection
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+  });
+
+  // Get OneDrive mappings
+  const { data: oneDriveMappings = [] } = useQuery({
+    queryKey: ["/api/onedrive/mappings"],
+    queryFn: async () => {
+      const response = await fetch('/api/onedrive/mappings');
+      if (response.ok) {
+        return await response.json();
+      }
+      return [];
+    },
   });
 
   // Get OneDrive root folder configuration
@@ -324,9 +341,14 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     try {
       for (const result of routingResults) {
         try {
-          // Build complete target path: /{rootFolder}/{project.code}/{suggestedPath}
-          const rootFolder = rootConfig?.folderPath || '/LAVORO_CORRENTE';
-          const targetPath = `${rootFolder}/${project.code}/${result.suggestedPath}`;
+          // Get the OneDrive mapping for the project to get the complete folder path
+          const oneDriveMapping = getOneDriveMapping(project.code);
+          if (!oneDriveMapping) {
+            throw new Error(`Mapping OneDrive non trovato per il progetto ${project.code}`);
+          }
+          
+          // Build target path using the complete project folder path: {projectFolderPath}/{suggestedPath}
+          const targetPath = `${oneDriveMapping.oneDriveFolderPath}/${result.suggestedPath}`;
           
           await moveFileMutation.mutateAsync({
             fileId: result.file.id,
