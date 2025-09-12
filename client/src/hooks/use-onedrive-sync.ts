@@ -32,17 +32,17 @@ export function useOneDriveSync() {
   // Get connection status from query result instead of local state
   const isConnected = isSuccess && connectionStatus === true;
 
-  // Get all projects for syncing
-  const { data: projects } = useQuery({
-    queryKey: ['projects'],
-    enabled: isConnected
-  }) as { data: Project[] | undefined };
+  // Get all projects for syncing (always enabled)
+  const { data: projects, isLoading: projectsLoading } = useQuery({
+    queryKey: ['/api/projects']
+    // Remove enabled condition - we need projects for sync stats calculation
+  }) as { data: Project[] | undefined, isLoading: boolean };
 
   // Get OneDrive mappings to include in sync stats
-  const { data: oneDriveMappings } = useQuery({
+  const { data: oneDriveMappings, isLoading: mappingsLoading } = useQuery({
     queryKey: ['/api/onedrive/mappings'],
     enabled: isConnected
-  }) as { data: any[] | undefined };
+  }) as { data: any[] | undefined, isLoading: boolean };
 
   // Load sync settings
   useEffect(() => {
