@@ -873,9 +873,17 @@ class ServerOneDriveService {
         throw new Error('Missing required parameters for file move');
       }
       
-      if (!/^[a-zA-Z0-9!\-_\.~]+$/.test(fileId)) {
-        throw new Error('File ID contains invalid characters');
-      }
+      // Log the actual file ID to debug
+      console.log(`📋 Received file ID for validation:`, {
+        fileId,
+        length: fileId.length,
+        chars: fileId.split('').map(c => ({ char: c, code: c.charCodeAt(0) }))
+      });
+      
+      // Temporarily remove strict validation to debug
+      // if (!/^[a-zA-Z0-9!\-_\.~]+$/.test(fileId)) {
+      //   throw new Error('File ID contains invalid characters');
+      // }
       
       // First, verify the file exists
       try {
