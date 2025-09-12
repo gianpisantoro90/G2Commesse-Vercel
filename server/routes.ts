@@ -18,9 +18,11 @@ const createProjectFolderSchema = z.object({
 });
 
 const scanFilesSchema = z.object({
-  folderPath: z.string().min(1, "Folder path is required"),
+  folderPath: z.string().optional(),
   projectCode: z.string().optional(),
   includeSubfolders: z.boolean().default(true),
+}).refine(data => data.folderPath || data.projectCode, {
+  message: "Either folderPath or projectCode must be provided"
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1054,8 +1056,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = scanFilesSchema.parse(req.body);
       const { folderPath, projectCode, includeSubfolders } = validatedData;
 
+      let targetPath = folderPath;
+      
+      // If projectCode is provided, resolve to its mapped folder
+      if (projectCode && !folderPath) {
+        const mapping = await storage.getOneDriveMapping(projectCode);
+        if (!mapping) {
+          return res.status(404).json({ 
+            error: `No OneDrive mapping found for project ${projectCode}. Please configure OneDrive for this project first.` 
+          });
+        }
+        targetPath = mapping.oneDriveFolderPath;
+        console.log(`🔍 Resolved project ${projectCode} to OneDrive path: ${targetPath}`);
+      } else if (!targetPath) {
+        return res.status(400).json({ 
+          error: 'Either folderPath or projectCode must be provided' 
+        });
+      }
+
+      console.log(`📁 Scanning OneDrive folder: ${targetPath} (includeSubfolders: ${includeSubfolders})`);
+
       // Scan OneDrive folder
-      const files = await serverOneDriveService.scanFolderRecursive(folderPath, {
+      const files = await serverOneDriveService.scanFolderRecursive(targetPath, {
         includeSubfolders,
         maxDepth: includeSubfolders ? 5 : 1
       });
@@ -1083,12 +1105,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      console.log(`✅ Scanned and indexed ${indexed.length} files from ${folderPath}`);
+      console.log(`✅ Scanned and indexed ${indexed.length} files from ${targetPath}${projectCode ? ` (project: ${projectCode})` : ''}`);
       res.json({ 
         success: true, 
         scanned: files.length, 
         indexed: indexed.length,
-        files: indexed 
+        files: indexed,
+        path: targetPath,
+        projectCode: projectCode || null
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
