@@ -149,20 +149,38 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
 
   // Handle folder scanning
   const handleScanFolder = async () => {
-    if (!scanPath.trim()) {
-      toast({
-        title: "Errore",
-        description: "Inserire un percorso di cartella OneDrive",
-        variant: "destructive",
-      });
-      return;
+    // Check if we should use root path or project mapping
+    const useRootPath = scanPath === (rootConfig?.folderPath || '/G2_Progetti');
+    
+    if (useRootPath) {
+      // Using root folder - require folder path
+      if (!scanPath.trim()) {
+        toast({
+          title: "Errore",
+          description: "Inserire un percorso di cartella OneDrive",
+          variant: "destructive",
+        });
+        return;
+      }
+      console.log('🔍 Scanning using root path:', scanPath);
+    } else {
+      // Using project mapping - require selected project
+      if (!selectedProject) {
+        toast({
+          title: "Errore",
+          description: "Selezionare un progetto o usare la cartella radice",
+          variant: "destructive",
+        });
+        return;
+      }
+      console.log('🔍 Scanning using project mapping for:', selectedProject);
     }
 
     setIsScanning(true);
     try {
       await scanFilesMutation.mutateAsync({
-        folderPath: scanPath,
-        projectCode: selectedProject || undefined,
+        folderPath: useRootPath ? scanPath : undefined,
+        projectCode: useRootPath ? undefined : selectedProject,
         includeSubfolders
       });
     } finally {
