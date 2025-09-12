@@ -2,11 +2,8 @@ import { useState } from "react";
 import Header from "@/components/layout/header";
 import TabNavigation from "@/components/layout/tab-navigation";
 import StatsCard from "@/components/dashboard/stats-card";
-import QuickActionsCard from "@/components/dashboard/quick-actions-card";
-import SystemInfoCard from "@/components/dashboard/system-info-card";
 import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
-import OneDriveSyncStatsCard from "@/components/dashboard/onedrive-sync-stats-card";
 import NewProjectForm from "@/components/projects/new-project-form";
 import FolderStructureCard from "@/components/projects/folder-structure-card";
 import ProjectsTable from "@/components/projects/projects-table";
@@ -77,32 +74,13 @@ export default function Dashboard() {
             {activeTab === "dashboard" && (
               <div className="space-y-8" data-testid="dashboard-panel">
                 {/* First Row - Core System Info */}
-                <div className="grid gap-6 lg:grid-cols-3">
-                  <StatsCard />
-                  <QuickActionsCard onNewProject={() => setActiveTab("nuova")} />
-                  <SystemInfoCard />
-                </div>
-                
-                {/* Second Row - OneDrive Integration Status */}
                 <div className="grid gap-6 lg:grid-cols-2">
+                  <StatsCard />
                   <OneDriveStatusCard />
-                  <OneDriveSyncStatsCard />
                 </div>
                 
                 {/* Third Row - Recent Projects with OneDrive Status */}
                 <RecentProjectsTable />
-              </div>
-            )}
-
-            {/* New Project Panel */}
-            {activeTab === "nuova" && (
-              <div className="max-w-2xl mx-auto space-y-6" data-testid="new-project-panel">
-                <NewProjectForm 
-                  onProjectSaved={setPendingProject}
-                />
-                <FolderStructureCard 
-                  pendingProject={pendingProject}
-                />
               </div>
             )}
 
@@ -120,6 +98,13 @@ export default function Dashboard() {
                         Gestione Commesse
                       </TabsTrigger>
                       <TabsTrigger 
+                        value="nuova" 
+                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                        data-testid="tab-nuova"
+                      >
+                        Nuova Commessa
+                      </TabsTrigger>
+                      <TabsTrigger 
                         value="clienti" 
                         className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
                         data-testid="tab-clienti"
@@ -131,6 +116,17 @@ export default function Dashboard() {
                   
                   <TabsContent value="progetti" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
                     <ProjectsTable />
+                  </TabsContent>
+                  
+                  <TabsContent value="nuova" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                    <div className="max-w-2xl mx-auto space-y-6">
+                      <NewProjectForm 
+                        onProjectSaved={setPendingProject}
+                      />
+                      <FolderStructureCard 
+                        pendingProject={pendingProject}
+                      />
+                    </div>
                   </TabsContent>
                   
                   <TabsContent value="clienti" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
@@ -186,6 +182,13 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* OneDrive Browser Panel */}
+            {activeTab === "onedrive" && (
+              <div data-testid="onedrive-browser-panel">
+                <OneDriveBrowser />
+              </div>
+            )}
+
             {/* System Panel */}
             {activeTab === "sistema" && (
               <div data-testid="system-panel">
@@ -220,13 +223,6 @@ export default function Dashboard() {
                       >
                         ☁️ OneDrive Config
                       </TabsTrigger>
-                      <TabsTrigger 
-                        value="browser" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
-                        data-testid="tab-onedrive-browser"
-                      >
-                        📁 OneDrive Browser
-                      </TabsTrigger>
                     </TabsList>
                   </div>
                   
@@ -244,10 +240,6 @@ export default function Dashboard() {
                   
                   <TabsContent value="onedrive" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
                     <OneDrivePanel />
-                  </TabsContent>
-                  
-                  <TabsContent value="browser" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
-                    <OneDriveBrowser />
                   </TabsContent>
                 </Tabs>
               </div>
