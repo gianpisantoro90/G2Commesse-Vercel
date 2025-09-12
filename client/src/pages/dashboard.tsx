@@ -27,7 +27,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeSubTab, setActiveSubTab] = useState({
     gestione: "progetti",
-    sistema: "storage"
+    sistema: "storage",
+    onedrive: "folders"
   });
   const [pendingProject, setPendingProject] = useState(null);
   
@@ -210,13 +211,6 @@ export default function Dashboard() {
                         🤖 Configurazione AI
                       </TabsTrigger>
                       <TabsTrigger 
-                        value="folders" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
-                        data-testid="tab-folders"
-                      >
-                        📁 Cartelle
-                      </TabsTrigger>
-                      <TabsTrigger 
                         value="onedrive" 
                         className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
                         data-testid="tab-onedrive"
@@ -234,12 +228,36 @@ export default function Dashboard() {
                     <AiConfigPanel />
                   </TabsContent>
                   
-                  <TabsContent value="folders" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
-                    <FolderConfigPanel />
-                  </TabsContent>
                   
                   <TabsContent value="onedrive" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
-                    <OneDrivePanel />
+                    <Tabs value={activeSubTab.onedrive} onValueChange={(value) => handleSubTabChange("onedrive", value)}>
+                      <div className="bg-gray-50 rounded-t-xl border-b border-gray-200 mb-6">
+                        <TabsList className="flex w-full bg-transparent border-0 p-0">
+                          <TabsTrigger 
+                            value="folders" 
+                            className="px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-100 transition-colors rounded-none"
+                            data-testid="tab-onedrive-folders"
+                          >
+                            📁 Cartelle
+                          </TabsTrigger>
+                          <TabsTrigger 
+                            value="config" 
+                            className="px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-100 transition-colors rounded-none"
+                            data-testid="tab-onedrive-config"
+                          >
+                            ⚙️ Configurazione
+                          </TabsTrigger>
+                        </TabsList>
+                      </div>
+                      
+                      <TabsContent value="folders" className="mt-0">
+                        <FolderConfigPanel />
+                      </TabsContent>
+                      
+                      <TabsContent value="config" className="mt-0">
+                        <OneDrivePanel />
+                      </TabsContent>
+                    </Tabs>
                   </TabsContent>
                 </Tabs>
               </div>
