@@ -269,7 +269,12 @@ export function useOneDriveSync() {
 
   // Auto-sync new projects with debouncing to prevent infinite loops
   useEffect(() => {
-    if (!isConnected || !autoSyncEnabled || !projects || !Array.isArray(projects)) return;
+    if (!isConnected || !autoSyncEnabled || !projects || !Array.isArray(projects) || !oneDriveMappings) return;
+
+    // Get mapped project codes for reference
+    const mappedProjectCodes = Array.isArray(oneDriveMappings) 
+      ? oneDriveMappings.map(m => m.projectCode) 
+      : [];
 
     // Debounce to prevent excessive calls when navigating between tabs
     const timeoutId = setTimeout(() => {
@@ -279,10 +284,13 @@ export function useOneDriveSync() {
         
         for (const project of projects) {
           const currentStatus = currentSyncStatuses[project.id];
+          const hasOneDriveMapping = mappedProjectCodes.includes(project.code);
           
-          // Only sync if project has no status OR status is explicitly 'not_synced'
-          // Skip projects that are already synced, pending, or have errors
-          if (!currentStatus && project.code) {
+          // Only sync if ALL conditions are met:
+          // 1. Project has no local sync status 
+          // 2. Project has no OneDrive mapping yet
+          // 3. Project has a valid code
+          if (!currentStatus && !hasOneDriveMapping && project.code) {
             console.log(`🔄 Auto-syncing new project: ${project.code}`);
             syncProject(project.id);
             // Add delay between auto-syncs to avoid overwhelming the API
@@ -292,10 +300,10 @@ export function useOneDriveSync() {
       };
 
       autoSyncProjects();
-    }, 2000); // 2 second debounce
+    }, 3000); // Increased debounce to 3 seconds
 
     return () => clearTimeout(timeoutId);
-  }, [projects, isConnected, autoSyncEnabled]); // Removed syncStatuses from dependencies
+  }, [projects, isConnected, autoSyncEnabled, oneDriveMappings]); // Added oneDriveMappings as dependency
 
   return {
     // State
