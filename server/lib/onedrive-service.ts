@@ -882,9 +882,50 @@ class ServerOneDriveService {
           throw new Error('Invalid characters in target path');
         }
         
-        const targetFolder = await client.api(`/me/drive/root:${sanitizedPath}`).get();
-        targetFolderId = targetFolder.id;
-        targetPath = sanitizedPath;
+        try {
+          const targetFolder = await client.api(`/me/drive/root:${sanitizedPath}`).get();
+          targetFolderId = targetFolder.id;
+          targetPath = sanitizedPath;
+        } catch (error: any) {
+          if (error.statusCode === 404) {
+            console.log(`📁 Target folder not found: ${sanitizedPath}. Attempting to create it...`);
+            
+            // Try to create the folder structure
+            const pathParts = sanitizedPath.split('/').filter(p => p.length > 0);
+            let currentPath = '';
+            let currentFolderId = 'root';
+            
+            for (const part of pathParts) {
+              currentPath += '/' + part;
+              
+              try {
+                // Try to get the folder first
+                const existingFolder = await client.api(`/me/drive/root:${currentPath}`).get();
+                currentFolderId = existingFolder.id;
+              } catch (folderError: any) {
+                if (folderError.statusCode === 404) {
+                  // Folder doesn't exist, create it
+                  console.log(`📁 Creating folder: ${currentPath}`);
+                  const newFolder = await client.api(`/me/drive/items/${currentFolderId}/children`).post({
+                    name: part,
+                    folder: {},
+                    '@microsoft.graph.conflictBehavior': 'replace'
+                  });
+                  currentFolderId = newFolder.id;
+                  console.log(`✅ Created folder: ${currentPath} (ID: ${currentFolderId})`);
+                } else {
+                  throw folderError;
+                }
+              }
+            }
+            
+            targetFolderId = currentFolderId;
+            targetPath = sanitizedPath;
+            console.log(`✅ Successfully ensured folder exists: ${sanitizedPath}`);
+          } else {
+            throw error;
+          }
+        }
       } else {
         // It's an ID
         if (!/^[a-zA-Z0-9!\-_\.~]+$/.test(targetFolderIdOrPath)) {
