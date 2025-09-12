@@ -178,9 +178,12 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
 
     setIsScanning(true);
     try {
+      // Get project code for backend (backend expects project.code, not project.id)
+      const projectCode = useRootPath ? undefined : projects.find(p => p.id === selectedProject)?.code;
+      
       await scanFilesMutation.mutateAsync({
         folderPath: useRootPath ? scanPath : undefined,
-        projectCode: useRootPath ? undefined : selectedProject,
+        projectCode,
         includeSubfolders
       });
     } finally {
