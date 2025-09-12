@@ -347,7 +347,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           const targetPath = `${oneDriveMapping.oneDriveFolderPath}/${result.suggestedPath}`;
           
           await moveFileMutation.mutateAsync({
-            fileId: result.file.id,
+            fileId: result.file.driveItemId,
             targetPath: targetPath,
             fileName: result.file.name
           });

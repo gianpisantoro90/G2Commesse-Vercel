@@ -2,6 +2,7 @@ import { Client } from '@microsoft/microsoft-graph-client';
 
 export interface OneDriveFile {
   id: string;
+  driveItemId: string;
   name: string;
   size: number;
   downloadUrl: string;
