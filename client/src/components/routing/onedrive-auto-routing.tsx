@@ -324,8 +324,9 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     try {
       for (const result of routingResults) {
         try {
-          // Build target path: /{project.code}/{suggestedPath}
-          const targetPath = `/${project.code}/${result.suggestedPath}`;
+          // Build complete target path: /{rootFolder}/{project.code}/{suggestedPath}
+          const rootFolder = rootConfig?.folderPath || '/LAVORO_CORRENTE';
+          const targetPath = `${rootFolder}/${project.code}/${result.suggestedPath}`;
           
           await moveFileMutation.mutateAsync({
             fileId: result.file.id,
