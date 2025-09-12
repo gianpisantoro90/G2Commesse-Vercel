@@ -891,7 +891,55 @@ class ServerOneDriveService {
     }
   }
 
-  async moveFile(fileId: string, targetFolderIdOrPath: string): Promise<{name: string, path: string, parentFolderId: string} | null> {
+  // Helper function to resolve filename conflicts
+  private async resolveFileNameConflict(client: any, targetFolderId: string, desiredFileName: string): Promise<string> {
+    let finalFileName = desiredFileName;
+    let counter = 1;
+    
+    while (true) {
+      try {
+        // Check if file exists in target folder
+        const existingFiles = await client.api(`/me/drive/items/${targetFolderId}/children`).get();
+        const conflict = existingFiles.value.find((item: any) => item.name === finalFileName);
+        
+        if (!conflict) {
+          // No conflict, we can use this name
+          break;
+        }
+        
+        // Conflict found, generate new name with suffix
+        const lastDotIndex = desiredFileName.lastIndexOf('.');
+        if (lastDotIndex > 0) {
+          // File has extension
+          const nameWithoutExt = desiredFileName.substring(0, lastDotIndex);
+          const extension = desiredFileName.substring(lastDotIndex);
+          finalFileName = `${nameWithoutExt}_${counter}${extension}`;
+        } else {
+          // No extension
+          finalFileName = `${desiredFileName}_${counter}`;
+        }
+        
+        counter++;
+        
+        // Safety check to prevent infinite loops
+        if (counter > 100) {
+          throw new Error('Too many naming conflicts, cannot resolve unique filename');
+        }
+      } catch (error: any) {
+        if (error.message?.includes('cannot resolve unique filename')) {
+          throw error;
+        }
+        // If we can't check for conflicts, use the desired name and let API handle it
+        console.warn('Could not check for filename conflicts, proceeding with desired name');
+        break;
+      }
+    }
+    
+    console.log(`🏷️ Resolved filename: ${desiredFileName} → ${finalFileName}`);
+    return finalFileName;
+  }
+
+  async moveFile(fileId: string, targetFolderIdOrPath: string, newFileName?: string): Promise<{name: string, path: string, parentFolderId: string} | null> {
     try {
       const client = await this.getClient();
       
@@ -1003,12 +1051,25 @@ class ServerOneDriveService {
         targetPath = targetFolder.parentReference?.path?.replace('/drive/root:', '') + '/' + targetFolder.name || '/';
       }
       
-      // Move the file
-      const moveData = {
+      // Prepare move data
+      const moveData: any = {
         parentReference: {
           id: targetFolderId
         }
       };
+      
+      // Handle renaming if new filename is provided
+      let finalFileName: string;
+      if (newFileName) {
+        // Resolve filename conflicts
+        finalFileName = await this.resolveFileNameConflict(client, targetFolderId, newFileName);
+        moveData.name = finalFileName;
+        console.log(`🏷️ File will be renamed during move: ${newFileName} → ${finalFileName}`);
+      } else {
+        // Get current filename for path construction
+        const currentFile = await client.api(`/me/drive/items/${fileId}`).get();
+        finalFileName = currentFile.name;
+      }
       
       const movedFile = await client
         .api(`/me/drive/items/${fileId}`)

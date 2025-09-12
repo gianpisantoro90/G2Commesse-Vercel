@@ -1125,14 +1125,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/onedrive/move-file", async (req, res) => {
     try {
-      const { fileId, targetFolderId, targetPath } = req.body;
+      const { fileId, targetFolderId, targetPath, fileName } = req.body;
       
       if (!fileId || (!targetFolderId && !targetPath)) {
         return res.status(400).json({ error: 'File ID and target folder ID or path required' });
       }
 
-      // Move file on OneDrive
-      const result = await serverOneDriveService.moveFile(fileId, targetFolderId || targetPath);
+      // Move file on OneDrive (with optional renaming)
+      const result = await serverOneDriveService.moveFile(fileId, targetFolderId || targetPath, fileName);
       
       if (result) {
         // Update file index
