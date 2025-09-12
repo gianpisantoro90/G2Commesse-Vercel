@@ -267,23 +267,35 @@ export function useOneDriveSync() {
     };
   };
 
-  // Auto-sync new projects (fixed circular dependency by placing after function definitions)
+  // Auto-sync new projects with debouncing to prevent infinite loops
   useEffect(() => {
     if (!isConnected || !autoSyncEnabled || !projects || !Array.isArray(projects)) return;
 
-    const autoSyncProjects = async () => {
-      for (const project of projects) {
-        const currentStatus = syncStatuses[project.id];
-        if (!currentStatus || currentStatus.status === 'not_synced') {
-          syncProject(project.id);
-          // Add small delay between auto-syncs to avoid overwhelming the API
-          await new Promise(resolve => setTimeout(resolve, 500));
+    // Debounce to prevent excessive calls when navigating between tabs
+    const timeoutId = setTimeout(() => {
+      const autoSyncProjects = async () => {
+        // Get current sync statuses at execution time (not as dependency)
+        const currentSyncStatuses = JSON.parse(localStorage.getItem('onedrive_sync_statuses') || '{}');
+        
+        for (const project of projects) {
+          const currentStatus = currentSyncStatuses[project.id];
+          
+          // Only sync if project has no status OR status is explicitly 'not_synced'
+          // Skip projects that are already synced, pending, or have errors
+          if (!currentStatus && project.code) {
+            console.log(`🔄 Auto-syncing new project: ${project.code}`);
+            syncProject(project.id);
+            // Add delay between auto-syncs to avoid overwhelming the API
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
-      }
-    };
+      };
 
-    autoSyncProjects();
-  }, [projects, isConnected, autoSyncEnabled, syncStatuses]); // Added missing dependencies
+      autoSyncProjects();
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [projects, isConnected, autoSyncEnabled]); // Removed syncStatuses from dependencies
 
   return {
     // State
