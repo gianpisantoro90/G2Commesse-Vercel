@@ -316,6 +316,17 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     }
   };
 
+  // Helper function to create filename with project code prefix
+  const createFileNameWithPrefix = (originalFileName: string, projectCode: string): string => {
+    // Check if file already has the project code prefix
+    if (originalFileName.startsWith(`${projectCode}_`)) {
+      return originalFileName; // Already has prefix, don't duplicate
+    }
+    
+    // Add project code prefix to filename
+    return `${projectCode}_${originalFileName}`;
+  };
+
   // Handle moving files to suggested paths
   const handleMoveFiles = async () => {
     if (routingResults.length === 0) return;
@@ -346,14 +357,17 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           // Build target path using the complete project folder path: {projectFolderPath}/{suggestedPath}
           const targetPath = `${oneDriveMapping.oneDriveFolderPath}/${result.suggestedPath}`;
           
+          // Create new filename with project code prefix
+          const newFileName = createFileNameWithPrefix(result.file.name, project.code);
+          
           await moveFileMutation.mutateAsync({
             fileId: result.file.driveItemId,
             targetPath: targetPath,
-            fileName: result.file.name
+            fileName: newFileName
           });
           
           successCount++;
-          console.log(`✅ Moved ${result.file.name} to ${targetPath}`);
+          console.log(`✅ Moved and renamed: ${result.file.name} → ${newFileName} to ${targetPath}`);
         } catch (error) {
           errorCount++;
           console.error(`❌ Failed to move ${result.file.name}:`, error);
