@@ -776,18 +776,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if mapping already exists
       const existingMapping = await storage.getOneDriveMapping(projectCode);
-      if (existingMapping) {
-        return res.status(409).json({ error: 'Project is already linked to a OneDrive folder' });
-      }
       
-      // Validate OneDrive folder exists and save mapping
+      // Validate OneDrive folder exists
       const success = await serverOneDriveService.linkProjectToFolder(projectCode, oneDriveFolderId, oneDriveFolderName, oneDriveFolderPath);
       
       if (success) {
-        // Save mapping to database
+        // If mapping exists, delete it first to replace with new one
+        if (existingMapping) {
+          await storage.deleteOneDriveMapping(projectCode);
+          console.log('🔄 Updated existing OneDrive mapping for project:', projectCode);
+        }
+        
+        // Save new mapping to database
         const mapping = await storage.createOneDriveMapping(validatedData);
         console.log('✅ Created OneDrive mapping:', mapping.id);
-        res.json({ success: true, mapping });
+        res.json({ 
+          success: true, 
+          mapping,
+          updated: !!existingMapping 
+        });
       } else {
         res.status(400).json({ error: 'Failed to validate OneDrive folder' });
       }

@@ -177,14 +177,27 @@ export default function OneDriveBrowser() {
         })
       });
       
-      if (!response.ok) throw new Error('Failed to link project');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const error = new Error(errorData.error || 'Failed to link project');
+        (error as any).status = response.status;
+        (error as any).data = errorData;
+        throw error;
+      }
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: "Progetto collegato",
-        description: "La cartella OneDrive è stata collegata al progetto",
-      });
+    onSuccess: (data) => {
+      if (data.updated) {
+        toast({
+          title: "Collegamento aggiornato",
+          description: "Il progetto è stato collegato alla nuova cartella OneDrive sostituendo il collegamento precedente",
+        });
+      } else {
+        toast({
+          title: "Progetto collegato",
+          description: "La cartella OneDrive è stata collegata al progetto",
+        });
+      }
       setLinkingFile(null);
       setSelectedProject("");
       // Invalidate relevant queries
@@ -193,12 +206,22 @@ export default function OneDriveBrowser() {
     },
     onError: (error: any) => {
       console.error('Project linking error:', error);
-      const errorMessage = error?.response?.data?.error || error?.message || 'Errore sconosciuto';
-      toast({
-        title: "Errore collegamento",
-        description: `Impossibile collegare il progetto: ${errorMessage}`,
-        variant: "destructive",
-      });
+      
+      // Handle specific error cases
+      if (error.status === 404) {
+        toast({
+          title: "Progetto non trovato",
+          description: "Il progetto selezionato non esiste nel sistema.",
+          variant: "destructive",
+        });
+      } else {
+        const errorMessage = error?.message || 'Errore sconosciuto';
+        toast({
+          title: "Errore collegamento",
+          description: `Impossibile collegare il progetto: ${errorMessage}`,
+          variant: "destructive",
+        });
+      }
     }
   });
 
