@@ -56,7 +56,7 @@ export default function OneDriveBrowser() {
 
   // Get projects for linking
   const { data: projects } = useQuery({
-    queryKey: ['projects']
+    queryKey: ["/api/projects"]
   }) as { data: Project[] | undefined };
 
   // Get current folder files
@@ -188,8 +188,8 @@ export default function OneDriveBrowser() {
       setLinkingFile(null);
       setSelectedProject("");
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['onedrive-mappings'] });
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
     },
     onError: (error: any) => {
       console.error('Project linking error:', error);
