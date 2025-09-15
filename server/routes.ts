@@ -1216,17 +1216,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         try {
-          // Get current file info first
+          // Get current file info first - try to get real name from OneDrive
           let originalName = 'Unknown';
           try {
-            // const fileIndex = await storage.getFileIndexByDriveItemId(fileId);
-            // const fileIndex = null; // Method not available in current storage interface
-            // if (fileIndex) {
-            //   originalName = fileIndex.name;
-            // }
+            const client = await serverOneDriveService.getClient();
+            const fileInfo = await client.api(`/me/drive/items/${fileId}`).get();
+            originalName = fileInfo.name;
+            console.log(`📄 Found file: ${originalName} (ID: ${fileId.substring(0, 8)})`);
+          } catch (nameError: any) {
+            if (nameError.statusCode === 404) {
+              console.warn(`⚠️ File not found (404): ${fileId.substring(0, 8)} - skipping`);
+              results.push({
+                original: `File_${fileId.substring(0, 8)}`,
+                renamed: newName,
+                success: false,
+                error: 'File not found - may have been moved or deleted'
+              });
+              errorCount++;
+              continue; // Skip this file and continue with the next one
+            }
+            console.warn('Could not get file name:', nameError.message);
             originalName = 'file_' + fileId.substring(0, 8); // Use partial ID as fallback
-          } catch (indexError) {
-            console.warn('Could not get file info from index:', fileId);
           }
 
           // Rename file using move operation with same location but new name
@@ -1256,13 +1266,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             errorCount++;
           }
         } catch (error: any) {
-          console.error(`❌ Failed to rename file ${fileId}:`, error);
-          results.push({
-            original: 'Unknown',
-            renamed: newName,
-            success: false,
-            error: error.message || 'Unknown error'
-          });
+          console.error(`❌ Failed to rename file ${fileId.substring(0, 8)}:`, error.message);
+          
+          // Handle specific error types
+          if (error.message?.includes('File not found') || error.message?.includes('404')) {
+            results.push({
+              original: `File_${fileId.substring(0, 8)}`,
+              renamed: newName,
+              success: false,
+              error: 'File not found - may have been moved or deleted from OneDrive'
+            });
+          } else {
+            results.push({
+              original: `File_${fileId.substring(0, 8)}`,
+              renamed: newName,
+              success: false,
+              error: error.message || 'Unknown error'
+            });
+          }
           errorCount++;
         }
 
