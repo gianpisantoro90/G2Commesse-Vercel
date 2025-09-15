@@ -8,8 +8,6 @@ import NewProjectForm from "@/components/projects/new-project-form";
 import FolderStructureCard from "@/components/projects/folder-structure-card";
 import ProjectsTable from "@/components/projects/projects-table";
 import ClientsTable from "@/components/projects/clients-table";
-import RoutingForm from "@/components/routing/routing-form";
-import RoutingResults from "@/components/routing/routing-results";
 import BulkRenameForm from "@/components/routing/bulk-rename-form";
 import BulkRenameResults from "@/components/routing/bulk-rename-results";
 import OneDriveAutoRouting from "@/components/routing/onedrive-auto-routing";
@@ -20,7 +18,6 @@ import OneDrivePanel from "@/components/system/onedrive-panel";
 import OneDriveFileRouter from "@/components/onedrive/onedrive-file-router";
 import OneDriveBrowser from "@/components/onedrive/onedrive-browser";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { type RoutingResult } from "@/lib/ai-router";
 import { type Project } from "@shared/schema";
 
 export default function Dashboard() {
@@ -32,23 +29,12 @@ export default function Dashboard() {
   const [pendingProject, setPendingProject] = useState(null);
   
   // Routing state
-  const [routingResults, setRoutingResults] = useState<Array<{result: RoutingResult, file: File}> | null>(null);
-  const [routingProject, setRoutingProject] = useState<Project | null>(null);
   const [bulkRenameResults, setBulkRenameResults] = useState<Array<{original: string, renamed: string}> | null>(null);
 
   const handleSubTabChange = (mainTab: string, subTab: string) => {
     setActiveSubTab(prev => ({ ...prev, [mainTab]: subTab }));
   };
   
-  const handleAnalysisComplete = (results: Array<{result: RoutingResult, file: File}>, project: Project | null) => {
-    setRoutingResults(results);
-    setRoutingProject(project);
-  };
-  
-  const handleClearRouting = () => {
-    setRoutingResults(null);
-    setRoutingProject(null);
-  };
 
   const handleBulkRenameComplete = (results: Array<{original: string, renamed: string}>) => {
     setBulkRenameResults(results);
@@ -143,17 +129,6 @@ export default function Dashboard() {
                   {/* New OneDrive Auto-Routing System */}
                   <OneDriveAutoRouting />
                   
-                  {/* Legacy File Upload System */}
-                  <div className="bg-gray-50 rounded-xl border border-gray-200 p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">📁 Routing File Upload (Legacy)</h3>
-                    <p className="text-gray-600 mb-4">
-                      Sistema tradizionale per upload e classificazione file locali.
-                    </p>
-                    <div className="space-y-4">
-                      <RoutingForm onAnalysisComplete={handleAnalysisComplete} />
-                    </div>
-                  </div>
-                  
                   {/* Bulk Rename Tool */}
                   <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <h3 className="text-xl font-bold text-gray-900 mb-4">🔄 Rinomina File in Massa</h3>
@@ -163,15 +138,6 @@ export default function Dashboard() {
                     <BulkRenameForm onRenameComplete={handleBulkRenameComplete} />
                   </div>
                 </div>
-                
-                {/* Legacy Results */}
-                {routingResults && (
-                  <RoutingResults 
-                    results={routingResults}
-                    project={routingProject}
-                    onClear={handleClearRouting}
-                  />
-                )}
                 
                 {bulkRenameResults && (
                   <BulkRenameResults 
