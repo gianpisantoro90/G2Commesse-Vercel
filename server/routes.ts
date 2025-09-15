@@ -144,17 +144,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/projects/:id", async (req, res) => {
     try {
+      console.log(`🗑️ Attempting to delete project: ${req.params.id}`);
+      
       // First get project details before deletion
       const project = await storage.getProject(req.params.id);
       if (!project) {
+        console.log(`❌ Project not found: ${req.params.id}`);
         return res.status(404).json({ message: "Commessa non trovata" });
       }
+      
+      console.log(`✅ Found project to delete: ${project.code}`);
 
       // Delete the project
       const deleted = await storage.deleteProject(req.params.id);
       if (!deleted) {
+        console.log(`❌ Failed to delete project: ${req.params.id}`);
         return res.status(404).json({ message: "Commessa non trovata" });
       }
+      
+      console.log(`✅ Successfully deleted project: ${project.code}`);
 
       // Also delete any associated OneDrive mapping
       try {
@@ -167,6 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ message: "Commessa eliminata con successo" });
     } catch (error) {
+      console.error(`❌ Error deleting project ${req.params.id}:`, error);
       res.status(500).json({ message: "Errore nell'eliminazione della commessa" });
     }
   });
