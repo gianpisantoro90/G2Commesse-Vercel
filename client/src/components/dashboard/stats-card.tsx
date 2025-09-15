@@ -10,10 +10,10 @@ export default function StatsCard() {
     queryKey: ["/api/clients"],
   });
 
-  // Calcola statistiche per status
-  const projectsInCorso = projects.filter(p => p.status === "In Corso").length;
-  const projectsSospese = projects.filter(p => p.status === "Sospesa").length;
-  const projectsConcluse = projects.filter(p => p.status === "Conclusa").length;
+  // Calcola statistiche per status (usando i valori corretti del database)
+  const projectsInCorso = projects.filter(p => p.status === "in_corso").length;
+  const projectsSospese = projects.filter(p => p.status === "sospesa").length;
+  const projectsConcluse = projects.filter(p => p.status === "conclusa").length;
   const totalProjects = projects.length;
   const totalClients = clients.length;
 
