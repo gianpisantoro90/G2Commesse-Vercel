@@ -18,21 +18,40 @@ async function getAccessToken() {
     throw new Error('X_REPLIT_TOKEN not found for repl/depl');
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=onedrive',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
+  try {
+    const response = await fetch(
+      'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=onedrive',
+      {
+        headers: {
+          'Accept': 'application/json',
+          'X_REPLIT_TOKEN': xReplitToken
+        }
       }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch connection: ${response.status} ${response.statusText}`);
     }
-  ).then(res => res.json()).then(data => data.items?.[0]);
+    
+    const data = await response.json();
+    connectionSettings = data.items?.[0];
+    
+    console.log('🔍 Connection response:', JSON.stringify(data, null, 2));
+    console.log('🔍 Connection settings:', JSON.stringify(connectionSettings, null, 2));
+    
+  } catch (error) {
+    console.error('❌ Error fetching connection:', error);
+    throw error;
+  }
 
-  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
+  const accessToken = connectionSettings?.settings?.access_token || connectionSettings?.settings?.oauth?.credentials?.access_token;
 
   if (!connectionSettings || !accessToken) {
+    console.error('❌ No connection settings or access token found');
     throw new Error('OneDrive not connected');
   }
+  
+  console.log('✅ OneDrive access token retrieved successfully');
   return accessToken;
 }
 

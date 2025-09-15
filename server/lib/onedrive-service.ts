@@ -1287,7 +1287,7 @@ class ServerOneDriveService {
       };
       
     } catch (error: any) {
-      await handleGraphError(error, 'Upload File', {
+      return await handleGraphError(error, 'Upload File', {
         fileName,
         targetPath,
         fileSize: fileBuffer.length
