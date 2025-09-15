@@ -16,7 +16,8 @@ import {
   FolderSearch,
   Cloud,
   ArrowRight,
-  Search
+  Search,
+  Download
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
@@ -277,11 +278,12 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         name: file.name,
         size: file.size,
         webUrl: '',
+        downloadUrl: '', // Not applicable for uploaded files
         driveItemId: `temp-${index}`,
         parentPath: '',
         folder: false,
         mimeType: file.type,
-        lastModified: file.lastModified ? new Date(file.lastModified) : new Date(),
+        lastModified: file.lastModified ? new Date(file.lastModified).toISOString() : new Date().toISOString(),
         originalFile: file // Store original File object for analysis
       } as ScannedFile & { originalFile: File }));
       
@@ -415,6 +417,26 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     return `${projectCode}_${originalFileName}`;
   };
 
+  // Helper function to create filename with project code and suggested path
+  const createFileNameWithSuggestedPath = (originalFileName: string, projectCode: string, suggestedPath: string): string => {
+    // Clean the suggested path by removing slashes and making it safe for filename
+    const cleanPath = suggestedPath.replace(/\//g, '__').replace(/\\/g, '__').trim();
+    
+    // Get file name and extension
+    const lastDotIndex = originalFileName.lastIndexOf('.');
+    const fileName = lastDotIndex > 0 ? originalFileName.substring(0, lastDotIndex) : originalFileName;
+    const extension = lastDotIndex > 0 ? originalFileName.substring(lastDotIndex) : '';
+    
+    // Check if file already has the project code prefix
+    if (fileName.startsWith(`${projectCode}_`)) {
+      // If it already has prefix, just add the suggested path
+      return `${fileName}__${cleanPath}${extension}`;
+    }
+    
+    // Create new filename: PROJECTCODE__ORIGINALNAME__SUGGESTEDPATH.ext
+    return `${projectCode}__${fileName}__${cleanPath}${extension}`;
+  };
+
   // Handle moving files to suggested paths
   const handleMoveFiles = async () => {
     if (routingResults.length === 0) return;
@@ -490,6 +512,58 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     }
   };
 
+  // Handle downloading files with suggested names for upload mode
+  const handleDownloadFiles = () => {
+    if (routingResults.length === 0) return;
+
+    const project = projects.find(p => p.id === selectedProject);
+    if (!project) {
+      toast({
+        title: "Errore",
+        description: "Progetto non trovato",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    routingResults.forEach((result, index) => {
+      try {
+        // Create new filename with project code prefix and suggested path
+        const newFileName = createFileNameWithSuggestedPath(result.file.name, project.code, result.suggestedPath);
+        
+        // Find the original uploaded file by using the synthetic ScannedFile ID
+        const originalFile = uploadedFiles.find(f => f.name === result.file.name);
+        if (!originalFile) {
+          throw new Error('File originale non trovato');
+        }
+
+        // Create download link
+        const url = URL.createObjectURL(originalFile);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = newFileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        successCount++;
+        console.log(`✅ Downloaded: ${result.file.name} → ${newFileName}`);
+      } catch (error) {
+        errorCount++;
+        console.error(`❌ Failed to download ${result.file.name}:`, error);
+      }
+    });
+
+    toast({
+      title: "Download completato",
+      description: `${successCount} file scaricati con nuovi nomi${errorCount > 0 ? `, ${errorCount} errori` : ''}`,
+    });
+  };
+
   // Get confidence badge color
   const getConfidenceBadge = (confidence: number) => {
     const percentage = Math.round(confidence * 100);
@@ -498,32 +572,8 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     return "bg-red-100 text-red-800";
   };
 
-  // Check if system is ready
-  const isReady = isConnected && rootConfig;
-
-  if (!isConnected) {
-    return (
-      <div className="card-g2" data-testid="onedrive-auto-routing">
-        <div className="text-center py-8 text-gray-500">
-          <Cloud className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">OneDrive Non Connesso</h3>
-          <p>Configura OneDrive nelle impostazioni per utilizzare l'auto-routing AI</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!rootConfig) {
-    return (
-      <div className="card-g2" data-testid="onedrive-auto-routing">
-        <div className="text-center py-8 text-gray-500">
-          <FolderOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Cartella Radice Non Configurata</h3>
-          <p>Configura la cartella radice OneDrive in Sistema → Cartelle</p>
-        </div>
-      </div>
-    );
-  }
+  // Check if OneDrive mode is ready (only for OneDrive specific features)
+  const isOneDriveReady = isConnected && rootConfig;
 
   return (
     <div className="card-g2" data-testid="onedrive-auto-routing">
@@ -564,6 +614,21 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           </button>
         </div>
       </div>
+
+      {/* OneDrive Status Warning */}
+      {mode === "onedrive" && !isOneDriveReady && (
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-yellow-600" />
+            <div>
+              <h3 className="font-medium text-yellow-800">OneDrive Non Configurato</h3>
+              <p className="text-sm text-yellow-700">
+                {!isConnected ? "Connetti OneDrive nelle impostazioni" : "Configura la cartella radice in Sistema → Cartelle"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
@@ -709,7 +774,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                   setActiveTab("select");
                 }
               }}
-              disabled={mode === "onedrive" ? (!scanPath.trim() || isScanning) : uploadedFiles.length === 0}
+              disabled={mode === "onedrive" ? (!scanPath.trim() || isScanning || !isOneDriveReady) : uploadedFiles.length === 0}
               className="button-g2-primary"
               data-testid="button-scan-folder"
             >
@@ -849,12 +914,22 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
               </Button>
             )}
             {routingResults.length > 0 && mode === "upload" && (
-              <div className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-yellow-600" />
-                  <span className="font-medium text-yellow-800">Modalità Upload:</span>
-                  <span>Questi sono suggerimenti di classificazione per i tuoi file locali</span>
+              <div className="flex items-center gap-4">
+                <div className="flex-1 text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-yellow-600" />
+                    <span className="font-medium text-yellow-800">Modalità Upload:</span>
+                    <span>Scarica i file con i nomi suggeriti dall'AI</span>
+                  </div>
                 </div>
+                <Button
+                  onClick={handleDownloadFiles}
+                  className="button-g2-primary"
+                  data-testid="button-download-files"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Scarica File Rinominati
+                </Button>
               </div>
             )}
           </div>
