@@ -950,9 +950,12 @@ class ServerOneDriveService {
       });
       
       // Security: Validate parameters
-      if (!fileId || !targetFolderIdOrPath) {
-        throw new Error('Missing required parameters for file move');
+      if (!fileId) {
+        throw new Error('Missing required fileId parameter');
       }
+      
+      // If no targetFolderIdOrPath provided, we're just renaming in the same location
+      const isRenameInPlace = !targetFolderIdOrPath || targetFolderIdOrPath === '';
       
       // Log the actual file ID to debug
       console.log(`📋 Received file ID for validation:`, {
@@ -983,6 +986,35 @@ class ServerOneDriveService {
           statusCode: fileError.statusCode
         });
         throw new Error(`File not found: ${fileId} (Status: ${fileError.statusCode})`);
+      }
+      
+      // Handle rename in place vs move to different folder
+      if (isRenameInPlace) {
+        console.log(`🏷️ Renaming file in current location: ${fileId}`);
+        
+        // Just rename the file in its current location
+        if (!newFileName) {
+          throw new Error('New filename is required for rename operation');
+        }
+        
+        const updateData: any = {
+          name: newFileName
+        };
+        
+        console.log(`🔄 Renaming file to: ${newFileName}`);
+        const updatedFile = await client.api(`/me/drive/items/${fileId}`).patch(updateData);
+        
+        console.log(`✅ File renamed successfully:`, {
+          id: updatedFile.id,
+          name: updatedFile.name,
+          path: updatedFile.parentReference?.path + '/' + updatedFile.name
+        });
+        
+        return {
+          name: updatedFile.name,
+          path: updatedFile.parentReference?.path + '/' + updatedFile.name,
+          parentFolderId: updatedFile.parentReference?.id || 'root'
+        };
       }
       
       // Get target folder info
