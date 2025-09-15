@@ -240,8 +240,57 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       return;
     }
 
-    // Prepare operations for files that need renaming
-    const operations = renamePreview
+    setIsProcessing(true);
+
+    // Step 1: Refresh file scanning to get current valid IDs
+    const folderPath = selectedFolderPath || customFolderPath;
+    if (!folderPath) {
+      toast({
+        title: "Errore",
+        description: "Percorso cartella non trovato - riseleziona la cartella",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+      return;
+    }
+
+    let currentFiles: OneDriveFile[];
+    try {
+      console.log(`🔄 Refreshing file scan before rename: ${folderPath}`);
+      
+      // Fresh scan to get current file IDs
+      const scannedFiles = await oneDriveService.scanFolderRecursive(folderPath, true);
+      currentFiles = scannedFiles.filter(item => !item.folder);
+      
+      toast({
+        title: "File aggiornati",
+        description: `Trovati ${currentFiles.length} file attuali nella cartella`,
+      });
+      
+    } catch (error: any) {
+      console.error('Error refreshing file scan:', error);
+      toast({
+        title: "Errore aggiornamento",
+        description: "Impossibile aggiornare la lista dei file - controlla la connessione OneDrive",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+      return;
+    }
+
+    // Step 2: Generate fresh rename preview with current IDs
+    const freshPreview = currentFiles.map(file => ({
+      original: file.name,
+      renamed: generateNewFileName(file.name, project.code),
+      fileId: file.id
+    }));
+
+    // Update state with fresh data
+    setFolderFiles(currentFiles);
+    setRenamePreview(freshPreview);
+
+    // Step 3: Prepare operations for files that need renaming
+    const operations = freshPreview
       .filter(item => item.original !== item.renamed)
       .map(item => ({
         fileId: item.fileId,
@@ -253,10 +302,10 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         title: "Nessuna rinominazione necessaria",
         description: "Tutti i file hanno già il prefisso corretto",
       });
+      setIsProcessing(false);
       return;
     }
 
-    setIsProcessing(true);
     try {
       console.log(`🔄 Starting bulk rename for ${operations.length} files`);
       
@@ -271,7 +320,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         }));
 
         // Add files that were already correct (for complete results)
-        const alreadyCorrect = renamePreview.filter(item => item.original === item.renamed);
+        const alreadyCorrect = freshPreview.filter(item => item.original === item.renamed);
         alreadyCorrect.forEach(item => {
           renameResults.push({
             original: item.original,
