@@ -270,6 +270,119 @@ class OneDriveService {
     }
   }
 
+  async browseFolder(folderPath: string): Promise<OneDriveFile[]> {
+    try {
+      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(folderPath)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        console.error('❌ Failed to browse OneDrive folder:', response.statusText);
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Failed to browse OneDrive folder:', error);
+      return [];
+    }
+  }
+
+  async scanFolderRecursive(folderPath: string, includeSubfolders: boolean = true): Promise<OneDriveFile[]> {
+    try {
+      const response = await fetch('/api/onedrive/scan-files', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          folderPath: folderPath,
+          includeSubfolders: includeSubfolders
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log(`✅ Scanned ${data.files.length} files from OneDrive folder: ${folderPath}`);
+          return data.files;
+        } else {
+          console.error('❌ Scan failed - server response:', data);
+          return [];
+        }
+      } else {
+        console.error('❌ Failed to scan OneDrive folder:', response.statusText);
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Failed to scan OneDrive folder:', error);
+      return [];
+    }
+  }
+
+  async bulkRenameFiles(operations: Array<{fileId: string, newName: string}>): Promise<{success: boolean, results: Array<{original: string, renamed: string, success: boolean}>}> {
+    try {
+      const response = await fetch('/api/onedrive/bulk-rename', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ operations }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Bulk rename completed: ${data.results.length} operations processed`);
+        return data;
+      } else {
+        console.error('❌ Failed to bulk rename files:', response.statusText);
+        const errorData = await response.json().catch(() => ({}));
+        return {
+          success: false,
+          results: []
+        };
+      }
+    } catch (error) {
+      console.error('❌ Failed to bulk rename files:', error);
+      return {
+        success: false,
+        results: []
+      };
+    }
+  }
+
+  async moveFile(fileId: string, targetPath: string, newFileName?: string): Promise<{name: string, path: string} | null> {
+    try {
+      const response = await fetch('/api/onedrive/move-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileId: fileId,
+          targetPath: targetPath,
+          newFileName: newFileName
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log(`✅ Moved file: ${data.file.name} to ${data.file.path}`);
+          return data.file;
+        } else {
+          console.error('❌ Move failed - server response:', data);
+          return null;
+        }
+      } else {
+        console.error('❌ Failed to move file:', response.statusText);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Failed to move file:', error);
+      return null;
+    }
+  }
+
   async getStatus(): Promise<{ connected: boolean; initialized: boolean }> {
     const connected = await this.testConnection();
     return {

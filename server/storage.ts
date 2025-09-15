@@ -43,6 +43,7 @@ export interface IStorage {
   // Files Index  
   createOrUpdateFileIndex(fileIndex: InsertFilesIndex): Promise<FilesIndex>;
   getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]>;
+  getFileIndexByDriveItemId(driveItemId: string): Promise<FilesIndex | undefined>;
   updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined>;
   deleteFileIndex(driveItemId: string): Promise<boolean>;
   
@@ -322,6 +323,10 @@ export class MemStorage implements IStorage {
     };
     this.filesIndex.set(driveItemId, updated);
     return updated;
+  }
+
+  async getFileIndexByDriveItemId(driveItemId: string): Promise<FilesIndex | undefined> {
+    return this.filesIndex.get(driveItemId);
   }
 
   async deleteFileIndex(driveItemId: string): Promise<boolean> {
@@ -650,6 +655,11 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await query;
+  }
+
+  async getFileIndexByDriveItemId(driveItemId: string): Promise<FilesIndex | undefined> {
+    const [result] = await db.select().from(filesIndex).where(eq(filesIndex.driveItemId, driveItemId)).limit(1);
+    return result || undefined;
   }
 
   async updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined> {

@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { Folder, FolderOpen, ChevronRight, ChevronDown, RefreshCw } from "lucide-react";
 import { type Project } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { oneDriveService, type OneDriveFile } from "@/lib/onedrive-service";
 
 interface BulkRenameFormProps {
   onRenameComplete: (results: Array<{original: string, renamed: string}>) => void;
@@ -14,35 +19,49 @@ interface BulkRenameFormProps {
 
 export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps) {
   const [selectedProject, setSelectedProject] = useState("");
-  const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
-  const [folderFiles, setFolderFiles] = useState<File[]>([]);
-  const [renamePreview, setRenamePreview] = useState<Array<{original: string, renamed: string}>>([]);
+  const [selectedFolderPath, setSelectedFolderPath] = useState("");
+  const [customFolderPath, setCustomFolderPath] = useState("");
+  const [folderFiles, setFolderFiles] = useState<OneDriveFile[]>([]);
+  const [renamePreview, setRenamePreview] = useState<Array<{original: string, renamed: string, fileId: string}>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [folderName, setFolderName] = useState("");
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [oneDriveConnected, setOneDriveConnected] = useState(false);
+  const [showFolderPicker, setShowFolderPicker] = useState(false);
+  const [browseCurrentPath, setBrowseCurrentPath] = useState("/");
+  const [browseFiles, setBrowseFiles] = useState<OneDriveFile[]>([]);
+  const [isLoadingBrowse, setIsLoadingBrowse] = useState(false);
   const { toast } = useToast();
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
-  const generateNewFileName = (originalFile: File, projectCode: string): string => {
-    const fileName = originalFile.name;
-    const lastDotIndex = fileName.lastIndexOf('.');
+  // Check OneDrive connection on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      const status = await oneDriveService.getStatus();
+      setOneDriveConnected(status.connected);
+    };
+    checkConnection();
+  }, []);
+
+  const generateNewFileName = (originalFileName: string, projectCode: string): string => {
+    const lastDotIndex = originalFileName.lastIndexOf('.');
     
     if (lastDotIndex === -1) {
       // No extension - check if already has prefix
-      if (fileName.startsWith(projectCode + '_')) {
-        return fileName; // Already has prefix
+      if (originalFileName.startsWith(projectCode + '_')) {
+        return originalFileName; // Already has prefix
       }
-      return `${projectCode}_${fileName}`;
+      return `${projectCode}_${originalFileName}`;
     }
     
-    const nameWithoutExt = fileName.substring(0, lastDotIndex);
-    const extension = fileName.substring(lastDotIndex);
+    const nameWithoutExt = originalFileName.substring(0, lastDotIndex);
+    const extension = originalFileName.substring(lastDotIndex);
     
     // Check if already has project code prefix (exact match)
     if (nameWithoutExt.startsWith(projectCode + '_')) {
-      return fileName; // Already has correct prefix
+      return originalFileName; // Already has correct prefix
     }
     
     // Check if has any other project code prefix pattern (numbers/letters followed by underscore)
@@ -60,11 +79,79 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
     setSelectedProject(projectId);
     setRenamePreview([]);
     setFolderFiles([]);
-    setDirectoryHandle(null);
-    setFolderName("");
+    setSelectedFolderPath("");
+    setCustomFolderPath("");
+    
+    // Auto-populate with project folder if it exists
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      // Look for project mapping to suggest default folder
+      fetch(`/api/onedrive/mappings/${project.code}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(mapping => {
+          if (mapping?.oneDriveFolderPath) {
+            setSelectedFolderPath(mapping.oneDriveFolderPath);
+          }
+        })
+        .catch(() => {
+          // Ignore errors, just don't auto-populate
+        });
+    }
   };
 
-  const handleSelectFolder = async () => {
+  // OneDrive folder browser functions
+  const loadBrowseFolder = async (path: string) => {
+    setIsLoadingBrowse(true);
+    try {
+      console.log(`📁 Loading OneDrive folder: ${path}`);
+      const files = await oneDriveService.browseFolder(path);
+      setBrowseFiles(files);
+      setBrowseCurrentPath(path);
+    } catch (error) {
+      console.error('Error loading OneDrive folder:', error);
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare la cartella OneDrive",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingBrowse(false);
+    }
+  };
+
+  const handleFolderSelect = (folderPath: string) => {
+    setSelectedFolderPath(folderPath);
+    setCustomFolderPath("");
+    setShowFolderPicker(false);
+    toast({
+      title: "Cartella selezionata",
+      description: `Cartella OneDrive: ${folderPath}`,
+    });
+  };
+
+  const getBreadcrumbItems = () => {
+    if (browseCurrentPath === '/') return [{ name: 'Root', path: '/' }];
+    
+    const parts = browseCurrentPath.split('/').filter(Boolean);
+    const items = [{ name: 'Root', path: '/' }];
+    
+    let currentBreadcrumbPath = '';
+    parts.forEach(part => {
+      currentBreadcrumbPath += `/${part}`;
+      items.push({ name: part, path: currentBreadcrumbPath });
+    });
+    
+    return items;
+  };
+
+  // Initialize folder browser when dialog opens
+  useEffect(() => {
+    if (showFolderPicker && browseFiles.length === 0) {
+      loadBrowseFolder("/");
+    }
+  }, [showFolderPicker]);
+
+  const handleScanFolder = async () => {
     if (!selectedProject) {
       toast({
         title: "Errore",
@@ -74,78 +161,70 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       return;
     }
 
-    try {
-      // Check if browser supports File System Access API
-      if (!('showDirectoryPicker' in window)) {
-        toast({
-          title: "Browser non supportato",
-          description: "Il tuo browser non supporta la selezione di cartelle. Usa Chrome/Edge aggiornato.",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!oneDriveConnected) {
+      toast({
+        title: "OneDrive non connesso",
+        description: "Configura OneDrive nelle impostazioni di sistema per utilizzare questa funzionalità",
+        variant: "destructive",
+      });
+      return;
+    }
 
-      // Open directory picker
-      const dirHandle = await (window as any).showDirectoryPicker();
-      setDirectoryHandle(dirHandle);
-      setFolderName(dirHandle.name);
+    const folderPath = selectedFolderPath || customFolderPath;
+    if (!folderPath) {
+      toast({
+        title: "Errore",
+        description: "Seleziona o inserisci un percorso cartella OneDrive",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoadingFiles(true);
+    try {
+      console.log(`🔍 Scanning OneDrive folder: ${folderPath}`);
       
-      // Read all files from directory and ALL subdirectories recursively
-      const files: File[] = [];
-      const readDirectoryRecursive = async (dirHandle: any, path: string = '') => {
-        for await (const [name, handle] of dirHandle.entries()) {
-          if (handle.kind === 'file') {
-            const file = await handle.getFile();
-            // Add path information to help identify file location
-            Object.defineProperty(file, 'relativePath', {
-              value: path ? `${path}/${name}` : name,
-              writable: false
-            });
-            files.push(file);
-          } else if (handle.kind === 'directory') {
-            // Recursively scan subdirectory
-            await readDirectoryRecursive(handle, path ? `${path}/${name}` : name);
-          }
-        }
-      };
+      // Scan OneDrive folder recursively
+      const files = await oneDriveService.scanFolderRecursive(folderPath, true);
       
-      await readDirectoryRecursive(dirHandle);
+      // Filter out folders, keep only files
+      const fileItems = files.filter(item => !item.folder);
       
-      setFolderFiles(files);
+      setFolderFiles(fileItems);
       
       // Generate preview
       const project = projects.find(p => p.id === selectedProject);
       if (project) {
-        const preview = files.map(file => ({
-          original: (file as any).relativePath || file.name,
-          renamed: generateNewFileName(file, project.code)
+        const preview = fileItems.map(file => ({
+          original: file.name,
+          renamed: generateNewFileName(file.name, project.code),
+          fileId: file.id
         }));
         setRenamePreview(preview);
       }
       
-      const subdirCount = files.filter(f => (f as any).relativePath && (f as any).relativePath.includes('/')).length;
       toast({
-        title: "Cartella selezionata",
-        description: `Trovati ${files.length} file in "${dirHandle.name}" (${subdirCount} nelle sottocartelle)`,
+        title: "Cartella scansionata",
+        description: `Trovati ${fileItems.length} file in "${folderPath}"`,
       });
       
     } catch (error: any) {
-      if (error.name !== 'AbortError') {
-        console.error('Error selecting folder:', error);
-        toast({
-          title: "Errore nella selezione",
-          description: "Impossibile accedere alla cartella selezionata",
-          variant: "destructive",
-        });
-      }
+      console.error('Error scanning OneDrive folder:', error);
+      toast({
+        title: "Errore nella scansione",
+        description: "Impossibile accedere alla cartella OneDrive selezionata",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingFiles(false);
     }
   };
 
   const handleBulkRename = async () => {
-    if (!selectedProject || !directoryHandle || folderFiles.length === 0) {
+    if (!selectedProject || folderFiles.length === 0) {
       toast({
         title: "Errore",
-        description: "Seleziona una commessa e una cartella con file da rinominare",
+        description: "Seleziona una commessa e scansiona una cartella con file da rinominare",
         variant: "destructive",
       });
       return;
@@ -161,129 +240,68 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       return;
     }
 
+    // Prepare operations for files that need renaming
+    const operations = renamePreview
+      .filter(item => item.original !== item.renamed)
+      .map(item => ({
+        fileId: item.fileId,
+        newName: item.renamed
+      }));
+    
+    if (operations.length === 0) {
+      toast({
+        title: "Nessuna rinominazione necessaria",
+        description: "Tutti i file hanno già il prefisso corretto",
+      });
+      return;
+    }
+
     setIsProcessing(true);
-
     try {
-      // Process only files that need renaming
-      const renameResults: Array<{original: string, renamed: string}> = [];
-      const filesToRename = folderFiles.filter(file => {
-        const newName = generateNewFileName(file, project.code);
-        return file.name !== newName;
-      });
+      console.log(`🔄 Starting bulk rename for ${operations.length} files`);
       
-      if (filesToRename.length === 0) {
-        toast({
-          title: "Nessuna rinominazione necessaria",
-          description: "Tutti i file hanno già il prefisso corretto",
-        });
-        setIsProcessing(false);
-        return;
-      }
+      // Call bulk rename API
+      const result = await oneDriveService.bulkRenameFiles(operations);
       
-      // Navigate to correct subdirectory and rename files
-      let renamedInPlace = 0;
-      const failedRenames: File[] = [];
-      
-      // Helper function to navigate to file's directory
-      const getFileDirectory = async (relativePath: string): Promise<any> => {
-        const pathParts = relativePath.split('/');
-        const fileName = pathParts.pop(); // Remove file name, keep directory path
-        
-        if (pathParts.length === 0) {
-          return directoryHandle; // File is in root directory
-        }
-        
-        let currentHandle = directoryHandle;
-        for (const part of pathParts) {
-          currentHandle = await currentHandle.getDirectoryHandle(part);
-        }
-        return currentHandle;
-      };
-      
-      for (const file of filesToRename) {
-        const relativePath = (file as any).relativePath || file.name;
-        const fileName = relativePath.split('/').pop() || file.name;
-        const newName = generateNewFileName(file, project.code);
-        
-        try {
-          // Get the correct directory handle for this file
-          const fileDirectory = await getFileDirectory(relativePath);
-          
-          // Get file handle from the correct directory
-          const fileHandle = await fileDirectory.getFileHandle(fileName);
-          const originalFile = await fileHandle.getFile();
-          
-          // Create new file with new name in the same directory
-          const newFileHandle = await fileDirectory.getFileHandle(newName, { create: true });
-          const writable = await newFileHandle.createWritable();
-          await writable.write(originalFile);
-          await writable.close();
-          
-          // Remove original file
-          await fileDirectory.removeEntry(fileName);
-          
-          renameResults.push({
-            original: relativePath,
-            renamed: relativePath.replace(fileName, newName)
-          });
-          renamedInPlace++;
-          
-        } catch (error) {
-          console.warn(`Failed to rename ${relativePath} in place, will download instead:`, error);
-          failedRenames.push(file);
-        }
-      }
-      
-      // For files that couldn't be renamed in place, download them
-      for (const file of failedRenames) {
-        const relativePath = (file as any).relativePath || file.name;
-        const fileName = relativePath.split('/').pop() || file.name;
-        const newName = generateNewFileName(file, project.code);
-        
-        const url = URL.createObjectURL(file);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = newName;
-        
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        renameResults.push({
-          original: relativePath,
-          renamed: relativePath.replace(fileName, newName)
-        });
-        
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-      
-      // Add files that were already correct (for complete results)
-      const alreadyCorrect = folderFiles.filter(file => {
-        const newName = generateNewFileName(file, project.code);
-        return file.name === newName;
-      });
-      
-      alreadyCorrect.forEach(file => {
-        renameResults.push({
-          original: file.name,
-          renamed: file.name
-        });
-      });
+      if (result.success) {
+        // Convert results to expected format for callback
+        const renameResults = result.results.map(r => ({
+          original: r.original,
+          renamed: r.renamed
+        }));
 
-      onRenameComplete(renameResults);
-      
-      const alreadyCorrectCount = renameResults.length - filesToRename.length;
-      
-      if (renamedInPlace > 0) {
-        toast({
-          title: "Rinominazione completata nella cartella",
-          description: `${renamedInPlace} file rinominati direttamente, ${failedRenames.length} scaricati, ${alreadyCorrectCount} già corretti`,
+        // Add files that were already correct (for complete results)
+        const alreadyCorrect = renamePreview.filter(item => item.original === item.renamed);
+        alreadyCorrect.forEach(item => {
+          renameResults.push({
+            original: item.original,
+            renamed: item.renamed
+          });
         });
+
+        onRenameComplete(renameResults);
+        
+        const successCount = result.results.filter(r => r.success).length;
+        const failureCount = result.results.filter(r => !r.success).length;
+        const alreadyCorrectCount = alreadyCorrect.length;
+        
+        if (failureCount === 0) {
+          toast({
+            title: "Rinominazione completata",
+            description: `${successCount} file rinominati con successo su OneDrive, ${alreadyCorrectCount} già corretti`,
+          });
+        } else {
+          toast({
+            title: "Rinominazione parzialmente completata",
+            description: `${successCount} file rinominati, ${failureCount} falliti, ${alreadyCorrectCount} già corretti`,
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
-          title: "File scaricati per rinominazione",
-          description: `${failedRenames.length} file scaricati, ${alreadyCorrectCount} già corretti. Sostituisci manualmente i file originali.`,
+          title: "Errore nella rinominazione",
+          description: "Impossibile completare l'operazione di rinominazione su OneDrive",
+          variant: "destructive",
         });
       }
 
@@ -291,7 +309,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       console.error('Bulk rename error:', error);
       toast({
         title: "Errore nella rinominazione",
-        description: "Si è verificato un errore durante il processo",
+        description: "Si è verificato un errore durante il processo di rinominazione",
         variant: "destructive",
       });
     } finally {
@@ -309,7 +327,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           Rinomina File Esistenti
         </CardTitle>
         <p className="text-sm text-blue-700">
-          Seleziona una cartella dal file system per rinominare automaticamente tutti i file contenuti aggiungendo il prefisso della commessa
+          Seleziona una cartella OneDrive per rinominare automaticamente tutti i file contenuti aggiungendo il prefisso della commessa
         </p>
       </CardHeader>
       
@@ -342,36 +360,185 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           </Alert>
         )}
 
-        {/* Folder Selection */}
-        <div className="space-y-2">
+        {/* OneDrive Connection Status */}
+        {!oneDriveConnected && (
+          <Alert className="border-red-200 bg-red-50">
+            <AlertDescription className="text-red-800">
+              <strong>⚠️ OneDrive non connesso:</strong> Configura OneDrive nelle impostazioni di sistema per utilizzare questa funzionalità.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* OneDrive Folder Selection */}
+        <div className="space-y-4">
           <Label className="text-sm font-medium">
-            Seleziona cartella commessa
+            Cartella OneDrive da scansionare
           </Label>
-          <div className="flex gap-3">
-            <Button
-              onClick={handleSelectFolder}
-              disabled={!selectedProject}
-              variant="outline"
-              className="flex-1 p-3 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              data-testid="folder-select-button"
-            >
-              {folderName ? (
-                <>📁 {folderName} ({folderFiles.length} file)</>
-              ) : (
-                <>📁 Scegli cartella...</>
-              )}
-            </Button>
-          </div>
-          <p className="text-xs text-gray-600">
-            Il sistema accederà alla cartella e rinominerà tutti i file (non le sottocartelle) aggiungendo il prefisso della commessa
-          </p>
-          {!('showDirectoryPicker' in window) && (
-            <Alert className="border-red-200 bg-red-50 mt-2">
-              <AlertDescription className="text-red-800">
-                <strong>⚠️ Browser non compatibile:</strong> Questa funzionalità richiede Chrome/Edge aggiornato per accedere alle cartelle del file system.
-              </AlertDescription>
-            </Alert>
+          
+          {/* Pre-filled project folder path */}
+          {selectedFolderPath && (
+            <div className="space-y-2">
+              <Label className="text-xs text-gray-600">Cartella commessa mappata:</Label>
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <span className="text-blue-600">📁</span>
+                  <span className="text-blue-800 font-medium">{selectedFolderPath}</span>
+                </div>
+              </div>
+            </div>
           )}
+          
+          {/* OneDrive folder browser */}
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Oppure sfoglia OneDrive:</Label>
+            <Dialog open={showFolderPicker} onOpenChange={setShowFolderPicker}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  disabled={!oneDriveConnected}
+                  data-testid="browse-onedrive-button"
+                >
+                  <Folder className="w-4 h-4 mr-2" />
+                  Sfoglia cartelle OneDrive
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[80vh]">
+                <DialogHeader>
+                  <DialogTitle>Seleziona cartella OneDrive</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* Breadcrumb */}
+                  <Breadcrumb>
+                    <BreadcrumbList>
+                      {getBreadcrumbItems().map((item, index, array) => (
+                        <div key={item.path} className="flex items-center">
+                          <BreadcrumbItem>
+                            {index === array.length - 1 ? (
+                              <BreadcrumbPage>{item.name}</BreadcrumbPage>
+                            ) : (
+                              <BreadcrumbLink
+                                onClick={() => loadBrowseFolder(item.path)}
+                                className="cursor-pointer"
+                              >
+                                {item.name}
+                              </BreadcrumbLink>
+                            )}
+                          </BreadcrumbItem>
+                          {index < array.length - 1 && <BreadcrumbSeparator />}
+                        </div>
+                      ))}
+                    </BreadcrumbList>
+                  </Breadcrumb>
+
+                  {/* Folder list */}
+                  <div className="border rounded-lg max-h-96 overflow-y-auto">
+                    {isLoadingBrowse ? (
+                      <div className="flex items-center justify-center py-8">
+                        <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mr-2" />
+                        <span className="text-gray-500">Caricamento...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1 p-2">
+                        {browseFiles
+                          .filter(file => file.folder)
+                          .map((folder) => {
+                            const folderPath = browseCurrentPath === '/' 
+                              ? `/${folder.name}` 
+                              : `${browseCurrentPath}/${folder.name}`;
+                            
+                            return (
+                              <div
+                                key={folder.id}
+                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                data-testid={`folder-item-${folder.id}`}
+                              >
+                                <div 
+                                  className="flex items-center gap-3 min-w-0 flex-1"
+                                  onClick={() => loadBrowseFolder(folderPath)}
+                                >
+                                  <FolderOpen className="w-5 h-5 text-blue-500" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium text-sm truncate">{folder.name}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {folderPath}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={() => handleFolderSelect(folderPath)}
+                                  size="sm"
+                                  className="ml-2"
+                                  data-testid={`select-folder-${folder.id}`}
+                                >
+                                  Seleziona
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        {browseFiles.filter(file => file.folder).length === 0 && !isLoadingBrowse && (
+                          <div className="text-center py-8 text-gray-500">
+                            Nessuna cartella trovata
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current folder selection */}
+                  <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Folder className="w-4 h-4 text-blue-600" />
+                      <span className="text-blue-800 font-medium">{browseCurrentPath}</span>
+                    </div>
+                    <Button
+                      onClick={() => handleFolderSelect(browseCurrentPath)}
+                      size="sm"
+                      data-testid="select-current-folder"
+                    >
+                      Seleziona questa cartella
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Custom folder path input */}
+          <div className="space-y-2">
+            <Label className="text-xs text-gray-600">Oppure inserisci percorso personalizzato:</Label>
+            <Input
+              placeholder="/percorso/cartella/onedrive"
+              value={customFolderPath}
+              onChange={(e) => setCustomFolderPath(e.target.value)}
+              disabled={!oneDriveConnected}
+              data-testid="custom-folder-input"
+            />
+          </div>
+
+          {/* Scan button */}
+          <Button
+            onClick={handleScanFolder}
+            disabled={!selectedProject || !oneDriveConnected || isLoadingFiles || (!selectedFolderPath && !customFolderPath)}
+            variant="outline"
+            className="w-full p-3 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            data-testid="scan-folder-button"
+          >
+            {isLoadingFiles ? (
+              <>
+                <span className="animate-spin mr-2">⟳</span>
+                Scansionando OneDrive...
+              </>
+            ) : folderFiles.length > 0 ? (
+              <>🔍 OneDrive scansionato ({folderFiles.length} file)</>
+            ) : (
+              <>🔍 Scansiona cartella OneDrive</>
+            )}
+          </Button>
+          
+          <p className="text-xs text-gray-600">
+            Il sistema scansionerà ricorsivamente la cartella OneDrive e i file verranno rinominati direttamente nel cloud
+          </p>
         </div>
 
         {/* Preview */}
@@ -438,8 +605,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           <>
             <Alert className="border-green-200 bg-green-50">
               <AlertDescription className="text-green-800">
-                <strong>✅ Funzionalità avanzata:</strong> Il sistema tenterà di rinominare i file direttamente nella cartella selezionata. 
-                Se non è possibile, i file rinominati verranno scaricati automaticamente.
+                <strong>✅ Rinominazione OneDrive:</strong> I file verranno rinominati direttamente su OneDrive in modo sicuro e sincronizzato.
               </AlertDescription>
             </Alert>
             

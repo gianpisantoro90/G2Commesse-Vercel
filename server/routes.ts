@@ -1181,6 +1181,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk rename files endpoint
+  app.post("/api/onedrive/bulk-rename", async (req, res) => {
+    try {
+      const { operations } = req.body;
+      
+      if (!operations || !Array.isArray(operations) || operations.length === 0) {
+        return res.status(400).json({ error: 'Operations array is required' });
+      }
+      
+      if (operations.length > 100) {
+        return res.status(400).json({ error: 'Too many operations. Maximum 100 files per request.' });
+      }
+
+      console.log(`🔄 Starting bulk rename operation for ${operations.length} files`);
+
+      const results = [];
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const operation of operations) {
+        const { fileId, newName } = operation;
+        
+        if (!fileId || !newName) {
+          results.push({
+            original: 'Unknown',
+            renamed: newName || 'Unknown',
+            success: false,
+            error: 'Missing fileId or newName'
+          });
+          errorCount++;
+          continue;
+        }
+
+        try {
+          // Get current file info first
+          let originalName = 'Unknown';
+          try {
+            const fileIndex = await storage.getFileIndexByDriveItemId(fileId);
+            if (fileIndex) {
+              originalName = fileIndex.name;
+            }
+          } catch (indexError) {
+            console.warn('Could not get file info from index:', fileId);
+          }
+
+          // Rename file using move operation with same location but new name
+          const result = await serverOneDriveService.moveFile(fileId, "", newName);
+          
+          if (result) {
+            // Update file index with new name
+            await storage.updateFileIndex(fileId, {
+              name: newName,
+              path: result.path
+            });
+
+            results.push({
+              original: originalName,
+              renamed: newName,
+              success: true
+            });
+            successCount++;
+            console.log(`✅ Renamed file: ${originalName} → ${newName}`);
+          } else {
+            results.push({
+              original: originalName,
+              renamed: newName,
+              success: false,
+              error: 'OneDrive API returned null'
+            });
+            errorCount++;
+          }
+        } catch (error: any) {
+          console.error(`❌ Failed to rename file ${fileId}:`, error);
+          results.push({
+            original: 'Unknown',
+            renamed: newName,
+            success: false,
+            error: error.message || 'Unknown error'
+          });
+          errorCount++;
+        }
+
+        // Add small delay to avoid rate limiting
+        if (operations.indexOf(operation) < operations.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+
+      const overallSuccess = errorCount === 0;
+      
+      console.log(`✅ Bulk rename completed: ${successCount} successful, ${errorCount} failed`);
+      
+      res.json({
+        success: overallSuccess,
+        results: results,
+        summary: {
+          total: operations.length,
+          successful: successCount,
+          failed: errorCount
+        }
+      });
+    } catch (error) {
+      console.error('Bulk rename failed:', error);
+      res.status(500).json({ error: 'Failed to perform bulk rename operation' });
+    }
+  });
+
   // Upload file to OneDrive endpoint
   app.post("/api/onedrive/upload-file", async (req, res) => {
     try {

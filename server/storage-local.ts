@@ -383,6 +383,11 @@ export class FileStorage implements IStorage {
     return results;
   }
 
+  async getFileIndexByDriveItemId(driveItemId: string): Promise<FilesIndex | undefined> {
+    const filesIndex = this.readJsonFile<FilesIndex>(this.filesIndexFile, []);
+    return filesIndex.find(f => f.driveItemId === driveItemId);
+  }
+
   async updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined> {
     const filesIndex = this.readJsonFile<FilesIndex>(this.filesIndexFile, []);
     const index = filesIndex.findIndex(f => f.driveItemId === driveItemId);
