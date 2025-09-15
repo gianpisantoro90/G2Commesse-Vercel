@@ -44,11 +44,13 @@ interface OneDriveAutoRoutingProps {
 
 export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoRoutingProps) {
   // State management
+  const [mode, setMode] = useState<"onedrive" | "upload">("onedrive"); // New mode toggle
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [scanPath, setScanPath] = useState<string>("");
   const [includeSubfolders, setIncludeSubfolders] = useState(true);
   const [scannedFiles, setScannedFiles] = useState<ScannedFile[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<ScannedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]); // New state for uploaded files
   const [routingResults, setRoutingResults] = useState<RoutingResultWithFile[]>([]);
   const [activeTab, setActiveTab] = useState("scan");
   
@@ -263,6 +265,49 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     setSelectedFiles([]);
   };
 
+  // Handle file upload (for upload mode)
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length > 0) {
+      setUploadedFiles(files);
+      
+      // Convert uploaded files to ScannedFile format for unified handling
+      const convertedFiles: ScannedFile[] = files.map((file, index) => ({
+        id: `uploaded-${index}-${Date.now()}`,
+        name: file.name,
+        size: file.size,
+        webUrl: '',
+        driveItemId: `temp-${index}`,
+        parentPath: '',
+        folder: false,
+        mimeType: file.type,
+        lastModified: file.lastModified ? new Date(file.lastModified) : new Date(),
+        originalFile: file // Store original File object for analysis
+      } as ScannedFile & { originalFile: File }));
+      
+      setScannedFiles(convertedFiles);
+      setSelectedFiles([]);
+      setRoutingResults([]);
+      setActiveTab("select");
+      
+      toast({
+        title: "File caricati",
+        description: `${files.length} file pronti per l'analisi`,
+      });
+    }
+  };
+
+  // Handle mode change
+  const handleModeChange = (newMode: "onedrive" | "upload") => {
+    setMode(newMode);
+    // Reset state when changing modes
+    setScannedFiles([]);
+    setSelectedFiles([]);
+    setUploadedFiles([]);
+    setRoutingResults([]);
+    setActiveTab("scan");
+  };
+
   // Handle AI analysis
   const handleAnalyzeFiles = async () => {
     if (selectedFiles.length === 0) {
@@ -302,29 +347,36 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         description: `Analizzando ${selectedFiles.length} file con AI...`,
       });
 
-      for (const oneDriveFile of selectedFiles) {
+      for (const selectedFile of selectedFiles) {
         try {
-          // Create fake File object for AI analysis (no need to download the actual content)
-          const fakeFile = new File([''], oneDriveFile.name, { 
-            type: oneDriveFile.mimeType || 'application/octet-stream' 
-          });
+          let fileForAnalysis: File;
+          
+          if (mode === "upload" && (selectedFile as any).originalFile) {
+            // Use original uploaded file for analysis
+            fileForAnalysis = (selectedFile as any).originalFile;
+          } else {
+            // Create fake File object for OneDrive files (AI only needs filename and metadata)
+            fileForAnalysis = new File([''], selectedFile.name, { 
+              type: selectedFile.mimeType || 'application/octet-stream' 
+            });
+          }
 
-          // Analyze with AI router (AI only needs filename and metadata, not file content)
-          const routingResult = await aiRouter.routeFile(fakeFile, project.template, project.id);
+          // Analyze with AI router
+          const routingResult = await aiRouter.routeFile(fileForAnalysis, project.template, project.id);
 
           results.push({
-            file: oneDriveFile,
+            file: selectedFile,
             suggestedPath: routingResult.suggestedPath,
             confidence: routingResult.confidence,
             reasoning: routingResult.reasoning,
             alternatives: routingResult.alternatives
           });
 
-          console.log(`✅ Analyzed ${oneDriveFile.name}: ${routingResult.suggestedPath} (${Math.round(routingResult.confidence * 100)}%)`);
+          console.log(`✅ Analyzed ${selectedFile.name}: ${routingResult.suggestedPath} (${Math.round(routingResult.confidence * 100)}%)`);
         } catch (error) {
-          console.error(`❌ Failed to analyze ${oneDriveFile.name}:`, error);
+          console.error(`❌ Failed to analyze ${selectedFile.name}:`, error);
           results.push({
-            file: oneDriveFile,
+            file: selectedFile,
             suggestedPath: 'MATERIALE_RICEVUTO/',
             confidence: 0.5,
             reasoning: `Errore nell'analisi: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -476,10 +528,40 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
   return (
     <div className="card-g2" data-testid="onedrive-auto-routing">
       <div className="flex items-center gap-3 mb-6">
-        <span className="text-3xl">☁️</span>
+        <span className="text-3xl">{mode === "onedrive" ? "☁️" : "📁"}</span>
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">Auto-Routing OneDrive AI</h2>
-          <p className="text-gray-600">Sistema intelligente per classificazione automatica file OneDrive</p>
+          <h2 className="text-2xl font-bold text-gray-900">🤖 Auto-Routing AI Unificato</h2>
+          <p className="text-gray-600">Sistema intelligente per classificazione automatica file da qualsiasi sorgente</p>
+        </div>
+      </div>
+
+      {/* Mode Toggle */}
+      <div className="flex justify-center mb-6">
+        <div className="bg-gray-100 p-1 rounded-lg inline-flex">
+          <button
+            onClick={() => handleModeChange("onedrive")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              mode === "onedrive"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
+            data-testid="mode-toggle-onedrive"
+          >
+            <Cloud className="w-4 h-4 mr-2 inline" />
+            Da OneDrive
+          </button>
+          <button
+            onClick={() => handleModeChange("upload")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              mode === "upload"
+                ? "bg-white text-green-600 shadow-sm"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
+            data-testid="mode-toggle-upload"
+          >
+            <Upload className="w-4 h-4 mr-2 inline" />
+            Upload Locale
+          </button>
         </div>
       </div>
 
@@ -487,7 +569,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="scan" className="flex items-center gap-2" data-testid="tab-scan">
             <FolderSearch className="w-4 h-4" />
-            1. Scansiona Cartella
+            1. {mode === "onedrive" ? "Scansiona Cartella" : "Carica File"}
           </TabsTrigger>
           <TabsTrigger value="select" className="flex items-center gap-2" data-testid="tab-select">
             <CheckCircle className="w-4 h-4" />
@@ -499,7 +581,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           </TabsTrigger>
         </TabsList>
 
-        {/* Step 1: Scan Folder */}
+        {/* Step 1: Scan Folder / Upload Files */}
         <TabsContent value="scan" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-4">
@@ -521,75 +603,132 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                 </Select>
               </div>
 
-              <div>
-                <Label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Cartella OneDrive del Progetto
-                </Label>
-                {selectedProject ? (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FolderOpen className="w-4 h-4 text-blue-600" />
-                      <span className="font-mono text-sm text-blue-800" data-testid="text-scan-path">{scanPath}</span>
-                    </div>
-                    <p className="text-xs text-blue-600 mt-1">
-                      📂 Cartella automaticamente selezionata dal mapping OneDrive
-                    </p>
+              {mode === "upload" ? (
+                // Upload Mode: File Upload Section
+                <div>
+                  <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Seleziona File dal Computer
+                  </Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                    <Upload className="w-8 h-8 mx-auto mb-3 text-gray-400" />
+                    <p className="text-gray-600 mb-2">Trascina i file qui o clicca per selezionare</p>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                      data-testid="input-file-upload"
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer text-sm font-medium text-gray-700 transition-colors"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Sfoglia File
+                    </label>
+                    {uploadedFiles.length > 0 && (
+                      <p className="text-xs text-green-600 mt-2">
+                        {uploadedFiles.length} file selezionati
+                      </p>
+                    )}
                   </div>
-                ) : (
-                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">Seleziona prima un progetto</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      La cartella OneDrive verrà selezionata automaticamente
-                    </p>
+                </div>
+              ) : (
+                // OneDrive Mode: Original OneDrive scanning section
+                <>
+                  <div>
+                    <Label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Cartella OneDrive del Progetto
+                    </Label>
+                    {selectedProject ? (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <FolderOpen className="w-4 h-4 text-blue-600" />
+                          <span className="font-mono text-sm text-blue-800" data-testid="text-scan-path">{scanPath}</span>
+                        </div>
+                        <p className="text-xs text-blue-600 mt-1">
+                          📂 Cartella automaticamente selezionata dal mapping OneDrive
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm text-gray-600">Seleziona prima un progetto</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          La cartella OneDrive verrà selezionata automaticamente
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="includeSubfolders"
-                  checked={includeSubfolders}
-                  onChange={(e) => setIncludeSubfolders(e.target.checked)}
-                  className="rounded"
-                  data-testid="checkbox-subfolders"
-                />
-                <Label htmlFor="includeSubfolders" className="text-sm">
-                  Includi sottocartelle
-                </Label>
-              </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="includeSubfolders"
+                      checked={includeSubfolders}
+                      onChange={(e) => setIncludeSubfolders(e.target.checked)}
+                      className="rounded"
+                      data-testid="checkbox-subfolders"
+                    />
+                    <Label htmlFor="includeSubfolders" className="text-sm">
+                      Includi sottocartelle
+                    </Label>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-semibold text-blue-900 mb-2">ℹ️ Come Funziona</h4>
               <div className="space-y-2 text-sm text-blue-800">
                 <p>1. <strong>Seleziona un progetto</strong> per contestualizzare l'analisi AI</p>
-                <p>2. <strong>La cartella OneDrive</strong> viene automaticamente selezionata dal mapping del progetto</p>
-                <p>3. <strong>Avvia la scansione</strong> per trovare tutti i file nella cartella del progetto</p>
-                <p>4. <strong>L'AI analizzerà</strong> i file e li sposterà con rinomina automatica (prefisso codice commessa)</p>
+                {mode === "onedrive" ? (
+                  <>
+                    <p>2. <strong>La cartella OneDrive</strong> viene automaticamente selezionata dal mapping del progetto</p>
+                    <p>3. <strong>Avvia la scansione</strong> per trovare tutti i file nella cartella del progetto</p>
+                    <p>4. <strong>L'AI analizzerà</strong> i file e li sposterà con rinomina automatica (prefisso codice commessa)</p>
+                  </>
+                ) : (
+                  <>
+                    <p>2. <strong>Carica i file</strong> dal tuo computer tramite l'interfaccia di upload</p>
+                    <p>3. <strong>Seleziona i file</strong> da analizzare per la classificazione AI</p>
+                    <p>4. <strong>L'AI analizzerà</strong> i file e fornirà suggerimenti di classificazione per l'organizzazione</p>
+                  </>
+                )}
               </div>
             </div>
           </div>
 
           <div className="flex justify-center">
             <Button
-              onClick={handleScanFolder}
-              disabled={!scanPath.trim() || isScanning}
+              onClick={mode === "onedrive" ? handleScanFolder : () => {
+                if (uploadedFiles.length > 0) {
+                  setActiveTab("select");
+                }
+              }}
+              disabled={mode === "onedrive" ? (!scanPath.trim() || isScanning) : uploadedFiles.length === 0}
               className="button-g2-primary"
               data-testid="button-scan-folder"
             >
-              {isScanning ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Scansionando...
-                </>
+              {mode === "onedrive" ? (
+                isScanning ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Scansionando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    Scansiona Cartella
+                  </>
+                )
               ) : (
                 <>
-                  <Search className="w-4 h-4 mr-2" />
-                  Scansiona Cartella
+                  <ArrowRight className="w-4 h-4 mr-2" />
+                  Procedi con File Caricati
                 </>
               )}
             </Button>
@@ -689,7 +828,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             <h3 className="text-lg font-semibold text-gray-900">
               Risultati Routing AI ({routingResults.length})
             </h3>
-            {routingResults.length > 0 && (
+            {routingResults.length > 0 && mode === "onedrive" && (
               <Button
                 onClick={handleMoveFiles}
                 disabled={isMoving}
@@ -708,6 +847,15 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                   </>
                 )}
               </Button>
+            )}
+            {routingResults.length > 0 && mode === "upload" && (
+              <div className="text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-yellow-600" />
+                  <span className="font-medium text-yellow-800">Modalità Upload:</span>
+                  <span>Questi sono suggerimenti di classificazione per i tuoi file locali</span>
+                </div>
+              </div>
             )}
           </div>
 
