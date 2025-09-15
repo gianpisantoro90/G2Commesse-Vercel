@@ -59,6 +59,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
   const [isScanning, setIsScanning] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false); // New state for upload loading
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -512,8 +513,8 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     }
   };
 
-  // Handle downloading files with suggested names for upload mode
-  const handleDownloadFiles = () => {
+  // Handle uploading files directly to OneDrive with AI suggestions
+  const handleUploadToOneDrive = async () => {
     if (routingResults.length === 0) return;
 
     const project = projects.find(p => p.id === selectedProject);
@@ -526,42 +527,81 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       return;
     }
 
+    // Check OneDrive requirements
+    if (!isConnected || !rootConfig) {
+      toast({
+        title: "Errore OneDrive",
+        description: "OneDrive deve essere connesso e configurato per caricare i file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
     let successCount = 0;
     let errorCount = 0;
 
-    routingResults.forEach((result, index) => {
-      try {
-        // Create new filename with project code prefix and suggested path
-        const newFileName = createFileNameWithSuggestedPath(result.file.name, project.code, result.suggestedPath);
-        
-        // Find the original uploaded file by using the synthetic ScannedFile ID
-        const originalFile = uploadedFiles.find(f => f.name === result.file.name);
-        if (!originalFile) {
-          throw new Error('File originale non trovato');
+    try {
+      // Get OneDrive mapping for the project to construct target path
+      const mapping = getOneDriveMapping(project.code);
+      const basePath = mapping ? mapping.oneDriveFolderPath : `${rootConfig.folderPath}/${project.code}`;
+
+      for (const result of routingResults) {
+        try {
+          // Find the original uploaded file
+          const originalFile = uploadedFiles.find(f => f.name === result.file.name);
+          if (!originalFile) {
+            throw new Error('File originale non trovato');
+          }
+
+          // Construct full target path: basePath + suggestedPath
+          const targetPath = `${basePath}/${result.suggestedPath}`.replace(/\/+/g, '/');
+          
+          console.log(`📤 Uploading ${originalFile.name} to OneDrive: ${targetPath}`);
+
+          // Upload file to OneDrive with project code prefix
+          const uploadResult = await oneDriveService.uploadFile(originalFile, project.code, targetPath);
+          
+          if (uploadResult) {
+            successCount++;
+            console.log(`✅ Uploaded to OneDrive: ${uploadResult.name} → ${targetPath}`);
+          } else {
+            throw new Error('Upload failed - no result returned');
+          }
+          
+        } catch (error) {
+          errorCount++;
+          console.error(`❌ Failed to upload ${result.file.name}:`, error);
         }
-
-        // Create download link
-        const url = URL.createObjectURL(originalFile);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = newFileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        successCount++;
-        console.log(`✅ Downloaded: ${result.file.name} → ${newFileName}`);
-      } catch (error) {
-        errorCount++;
-        console.error(`❌ Failed to download ${result.file.name}:`, error);
       }
-    });
 
-    toast({
-      title: "Download completato",
-      description: `${successCount} file scaricati con nuovi nomi${errorCount > 0 ? `, ${errorCount} errori` : ''}`,
-    });
+      // Show results toast
+      if (successCount > 0) {
+        toast({
+          title: "Upload completato",
+          description: `${successCount} file caricati su OneDrive${errorCount > 0 ? `, ${errorCount} errori` : ''}`,
+        });
+
+        // Clear state and refresh OneDrive data
+        setScannedFiles([]);
+        setSelectedFiles([]);
+        setUploadedFiles([]);
+        setRoutingResults([]);
+        setActiveTab("scan");
+        queryClient.invalidateQueries({ queryKey: ['onedrive-files'] });
+      }
+
+      if (errorCount > 0 && successCount === 0) {
+        toast({
+          title: "Errore upload",
+          description: `Impossibile caricare ${errorCount} file su OneDrive`,
+          variant: "destructive",
+        });
+      }
+
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   // Get confidence badge color
@@ -572,7 +612,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     return "bg-red-100 text-red-800";
   };
 
-  // Check if OneDrive mode is ready (only for OneDrive specific features)
+  // Check if OneDrive is ready (required for both modes now)
   const isOneDriveReady = isConnected && rootConfig;
 
   return (
@@ -616,14 +656,23 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       </div>
 
       {/* OneDrive Status Warning */}
-      {mode === "onedrive" && !isOneDriveReady && (
+      {!isOneDriveReady && (
         <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-yellow-600" />
             <div>
-              <h3 className="font-medium text-yellow-800">OneDrive Non Configurato</h3>
+              <h3 className="font-medium text-yellow-800">OneDrive Richiesto</h3>
               <p className="text-sm text-yellow-700">
-                {!isConnected ? "Connetti OneDrive nelle impostazioni" : "Configura la cartella radice in Sistema → Cartelle"}
+                {!isConnected 
+                  ? "Connetti OneDrive nelle impostazioni per utilizzare il routing AI" 
+                  : "Configura la cartella radice in Sistema → Cartelle per proseguire"
+                }
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                {mode === "onedrive" 
+                  ? "OneDrive è necessario per scansionare e spostare file esistenti"
+                  : "OneDrive è necessario per caricare i file direttamente nei percorsi suggeriti"
+                }
               </p>
             </div>
           </div>
@@ -760,7 +809,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                   <>
                     <p>2. <strong>Carica i file</strong> dal tuo computer tramite l'interfaccia di upload</p>
                     <p>3. <strong>Seleziona i file</strong> da analizzare per la classificazione AI</p>
-                    <p>4. <strong>L'AI analizzerà</strong> i file e fornirà suggerimenti di classificazione per l'organizzazione</p>
+                    <p>4. <strong>L'AI analizzerà</strong> i file e li caricherà direttamente su OneDrive nei percorsi suggeriti con rinomina automatica</p>
                   </>
                 )}
               </div>
@@ -774,7 +823,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                   setActiveTab("select");
                 }
               }}
-              disabled={mode === "onedrive" ? (!scanPath.trim() || isScanning || !isOneDriveReady) : uploadedFiles.length === 0}
+              disabled={mode === "onedrive" ? (!scanPath.trim() || isScanning || !isOneDriveReady) : (uploadedFiles.length === 0 || !isOneDriveReady)}
               className="button-g2-primary"
               data-testid="button-scan-folder"
             >
@@ -915,20 +964,30 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             )}
             {routingResults.length > 0 && mode === "upload" && (
               <div className="flex items-center gap-4">
-                <div className="flex-1 text-sm text-gray-600 bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex-1 text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="font-medium text-green-800">Applica Suggerimenti AI:</span>
-                    <span>Scarica i file con codice progetto e percorso suggerito nel nome</span>
+                    <Cloud className="w-4 h-4 text-blue-600" />
+                    <span className="font-medium text-blue-800">Carica su OneDrive:</span>
+                    <span>I file verranno caricati direttamente nei percorsi suggeriti con codice progetto</span>
                   </div>
                 </div>
                 <Button
-                  onClick={handleDownloadFiles}
+                  onClick={handleUploadToOneDrive}
+                  disabled={isUploading || !isOneDriveReady}
                   className="button-g2-primary"
-                  data-testid="button-apply-suggestions"
+                  data-testid="button-upload-to-onedrive"
                 >
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Applica Routing AI
+                  {isUploading ? (
+                    <>
+                      <Upload className="w-4 h-4 mr-2 animate-pulse" />
+                      Caricando...
+                    </>
+                  ) : (
+                    <>
+                      <Cloud className="w-4 h-4 mr-2" />
+                      Carica su OneDrive
+                    </>
+                  )}
                 </Button>
               </div>
             )}

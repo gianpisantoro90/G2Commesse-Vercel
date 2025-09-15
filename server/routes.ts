@@ -1181,6 +1181,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload file to OneDrive endpoint
+  app.post("/api/onedrive/upload-file", async (req, res) => {
+    try {
+      const { fileName, fileBuffer, targetPath, projectCode } = req.body;
+      
+      if (!fileName || !fileBuffer || !targetPath || !projectCode) {
+        return res.status(400).json({ 
+          error: 'File name, file buffer, target path, and project code are required' 
+        });
+      }
+
+      // Convert base64 file buffer to Buffer
+      let buffer: Buffer;
+      try {
+        buffer = Buffer.from(fileBuffer, 'base64');
+      } catch (error) {
+        console.error('❌ Failed to decode file buffer:', error);
+        return res.status(400).json({ error: 'Invalid file buffer format' });
+      }
+
+      // Create filename with project code prefix
+      const createFileNameWithPrefix = (originalFileName: string, projectCode: string): string => {
+        if (originalFileName.startsWith(`${projectCode}_`)) {
+          return originalFileName;
+        }
+        return `${projectCode}_${originalFileName}`;
+      };
+
+      const renamedFileName = createFileNameWithPrefix(fileName, projectCode);
+      
+      console.log(`📤 Uploading file: ${renamedFileName} to ${targetPath}`);
+      console.log(`📊 File size: ${buffer.length} bytes`);
+
+      // Upload file using OneDrive service
+      const result = await serverOneDriveService.uploadFile(buffer, renamedFileName, targetPath);
+      
+      console.log('✅ File uploaded to OneDrive:', result.name);
+      res.json({ success: true, file: result });
+      
+    } catch (error) {
+      console.error('Upload file failed:', error);
+      res.status(500).json({ error: 'Failed to upload file to OneDrive' });
+    }
+  });
+
   // OneDrive reconciliation endpoint
   app.post("/api/onedrive/reconcile", async (req, res) => {
     try {

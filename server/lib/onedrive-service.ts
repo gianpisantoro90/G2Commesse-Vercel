@@ -1229,6 +1229,71 @@ class ServerOneDriveService {
     
     console.log(`✅ Successfully created all ${template} template folders`);
   }
+
+  async uploadFile(fileBuffer: Buffer, fileName: string, targetPath: string): Promise<OneDriveUploadResult> {
+    try {
+      const client = await this.getClient();
+      
+      // Security: Validate and sanitize inputs
+      if (!fileBuffer || fileBuffer.length === 0) {
+        throw new Error('File buffer is empty or invalid');
+      }
+      
+      if (!fileName || typeof fileName !== 'string') {
+        throw new Error('File name is required and must be a string');
+      }
+      
+      if (!targetPath || typeof targetPath !== 'string') {
+        throw new Error('Target path is required and must be a string');
+      }
+      
+      // Validate target path
+      const pathValidation = validateOneDrivePath(targetPath);
+      if (!pathValidation.isValid) {
+        throw new Error(`Invalid target path: ${pathValidation.error}`);
+      }
+      
+      // Sanitize file name
+      const sanitizedFileName = fileName.replace(/[<>:"/\\|?*]/g, '_');
+      
+      // Construct the upload path
+      const uploadPath = `${targetPath}/${sanitizedFileName}`.replace(/\/+/g, '/');
+      const apiPath = `/me/drive/root:${uploadPath}:/content`;
+      
+      console.log(`📤 Uploading file: ${sanitizedFileName} to ${targetPath}`);
+      console.log(`🔗 API Path: ${apiPath}`);
+      console.log(`📊 File size: ${fileBuffer.length} bytes`);
+      
+      logGraphRequest('Upload File', apiPath, 'PUT', { fileSize: fileBuffer.length });
+      
+      // Upload the file using Microsoft Graph API
+      const response = await client
+        .api(apiPath)
+        .put(fileBuffer);
+      
+      console.log(`✅ File uploaded successfully:`, {
+        id: response.id,
+        name: response.name,
+        size: response.size,
+        webUrl: response.webUrl
+      });
+      
+      return {
+        id: response.id,
+        name: response.name,
+        size: response.size,
+        webUrl: response.webUrl,
+        downloadUrl: response['@microsoft.graph.downloadUrl'] || ''
+      };
+      
+    } catch (error: any) {
+      await handleGraphError(error, 'Upload File', {
+        fileName,
+        targetPath,
+        fileSize: fileBuffer.length
+      });
+    }
+  }
 }
 
 // Export singleton instance

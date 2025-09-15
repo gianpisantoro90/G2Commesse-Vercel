@@ -82,11 +82,62 @@ class OneDriveService {
   async uploadFile(
     file: File, 
     projectCode: string, 
-    targetFolder?: string
+    targetPath: string
   ): Promise<OneDriveUploadResult | null> {
-    // TODO: Implement file upload through server-side API
-    console.log(`📝 File upload not yet implemented: ${file.name} to ${projectCode}/${targetFolder || ''}`);
-    return null;
+    try {
+      console.log(`📤 Uploading file: ${file.name} to ${targetPath} with project code: ${projectCode}`);
+      
+      // Convert file to base64 for transmission
+      const fileBuffer = await this.fileToBase64(file);
+      
+      const response = await fetch('/api/onedrive/upload-file', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileBuffer: fileBuffer,
+          targetPath: targetPath,
+          projectCode: projectCode
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log(`✅ Uploaded file to OneDrive: ${data.file.name}`);
+          return data.file;
+        } else {
+          console.error('❌ Upload failed - server response:', data);
+          return null;
+        }
+      } else {
+        console.error('❌ Failed to upload file to OneDrive:', response.statusText);
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Failed to upload file to OneDrive:', error);
+      return null;
+    }
+  }
+
+  // Helper method to convert File to base64
+  private async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+      reader.onload = () => {
+        if (reader.result) {
+          const arrayBuffer = reader.result as ArrayBuffer;
+          const base64String = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          resolve(base64String);
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
+      reader.onerror = () => reject(reader.error);
+    });
   }
 
   async downloadFile(fileId: string): Promise<Blob | null> {
