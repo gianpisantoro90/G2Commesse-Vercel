@@ -155,7 +155,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`✅ Found project to delete: ${project.code}`);
 
-      // Delete the project
+      // First delete any associated OneDrive mapping (must be done before project deletion due to foreign key constraint)
+      try {
+        await storage.deleteOneDriveMapping(project.code);
+        console.log(`🗑️ Deleted OneDrive mapping for project: ${project.code}`);
+      } catch (mappingError) {
+        console.warn(`⚠️ Could not delete OneDrive mapping for project ${project.code}:`, mappingError);
+        // Continue with project deletion even if mapping deletion fails
+      }
+
+      // Now delete the project (safe after mapping is removed)
       const deleted = await storage.deleteProject(req.params.id);
       if (!deleted) {
         console.log(`❌ Failed to delete project: ${req.params.id}`);
@@ -163,15 +172,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log(`✅ Successfully deleted project: ${project.code}`);
-
-      // Also delete any associated OneDrive mapping
-      try {
-        await storage.deleteOneDriveMapping(project.code);
-        console.log(`🗑️ Deleted OneDrive mapping for project: ${project.code}`);
-      } catch (mappingError) {
-        console.warn(`⚠️ Could not delete OneDrive mapping for project ${project.code}:`, mappingError);
-        // Don't fail the entire operation if mapping deletion fails
-      }
 
       res.json({ message: "Commessa eliminata con successo" });
     } catch (error) {
