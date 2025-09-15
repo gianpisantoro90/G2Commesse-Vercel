@@ -915,20 +915,20 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             )}
             {routingResults.length > 0 && mode === "upload" && (
               <div className="flex items-center gap-4">
-                <div className="flex-1 text-sm text-gray-600 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex-1 text-sm text-gray-600 bg-green-50 border border-green-200 rounded-lg p-3">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-yellow-600" />
-                    <span className="font-medium text-yellow-800">Modalità Upload:</span>
-                    <span>Scarica i file con i nomi suggeriti dall'AI</span>
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <span className="font-medium text-green-800">Applica Suggerimenti AI:</span>
+                    <span>Scarica i file con codice progetto e percorso suggerito nel nome</span>
                   </div>
                 </div>
                 <Button
                   onClick={handleDownloadFiles}
                   className="button-g2-primary"
-                  data-testid="button-download-files"
+                  data-testid="button-apply-suggestions"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Scarica File Rinominati
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Applica Routing AI
                 </Button>
               </div>
             )}
