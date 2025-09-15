@@ -1122,7 +1122,10 @@ class ServerOneDriveService {
       }
       (fileInfo as any).path = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
       
-      allFiles.push(fileInfo);
+      // Only add files to results, not folders (for bulk rename operations)
+      if (!item.folder) {
+        allFiles.push(fileInfo);
+      }
       
       // Recursively scan subfolders if enabled and within depth limit
       if (item.folder && includeSubfolders && currentDepth < maxDepth) {
