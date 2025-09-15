@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -98,6 +97,29 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     enabled: isConnected
   });
 
+  // Auto-set scan path when project is selected
+  useEffect(() => {
+    if (selectedProject && projects.length > 0) {
+      const project = projects.find(p => p.id === selectedProject);
+      if (project) {
+        const mapping = getOneDriveMapping(project.code);
+        if (mapping) {
+          // Use the OneDrive folder path from the mapping
+          setScanPath(mapping.oneDriveFolderPath);
+          console.log(`🎯 Auto-selected OneDrive path for ${project.code}: ${mapping.oneDriveFolderPath}`);
+        } else {
+          // No mapping found, use root path + project code as fallback
+          const fallbackPath = `${rootConfig?.folderPath || '/LAVORO_CORRENTE'}/${project.code}`;
+          setScanPath(fallbackPath);
+          console.log(`⚠️ No OneDrive mapping found for ${project.code}, using fallback: ${fallbackPath}`);
+        }
+      }
+    } else {
+      // No project selected, clear scan path
+      setScanPath("");
+    }
+  }, [selectedProject, projects, oneDriveMappings, rootConfig]);
+
   // Mutation for scanning files
   const scanFilesMutation = useMutation({
     mutationFn: async ({ folderPath, projectCode, includeSubfolders }: {
@@ -166,43 +188,57 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
 
   // Handle folder scanning
   const handleScanFolder = async () => {
-    // Check if we should use root path or project mapping
-    const useRootPath = scanPath === (rootConfig?.folderPath || '/G2_Progetti');
-    
-    if (useRootPath) {
-      // Using root folder - require folder path
-      if (!scanPath.trim()) {
-        toast({
-          title: "Errore",
-          description: "Inserire un percorso di cartella OneDrive",
-          variant: "destructive",
-        });
-        return;
-      }
-      console.log('🔍 Scanning using root path:', scanPath);
-    } else {
-      // Using project mapping - require selected project
-      if (!selectedProject) {
-        toast({
-          title: "Errore",
-          description: "Selezionare un progetto o usare la cartella radice",
-          variant: "destructive",
-        });
-        return;
-      }
-      console.log('🔍 Scanning using project mapping for:', selectedProject);
+    // Validate inputs
+    if (!selectedProject) {
+      toast({
+        title: "Errore",
+        description: "Selezionare un progetto per la scansione",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!scanPath.trim()) {
+      toast({
+        title: "Errore",
+        description: "Percorso cartella OneDrive non disponibile",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const project = projects.find(p => p.id === selectedProject);
+    if (!project) {
+      toast({
+        title: "Errore",
+        description: "Progetto non trovato",
+        variant: "destructive",
+      });
+      return;
     }
 
     setIsScanning(true);
     try {
-      // Get project code for backend (backend expects project.code, not project.id)
-      const projectCode = useRootPath ? undefined : projects.find(p => p.id === selectedProject)?.code;
+      // Check if project has OneDrive mapping
+      const oneDriveMapping = getOneDriveMapping(project.code);
       
-      await scanFilesMutation.mutateAsync({
-        folderPath: useRootPath ? scanPath : '',
-        projectCode: projectCode || '',
-        includeSubfolders
-      });
+      if (oneDriveMapping) {
+        // Project has mapping - use backend mapping logic
+        console.log('🔍 Scanning using OneDrive mapping for project:', project.code);
+        await scanFilesMutation.mutateAsync({
+          folderPath: '', // Empty to signal backend to use mapping
+          projectCode: project.code,
+          includeSubfolders
+        });
+      } else {
+        // Project has no mapping - use fallback folder path
+        console.log('🔍 Scanning using fallback path for project:', project.code, '→', scanPath);
+        await scanFilesMutation.mutateAsync({
+          folderPath: scanPath, // Use the fallback path calculated by frontend
+          projectCode: project.code,
+          includeSubfolders
+        });
+      }
     } finally {
       setIsScanning(false);
     }
@@ -487,27 +523,29 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
 
               <div>
                 <Label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Percorso Cartella OneDrive
+                  Cartella OneDrive del Progetto
                 </Label>
-                <div className="flex gap-2">
-                  <Input
-                    value={scanPath}
-                    onChange={(e) => setScanPath(e.target.value)}
-                    placeholder="/G2_Progetti/25ABC123"
-                    className="input-g2"
-                    data-testid="input-scan-path"
-                  />
-                  <Button
-                    variant="outline"
-                    onClick={() => setScanPath(rootConfig?.folderPath || '/G2_Progetti')}
-                    data-testid="button-use-root"
-                  >
-                    Usa Radice
-                  </Button>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Cartella radice: {rootConfig?.folderPath || 'Non configurata'}
-                </p>
+                {selectedProject ? (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="w-4 h-4 text-blue-600" />
+                      <span className="font-mono text-sm text-blue-800" data-testid="text-scan-path">{scanPath}</span>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-1">
+                      📂 Cartella automaticamente selezionata dal mapping OneDrive
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-600">Seleziona prima un progetto</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      La cartella OneDrive verrà selezionata automaticamente
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -529,9 +567,9 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
               <h4 className="font-semibold text-blue-900 mb-2">ℹ️ Come Funziona</h4>
               <div className="space-y-2 text-sm text-blue-800">
                 <p>1. <strong>Seleziona un progetto</strong> per contestualizzare l'analisi AI</p>
-                <p>2. <strong>Inserisci il percorso</strong> della cartella OneDrive da scansionare</p>
-                <p>3. <strong>Avvia la scansione</strong> per trovare tutti i file nella cartella</p>
-                <p>4. <strong>L'AI analizzerà</strong> i file e suggerirà dove spostarli</p>
+                <p>2. <strong>La cartella OneDrive</strong> viene automaticamente selezionata dal mapping del progetto</p>
+                <p>3. <strong>Avvia la scansione</strong> per trovare tutti i file nella cartella del progetto</p>
+                <p>4. <strong>L'AI analizzerà</strong> i file e li sposterà con rinomina automatica (prefisso codice commessa)</p>
               </div>
             </div>
           </div>

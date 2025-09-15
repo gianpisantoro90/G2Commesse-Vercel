@@ -5,5 +5,12 @@
     "city": "Napoli",
     "projectsCount": 1,
     "id": "a6b48eeb-c118-4b0f-8f9d-20614618f721"
+  },
+  {
+    "sigla": "PAR",
+    "name": "Parco Olimpico",
+    "city": "Bacoli",
+    "projectsCount": 1,
+    "id": "91626bcc-e1c6-4f38-8f24-b4dd99a046c6"
   }
 ]
