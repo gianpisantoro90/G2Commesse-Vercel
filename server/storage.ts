@@ -27,6 +27,7 @@ export interface IStorage {
   getFileRouting(id: string): Promise<FileRouting | undefined>;
   getFileRoutingsByProject(projectId: string): Promise<FileRouting[]>;
   createFileRouting(routing: InsertFileRouting): Promise<FileRouting>;
+  deleteFileRoutingsByProject(projectId: string): Promise<boolean>;
   
   // System Config
   getSystemConfig(key: string): Promise<SystemConfig | undefined>;
@@ -188,6 +189,14 @@ export class MemStorage implements IStorage {
     };
     this.fileRoutings.set(id, routing);
     return routing;
+  }
+
+  async deleteFileRoutingsByProject(projectId: string): Promise<boolean> {
+    const routings = Array.from(this.fileRoutings.entries()).filter(([_, routing]) => routing.projectId === projectId);
+    for (const [id, _] of routings) {
+      this.fileRoutings.delete(id);
+    }
+    return routings.length > 0;
   }
 
   // System Config
@@ -527,6 +536,11 @@ export class DatabaseStorage implements IStorage {
     return routing;
   }
 
+  async deleteFileRoutingsByProject(projectId: string): Promise<boolean> {
+    const result = await db.delete(fileRoutings).where(eq(fileRoutings.projectId, projectId));
+    return (result.rowCount || 0) > 0;
+  }
+
   // System Config
   async getSystemConfig(key: string): Promise<SystemConfig | undefined> {
     const [config] = await db.select().from(systemConfig).where(eq(systemConfig.key, key));
@@ -853,6 +867,10 @@ class FallbackStorage implements IStorage {
 
   async createFileRouting(routing: InsertFileRouting): Promise<FileRouting> {
     return this.executeWithFallback(storage => storage.createFileRouting(routing));
+  }
+
+  async deleteFileRoutingsByProject(projectId: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteFileRoutingsByProject(projectId));
   }
 
   async getSystemConfig(key: string): Promise<SystemConfig | undefined> {

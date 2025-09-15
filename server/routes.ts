@@ -155,7 +155,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`✅ Found project to delete: ${project.code}`);
 
-      // First delete any associated OneDrive mapping (must be done before project deletion due to foreign key constraint)
+      // Step 1: Delete any file routings associated with the project (must be done first due to FK constraint)
+      try {
+        const fileRoutingsDeleted = await storage.deleteFileRoutingsByProject(req.params.id);
+        if (fileRoutingsDeleted) {
+          console.log(`🗑️ Deleted file routings for project: ${project.code}`);
+        } else {
+          console.log(`ℹ️ No file routings found for project: ${project.code}`);
+        }
+      } catch (routingError) {
+        console.warn(`⚠️ Could not delete file routings for project ${project.code}:`, routingError);
+        // Continue with other deletions even if file routing deletion fails
+      }
+
+      // Step 2: Delete any associated OneDrive mapping (must be done before project deletion due to FK constraint)
       try {
         await storage.deleteOneDriveMapping(project.code);
         console.log(`🗑️ Deleted OneDrive mapping for project: ${project.code}`);
@@ -164,7 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Continue with project deletion even if mapping deletion fails
       }
 
-      // Now delete the project (safe after mapping is removed)
+      // Step 3: Now delete the project (safe after dependencies are removed)
       const deleted = await storage.deleteProject(req.params.id);
       if (!deleted) {
         console.log(`❌ Failed to delete project: ${req.params.id}`);
