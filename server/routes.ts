@@ -1,9 +1,30 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema } from "@shared/schema";
 import serverOneDriveService from "./lib/onedrive-service";
 import { z } from "zod";
+
+// Extend session interface to include authenticated flag
+declare module 'express-session' {
+  interface SessionData {
+    authenticated?: boolean;
+  }
+}
+
+// Authentication middleware
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (req.session.authenticated) {
+    return next();
+  }
+  
+  // Check for login route or allow login attempt
+  if (req.path === '/api/auth/login' || req.method === 'POST' && req.path === '/api/auth/login') {
+    return next();
+  }
+  
+  return res.status(401).json({ message: "Authentication required" });
+};
 
 // OneDrive endpoint validation schemas
 const setRootFolderSchema = z.object({
@@ -26,6 +47,69 @@ const scanFilesSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Authentication routes
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Username e password sono obbligatori" 
+        });
+      }
+      
+      // Check credentials against environment variables
+      const validUsername = process.env.AUTH_USERNAME;
+      const validPassword = process.env.AUTH_PASSWORD;
+      
+      if (username === validUsername && password === validPassword) {
+        req.session.authenticated = true;
+        return res.json({ 
+          success: true, 
+          message: "Login effettuato con successo" 
+        });
+      } else {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Credenziali non valide" 
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      return res.status(500).json({ 
+        success: false, 
+        message: "Errore interno del server" 
+      });
+    }
+  });
+
+  app.post("/api/auth/logout", (req, res) => {
+    req.session.authenticated = false;
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ 
+          success: false, 
+          message: "Errore durante il logout" 
+        });
+      }
+      return res.json({ 
+        success: true, 
+        message: "Logout effettuato con successo" 
+      });
+    });
+  });
+
+  app.get("/api/auth/status", (req, res) => {
+    return res.json({ 
+      authenticated: !!req.session.authenticated 
+    });
+  });
+
+  // Apply authentication middleware to all other API routes
+  app.use("/api", requireAuth);
+
   // Generate project code
   app.post("/api/generate-code", async (req, res) => {
     try {
