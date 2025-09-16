@@ -18,8 +18,8 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     return next();
   }
   
-  // Check for login route or allow login attempt
-  if (req.path === '/api/auth/login' || req.method === 'POST' && req.path === '/api/auth/login') {
+  // Allow all auth-related endpoints
+  if (req.path.startsWith('/api/auth/')) {
     return next();
   }
   
