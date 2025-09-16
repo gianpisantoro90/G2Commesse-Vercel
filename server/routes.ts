@@ -1497,8 +1497,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`✅ Found existing folder for ${project.code}, creating mapping`);
             const mapping = await storage.createOneDriveMapping({
               projectCode: project.code,
-              oneDriveFolderId: existingFolder.id,
-              oneDriveFolderName: existingFolder.name,
+              oneDriveFolderId: (existingFolder as any).id,
+              oneDriveFolderName: (existingFolder as any).name,
               oneDriveFolderPath: folderPath
             });
             
@@ -1506,7 +1506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               projectCode: project.code,
               status: 'mapped_existing',
               message: `Mapped to existing folder: ${folderPath}`,
-              folderId: existingFolder.id
+              folderId: (existingFolder as any).id
             });
           } else {
             // Folder doesn't exist - create it with template

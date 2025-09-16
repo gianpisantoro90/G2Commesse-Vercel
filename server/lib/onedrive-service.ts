@@ -256,6 +256,8 @@ export interface OneDriveFile {
   path?: string;
   mimeType?: string;
   parentFolderId?: string;
+  driveId?: string;  // Drive ID for files in shared/non-default drives
+  driveType?: string; // Type of drive (personal, business, sharepoint)
 }
 
 export interface OneDriveUploadResult {
@@ -1135,21 +1137,18 @@ class ServerOneDriveService {
         
         // Add additional properties for better indexing
         if (item.file) {
-          (fileInfo as any).mimeType = item.file.mimeType;
+          fileInfo.mimeType = item.file.mimeType;
         }
         if (item.parentReference) {
-          (fileInfo as any).parentFolderId = item.parentReference.id;
+          fileInfo.parentFolderId = item.parentReference.id;
+          fileInfo.driveId = item.parentReference.driveId;
+          fileInfo.driveType = item.parentReference.driveType;
         }
-        (fileInfo as any).path = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
+        fileInfo.path = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
         
         // Only add files to results, not folders (for bulk rename operations)
         if (!item.folder) {
-          // Add drive information for proper file addressing
-          if (item.parentReference) {
-            (fileInfo as any).driveId = item.parentReference.driveId;
-            (fileInfo as any).driveType = item.parentReference.driveType;
-          }
-          console.log(`📄 Found file for bulk rename: ${item.name} (Drive: ${(fileInfo as any).driveId?.substring(0, 8) || 'unknown'}...)`);
+          console.log(`📄 Found file for bulk rename: ${item.name} (Drive: ${fileInfo.driveId?.substring(0, 8) || 'unknown'}...)`);
           allFiles.push(fileInfo);
         }
         

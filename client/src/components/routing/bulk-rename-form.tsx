@@ -296,7 +296,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         const file = currentFiles.find(f => f.id === item.fileId);
         return {
           fileId: item.fileId,
-          driveId: file?.driveId || 'MISSING_DRIVE_ID', // This should not happen with correct data
+          driveId: file?.driveId || '',
           originalName: item.original,
           newName: item.renamed
         };
