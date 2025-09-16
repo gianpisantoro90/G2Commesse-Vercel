@@ -1123,51 +1123,85 @@ class ServerOneDriveService {
     const client = await this.getClient();
     const allFiles: OneDriveFile[] = [];
     
-    // Get items in current folder
-    let apiUrl: string;
-    if (folderPath === '/' || folderPath === '') {
-      apiUrl = '/me/drive/root/children';
-    } else {
-      apiUrl = `/me/drive/root:${folderPath}:/children`;
+    try {
+      // Get items in current folder
+      let apiUrl: string;
+      if (folderPath === '/' || folderPath === '') {
+        apiUrl = '/me/drive/root/children';
+      } else {
+        apiUrl = `/me/drive/root:${folderPath}:/children`;
+      }
+      
+      logGraphRequest('Scan Folder Recursive', apiUrl, 'GET');
+      
+      const response = await client.api(apiUrl).get();
+      logGraphResponse('Scan Folder Recursive', response);
+      
+      for (const item of response.value) {
+        const fileInfo: OneDriveFile = {
+          id: item.id,
+          name: item.name,
+          size: item.size || 0,
+          downloadUrl: item['@microsoft.graph.downloadUrl'] || '',
+          lastModified: item.lastModifiedDateTime,
+          webUrl: item.webUrl,
+          folder: !!item.folder,
+          parentPath: folderPath
+        };
+        
+        // Add additional properties for better indexing
+        if (item.file) {
+          (fileInfo as any).mimeType = item.file.mimeType;
+        }
+        if (item.parentReference) {
+          (fileInfo as any).parentFolderId = item.parentReference.id;
+        }
+        (fileInfo as any).path = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
+        
+        // Only add files to results, not folders (for bulk rename operations)
+        if (!item.folder) {
+          console.log(`📄 Found file for bulk rename: ${item.name} (ID: ${item.id.substring(0, 8)}...)`);
+          allFiles.push(fileInfo);
+        }
+        
+        // Recursively scan subfolders if enabled and within depth limit
+        if (item.folder && includeSubfolders && currentDepth < maxDepth) {
+          const subFolderPath = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
+          try {
+            const subFiles = await this.scanFolderRecursiveInternal(subFolderPath, currentDepth + 1, maxDepth, includeSubfolders);
+            allFiles.push(...subFiles);
+          } catch (subFolderError) {
+            console.warn(`⚠️ Failed to scan subfolder ${subFolderPath}:`, subFolderError);
+            // Continue with other folders instead of failing completely
+          }
+        }
+      }
+      
+      return allFiles;
+    } catch (error: any) {
+      logGraphResponse('Scan Folder Recursive', null, error);
+      console.error(`❌ Failed to scan folder ${folderPath} at depth ${currentDepth}:`, error);
+      
+      // Handle specific error types
+      if (error.statusCode === 404) {
+        console.warn(`⚠️ Folder not found: ${folderPath} - may have been moved or deleted`);
+      } else if (error.statusCode === 403) {
+        console.warn(`⚠️ Access denied to folder: ${folderPath} - insufficient permissions`);
+      } else {
+        await handleGraphError(error, 'Scan Folder Recursive', {
+          folderPath,
+          currentDepth,
+          maxDepth,
+          includeSubfolders,
+          operation: 'GET /me/drive/root:path:/children'
+        }).catch(() => {
+          // Ignore handleGraphError failures to prevent cascading errors
+        });
+      }
+      
+      // Return empty array instead of throwing to allow partial results
+      return [];
     }
-    
-    const response = await client.api(apiUrl).get();
-    
-    for (const item of response.value) {
-      const fileInfo: OneDriveFile = {
-        id: item.id,
-        name: item.name,
-        size: item.size || 0,
-        downloadUrl: item['@microsoft.graph.downloadUrl'] || '',
-        lastModified: item.lastModifiedDateTime,
-        webUrl: item.webUrl,
-        folder: !!item.folder,
-        parentPath: folderPath
-      };
-      
-      // Add additional properties for better indexing
-      if (item.file) {
-        (fileInfo as any).mimeType = item.file.mimeType;
-      }
-      if (item.parentReference) {
-        (fileInfo as any).parentFolderId = item.parentReference.id;
-      }
-      (fileInfo as any).path = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
-      
-      // Only add files to results, not folders (for bulk rename operations)
-      if (!item.folder) {
-        allFiles.push(fileInfo);
-      }
-      
-      // Recursively scan subfolders if enabled and within depth limit
-      if (item.folder && includeSubfolders && currentDepth < maxDepth) {
-        const subFolderPath = folderPath === '/' ? `/${item.name}` : `${folderPath}/${item.name}`;
-        const subFiles = await this.scanFolderRecursiveInternal(subFolderPath, currentDepth + 1, maxDepth, includeSubfolders);
-        allFiles.push(...subFiles);
-      }
-    }
-    
-    return allFiles;
   }
 
   private async copyTemplateStructure(projectPath: string, template: string): Promise<void> {
