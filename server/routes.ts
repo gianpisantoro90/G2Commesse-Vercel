@@ -1241,7 +1241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true, 
         scanned: files.length, 
         indexed: indexed.length,
-        files: indexed,
+        files: files, // Return original OneDrive files with driveId, not database records
         path: targetPath,
         projectCode: projectCode || null
       });
