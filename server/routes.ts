@@ -1317,33 +1317,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         try {
-          // Get current file info first - try to get real name from OneDrive
-          let originalName = 'Unknown';
-          try {
-            const client = await serverOneDriveService.getClient();
-            const fileInfo = await client.api(`/me/drive/items/${fileId}`).get();
-            originalName = fileInfo.name;
-            console.log(`📄 Found file: ${originalName} (ID: ${fileId.substring(0, 8)})`);
-          } catch (nameError: any) {
-            if (nameError.statusCode === 404) {
-              console.warn(`⚠️ File not found (404): ${fileId.substring(0, 8)} - skipping`);
-              results.push({
-                original: `File_${fileId.substring(0, 8)}`,
-                renamed: newName,
-                success: false,
-                error: 'File not found - may have been moved or deleted'
-              });
-              errorCount++;
-              continue; // Skip this file and continue with the next one
-            }
-            console.warn('Could not get file name:', nameError.message);
-            originalName = 'file_' + fileId.substring(0, 8); // Use partial ID as fallback
-          }
-
-          // Rename file directly using Graph API PATCH operation
           const client = await serverOneDriveService.getClient();
+          const originalName = operation.originalName || `file_${fileId.substring(0, 8)}`;
+          const driveId = operation.driveId;
+          
+          console.log(`🔄 Direct rename attempt: ${originalName} → ${newName} (Drive: ${driveId?.substring(0, 8) || 'default'}...)`);
+          
+          // Use proper drive-scoped API endpoint
           const updatePayload = { name: newName };
-          const result = await client.api(`/me/drive/items/${fileId}`).patch(updatePayload);
+          let result;
+          
+          if (driveId) {
+            // Use drive-specific endpoint for files in non-default drives
+            result = await client.api(`/drives/${driveId}/items/${fileId}`).patch(updatePayload);
+          } else {
+            // Fallback to default drive
+            result = await client.api(`/me/drive/items/${fileId}`).patch(updatePayload);
+          }
           
           if (result && result.name === newName) {
             // Update file index with new name

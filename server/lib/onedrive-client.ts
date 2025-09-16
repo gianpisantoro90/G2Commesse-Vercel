@@ -36,8 +36,8 @@ async function getAccessToken() {
     const data = await response.json();
     connectionSettings = data.items?.[0];
     
-    console.log('🔍 Connection response:', JSON.stringify(data, null, 2));
-    console.log('🔍 Connection settings:', JSON.stringify(connectionSettings, null, 2));
+    console.log('🔍 Connection response received (sensitive data redacted for security)');
+    console.log('🔍 Connection settings obtained (access token redacted for security)');
     
   } catch (error) {
     console.error('❌ Error fetching connection:', error);

@@ -1144,7 +1144,12 @@ class ServerOneDriveService {
         
         // Only add files to results, not folders (for bulk rename operations)
         if (!item.folder) {
-          console.log(`📄 Found file for bulk rename: ${item.name} (ID: ${item.id.substring(0, 8)}...)`);
+          // Add drive information for proper file addressing
+          if (item.parentReference) {
+            (fileInfo as any).driveId = item.parentReference.driveId;
+            (fileInfo as any).driveType = item.parentReference.driveType;
+          }
+          console.log(`📄 Found file for bulk rename: ${item.name} (Drive: ${(fileInfo as any).driveId?.substring(0, 8) || 'unknown'}...)`);
           allFiles.push(fileInfo);
         }
         

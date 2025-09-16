@@ -292,10 +292,15 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
     // Step 3: Prepare operations for files that need renaming
     const operations = freshPreview
       .filter(item => item.original !== item.renamed)
-      .map(item => ({
-        fileId: item.fileId,
-        newName: item.renamed
-      }));
+      .map(item => {
+        const file = currentFiles.find(f => f.id === item.fileId);
+        return {
+          fileId: item.fileId,
+          driveId: (file as any)?.driveId,
+          originalName: item.original,
+          newName: item.renamed
+        };
+      });
     
     if (operations.length === 0) {
       toast({
