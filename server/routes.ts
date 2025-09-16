@@ -1303,14 +1303,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let errorCount = 0;
 
       for (const operation of operations) {
-        const { fileId, newName } = operation;
+        const { fileId, driveId, originalName, newName } = operation;
         
-        if (!fileId || !newName) {
+        if (!fileId || !newName || !driveId) {
           results.push({
-            original: 'Unknown',
+            original: originalName || 'Unknown',
             renamed: newName || 'Unknown',
             success: false,
-            error: 'Missing fileId or newName'
+            error: 'Missing required fields: fileId, driveId, or newName'
           });
           errorCount++;
           continue;

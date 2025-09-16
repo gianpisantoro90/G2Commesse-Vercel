@@ -3,6 +3,7 @@ import { Client } from '@microsoft/microsoft-graph-client';
 export interface OneDriveFile {
   id: string;
   driveItemId: string;
+  driveId: string; // Drive ID for proper Graph API calls
   name: string;
   size: number;
   downloadUrl: string;
@@ -319,7 +320,7 @@ class OneDriveService {
     }
   }
 
-  async bulkRenameFiles(operations: Array<{fileId: string, newName: string}>): Promise<{success: boolean, results: Array<{original: string, renamed: string, success: boolean}>}> {
+  async bulkRenameFiles(operations: Array<{fileId: string, driveId: string, originalName: string, newName: string}>): Promise<{success: boolean, results: Array<{original: string, renamed: string, success: boolean}>}> {
     try {
       const response = await fetch('/api/onedrive/bulk-rename', {
         method: 'POST',
