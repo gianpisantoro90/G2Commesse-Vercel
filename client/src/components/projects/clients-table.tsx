@@ -1,16 +1,31 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Client, type Project } from "@shared/schema";
+
+// Schema for edit form
+const editClientSchema = z.object({
+  sigla: z.string().min(1, "Sigla è obbligatoria").max(10, "Sigla troppo lunga"),
+  name: z.string().min(1, "Nome è obbligatorio"),
+  city: z.string().optional(),
+});
+
+type EditClientForm = z.infer<typeof editClientSchema>;
 
 export default function ClientsTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClientProjects, setSelectedClientProjects] = useState<Project[] | null>(null);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -22,6 +37,43 @@ export default function ClientsTable() {
   // Fetch projects for viewing client projects
   const { data: allProjects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+  });
+
+  // Edit client form
+  const editForm = useForm<EditClientForm>({
+    resolver: zodResolver(editClientSchema),
+    defaultValues: {
+      sigla: "",
+      name: "",
+      city: "",
+    },
+  });
+
+  // Update client mutation
+  const updateClientMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: EditClientForm }) => {
+      const response = await apiRequest("PUT", `/api/clients/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({
+        title: "Cliente aggiornato",
+        description: "Il cliente è stato aggiornato con successo",
+      });
+      setShowEditModal(false);
+      setEditingClient(null);
+      editForm.reset();
+    },
+    onError: (error: any) => {
+      console.error("Update client error:", error);
+      toast({
+        title: "Errore nell'aggiornamento",
+        description: error?.message || "Impossibile aggiornare il cliente",
+        variant: "destructive",
+      });
+    },
   });
 
   // Delete client mutation
@@ -70,6 +122,27 @@ export default function ClientsTable() {
     const clientProjects = allProjects.filter(project => project.client === client.sigla);
     setSelectedClientProjects(clientProjects);
     setShowProjectsModal(true);
+  };
+
+  // Handle edit client
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    editForm.reset({
+      sigla: client.sigla,
+      name: client.name,
+      city: client.city || "",
+    });
+    setShowEditModal(true);
+  };
+
+  // Handle edit form submit
+  const handleEditSubmit = (data: EditClientForm) => {
+    if (editingClient) {
+      updateClientMutation.mutate({
+        id: editingClient.id,
+        data,
+      });
+    }
   };
 
   // Handle delete client
@@ -174,10 +247,11 @@ export default function ClientsTable() {
                           variant="ghost"
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Modifica"
-                          onClick={() => toast({ title: "Funzionalità in sviluppo", description: "La modifica clienti sarà disponibile presto" })}
+                          onClick={() => handleEditClient(client)}
+                          disabled={updateClientMutation.isPending}
                           data-testid={`edit-client-${client.id}`}
                         >
-                          ✏️
+                          {updateClientMutation.isPending ? '⏳' : '✏️'}
                         </Button>
                         <Button
                           size="sm"
@@ -271,6 +345,96 @@ export default function ClientsTable() {
               Chiudi
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Client Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifica Cliente</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
+              <FormField
+                control={editForm.control}
+                name="sigla"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sigla Cliente *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field}
+                        placeholder="es. ABC"
+                        maxLength={10}
+                        disabled={updateClientMutation.isPending}
+                        data-testid="input-edit-client-sigla"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome Cliente *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field}
+                        placeholder="Nome completo del cliente"
+                        disabled={updateClientMutation.isPending}
+                        data-testid="input-edit-client-name"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={editForm.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Città</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field}
+                        placeholder="Città principale del cliente"
+                        disabled={updateClientMutation.isPending}
+                        data-testid="input-edit-client-city"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={updateClientMutation.isPending}
+                  data-testid="button-cancel-edit-client"
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={updateClientMutation.isPending}
+                  data-testid="button-save-edit-client"
+                >
+                  {updateClientMutation.isPending ? "Salvando..." : "Salva"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

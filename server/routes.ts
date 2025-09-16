@@ -300,6 +300,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/clients/:id", async (req, res) => {
+    try {
+      const validatedData = insertClientSchema.partial().parse(req.body);
+      const updatedClient = await storage.updateClient(req.params.id, validatedData);
+      if (!updatedClient) {
+        return res.status(404).json({ message: "Cliente non trovato" });
+      }
+      res.json(updatedClient);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati non validi", errors: error.errors });
+      }
+      console.error("Error updating client:", error);
+      res.status(500).json({ message: "Errore nell'aggiornamento del cliente" });
+    }
+  });
+
   app.delete("/api/clients/:id", async (req, res) => {
     try {
       const deleted = await storage.deleteClient(req.params.id);
