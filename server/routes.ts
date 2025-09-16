@@ -1340,14 +1340,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             originalName = 'file_' + fileId.substring(0, 8); // Use partial ID as fallback
           }
 
-          // Rename file using move operation with same location but new name
-          const result = await serverOneDriveService.moveFile(fileId, "", newName);
+          // Rename file directly using Graph API PATCH operation
+          const client = await serverOneDriveService.getClient();
+          const updatePayload = { name: newName };
+          const result = await client.api(`/me/drive/items/${fileId}`).patch(updatePayload);
           
-          if (result) {
+          if (result && result.name === newName) {
             // Update file index with new name
             await storage.updateFileIndex(fileId, {
               name: newName,
-              path: result.path
+              path: result.parentReference?.path ? `${result.parentReference.path}/${newName}` : `/${newName}`
             });
 
             results.push({
@@ -1362,7 +1364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               original: originalName,
               renamed: newName,
               success: false,
-              error: 'OneDrive API returned null'
+              error: 'OneDrive API did not confirm the rename operation'
             });
             errorCount++;
           }

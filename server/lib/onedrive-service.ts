@@ -969,24 +969,8 @@ class ServerOneDriveService {
       //   throw new Error('File ID contains invalid characters');
       // }
       
-      // First, verify the file exists
-      try {
-        console.log(`🔍 Verifying file exists: ${fileId}`);
-        const fileInfo = await client.api(`/me/drive/items/${fileId}`).get();
-        console.log(`✅ File found:`, {
-          id: fileInfo.id,
-          name: fileInfo.name,
-          size: fileInfo.size,
-          parentPath: fileInfo.parentReference?.path
-        });
-      } catch (fileError: any) {
-        console.error(`❌ File verification failed:`, {
-          fileId,
-          error: fileError.message,
-          statusCode: fileError.statusCode
-        });
-        throw new Error(`File not found: ${fileId} (Status: ${fileError.statusCode})`);
-      }
+      // Skip file verification - try to rename directly to avoid timing issues
+      console.log(`🔄 Attempting to rename file directly: ${fileId}`);
       
       // Handle rename in place vs move to different folder
       if (isRenameInPlace) {
