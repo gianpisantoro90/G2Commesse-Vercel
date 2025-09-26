@@ -12,6 +12,7 @@ import {
   renderPrestazioneBadge, 
   formatImporto, 
   renderClasseDMColumn,
+  renderLivelliProgettazioneColumn,
   PRESTAZIONI_CONFIG,
   type PrestazioneType 
 } from "@/lib/prestazioni-utils";
@@ -210,6 +211,10 @@ export default function ProjectsTable() {
                     Prestazioni 
                     <span className="ml-1 text-xs text-gray-500 cursor-help" title="Tipologia di servizi professionali">ⓘ</span>
                   </th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">
+                    Livelli Progettazione
+                    <span className="ml-1 text-xs text-gray-500 cursor-help" title="Livelli di progettazione DM 143/2013">ⓘ</span>
+                  </th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
                     Classe DM 143/2013
                     <span className="ml-1 text-xs text-gray-500 cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
@@ -254,6 +259,32 @@ export default function ProjectsTable() {
                         {!(project.metadata as ProjectMetadata)?.prestazioni?.length && (
                           <span className="text-xs text-gray-400 italic">Non specificate</span>
                         )}
+                      </div>
+                    </td>
+                    {/* Colonna Livelli Progettazione */}
+                    <td className="py-4 px-4" data-testid={`project-livelli-progettazione-${project.id}`}>
+                      <div className="flex flex-wrap gap-1">
+                        {(() => {
+                          const metadata = project.metadata as ProjectMetadata;
+                          const livelliBadges = renderLivelliProgettazioneColumn(
+                            metadata?.prestazioni, 
+                            metadata?.livelloProgettazione
+                          );
+                          
+                          if (livelliBadges.length === 0) {
+                            return <span className="text-xs text-gray-400 italic">-</span>;
+                          }
+                          
+                          return livelliBadges.map((badge, index) => (
+                            <span 
+                              key={index}
+                              className={badge.className}
+                              title={badge.fullLabel}
+                            >
+                              {badge.icon} {badge.label}
+                            </span>
+                          ));
+                        })()}
                       </div>
                     </td>
                     {/* Colonna Classe DM 143/2013 */}
