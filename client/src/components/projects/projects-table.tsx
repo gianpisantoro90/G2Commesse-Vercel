@@ -4,12 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { type Project, type OneDriveMapping } from "@shared/schema";
+import { type Project, type OneDriveMapping, type ProjectMetadata } from "@shared/schema";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
+import { 
+  renderPrestazioneBadge, 
+  formatImporto, 
+  renderClasseDMColumn,
+  PRESTAZIONI_CONFIG,
+  type PrestazioneType 
+} from "@/lib/prestazioni-utils";
 
 export default function ProjectsTable() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -78,6 +86,15 @@ export default function ProjectsTable() {
       title: "Esportazione completata",
       description: `Commessa ${project.code} esportata con successo`,
     });
+  };
+
+  // Handler for opening prestazioni modal
+  const handleOpenPrestazioniModal = (project: Project) => {
+    setSelectedProjectForPrestazioni(project);
+  };
+
+  const handleClosePrestazioniModal = () => {
+    setSelectedProjectForPrestazioni(null);
   };
 
   // OneDrive helper functions
@@ -188,6 +205,14 @@ export default function ProjectsTable() {
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">Cliente</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Città</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">Oggetto</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48 bg-green-50 border-l-4 border-green-400">
+                    Prestazioni 
+                    <span className="ml-1 text-xs text-gray-500 cursor-help" title="Tipologia di servizi professionali">ⓘ</span>
+                  </th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32 bg-green-50 border-r-4 border-green-400">
+                    Classe DM 143/2013
+                    <span className="ml-1 text-xs text-gray-500 cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
+                  </th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-16">Anno</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-20">Template</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Stato</th>
@@ -209,6 +234,45 @@ export default function ProjectsTable() {
                     </td>
                     <td className="py-4 px-4 text-sm" data-testid={`project-object-${project.id}`}>
                       {project.object}
+                    </td>
+                    {/* Colonna Prestazioni */}
+                    <td className="py-4 px-4 bg-green-50 border-l-4 border-green-400" data-testid={`project-prestazioni-${project.id}`}>
+                      <div className="flex flex-wrap gap-1">
+                        {((project.metadata as ProjectMetadata)?.prestazioni || []).map((prestazione) => {
+                          const badge = renderPrestazioneBadge(prestazione as PrestazioneType, 'sm');
+                          return (
+                            <span 
+                              key={prestazione}
+                              className={badge.className}
+                              title={badge.fullLabel}
+                            >
+                              {badge.icon} {badge.label}
+                            </span>
+                          );
+                        })}
+                        {!(project.metadata as ProjectMetadata)?.prestazioni?.length && (
+                          <span className="text-xs text-gray-400 italic">Non specificate</span>
+                        )}
+                      </div>
+                    </td>
+                    {/* Colonna Classe DM 143/2013 */}
+                    <td className="py-4 px-4 bg-green-50 border-r-4 border-green-400" data-testid={`project-classe-dm-${project.id}`}>
+                      {(() => {
+                        const metadata = project.metadata as ProjectMetadata;
+                        const classeDM = renderClasseDMColumn(metadata?.classeDM143, metadata?.importoOpere);
+                        return (
+                          <div>
+                            <span className={`px-2 py-1 rounded text-xs font-mono font-bold ${
+                              classeDM.isFormatted ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-600'
+                            }`}>
+                              {classeDM.classe}
+                            </span>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {classeDM.importo}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-600" data-testid={`project-year-${project.id}`}>
                       20{project.year.toString().padStart(2, '0')}
@@ -321,6 +385,16 @@ export default function ProjectsTable() {
                         <Button
                           size="sm"
                           variant="ghost"
+                          onClick={() => handleOpenPrestazioniModal(project)}
+                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          title="Dettagli Prestazioni"
+                          data-testid={`prestazioni-details-${project.id}`}
+                        >
+                          🏗️
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
                           onClick={() => handleDeleteProject(project)}
                           disabled={deleteProjectMutation.isPending}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -343,6 +417,23 @@ export default function ProjectsTable() {
             </span>
           </div>
         </>
+      )}
+      
+      {/* TODO: Prestazioni Modal Placeholder - Will be implemented in Task 5 */}
+      {selectedProjectForPrestazioni && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md">
+            <h3 className="text-lg font-semibold mb-4">
+              Prestazioni per {selectedProjectForPrestazioni.code}
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Modal prestazioni in implementazione...
+            </p>
+            <Button onClick={handleClosePrestazioniModal}>
+              Chiudi
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );
