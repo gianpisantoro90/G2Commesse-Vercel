@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { type Project, type OneDriveMapping, type ProjectMetadata } from "@shared/schema";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
+import PrestazioniModal from "./prestazioni-modal";
 import { 
   renderPrestazioneBadge, 
   formatImporto, 
@@ -419,21 +420,13 @@ export default function ProjectsTable() {
         </>
       )}
       
-      {/* TODO: Prestazioni Modal Placeholder - Will be implemented in Task 5 */}
+      {/* Prestazioni Modal */}
       {selectedProjectForPrestazioni && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              Prestazioni per {selectedProjectForPrestazioni.code}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Modal prestazioni in implementazione...
-            </p>
-            <Button onClick={handleClosePrestazioniModal}>
-              Chiudi
-            </Button>
-          </div>
-        </div>
+        <PrestazioniModal
+          project={selectedProjectForPrestazioni}
+          isOpen={true}
+          onClose={handleClosePrestazioniModal}
+        />
       )}
     </div>
   );
