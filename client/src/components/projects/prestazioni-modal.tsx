@@ -53,12 +53,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
   // Mutation for saving prestazioni
   const savePrestazioniMutation = useMutation({
     mutationFn: async (data: ProjectPrestazioni) => {
-      const response = await apiRequest("PUT", `/api/projects/${project.id}/prestazioni`, {
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await apiRequest("PUT", `/api/projects/${project.id}/prestazioni`, data);
       return response.json();
     },
     onSuccess: () => {

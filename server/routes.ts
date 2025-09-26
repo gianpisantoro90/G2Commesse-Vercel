@@ -281,11 +281,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/projects/:id/prestazioni", async (req, res) => {
     try {
       console.log(`🏗️ Updating prestazioni for project: ${req.params.id}`);
-      console.log(`📦 Raw request body:`, JSON.stringify(req.body, null, 2));
       
       // Validate prestazioni data
       const validatedPrestazioni = prestazioniSchema.parse(req.body);
-      console.log(`✅ Validated prestazioni:`, JSON.stringify(validatedPrestazioni, null, 2));
       
       // Get existing project first
       const existingProject = await storage.getProject(req.params.id);
