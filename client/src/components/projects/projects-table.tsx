@@ -206,11 +206,11 @@ export default function ProjectsTable() {
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">Cliente</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Città</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">Oggetto</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48 bg-green-50 border-l-4 border-green-400">
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
                     Prestazioni 
                     <span className="ml-1 text-xs text-gray-500 cursor-help" title="Tipologia di servizi professionali">ⓘ</span>
                   </th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32 bg-green-50 border-r-4 border-green-400">
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
                     Classe DM 143/2013
                     <span className="ml-1 text-xs text-gray-500 cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
                   </th>
@@ -237,7 +237,7 @@ export default function ProjectsTable() {
                       {project.object}
                     </td>
                     {/* Colonna Prestazioni */}
-                    <td className="py-4 px-4 bg-green-50 border-l-4 border-green-400" data-testid={`project-prestazioni-${project.id}`}>
+                    <td className="py-4 px-4" data-testid={`project-prestazioni-${project.id}`}>
                       <div className="flex flex-wrap gap-1">
                         {((project.metadata as ProjectMetadata)?.prestazioni || []).map((prestazione) => {
                           const badge = renderPrestazioneBadge(prestazione as PrestazioneType, 'sm');
@@ -257,7 +257,7 @@ export default function ProjectsTable() {
                       </div>
                     </td>
                     {/* Colonna Classe DM 143/2013 */}
-                    <td className="py-4 px-4 bg-green-50 border-r-4 border-green-400" data-testid={`project-classe-dm-${project.id}`}>
+                    <td className="py-4 px-4" data-testid={`project-classe-dm-${project.id}`}>
                       {(() => {
                         const metadata = project.metadata as ProjectMetadata;
                         const classeDM = renderClasseDMColumn(metadata?.classeDM143, metadata?.importoOpere);
@@ -377,7 +377,7 @@ export default function ProjectsTable() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleExportProject(project)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Esporta"
                           data-testid={`export-project-${project.id}`}
                         >
