@@ -103,6 +103,38 @@ export const insertFilesIndexSchema = createInsertSchema(filesIndex).omit({
   updatedAt: true,
 });
 
+// Prestazioni professionali metadata interfaces
+export interface ProjectPrestazioni {
+  prestazioni?: Array<'progettazione' | 'dl' | 'csp' | 'cse' | 'contabilita' | 'collaudo' | 'perizia' | 'pratiche'>;
+  livelloProgettazione?: Array<'pfte' | 'definitivo' | 'esecutivo' | 'variante'>;
+  classeDM143?: string; // Es: "E22", "IA03", "S05"
+  importoOpere?: number; // Importo lavori base calcolo parcella
+  importoServizio?: number; // Importo servizio professionale al netto
+  percentualeParcella?: number; // % parcella applicata
+}
+
+export interface ProjectMetadata extends ProjectPrestazioni {
+  [key: string]: any; // Mantieni flessibilità per altri metadata futuri
+}
+
+// Zod schemas per validazione prestazioni
+export const prestazioniSchema = z.object({
+  prestazioni: z.array(z.enum(['progettazione', 'dl', 'csp', 'cse', 'contabilita', 'collaudo', 'perizia', 'pratiche'])).optional(),
+  livelloProgettazione: z.array(z.enum(['pfte', 'definitivo', 'esecutivo', 'variante'])).optional(),
+  classeDM143: z.string().optional(),
+  importoOpere: z.number().min(0).optional(),
+  importoServizio: z.number().min(0).optional(),
+  percentualeParcella: z.number().min(0).max(100).optional(),
+}).refine((data) => {
+  // Se progettazione è selezionata, richiedere livello
+  if (data.prestazioni?.includes('progettazione') && (!data.livelloProgettazione || data.livelloProgettazione.length === 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Se la progettazione è selezionata, è necessario specificare il livello"
+});
+
 // Types
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Project = typeof projects.$inferSelect;

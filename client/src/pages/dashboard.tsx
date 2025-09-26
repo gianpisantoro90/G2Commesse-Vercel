@@ -59,14 +59,14 @@ export default function Dashboard() {
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
               <div className="space-y-8" data-testid="dashboard-panel">
-                {/* First Row - Core System Info */}
+                {/* First Row - Recent Projects */}
+                <RecentProjectsTable />
+                
+                {/* Second Row - Core System Info */}
                 <div className="grid gap-6 lg:grid-cols-2">
                   <StatsCard />
                   <OneDriveStatusCard />
                 </div>
-                
-                {/* Third Row - Recent Projects with OneDrive Status */}
-                <RecentProjectsTable />
               </div>
             )}
 
