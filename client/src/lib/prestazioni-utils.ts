@@ -1,0 +1,251 @@
+import type { ProjectPrestazioni } from "@shared/schema";
+
+// Configurazione prestazioni professionali
+export const PRESTAZIONI_CONFIG = {
+  progettazione: {
+    id: 'progettazione',
+    icon: '📐',
+    label: 'Progettazione',
+    shortLabel: 'Prog.',
+    className: 'bg-blue-100 text-blue-800 border-blue-200',
+    description: 'Progettazione architettonica e/o strutturale'
+  },
+  dl: {
+    id: 'dl',
+    icon: '👷',
+    label: 'Direzione Lavori',
+    shortLabel: 'DL',
+    className: 'bg-purple-100 text-purple-800 border-purple-200',
+    description: 'Direzione lavori e supervisione cantiere'
+  },
+  csp: {
+    id: 'csp',
+    icon: '🛡️',
+    label: 'CSP',
+    shortLabel: 'CSP',
+    className: 'bg-orange-100 text-orange-800 border-orange-200',
+    description: 'Coordinamento Sicurezza in fase di Progettazione'
+  },
+  cse: {
+    id: 'cse',
+    icon: '🛡️',
+    label: 'CSE',
+    shortLabel: 'CSE',
+    className: 'bg-orange-100 text-orange-800 border-orange-200',
+    description: 'Coordinamento Sicurezza in fase di Esecuzione'
+  },
+  contabilita: {
+    id: 'contabilita',
+    icon: '📊',
+    label: 'Contabilità Lavori',
+    shortLabel: 'Cont.',
+    className: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    description: 'Contabilità lavori e gestione economica'
+  },
+  collaudo: {
+    id: 'collaudo',
+    icon: '✅',
+    label: 'Collaudo',
+    shortLabel: 'Coll.',
+    className: 'bg-green-100 text-green-800 border-green-200',
+    description: 'Collaudo statico e/o funzionale'
+  },
+  perizia: {
+    id: 'perizia',
+    icon: '⚖️',
+    label: 'Perizia',
+    shortLabel: 'Per.',
+    className: 'bg-pink-100 text-pink-800 border-pink-200',
+    description: 'Perizie, CTU, CTP'
+  },
+  pratiche: {
+    id: 'pratiche',
+    icon: '📋',
+    label: 'Pratiche',
+    shortLabel: 'Prat.',
+    className: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+    description: 'Pratiche strutturali ed edilizie'
+  }
+} as const;
+
+// Configurazione livelli progettazione
+export const LIVELLO_PROGETTAZIONE_CONFIG = {
+  pfte: {
+    id: 'pfte',
+    label: 'PFTE',
+    fullLabel: 'Progetto di Fattibilità Tecnico-Economica',
+    description: 'Progetto di Fattibilità Tecnico-Economica'
+  },
+  definitivo: {
+    id: 'definitivo',
+    label: 'Definitivo',
+    fullLabel: 'Progetto Definitivo',
+    description: 'Progetto definitivo'
+  },
+  esecutivo: {
+    id: 'esecutivo',
+    label: 'Esecutivo',
+    fullLabel: 'Progetto Esecutivo',
+    description: 'Progetto esecutivo'
+  },
+  variante: {
+    id: 'variante',
+    label: 'Variante',
+    fullLabel: 'Variante in corso d\'opera',
+    description: 'Variante in corso d\'opera'
+  }
+} as const;
+
+// Tipi per autocomplete e type safety
+export type PrestazioneType = keyof typeof PRESTAZIONI_CONFIG;
+export type LivelloProgettazioneType = keyof typeof LIVELLO_PROGETTAZIONE_CONFIG;
+
+// Funzione per formattare importi in euro
+export function formatImporto(amount?: number | null): string {
+  if (!amount || amount === 0) return 'Forfait';
+  
+  return new Intl.NumberFormat('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0
+  }).format(amount);
+}
+
+// Funzione per formattare percentuale
+export function formatPercentuale(percentage?: number | null): string {
+  if (!percentage) return '-';
+  return `${percentage.toFixed(2)}%`;
+}
+
+// Funzione per validare classe DM 143/2013
+export function validateClasseDM143(classe?: string): boolean {
+  if (!classe) return true; // Opzionale
+  
+  // Esempi di classi valide: E22, IA03, S05, etc.
+  const pattern = /^[A-Z]{1,2}[0-9]{1,2}$/;
+  return pattern.test(classe);
+}
+
+// Funzione per renderizzare badge prestazioni
+export function renderPrestazioneBadge(
+  prestazione: PrestazioneType, 
+  size: 'sm' | 'md' = 'sm'
+): {
+  icon: string;
+  label: string;
+  className: string;
+  fullLabel: string;
+} {
+  const config = PRESTAZIONI_CONFIG[prestazione];
+  const sizeClass = size === 'sm' 
+    ? 'px-2 py-1 text-xs' 
+    : 'px-3 py-1.5 text-sm';
+    
+  return {
+    icon: config.icon,
+    label: config.shortLabel,
+    className: `inline-flex items-center gap-1 rounded-full font-medium border ${config.className} ${sizeClass}`,
+    fullLabel: config.label
+  };
+}
+
+// Funzione per ottenere configurazione prestazione
+export function getPrestazioneConfig(prestazione: PrestazioneType) {
+  return PRESTAZIONI_CONFIG[prestazione];
+}
+
+// Funzione per ottenere tutte le prestazioni disponibili
+export function getAllPrestazioni(): Array<{ id: PrestazioneType; config: typeof PRESTAZIONI_CONFIG[PrestazioneType] }> {
+  return Object.entries(PRESTAZIONI_CONFIG).map(([id, config]) => ({
+    id: id as PrestazioneType,
+    config
+  }));
+}
+
+// Funzione per ottenere tutti i livelli progettazione
+export function getAllLivelliProgettazione(): Array<{ id: LivelloProgettazioneType; config: typeof LIVELLO_PROGETTAZIONE_CONFIG[LivelloProgettazioneType] }> {
+  return Object.entries(LIVELLO_PROGETTAZIONE_CONFIG).map(([id, config]) => ({
+    id: id as LivelloProgettazioneType,
+    config
+  }));
+}
+
+// Funzione helper per verificare se progettazione è selezionata
+export function hasProgettazione(prestazioni?: string[]): boolean {
+  return prestazioni?.includes('progettazione') ?? false;
+}
+
+// Funzione per calcolare importo totale (opere + servizio)
+export function calcolaImportoTotale(importoOpere?: number, importoServizio?: number): number {
+  return (importoOpere || 0) + (importoServizio || 0);
+}
+
+// Funzione per validare i dati prestazioni
+export function validatePrestazioniData(data: ProjectPrestazioni): {
+  isValid: boolean;
+  errors: string[];
+} {
+  const errors: string[] = [];
+  
+  // Almeno una prestazione deve essere selezionata
+  if (!data.prestazioni || data.prestazioni.length === 0) {
+    errors.push('Almeno una prestazione deve essere selezionata');
+  }
+  
+  // Se progettazione è selezionata, richiedere livello
+  if (hasProgettazione(data.prestazioni) && (!data.livelloProgettazione || data.livelloProgettazione.length === 0)) {
+    errors.push('Se la progettazione è selezionata, è necessario specificare il livello');
+  }
+  
+  // Validare importi
+  if (data.importoOpere && data.importoOpere < 0) {
+    errors.push('L\'importo opere deve essere maggiore o uguale a 0');
+  }
+  
+  if (data.importoServizio && data.importoServizio < 0) {
+    errors.push('L\'importo servizio deve essere maggiore o uguale a 0');
+  }
+  
+  if (data.percentualeParcella && (data.percentualeParcella < 0 || data.percentualeParcella > 100)) {
+    errors.push('La percentuale parcella deve essere tra 0 e 100');
+  }
+  
+  // Validare classe DM 143
+  if (data.classeDM143 && !validateClasseDM143(data.classeDM143)) {
+    errors.push('Formato classe DM 143/2013 non valido (es: E22, IA03, S05)');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+// Funzioni helper per il rendering delle colonne
+export function renderPrestazioniColumn(prestazioni?: string[]): string[] {
+  if (!prestazioni || prestazioni.length === 0) return [];
+  
+  return prestazioni.map(p => {
+    const config = PRESTAZIONI_CONFIG[p as PrestazioneType];
+    return config ? `${config.icon} ${config.shortLabel}` : p;
+  });
+}
+
+export function renderClasseDMColumn(classe?: string, importoOpere?: number): {
+  classe: string;
+  importo: string;
+  isFormatted: boolean;
+} {
+  return {
+    classe: classe || '-',
+    importo: formatImporto(importoOpere),
+    isFormatted: !!classe
+  };
+}
+
+// Costanti CSS per le nuove colonne
+export const NEW_COLUMN_STYLES = {
+  highlight: 'bg-green-50 border-l-4 border-green-400',
+  badge: 'new-column-badge',
+  animation: 'animate-pulse'
+};
