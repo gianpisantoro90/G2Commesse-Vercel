@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema } from "@shared/schema";
 import serverOneDriveService from "./lib/onedrive-service";
 import { z } from "zod";
 
@@ -274,6 +274,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error(`❌ Error deleting project ${req.params.id}:`, error);
       res.status(500).json({ message: "Errore nell'eliminazione della commessa" });
+    }
+  });
+
+  // Project prestazioni endpoint
+  app.put("/api/projects/:id/prestazioni", async (req, res) => {
+    try {
+      console.log(`🏗️ Updating prestazioni for project: ${req.params.id}`);
+      
+      // Validate prestazioni data
+      const validatedPrestazioni = prestazioniSchema.parse(req.body);
+      
+      // Get existing project first
+      const existingProject = await storage.getProject(req.params.id);
+      if (!existingProject) {
+        return res.status(404).json({ message: "Commessa non trovata" });
+      }
+      
+      // Merge prestazioni into existing metadata
+      const currentMetadata = existingProject.metadata || {};
+      const updatedMetadata = {
+        ...currentMetadata,
+        ...validatedPrestazioni
+      };
+      
+      // Update project with new metadata
+      const updatedProject = await storage.updateProject(req.params.id, {
+        metadata: updatedMetadata
+      });
+      
+      if (!updatedProject) {
+        return res.status(404).json({ message: "Errore nell'aggiornamento delle prestazioni" });
+      }
+      
+      console.log(`✅ Successfully updated prestazioni for project: ${existingProject.code}`);
+      console.log(`📊 New prestazioni:`, validatedPrestazioni.prestazioni);
+      
+      res.json(updatedProject);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.error(`❌ Validation error for prestazioni:`, error.errors);
+        return res.status(400).json({ 
+          message: "Dati prestazioni non validi", 
+          errors: error.errors 
+        });
+      }
+      console.error(`❌ Error updating prestazioni for project ${req.params.id}:`, error);
+      res.status(500).json({ message: "Errore nell'aggiornamento delle prestazioni" });
     }
   });
 
