@@ -74,25 +74,33 @@ export const LIVELLO_PROGETTAZIONE_CONFIG = {
     id: 'pfte',
     label: 'PFTE',
     fullLabel: 'Progetto di Fattibilità Tecnico-Economica',
-    description: 'Progetto di Fattibilità Tecnico-Economica'
+    description: 'Progetto di Fattibilità Tecnico-Economica',
+    className: 'bg-blue-50 text-blue-700 border-blue-200',
+    icon: '📋'
   },
   definitivo: {
     id: 'definitivo',
     label: 'Definitivo',
     fullLabel: 'Progetto Definitivo',
-    description: 'Progetto definitivo'
+    description: 'Progetto definitivo',
+    className: 'bg-orange-50 text-orange-700 border-orange-200',
+    icon: '📐'
   },
   esecutivo: {
     id: 'esecutivo',
     label: 'Esecutivo',
     fullLabel: 'Progetto Esecutivo',
-    description: 'Progetto esecutivo'
+    description: 'Progetto esecutivo',
+    className: 'bg-green-50 text-green-700 border-green-200',
+    icon: '🏗️'
   },
   variante: {
     id: 'variante',
     label: 'Variante',
     fullLabel: 'Variante in corso d\'opera',
-    description: 'Variante in corso d\'opera'
+    description: 'Variante in corso d\'opera',
+    className: 'bg-purple-50 text-purple-700 border-purple-200',
+    icon: '🔄'
   }
 } as const;
 
@@ -243,9 +251,45 @@ export function renderClasseDMColumn(classe?: string, importoOpere?: number): {
   };
 }
 
-// Costanti CSS per le nuove colonne
-export const NEW_COLUMN_STYLES = {
-  highlight: 'bg-green-50 border-l-4 border-green-400',
-  badge: 'new-column-badge',
-  animation: 'animate-pulse'
-};
+// Funzione per renderizzare badge livelli progettazione
+export function renderLivelloProgettazioneBadge(
+  livello: LivelloProgettazioneType, 
+  size: 'sm' | 'md' = 'sm'
+): {
+  icon: string;
+  label: string;
+  className: string;
+  fullLabel: string;
+} {
+  const config = LIVELLO_PROGETTAZIONE_CONFIG[livello];
+  const sizeClass = size === 'sm' 
+    ? 'px-2 py-1 text-xs' 
+    : 'px-3 py-1.5 text-sm';
+    
+  return {
+    icon: config.icon,
+    label: config.label,
+    className: `inline-flex items-center gap-1 rounded-full font-medium border ${config.className} ${sizeClass}`,
+    fullLabel: config.fullLabel
+  };
+}
+
+// Funzione per renderizzare colonna livelli progettazione
+export function renderLivelliProgettazioneColumn(
+  prestazioni?: string[], 
+  livelloProgettazione?: string[]
+): Array<{
+  icon: string;
+  label: string;
+  className: string;
+  fullLabel: string;
+}> {
+  // Mostra livelli solo se progettazione è selezionata
+  if (!hasProgettazione(prestazioni) || !livelloProgettazione || livelloProgettazione.length === 0) {
+    return [];
+  }
+  
+  return livelloProgettazione.map(livello => 
+    renderLivelloProgettazioneBadge(livello as LivelloProgettazioneType)
+  );
+}
