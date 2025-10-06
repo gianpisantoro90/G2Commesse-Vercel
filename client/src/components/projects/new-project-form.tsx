@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { insertProjectSchema, type InsertProject } from "@shared/schema";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
+import { TIPO_RAPPORTO_CONFIG, type TipoRapportoType } from "@/lib/prestazioni-utils";
 import { Cloud, CheckCircle, AlertCircle, Loader2, FolderOpen, ExternalLink, Settings, Save } from "lucide-react";
 import { z } from "zod";
 
@@ -41,6 +42,8 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
       year: new Date().getFullYear() % 100,
       template: "LUNGO",
       status: "in_corso",
+      tipoRapporto: "diretto",
+      committenteFinale: undefined,
       code: "",
       fsRoot: null,
       metadata: {},
@@ -267,6 +270,55 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             )}
           </div>
         </div>
+        
+        {/* Nuova sezione: Tipo Rapporto Committenza */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <div>
+            <Label className="block text-sm font-semibold text-gray-700 mb-2">
+              Tipo Rapporto *
+              <span className="ml-1 text-xs text-gray-500 font-normal">Chi commissiona a G2?</span>
+            </Label>
+            <Select
+              onValueChange={(value) => form.setValue("tipoRapporto", value as TipoRapportoType)}
+              defaultValue={form.getValues("tipoRapporto")}
+              data-testid="select-tipo-rapporto"
+            >
+              <SelectTrigger className="input-g2">
+                <SelectValue placeholder="Seleziona tipo rapporto..." />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(TIPO_RAPPORTO_CONFIG).map(([key, config]) => (
+                  <SelectItem key={key} value={key}>
+                    {config.icon} {config.label} - {config.description}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {form.formState.errors.tipoRapporto && (
+              <p className="text-sm text-red-600 mt-1">{form.formState.errors.tipoRapporto.message}</p>
+            )}
+          </div>
+        </div>
+        
+        {/* Campo Committente Finale - visibile solo se tipo != diretto */}
+        {form.watch("tipoRapporto") && form.watch("tipoRapporto") !== "diretto" && (
+          <div>
+            <Label htmlFor="committente-finale" className="block text-sm font-semibold text-gray-700 mb-2">
+              Committente Finale
+              <span className="ml-1 text-xs text-gray-500 font-normal">Proprietario/Ente finale dell'opera</span>
+            </Label>
+            <Input
+              id="committente-finale"
+              placeholder="Es. Comune di Roma, Privato, etc."
+              className="input-g2"
+              data-testid="input-committente-finale"
+              {...form.register("committenteFinale")}
+            />
+            {form.formState.errors.committenteFinale && (
+              <p className="text-sm text-red-600 mt-1">{form.formState.errors.committenteFinale.message}</p>
+            )}
+          </div>
+        )}
         
         <div>
           <Label htmlFor="object" className="block text-sm font-semibold text-gray-700 mb-2">
