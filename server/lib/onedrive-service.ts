@@ -841,18 +841,12 @@ class ServerOneDriveService {
       // Copy template structure based on template type
       const projectPath = `${sanitizedRootPath}/${folderName}`;
       
-      try {
-        // Create basic folder structure based on template
-        await this.copyTemplateStructure(projectPath, template);
-      } catch (templateError: any) {
-        console.warn('⚠️ Template structure copy failed, project folder created without template:', {
-          error: templateError.message || templateError,
-          projectPath,
-          template
-        });
-      }
+      console.log(`🔄 Creating ${template} template structure in: ${projectPath}`);
       
-      console.log(`✅ Created OneDrive project folder with ${template} template:`, projectPath);
+      // Create basic folder structure based on template - this should not fail silently
+      await this.copyTemplateStructure(projectPath, template);
+      
+      console.log(`✅ Successfully created OneDrive project folder with ${template} template:`, projectPath);
       return {
         id: projectFolder.id,
         name: projectFolder.name,
