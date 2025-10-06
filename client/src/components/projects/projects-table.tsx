@@ -239,7 +239,14 @@ export default function ProjectsTable() {
                       {project.code}
                     </td>
                     <td className="py-4 px-4 text-sm" data-testid={`project-client-${project.id}`}>
-                      {project.client}
+                      <div>
+                        <div className="font-medium">{project.client}</div>
+                        {project.committenteFinale && project.tipoRapporto !== "diretto" && (
+                          <div className="text-xs text-gray-500 mt-0.5">
+                            ↳ Per: {project.committenteFinale}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-4" data-testid={`project-tipo-rapporto-${project.id}`}>
                       {(() => {
