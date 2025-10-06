@@ -12,6 +12,8 @@ export const projects = pgTable("projects", {
   year: integer("year").notNull(),
   template: text("template").notNull(), // 'LUNGO' or 'BREVE'
   status: text("status").notNull().default("in_corso"), // 'in_corso', 'conclusa', 'sospesa'
+  tipoRapporto: text("tipo_rapporto").notNull().default("diretto"), // 'diretto', 'consulenza', 'subappalto', 'ati', 'partnership'
+  committenteFinale: text("committente_finale"), // Nome proprietario/ente finale (opzionale)
   createdAt: timestamp("created_at").defaultNow(),
   fsRoot: text("fs_root"),
   metadata: jsonb("metadata").default({}),
