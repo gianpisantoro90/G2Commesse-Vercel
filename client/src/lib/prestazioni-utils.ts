@@ -293,3 +293,67 @@ export function renderLivelliProgettazioneColumn(
     renderLivelloProgettazioneBadge(livello as LivelloProgettazioneType)
   );
 }
+
+// Configurazione tipi rapporto committenza
+export const TIPO_RAPPORTO_CONFIG = {
+  diretto: {
+    id: 'diretto',
+    label: 'Diretto',
+    description: 'Incarico diretto con il committente',
+    className: 'bg-blue-50 text-blue-700 border-blue-200',
+    icon: '🤝'
+  },
+  consulenza: {
+    id: 'consulenza',
+    label: 'Consulenza',
+    description: 'Consulenza per altro professionista',
+    className: 'bg-purple-50 text-purple-700 border-purple-200',
+    icon: '👥'
+  },
+  subappalto: {
+    id: 'subappalto',
+    label: 'Subappalto',
+    description: 'Subappalto da altro professionista',
+    className: 'bg-orange-50 text-orange-700 border-orange-200',
+    icon: '⚙️'
+  },
+  ati: {
+    id: 'ati',
+    label: 'ATI',
+    description: 'Associazione Temporanea di Imprese',
+    className: 'bg-green-50 text-green-700 border-green-200',
+    icon: '🤝'
+  },
+  partnership: {
+    id: 'partnership',
+    label: 'Partnership',
+    description: 'Partnership con altro professionista',
+    className: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    icon: '🔗'
+  }
+} as const;
+
+export type TipoRapportoType = keyof typeof TIPO_RAPPORTO_CONFIG;
+
+// Funzione per renderizzare badge tipo rapporto
+export function renderTipoRapportoBadge(
+  tipo: TipoRapportoType, 
+  size: 'sm' | 'md' = 'sm'
+): {
+  icon: string;
+  label: string;
+  className: string;
+  description: string;
+} {
+  const config = TIPO_RAPPORTO_CONFIG[tipo];
+  const sizeClass = size === 'sm' 
+    ? 'px-2 py-1 text-xs' 
+    : 'px-3 py-1.5 text-sm';
+    
+  return {
+    icon: config.icon,
+    label: config.label,
+    className: `inline-flex items-center gap-1 rounded-full font-medium border ${config.className} ${sizeClass}`,
+    description: config.description
+  };
+}
