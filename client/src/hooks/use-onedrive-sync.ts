@@ -267,43 +267,9 @@ export function useOneDriveSync() {
     };
   };
 
-  // Auto-sync new projects with debouncing to prevent infinite loops
-  useEffect(() => {
-    if (!isConnected || !autoSyncEnabled || !projects || !Array.isArray(projects) || !oneDriveMappings) return;
-
-    // Get mapped project codes for reference
-    const mappedProjectCodes = Array.isArray(oneDriveMappings) 
-      ? oneDriveMappings.map(m => m.projectCode) 
-      : [];
-
-    // Debounce to prevent excessive calls when navigating between tabs
-    const timeoutId = setTimeout(() => {
-      const autoSyncProjects = async () => {
-        // Get current sync statuses at execution time (not as dependency)
-        const currentSyncStatuses = JSON.parse(localStorage.getItem('onedrive_sync_statuses') || '{}');
-        
-        for (const project of projects) {
-          const currentStatus = currentSyncStatuses[project.id];
-          const hasOneDriveMapping = mappedProjectCodes.includes(project.code);
-          
-          // Only sync if ALL conditions are met:
-          // 1. Project has no local sync status 
-          // 2. Project has no OneDrive mapping yet
-          // 3. Project has a valid code
-          if (!currentStatus && !hasOneDriveMapping && project.code) {
-            console.log(`🔄 Auto-syncing new project: ${project.code}`);
-            syncProject(project.id);
-            // Add delay between auto-syncs to avoid overwhelming the API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
-      };
-
-      autoSyncProjects();
-    }, 3000); // Increased debounce to 3 seconds
-
-    return () => clearTimeout(timeoutId);
-  }, [projects, isConnected, autoSyncEnabled, oneDriveMappings]); // Added oneDriveMappings as dependency
+  // DISABLED: Auto-sync removed - OneDrive folders should only be created 
+  // when user explicitly clicks "Crea Commessa OneDrive" button
+  // This prevents empty folders from being created automatically
 
   return {
     // State
