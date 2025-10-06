@@ -13,8 +13,10 @@ import {
   formatImporto, 
   renderClasseDMColumn,
   renderLivelliProgettazioneColumn,
+  renderTipoRapportoBadge,
   PRESTAZIONI_CONFIG,
-  type PrestazioneType 
+  type PrestazioneType,
+  type TipoRapportoType 
 } from "@/lib/prestazioni-utils";
 
 export default function ProjectsTable() {
@@ -205,6 +207,10 @@ export default function ProjectsTable() {
                 <tr>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tl-lg w-24">Codice</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">Cliente</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-28">
+                    Tipo Rapporto
+                    <span className="ml-1 text-xs text-gray-500 cursor-help" title="Chi commissiona il lavoro a G2 Ingegneria">ⓘ</span>
+                  </th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Città</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">Oggetto</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
@@ -234,6 +240,20 @@ export default function ProjectsTable() {
                     </td>
                     <td className="py-4 px-4 text-sm" data-testid={`project-client-${project.id}`}>
                       {project.client}
+                    </td>
+                    <td className="py-4 px-4" data-testid={`project-tipo-rapporto-${project.id}`}>
+                      {(() => {
+                        const tipoRapporto = project.tipoRapporto || "diretto";
+                        const badge = renderTipoRapportoBadge(tipoRapporto as TipoRapportoType, 'sm');
+                        return (
+                          <span 
+                            className={badge.className}
+                            title={badge.description}
+                          >
+                            {badge.icon} {badge.label}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-600" data-testid={`project-city-${project.id}`}>
                       {project.city}
