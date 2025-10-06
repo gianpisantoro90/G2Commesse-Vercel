@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertProjectSchema, type Project, type InsertProject } from "@shared/schema";
+import { TIPO_RAPPORTO_CONFIG, type TipoRapportoType } from "@/lib/prestazioni-utils";
 
 interface EditProjectFormProps {
   project: Project;
@@ -31,6 +32,8 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       year: project.year,
       template: project.template,
       status: project.status,
+      tipoRapporto: project.tipoRapporto || "diretto",
+      committenteFinale: project.committenteFinale || undefined,
       fsRoot: project.fsRoot || undefined,
       metadata: project.metadata || {},
     },
@@ -74,6 +77,8 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
         year: project.year,
         template: project.template,
         status: project.status,
+        tipoRapporto: project.tipoRapporto || "diretto",
+        committenteFinale: project.committenteFinale || undefined,
         fsRoot: project.fsRoot || undefined,
         metadata: project.metadata || {},
       });
@@ -132,6 +137,53 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                 </FormItem>
               )}
             />
+            
+            <FormField
+              control={form.control}
+              name="tipoRapporto"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Tipo Rapporto
+                    <span className="ml-1 text-xs text-gray-500 font-normal">Chi commissiona a G2?</span>
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger data-testid="edit-project-tipo-rapporto">
+                        <SelectValue placeholder="Seleziona tipo rapporto" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.entries(TIPO_RAPPORTO_CONFIG).map(([key, config]) => (
+                        <SelectItem key={key} value={key}>
+                          {config.icon} {config.label} - {config.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {form.watch("tipoRapporto") && form.watch("tipoRapporto") !== "diretto" && (
+              <FormField
+                control={form.control}
+                name="committenteFinale"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Committente Finale
+                      <span className="ml-1 text-xs text-gray-500 font-normal">Proprietario/Ente finale dell'opera</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value || ""} data-testid="edit-project-committente-finale" placeholder="Es. Comune di Roma, Privato, etc." />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             <FormField
               control={form.control}
