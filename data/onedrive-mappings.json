@@ -1,22 +1,56 @@
 [
   {
-    "projectCode": "25IGENAP01",
-    "oneDriveFolderId": "01GOMDZBBQYMACEWNBNVDJ7D4MCUWNBEYM",
-    "oneDriveFolderName": "25IGENAP01_Ristrutturazione_villone",
-    "oneDriveFolderPath": "/LAVORO_CORRENTE/25IGENAP01_Ristrutturazione_villone",
-    "id": "f387c987-3025-4a98-9d7c-9b6592398689",
-    "createdAt": "2025-09-12T13:48:56.936Z",
-    "updatedAt": "2025-09-12T13:48:56.936Z"
+    "id": "6b9b5e97-4777-4ecf-a1dc-9f50a9404fc9",
+    "projectCode": "25PARBAC01",
+    "oneDriveFolderId": "01GOMDZBAXVE54ASCZM5DI6LB7IXXHBUTW",
+    "oneDriveFolderName": "25PARBAC01_Relazione_danni_giunto_edificio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25PARBAC01_Relazione_danni_giunto_edificio",
+    "createdAt": "2025-09-15T12:44:50.448Z",
+    "updatedAt": "2025-09-15T12:44:50.448Z"
   },
   {
-    "projectCode": "25PARBAC01",
+    "id": "700839ea-cb32-4f50-9487-3ed8eaa1d5b4",
+    "projectCode": "24ELEAFR01",
+    "oneDriveFolderId": "01GOMDZBEJFSVCTXVDHJHI2OKFW3BERNDV",
+    "oneDriveFolderName": "24ELEAFR01_RAP_Smart_City",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEAFR01_RAP_Smart_City",
+    "createdAt": "2025-09-18T16:23:22.054Z",
+    "updatedAt": "2025-09-18T16:23:22.054Z"
+  },
+  {
+    "id": "2f4bb363-57e5-427d-8262-18251d6f28c5",
+    "projectCode": "25GUAROM01",
+    "oneDriveFolderId": "01GOMDZBDNF3CGCGQV4NBZIDVEHYCQGWYG",
+    "oneDriveFolderName": "25GUAROM01_Rifacimento_pavimentazione",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25GUAROM01_Rifacimento_pavimentazione",
+    "createdAt": "2025-09-25T10:20:32.489Z",
+    "updatedAt": "2025-09-25T10:20:32.489Z"
+  },
+  {
+    "id": "8db72580-4cb2-4365-90e7-5eafb3019cd2",
+    "projectCode": "24AGOVIT01",
+    "oneDriveFolderId": "01GOMDZBCMMOC46EVMLRGKGDAGR5Z2BY7C",
+    "oneDriveFolderName": "24AGOVIT01_Ristrutturazione_Armeria",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24AGOVIT01_Ristrutturazione_Armeria",
+    "createdAt": "2025-09-25T10:27:39.248Z",
+    "updatedAt": "2025-09-25T10:27:39.248Z"
+  },
+  {
+    "id": "514c3ac6-41cf-4626-ab55-84e8e1219f08",
+    "projectCode": "24LUCFRA01",
     "oneDriveFolderId": "",
-    "oneDriveFolderPath": "/LAVORO_CORRENTE/25PARBAC01",
-    "oneDriveFolderName": "25PARBAC01",
-    "syncStatus": "synced",
-    "lastSyncAt": "2025-09-15T12:11:35.855Z",
-    "id": "efa66df0-c7be-4aad-aec4-709685d7d08b",
-    "createdAt": "2025-09-15T12:11:35.855Z",
-    "updatedAt": "2025-09-15T12:11:35.855Z"
+    "oneDriveFolderName": "24LUCFRA01",
+    "oneDriveFolderPath": "/G2_Progetti/24LUCFRA01",
+    "createdAt": "2025-10-06T15:44:17.376Z",
+    "updatedAt": "2025-10-06T15:44:17.376Z"
+  },
+  {
+    "id": "0e55715c-85f3-4a1c-bb76-d492eb37e44b",
+    "projectCode": "25AGOFRA01",
+    "oneDriveFolderId": "01GOMDZBEI7FT2PUC3VNGYSWAXDB4YIIFI",
+    "oneDriveFolderName": "25AGOFRA01_Risstrutturazione_Sede_Vigili_Urbani",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25AGOFRA01_Risstrutturazione_Sede_Vigili_Urbani",
+    "createdAt": "2025-10-06T16:59:59.609Z",
+    "updatedAt": "2025-10-06T16:59:59.609Z"
   }
 ]

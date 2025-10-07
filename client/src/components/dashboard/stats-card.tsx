@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton";
 import { type Project, type Client } from "@shared/schema";
 
 export default function StatsCard() {
-  const { data: projects = [] } = useQuery<Project[]>({
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
-  const { data: clients = [] } = useQuery<Client[]>({
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
   });
 
@@ -16,6 +17,29 @@ export default function StatsCard() {
   const projectsConcluse = projects.filter(p => p.status === "conclusa").length;
   const totalProjects = projects.length;
   const totalClients = clients.length;
+
+  const isLoading = isLoadingProjects || isLoadingClients;
+
+  if (isLoading) {
+    return (
+      <div className="card-g2" data-testid="stats-card-loading">
+        <Skeleton className="h-6 w-32 mb-4" />
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="text-center">
+              <Skeleton className="h-4 w-24 mx-auto mb-2" />
+              <Skeleton className="h-9 w-16 mx-auto" />
+            </div>
+          ))}
+        </div>
+        <div className="text-center mb-4">
+          <Skeleton className="h-4 w-28 mx-auto mb-2" />
+          <Skeleton className="h-8 w-12 mx-auto" />
+        </div>
+        <Skeleton className="h-12 w-full rounded-lg" />
+      </div>
+    );
+  }
 
   return (
     <div className="card-g2" data-testid="stats-card">

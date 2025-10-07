@@ -5,7 +5,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -26,6 +37,7 @@ export default function ClientsTable() {
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -148,7 +160,7 @@ export default function ClientsTable() {
   // Handle delete client
   const handleDeleteClient = async (client: Client) => {
     const clientProjectsCount = allProjects.filter(project => project.client === client.sigla).length;
-    
+
     if (clientProjectsCount > 0) {
       toast({
         title: "Impossibile eliminare",
@@ -158,16 +170,34 @@ export default function ClientsTable() {
       return;
     }
 
-    if (confirm(`Sei sicuro di voler eliminare il cliente "${client.name}"?`)) {
-      deleteClientMutation.mutate(client.id);
+    setClientToDelete(client);
+  };
+
+  const confirmDeleteClient = () => {
+    if (clientToDelete) {
+      deleteClientMutation.mutate(clientToDelete.id);
+      setClientToDelete(null);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <div className="text-2xl">⏳</div>
-        <p>Caricamento clienti...</p>
+      <div data-testid="clients-table-loading">
+        <div className="flex justify-between items-center mb-6">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-10 w-64" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex gap-4 items-center p-4 bg-white rounded-lg border border-gray-100">
+              <Skeleton className="h-6 w-16" />
+              <Skeleton className="h-6 w-48 flex-1" />
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -437,6 +467,48 @@ export default function ClientsTable() {
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare il cliente?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <div>Sei sicuro di voler eliminare questo cliente?</div>
+              {clientToDelete && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="font-semibold text-sm mb-1">
+                    {clientToDelete.name}
+                  </div>
+                  <div className="text-xs text-gray-600">
+                    Sigla: <span className="font-mono font-semibold">{clientToDelete.sigla}</span>
+                  </div>
+                  {clientToDelete.city && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Città: {clientToDelete.city}
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-500 mt-1">
+                    Commesse: {clientToDelete.projectsCount || 0}
+                  </div>
+                </div>
+              )}
+              <div className="text-red-600 font-medium mt-2">
+                ⚠️ Questa azione non può essere annullata.
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteClient}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Elimina cliente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

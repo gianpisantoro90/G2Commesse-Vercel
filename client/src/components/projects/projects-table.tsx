@@ -2,6 +2,24 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Project, type OneDriveMapping, type ProjectMetadata } from "@shared/schema";
@@ -21,7 +39,10 @@ import {
 
 export default function ProjectsTable() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [yearFilter, setYearFilter] = useState<string>("all");
   const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -64,16 +85,34 @@ export default function ProjectsTable() {
     },
   });
 
-  const filteredProjects = projects.filter(project =>
-    project.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.object.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Get unique years from projects
+  const availableYears = Array.from(new Set(projects.map(p => p.year))).sort((a, b) => b - a);
+
+  const filteredProjects = projects.filter(project => {
+    // Text search filter
+    const matchesSearch = searchTerm === "" ||
+      project.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.object.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Status filter
+    const matchesStatus = statusFilter === "all" || project.status === statusFilter;
+
+    // Year filter
+    const matchesYear = yearFilter === "all" || project.year === parseInt(yearFilter);
+
+    return matchesSearch && matchesStatus && matchesYear;
+  });
 
   const handleDeleteProject = (project: Project) => {
-    if (confirm(`Sei sicuro di voler eliminare la commessa ${project.code}?`)) {
-      deleteProjectMutation.mutate(project.id);
+    setProjectToDelete(project);
+  };
+
+  const confirmDeleteProject = () => {
+    if (projectToDelete) {
+      deleteProjectMutation.mutate(projectToDelete.id);
+      setProjectToDelete(null);
     }
   };
 
@@ -156,28 +195,36 @@ export default function ProjectsTable() {
 
   if (isLoading) {
     return (
-      <div className="text-center py-8">
-        <div className="text-2xl">⏳</div>
-        <p>Caricamento commesse...</p>
+      <div data-testid="projects-table-loading">
+        <div className="flex justify-between items-center mb-6">
+          <Skeleton className="h-7 w-48" />
+          <div className="flex gap-3">
+            <Skeleton className="h-10 w-64" />
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex gap-4 items-center p-4 bg-white rounded-lg border border-gray-100">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-6 w-40 flex-1" />
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-8 w-28" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <div data-testid="projects-table">
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Tutte le Commesse</h3>
-        <div className="flex gap-3">
-          <div className="relative">
-            <Input
-              placeholder="Cerca commesse..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              data-testid="search-projects"
-            />
-            <span className="absolute left-3 top-2.5 text-gray-400 text-lg">🔍</span>
-          </div>
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Tutte le Commesse</h3>
           <Button
             variant="outline"
             onClick={() => refetch()}
@@ -186,6 +233,62 @@ export default function ProjectsTable() {
           >
             🔄 Aggiorna
           </Button>
+        </div>
+
+        {/* Filters Row */}
+        <div className="flex gap-3 flex-wrap items-center">
+          <div className="relative flex-1 min-w-[250px]">
+            <Input
+              placeholder="Cerca per codice, cliente, città, oggetto..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              data-testid="search-projects"
+            />
+            <span className="absolute left-3 top-2.5 text-gray-400 text-lg">🔍</span>
+          </div>
+
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]" data-testid="filter-status">
+              <SelectValue placeholder="Tutti gli stati" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti gli stati</SelectItem>
+              <SelectItem value="in_corso">✅ In Corso</SelectItem>
+              <SelectItem value="sospesa">⏸️ Sospesa</SelectItem>
+              <SelectItem value="conclusa">🏁 Conclusa</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={yearFilter} onValueChange={setYearFilter}>
+            <SelectTrigger className="w-[150px]" data-testid="filter-year">
+              <SelectValue placeholder="Tutti gli anni" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti gli anni</SelectItem>
+              {availableYears.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  20{year.toString().padStart(2, '0')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {(statusFilter !== "all" || yearFilter !== "all" || searchTerm !== "") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setStatusFilter("all");
+                setYearFilter("all");
+                setSearchTerm("");
+              }}
+              className="text-gray-500 hover:text-gray-700"
+              data-testid="clear-filters"
+            >
+              ✕ Pulisci filtri
+            </Button>
+          )}
         </div>
       </div>
       
@@ -486,6 +589,43 @@ export default function ProjectsTable() {
           onClose={handleClosePrestazioniModal}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!projectToDelete} onOpenChange={(open) => !open && setProjectToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminare la commessa?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <div>Sei sicuro di voler eliminare questa commessa?</div>
+              {projectToDelete && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="font-mono font-semibold text-primary text-sm mb-1">
+                    {projectToDelete.code}
+                  </div>
+                  <div className="text-sm text-gray-700">
+                    <strong>{projectToDelete.client}</strong> - {projectToDelete.city}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {projectToDelete.object}
+                  </div>
+                </div>
+              )}
+              <div className="text-red-600 font-medium mt-2">
+                ⚠️ Questa azione non può essere annullata.
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteProject}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Elimina commessa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

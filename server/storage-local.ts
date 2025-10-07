@@ -26,7 +26,8 @@ export interface IStorage {
   getFileRouting(id: string): Promise<FileRouting | undefined>;
   getFileRoutingsByProject(projectId: string): Promise<FileRouting[]>;
   createFileRouting(routing: InsertFileRouting): Promise<FileRouting>;
-  
+  deleteFileRoutingsByProject(projectId: string): Promise<boolean>;
+
   // System Config
   getSystemConfig(key: string): Promise<SystemConfig | undefined>;
   setSystemConfig(key: string, value: any): Promise<SystemConfig>;
@@ -36,10 +37,12 @@ export interface IStorage {
   getAllOneDriveMappings(): Promise<OneDriveMapping[]>;
   createOneDriveMapping(mapping: InsertOneDriveMapping): Promise<OneDriveMapping>;
   deleteOneDriveMapping(projectCode: string): Promise<boolean>;
-  
-  // Files Index  
+  getOrphanedProjects(): Promise<Project[]>;
+
+  // Files Index
   createOrUpdateFileIndex(fileIndex: InsertFilesIndex): Promise<FilesIndex>;
   getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]>;
+  getFileIndexByDriveItemId(driveItemId: string): Promise<FilesIndex | undefined>;
   updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined>;
   deleteFileIndex(driveItemId: string): Promise<boolean>;
   
@@ -249,10 +252,20 @@ export class FileStorage implements IStorage {
       confidence: insertRouting.confidence || 0,
       method: insertRouting.method || null,
     };
-    
+
     routings.push(routing);
     this.writeJsonFile(this.fileRoutingsFile, routings);
     return routing;
+  }
+
+  async deleteFileRoutingsByProject(projectId: string): Promise<boolean> {
+    const routings = this.readJsonFile<FileRouting>(this.fileRoutingsFile, []);
+    const filtered = routings.filter(r => r.projectId !== projectId);
+    if (filtered.length < routings.length) {
+      this.writeJsonFile(this.fileRoutingsFile, filtered);
+      return true;
+    }
+    return false;
   }
 
   // System Config
@@ -317,6 +330,13 @@ export class FileStorage implements IStorage {
       return true;
     }
     return false;
+  }
+
+  async getOrphanedProjects(): Promise<Project[]> {
+    const projects = await this.getAllProjects();
+    const mappings = await this.getAllOneDriveMappings();
+    const mappedCodes = new Set(mappings.map(m => m.projectCode));
+    return projects.filter(p => !mappedCodes.has(p.code));
   }
 
   // Files Index

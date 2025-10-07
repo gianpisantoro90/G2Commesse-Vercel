@@ -1,16 +1,44 @@
 [
   {
-    "sigla": "IGE",
-    "name": "IGENERATION",
-    "city": "Napoli",
-    "projectsCount": 1,
-    "id": "a6b48eeb-c118-4b0f-8f9d-20614618f721"
-  },
-  {
+    "id": "5d00b477-3bea-45b3-82ec-b08c06de160f",
     "sigla": "PAR",
     "name": "Parco Olimpico",
     "city": "Bacoli",
-    "projectsCount": 1,
-    "id": "91626bcc-e1c6-4f38-8f24-b4dd99a046c6"
+    "projectsCount": 1
+  },
+  {
+    "id": "387fce2a-2c59-4a3c-89cb-bf7ed984b12a",
+    "sigla": "ELE",
+    "name": "Electa Progettazioni Integrate",
+    "city": "Afragola",
+    "projectsCount": 1
+  },
+  {
+    "id": "877f3001-63c4-4def-bcc2-3b4db96050af",
+    "sigla": "GUA",
+    "name": "Guardia di Finanza - RETLA",
+    "city": "Roma",
+    "projectsCount": 1
+  },
+  {
+    "id": "93166bac-579d-410e-af54-e39eac9c5454",
+    "sigla": "LUC",
+    "name": "Luciano Vitale",
+    "city": "Frattamaggiore",
+    "projectsCount": 1
+  },
+  {
+    "id": "6fbc39c7-24f3-4cc4-a9af-084096d0f381",
+    "sigla": "AGO",
+    "name": "Agostino Lupoli",
+    "city": "VIterbo",
+    "projectsCount": 3
+  },
+  {
+    "id": "2ba905d2-5806-4e81-a5c5-e894fdabebbd",
+    "sigla": "PRO",
+    "name": "Prova",
+    "city": "Catanzaro",
+    "projectsCount": 0
   }
 ]

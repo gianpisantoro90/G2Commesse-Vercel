@@ -1,18 +1,6 @@
 [
   {
-    "code": "25IGENAP01",
-    "client": "IGENERATION",
-    "city": "Napoli",
-    "object": "Ristrutturazione villone",
-    "year": 25,
-    "template": "BREVE",
-    "status": "in_corso",
-    "fsRoot": null,
-    "metadata": {},
-    "id": "35470fbd-2f81-4594-8785-a2d5fd6d6357",
-    "createdAt": "2025-09-12T13:48:54.142Z"
-  },
-  {
+    "id": "9c1dba0f-9547-4094-8475-523373063bc4",
     "code": "25PARBAC01",
     "client": "Parco Olimpico",
     "city": "Bacoli",
@@ -20,9 +8,115 @@
     "year": 25,
     "template": "BREVE",
     "status": "in_corso",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-09-11T13:23:32.984Z",
     "fsRoot": null,
-    "metadata": {},
-    "id": "133d120b-ab75-491f-86a4-95c087a3d0bc",
-    "createdAt": "2025-09-15T12:11:29.330Z"
+    "metadata": {}
+  },
+  {
+    "id": "1a6ee16c-98b9-444a-b6a4-574cd2353a4d",
+    "code": "24ELEAFR01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Afragola",
+    "object": "RAP - Smart City",
+    "year": 24,
+    "template": "BREVE",
+    "status": "in_corso",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-09-18T11:23:17.097Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "ff35b198-02f7-4a58-b661-443fb2703434",
+    "code": "25GUAROM01",
+    "client": "Guardia di Finanza - RETLA",
+    "city": "Roma",
+    "object": "Rifacimento Pavimentazione in Via Boglione, 84",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "in_corso",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-09-25T10:18:07.432Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "19af89ad-59c9-4da3-9f71-52103e10486a",
+    "code": "24AGOVIT01",
+    "client": "Agostino Lupoli",
+    "city": "VIterbo",
+    "object": "Ristrutturazione Armeria",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "partnership",
+    "committenteFinale": "Aeronautica Militare",
+    "createdAt": "2025-09-25T10:25:54.473Z",
+    "fsRoot": null,
+    "metadata": {
+      "classeDM143": "E16",
+      "prestazioni": [
+        "progettazione"
+      ],
+      "livelloProgettazione": [
+        "pfte",
+        "esecutivo"
+      ]
+    }
+  },
+  {
+    "id": "975d8705-e5ae-44d4-98d5-d698ed806436",
+    "code": "24LUCFRA01",
+    "client": "Luciano Vitale",
+    "city": "Frattamaggiore",
+    "object": "Valutazione Impatto acustico officina",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-06T15:44:11.685Z",
+    "fsRoot": null,
+    "metadata": {
+      "classeDM143": "",
+      "prestazioni": [
+        "perizia"
+      ],
+      "livelloProgettazione": []
+    }
+  },
+  {
+    "id": "e210526c-a757-4c3a-883c-aa1fe8b5c039",
+    "code": "24AGOCAT01",
+    "client": "Agostino Lupoli",
+    "city": "Catanzaro",
+    "object": "Sala Congressi",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "partnership",
+    "committenteFinale": "DIGES",
+    "createdAt": "2025-10-06T16:51:34.793Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "67568266-5455-43e9-bb52-dbcfebb68bb1",
+    "code": "25AGOFRA01",
+    "client": "Agostino Lupoli",
+    "city": "Frattamaggiore",
+    "object": "Risstrutturazione Sede Vigili Urbani",
+    "year": 25,
+    "template": "BREVE",
+    "status": "in_corso",
+    "tipoRapporto": "ati",
+    "committenteFinale": "Comune di Frattamaggiore",
+    "createdAt": "2025-10-06T16:59:56.660Z",
+    "fsRoot": null,
+    "metadata": {}
   }
 ]
