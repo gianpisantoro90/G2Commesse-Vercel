@@ -66,6 +66,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validUsername = process.env.AUTH_USERNAME;
       const validPassword = process.env.AUTH_PASSWORD;
       
+      // Log for debugging (remove in production)
+      console.log('🔐 Login attempt:', { 
+        receivedUsername: username, 
+        hasValidUsername: !!validUsername,
+        hasValidPassword: !!validPassword,
+        usernameMatch: username === validUsername
+      });
+      
+      if (!validUsername || !validPassword) {
+        console.error('❌ AUTH_USERNAME or AUTH_PASSWORD not configured in environment');
+        return res.status(500).json({ 
+          success: false, 
+          message: "Credenziali di sistema non configurate. Contatta l'amministratore." 
+        });
+      }
+      
       if (username === validUsername && password === validPassword) {
         req.session.authenticated = true;
         return res.json({ 
