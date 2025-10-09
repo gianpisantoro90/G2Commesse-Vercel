@@ -65,7 +65,9 @@
       "livelloProgettazione": [
         "pfte",
         "esecutivo"
-      ]
+      ],
+      "importoOpere": 1000000,
+      "importoServizio": 5000
     }
   },
   {
