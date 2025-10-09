@@ -53,7 +53,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { username, password } = req.body;
+      // Trim whitespace from username and password
+      const username = req.body.username?.trim();
+      const password = req.body.password?.trim();
       
       if (!username || !password) {
         return res.status(400).json({ 
