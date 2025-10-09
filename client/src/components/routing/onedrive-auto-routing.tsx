@@ -29,6 +29,7 @@ interface ScannedFile extends OneDriveFile {
   mimeType?: string;
   parentFolderId?: string;
   path?: string;
+  driveItemId?: string;
 }
 
 interface RoutingResultWithFile {
@@ -470,9 +471,9 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           
           // Create new filename with project code prefix
           const newFileName = createFileNameWithPrefix(result.file.name, project.code);
-          
+
           await moveFileMutation.mutateAsync({
-            fileId: result.file.driveItemId,
+            fileId: result.file.driveItemId || result.file.id,
             targetPath: targetPath,
             fileName: newFileName
           });

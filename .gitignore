@@ -4,3 +4,15 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Environment files
+.env.local
+.env
+
+# Local data
+data/
+.local/
+.claude/
+
+# Temporary files
+nul

@@ -189,7 +189,7 @@ export function useOneDriveSync() {
       projectCode: string; 
       targetFolder?: string; 
     }) => {
-      const result = await oneDriveService.uploadFile(file, projectCode, targetFolder);
+      const result = await oneDriveService.uploadFile(file, projectCode, targetFolder || '');
       if (!result) throw new Error('Upload failed');
       return result;
     },

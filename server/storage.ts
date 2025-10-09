@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -40,13 +40,29 @@ export interface IStorage {
   deleteOneDriveMapping(projectCode: string): Promise<boolean>;
   getOrphanedProjects(): Promise<Project[]>;
   
-  // Files Index  
+  // Files Index
   createOrUpdateFileIndex(fileIndex: InsertFilesIndex): Promise<FilesIndex>;
   getFilesIndex(filters: { projectCode?: string; path?: string; limit?: number }): Promise<FilesIndex[]>;
   getFileIndexByDriveItemId(driveItemId: string): Promise<FilesIndex | undefined>;
   updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined>;
   deleteFileIndex(driveItemId: string): Promise<boolean>;
-  
+
+  // Communications
+  getAllCommunications(): Promise<Communication[]>;
+  getCommunicationsByProject(projectId: string): Promise<Communication[]>;
+  getCommunication(id: string): Promise<Communication | undefined>;
+  createCommunication(communication: InsertCommunication): Promise<Communication>;
+  updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication | undefined>;
+  deleteCommunication(id: string): Promise<boolean>;
+
+  // Deadlines
+  getAllDeadlines(): Promise<Deadline[]>;
+  getDeadlinesByProject(projectId: string): Promise<Deadline[]>;
+  getDeadline(id: string): Promise<Deadline | undefined>;
+  createDeadline(deadline: InsertProjectDeadline): Promise<Deadline>;
+  updateDeadline(id: string, updates: Partial<InsertProjectDeadline>): Promise<Deadline | undefined>;
+  deleteDeadline(id: string): Promise<boolean>;
+
   // Bulk operations
   exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
   importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }): Promise<void>;
@@ -60,6 +76,8 @@ export class MemStorage implements IStorage {
   private systemConfig: Map<string, SystemConfig> = new Map();
   private oneDriveMappings: Map<string, OneDriveMapping> = new Map();
   private filesIndex: Map<string, FilesIndex> = new Map();
+  private communications: Map<string, Communication> = new Map();
+  private deadlines: Map<string, Deadline> = new Map();
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -80,6 +98,8 @@ export class MemStorage implements IStorage {
       ...insertProject,
       id,
       status: insertProject.status || "in_corso",
+      tipoRapporto: insertProject.tipoRapporto || "diretto",
+      committenteFinale: insertProject.committenteFinale || null,
       createdAt: new Date(),
       fsRoot: insertProject.fsRoot || null,
       metadata: insertProject.metadata || {},
@@ -105,9 +125,10 @@ export class MemStorage implements IStorage {
   }
 
   async updateProject(id: string, updateData: Partial<InsertProject>): Promise<Project | undefined> {
+    console.log('⚠️  MemStorage.updateProject called for:', id, '- THIS SHOULD NOT BE USED!');
     const existing = this.projects.get(id);
     if (!existing) return undefined;
-    
+
     const updated: Project = { ...existing, ...updateData };
     this.projects.set(id, updated);
     return updated;
@@ -363,6 +384,97 @@ export class MemStorage implements IStorage {
     }
   }
 
+  // Communications methods
+  async getAllCommunications(): Promise<Communication[]> {
+    return Array.from(this.communications.values());
+  }
+
+  async getCommunicationsByProject(projectId: string): Promise<Communication[]> {
+    return Array.from(this.communications.values()).filter(c => c.projectId === projectId);
+  }
+
+  async getCommunication(id: string): Promise<Communication | undefined> {
+    return this.communications.get(id);
+  }
+
+  async createCommunication(insertCommunication: InsertCommunication): Promise<Communication> {
+    const id = randomUUID();
+    const communication: Communication = {
+      ...insertCommunication,
+      id,
+      tags: insertCommunication.tags || [],
+      attachments: insertCommunication.attachments || [],
+      body: insertCommunication.body || null,
+      recipient: insertCommunication.recipient || null,
+      sender: insertCommunication.sender || null,
+      createdBy: insertCommunication.createdBy || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.communications.set(id, communication);
+    return communication;
+  }
+
+  async updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication | undefined> {
+    const existing = this.communications.get(id);
+    if (!existing) return undefined;
+
+    const updated: Communication = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.communications.set(id, updated);
+    return updated;
+  }
+
+  async deleteCommunication(id: string): Promise<boolean> {
+    return this.communications.delete(id);
+  }
+
+  // Deadline methods
+  async getAllDeadlines(): Promise<Deadline[]> {
+    return Array.from(this.deadlines.values());
+  }
+
+  async getDeadlinesByProject(projectId: string): Promise<Deadline[]> {
+    return Array.from(this.deadlines.values()).filter(d => d.projectId === projectId);
+  }
+
+  async getDeadline(id: string): Promise<Deadline | undefined> {
+    return this.deadlines.get(id);
+  }
+
+  async createDeadline(insertDeadline: InsertProjectDeadline): Promise<Deadline> {
+    const id = randomUUID();
+    const deadline: Deadline = {
+      ...insertDeadline,
+      id,
+      completedAt: insertDeadline.completedAt || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.deadlines.set(id, deadline);
+    return deadline;
+  }
+
+  async updateDeadline(id: string, updates: Partial<InsertProjectDeadline>): Promise<Deadline | undefined> {
+    const existing = this.deadlines.get(id);
+    if (!existing) return undefined;
+
+    const updated: Deadline = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.deadlines.set(id, updated);
+    return updated;
+  }
+
+  async deleteDeadline(id: string): Promise<boolean> {
+    return this.deadlines.delete(id);
+  }
+
   async clearAllData() {
     this.projects.clear();
     this.clients.clear();
@@ -370,6 +482,7 @@ export class MemStorage implements IStorage {
     this.systemConfig.clear();
     this.oneDriveMappings.clear();
     this.filesIndex.clear();
+    this.communications.clear();
   }
 
   private generateSafeAcronym(text: string): string {
@@ -679,6 +792,78 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount || 0) > 0;
   }
 
+  // Communications methods
+  async getAllCommunications(): Promise<Communication[]> {
+    return await db.select().from(communications);
+  }
+
+  async getCommunicationsByProject(projectId: string): Promise<Communication[]> {
+    return await db.select().from(communications).where(eq(communications.projectId, projectId));
+  }
+
+  async getCommunication(id: string): Promise<Communication | undefined> {
+    const [communication] = await db.select().from(communications).where(eq(communications.id, id));
+    return communication || undefined;
+  }
+
+  async createCommunication(insertCommunication: InsertCommunication): Promise<Communication> {
+    const [communication] = await db.insert(communications).values(insertCommunication).returning();
+    return communication;
+  }
+
+  async updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication | undefined> {
+    const [updated] = await db
+      .update(communications)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(communications.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCommunication(id: string): Promise<boolean> {
+    const result = await db.delete(communications).where(eq(communications.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Deadline methods
+  async getAllDeadlines(): Promise<Deadline[]> {
+    return await db.select().from(projectDeadlines);
+  }
+
+  async getDeadlinesByProject(projectId: string): Promise<Deadline[]> {
+    return await db.select().from(projectDeadlines).where(eq(projectDeadlines.projectId, projectId));
+  }
+
+  async getDeadline(id: string): Promise<Deadline | undefined> {
+    const [deadline] = await db.select().from(projectDeadlines).where(eq(projectDeadlines.id, id));
+    return deadline || undefined;
+  }
+
+  async createDeadline(insertDeadline: InsertProjectDeadline): Promise<Deadline> {
+    const [deadline] = await db.insert(projectDeadlines).values(insertDeadline).returning();
+    return deadline;
+  }
+
+  async updateDeadline(id: string, updates: Partial<InsertProjectDeadline>): Promise<Deadline | undefined> {
+    const [updated] = await db
+      .update(projectDeadlines)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(projectDeadlines.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteDeadline(id: string): Promise<boolean> {
+    const result = await db.delete(projectDeadlines).where(eq(projectDeadlines.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
   // Bulk operations
   async exportAllData() {
     const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData] = await Promise.all([
@@ -927,6 +1112,60 @@ class FallbackStorage implements IStorage {
     return this.executeWithFallback(storage => storage.deleteFileIndex(driveItemId));
   }
 
+  async getFileIndexByDriveItemId(driveItemId: string): Promise<FilesIndex | undefined> {
+    return this.executeWithFallback(storage => storage.getFileIndexByDriveItemId(driveItemId));
+  }
+
+  // Communications methods
+  async getAllCommunications(): Promise<Communication[]> {
+    return this.executeWithFallback(storage => storage.getAllCommunications());
+  }
+
+  async getCommunicationsByProject(projectId: string): Promise<Communication[]> {
+    return this.executeWithFallback(storage => storage.getCommunicationsByProject(projectId));
+  }
+
+  async getCommunication(id: string): Promise<Communication | undefined> {
+    return this.executeWithFallback(storage => storage.getCommunication(id));
+  }
+
+  async createCommunication(communication: InsertCommunication): Promise<Communication> {
+    return this.executeWithFallback(storage => storage.createCommunication(communication));
+  }
+
+  async updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication | undefined> {
+    return this.executeWithFallback(storage => storage.updateCommunication(id, updates));
+  }
+
+  async deleteCommunication(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteCommunication(id));
+  }
+
+  // Deadline methods
+  async getAllDeadlines(): Promise<Deadline[]> {
+    return this.executeWithFallback(storage => storage.getAllDeadlines());
+  }
+
+  async getDeadlinesByProject(projectId: string): Promise<Deadline[]> {
+    return this.executeWithFallback(storage => storage.getDeadlinesByProject(projectId));
+  }
+
+  async getDeadline(id: string): Promise<Deadline | undefined> {
+    return this.executeWithFallback(storage => storage.getDeadline(id));
+  }
+
+  async createDeadline(deadline: InsertProjectDeadline): Promise<Deadline> {
+    return this.executeWithFallback(storage => storage.createDeadline(deadline));
+  }
+
+  async updateDeadline(id: string, updates: Partial<InsertProjectDeadline>): Promise<Deadline | undefined> {
+    return this.executeWithFallback(storage => storage.updateDeadline(id, updates));
+  }
+
+  async deleteDeadline(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteDeadline(id));
+  }
+
   async exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }> {
     return this.executeWithFallback(storage => storage.exportAllData());
   }
@@ -940,16 +1179,17 @@ class FallbackStorage implements IStorage {
   }
 }
 
-// Initialize fallback-aware storage
-const storage = new FallbackStorage();
-
-// Test connection asynchronously and set the preferred storage
-initializeStorage().then(initializedStorage => {
-  storage.setStorage(initializedStorage);
-  console.log('💾 Storage initialized successfully with fallback protection');
+// Initialize storage synchronously to avoid race conditions
+let storage: IStorage;
+const storagePromise = initializeStorage().then(initializedStorage => {
+  storage = initializedStorage;
+  console.log('💾 Storage initialized successfully');
+  return initializedStorage;
 }).catch(error => {
-  console.error('❌ Storage initialization failed, using MemStorage with fallback protection:', error);
-  storage.setStorage(new MemStorage());
+  console.error('❌ Storage initialization failed, using MemStorage:', error);
+  storage = new MemStorage();
+  return storage;
 });
 
-export { storage };
+// Export a proxy that waits for initialization
+export { storage, storagePromise };

@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import fs from "fs";
@@ -45,7 +45,23 @@ export interface IStorage {
   getFileIndexByDriveItemId(driveItemId: string): Promise<FilesIndex | undefined>;
   updateFileIndex(driveItemId: string, updates: Partial<InsertFilesIndex>): Promise<FilesIndex | undefined>;
   deleteFileIndex(driveItemId: string): Promise<boolean>;
-  
+
+  // Communications
+  getAllCommunications(): Promise<Communication[]>;
+  getCommunicationsByProject(projectId: string): Promise<Communication[]>;
+  getCommunication(id: string): Promise<Communication | undefined>;
+  createCommunication(communication: InsertCommunication): Promise<Communication>;
+  updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication | undefined>;
+  deleteCommunication(id: string): Promise<boolean>;
+
+  // Deadlines
+  getAllDeadlines(): Promise<Deadline[]>;
+  getDeadlinesByProject(projectId: string): Promise<Deadline[]>;
+  getDeadline(id: string): Promise<Deadline | undefined>;
+  createDeadline(deadline: InsertProjectDeadline): Promise<Deadline>;
+  updateDeadline(id: string, updates: Partial<InsertProjectDeadline>): Promise<Deadline | undefined>;
+  deleteDeadline(id: string): Promise<boolean>;
+
   // Bulk operations
   exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
   importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }): Promise<void>;
@@ -61,6 +77,8 @@ export class FileStorage implements IStorage {
   private systemConfigFile = path.join(this.dataDir, 'system-config.json');
   private oneDriveMappingsFile = path.join(this.dataDir, 'onedrive-mappings.json');
   private filesIndexFile = path.join(this.dataDir, 'files-index.json');
+  private communicationsFile = path.join(this.dataDir, 'communications.json');
+  private deadlinesFile = path.join(this.dataDir, 'deadlines.json');
 
   constructor() {
     this.ensureDataDir();
@@ -121,6 +139,8 @@ export class FileStorage implements IStorage {
       ...insertProject,
       id,
       status: insertProject.status || "in_corso",
+      tipoRapporto: insertProject.tipoRapporto || "diretto",
+      committenteFinale: insertProject.committenteFinale || null,
       createdAt: new Date(),
       fsRoot: insertProject.fsRoot || null,
       metadata: insertProject.metadata || {},
@@ -150,12 +170,18 @@ export class FileStorage implements IStorage {
   }
 
   async updateProject(id: string, updateData: Partial<InsertProject>): Promise<Project | undefined> {
+    console.log('🔧 FileStorage.updateProject called for:', id);
+    console.log('🔧 Update data:', updateData);
     const projects = this.readJsonFile<Project>(this.projectsFile, []);
     const index = projects.findIndex(p => p.id === id);
-    if (index === -1) return undefined;
-    
+    if (index === -1) {
+      console.log('❌ Project not found in FileStorage');
+      return undefined;
+    }
+
     projects[index] = { ...projects[index], ...updateData };
     this.writeJsonFile(this.projectsFile, projects);
+    console.log('✅ FileStorage.updateProject completed, saved to:', this.projectsFile);
     return projects[index];
   }
 
@@ -429,6 +455,124 @@ export class FileStorage implements IStorage {
     const filtered = filesIndex.filter(f => f.driveItemId !== driveItemId);
     if (filtered.length < initialLength) {
       this.writeJsonFile(this.filesIndexFile, filtered);
+      return true;
+    }
+    return false;
+  }
+
+  // Communications
+  async getAllCommunications(): Promise<Communication[]> {
+    return this.readJsonFile<Communication>(this.communicationsFile, []);
+  }
+
+  async getCommunicationsByProject(projectId: string): Promise<Communication[]> {
+    const communications = this.readJsonFile<Communication>(this.communicationsFile, []);
+    return communications.filter(c => c.projectId === projectId);
+  }
+
+  async getCommunication(id: string): Promise<Communication | undefined> {
+    const communications = this.readJsonFile<Communication>(this.communicationsFile, []);
+    return communications.find(c => c.id === id);
+  }
+
+  async createCommunication(insertCommunication: InsertCommunication): Promise<Communication> {
+    const communications = this.readJsonFile<Communication>(this.communicationsFile, []);
+    const id = randomUUID();
+    const communication: Communication = {
+      ...insertCommunication,
+      id,
+      tags: insertCommunication.tags || [],
+      attachments: insertCommunication.attachments || [],
+      body: insertCommunication.body || null,
+      recipient: insertCommunication.recipient || null,
+      sender: insertCommunication.sender || null,
+      createdBy: insertCommunication.createdBy || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    communications.push(communication);
+    this.writeJsonFile(this.communicationsFile, communications);
+    return communication;
+  }
+
+  async updateCommunication(id: string, updates: Partial<InsertCommunication>): Promise<Communication | undefined> {
+    const communications = this.readJsonFile<Communication>(this.communicationsFile, []);
+    const index = communications.findIndex(c => c.id === id);
+    if (index === -1) return undefined;
+
+    const updated: Communication = {
+      ...communications[index],
+      ...updates,
+      updatedAt: new Date(),
+    };
+    communications[index] = updated;
+    this.writeJsonFile(this.communicationsFile, communications);
+    return updated;
+  }
+
+  async deleteCommunication(id: string): Promise<boolean> {
+    const communications = this.readJsonFile<Communication>(this.communicationsFile, []);
+    const initialLength = communications.length;
+    const filtered = communications.filter(c => c.id !== id);
+    if (filtered.length < initialLength) {
+      this.writeJsonFile(this.communicationsFile, filtered);
+      return true;
+    }
+    return false;
+  }
+
+  // Deadlines
+  async getAllDeadlines(): Promise<Deadline[]> {
+    return this.readJsonFile<Deadline>(this.deadlinesFile, []);
+  }
+
+  async getDeadlinesByProject(projectId: string): Promise<Deadline[]> {
+    const deadlines = this.readJsonFile<Deadline>(this.deadlinesFile, []);
+    return deadlines.filter(d => d.projectId === projectId);
+  }
+
+  async getDeadline(id: string): Promise<Deadline | undefined> {
+    const deadlines = this.readJsonFile<Deadline>(this.deadlinesFile, []);
+    return deadlines.find(d => d.id === id);
+  }
+
+  async createDeadline(insertDeadline: InsertProjectDeadline): Promise<Deadline> {
+    const deadlines = this.readJsonFile<Deadline>(this.deadlinesFile, []);
+    const id = randomUUID();
+    const deadline: Deadline = {
+      ...insertDeadline,
+      id,
+      status: insertDeadline.status || "pending",
+      completedAt: insertDeadline.completedAt || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    deadlines.push(deadline);
+    this.writeJsonFile(this.deadlinesFile, deadlines);
+    return deadline;
+  }
+
+  async updateDeadline(id: string, updates: Partial<InsertProjectDeadline>): Promise<Deadline | undefined> {
+    const deadlines = this.readJsonFile<Deadline>(this.deadlinesFile, []);
+    const index = deadlines.findIndex(d => d.id === id);
+    if (index === -1) return undefined;
+
+    const updated: Deadline = {
+      ...deadlines[index],
+      ...updates,
+      updatedAt: new Date(),
+    };
+    deadlines[index] = updated;
+    this.writeJsonFile(this.deadlinesFile, deadlines);
+    return updated;
+  }
+
+  async deleteDeadline(id: string): Promise<boolean> {
+    const deadlines = this.readJsonFile<Deadline>(this.deadlinesFile, []);
+    const initialLength = deadlines.length;
+    const filtered = deadlines.filter(d => d.id !== id);
+    if (filtered.length < initialLength) {
+      this.writeJsonFile(this.deadlinesFile, filtered);
       return true;
     }
     return false;

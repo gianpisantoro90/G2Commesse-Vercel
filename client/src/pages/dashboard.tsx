@@ -4,10 +4,16 @@ import TabNavigation from "@/components/layout/tab-navigation";
 import StatsCard from "@/components/dashboard/stats-card";
 import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
+import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
 import NewProjectForm from "@/components/projects/new-project-form";
 import FolderStructureCard from "@/components/projects/folder-structure-card";
 import ProjectsTable from "@/components/projects/projects-table";
 import ClientsTable from "@/components/projects/clients-table";
+import ParcellaCalculator from "@/components/projects/parcella-calculator-new";
+import Scadenzario from "@/components/projects/scadenzario";
+import RegistroComunicazioni from "@/components/projects/registro-comunicazioni";
+import GestioneRisorse from "@/components/projects/gestione-risorse";
+import KpiDashboard from "@/components/projects/kpi-dashboard";
 import BulkRenameForm from "@/components/routing/bulk-rename-form";
 import BulkRenameResults from "@/components/routing/bulk-rename-results";
 import OneDriveAutoRouting from "@/components/routing/onedrive-auto-routing";
@@ -24,7 +30,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeSubTab, setActiveSubTab] = useState({
     gestione: "progetti",
-    sistema: "storage"
+    sistema: "storage",
+    vista: "tabella"
   });
   const [pendingProject, setPendingProject] = useState(null);
   
@@ -59,10 +66,13 @@ export default function Dashboard() {
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
               <div className="space-y-8" data-testid="dashboard-panel">
-                {/* First Row - Recent Projects */}
+                {/* First Row - Economic Dashboard */}
+                <EconomicDashboardCard />
+
+                {/* Second Row - Recent Projects */}
                 <RecentProjectsTable />
-                
-                {/* Second Row - Core System Info */}
+
+                {/* Third Row - Core System Info */}
                 <div className="grid gap-6 lg:grid-cols-2">
                   <StatsCard />
                   <OneDriveStatusCard />
@@ -74,34 +84,89 @@ export default function Dashboard() {
             {activeTab === "gestione" && (
               <div data-testid="management-panel">
                 <Tabs value={activeSubTab.gestione} onValueChange={(value) => handleSubTabChange("gestione", value)}>
-                  <div className="bg-white rounded-t-2xl border-b border-gray-200">
-                    <TabsList className="flex w-full bg-transparent border-0 p-0">
-                      <TabsTrigger 
-                        value="nuova" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                  <div className="bg-white rounded-t-2xl border-b border-gray-200 overflow-x-auto">
+                    <TabsList className="inline-flex w-auto min-w-full bg-transparent border-0 p-0">
+                      <TabsTrigger
+                        value="nuova"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-nuova"
                       >
-                        Nuova Commessa
+                        ➕ Nuova
                       </TabsTrigger>
-                      <TabsTrigger 
-                        value="progetti" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                      <TabsTrigger
+                        value="progetti"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-progetti"
                       >
-                        Gestione Commesse
+                        📋 Commesse
                       </TabsTrigger>
-                      <TabsTrigger 
-                        value="clienti" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                      <TabsTrigger
+                        value="clienti"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-clienti"
                       >
-                        Anagrafica Clienti
+                        👥 Clienti
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="risorse"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        data-testid="tab-risorse"
+                      >
+                        👷 Risorse
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="kpi"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        data-testid="tab-kpi"
+                      >
+                        📊 KPI
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="parcella"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        data-testid="tab-parcella"
+                      >
+                        💰 Calc. Parcella
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="scadenzario"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        data-testid="tab-scadenzario"
+                      >
+                        📅 Scadenze
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="comunicazioni"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        data-testid="tab-comunicazioni"
+                      >
+                        💬 Comun.
                       </TabsTrigger>
                     </TabsList>
                   </div>
-                  
+
                   <TabsContent value="progetti" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
                     <ProjectsTable />
+                  </TabsContent>
+
+                  <TabsContent value="risorse" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                    <GestioneRisorse />
+                  </TabsContent>
+
+                  <TabsContent value="kpi" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                    <KpiDashboard />
+                  </TabsContent>
+
+                  <TabsContent value="parcella" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                    <ParcellaCalculator />
+                  </TabsContent>
+
+                  <TabsContent value="scadenzario" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                    <Scadenzario />
+                  </TabsContent>
+
+                  <TabsContent value="comunicazioni" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                    <RegistroComunicazioni />
                   </TabsContent>
                   
                   <TabsContent value="nuova" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">

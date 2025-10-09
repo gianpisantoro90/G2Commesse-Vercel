@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage, storagePromise } from "./storage";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema } from "@shared/schema";
 import serverOneDriveService from "./lib/onedrive-service";
 import { z } from "zod";
@@ -47,6 +47,9 @@ const scanFilesSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Wait for storage to be fully initialized before registering routes
+  await storagePromise;
+
   // Authentication routes
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -170,6 +173,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects", async (req, res) => {
     try {
       const projects = await storage.getAllProjects();
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       res.json(projects);
     } catch (error) {
       res.status(500).json({ message: "Errore nel recupero delle commesse" });
@@ -208,23 +214,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/projects/:id", async (req, res) => {
+  // Support both PUT and PATCH for updates
+  const updateProjectHandler = async (req: Request, res: Response) => {
     try {
-      const validatedData = insertProjectSchema.partial().parse(req.body);
+      console.log('📝 PATCH request body:', JSON.stringify(req.body, null, 2));
+
+      // Convert date strings to Date objects for validation
+      const bodyWithDates = { ...req.body };
+      if (bodyWithDates.dataFattura) bodyWithDates.dataFattura = new Date(bodyWithDates.dataFattura);
+      if (bodyWithDates.dataPagamento) bodyWithDates.dataPagamento = new Date(bodyWithDates.dataPagamento);
+
+      const validatedData = insertProjectSchema.partial().parse(bodyWithDates);
       const project = await storage.updateProject(req.params.id, validatedData);
-      
+
       if (!project) {
         return res.status(404).json({ message: "Commessa non trovata" });
       }
-      
+
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log('❌ Validation errors:', JSON.stringify(error.errors, null, 2));
         return res.status(400).json({ message: "Dati non validi", errors: error.errors });
       }
       res.status(500).json({ message: "Errore nell'aggiornamento della commessa" });
     }
-  });
+  };
+
+  app.put("/api/projects/:id", updateProjectHandler);
+  app.patch("/api/projects/:id", updateProjectHandler);
 
   app.delete("/api/projects/:id", async (req, res) => {
     try {
@@ -321,6 +339,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error(`❌ Error updating prestazioni for project ${req.params.id}:`, error);
       res.status(500).json({ message: "Errore nell'aggiornamento delle prestazioni" });
+    }
+  });
+
+  // Communications
+  app.get("/api/communications", async (req, res) => {
+    try {
+      const projectId = req.query.projectId as string | undefined;
+      const communications = projectId
+        ? await storage.getCommunicationsByProject(projectId)
+        : await storage.getAllCommunications();
+      res.json(communications);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero delle comunicazioni" });
+    }
+  });
+
+  app.post("/api/communications", async (req, res) => {
+    try {
+      const communication = await storage.createCommunication(req.body);
+      res.status(201).json(communication);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nella creazione della comunicazione" });
+    }
+  });
+
+  app.patch("/api/communications/:id", async (req, res) => {
+    try {
+      const updated = await storage.updateCommunication(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "Comunicazione non trovata" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nell'aggiornamento della comunicazione" });
+    }
+  });
+
+  app.delete("/api/communications/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteCommunication(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Comunicazione non trovata" });
+      }
+      res.json({ message: "Comunicazione eliminata con successo" });
+    } catch (error) {
+      res.status(500).json({ message: "Errore nell'eliminazione della comunicazione" });
+    }
+  });
+
+  // Deadlines
+  app.get("/api/deadlines", async (req, res) => {
+    try {
+      const projectId = req.query.projectId as string | undefined;
+      const deadlines = projectId
+        ? await storage.getDeadlinesByProject(projectId)
+        : await storage.getAllDeadlines();
+      res.json(deadlines);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero delle scadenze" });
+    }
+  });
+
+  app.post("/api/deadlines", async (req, res) => {
+    try {
+      const deadline = await storage.createDeadline(req.body);
+      res.status(201).json(deadline);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nella creazione della scadenza" });
+    }
+  });
+
+  app.patch("/api/deadlines/:id", async (req, res) => {
+    try {
+      const updated = await storage.updateDeadline(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "Scadenza non trovata" });
+      }
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nell'aggiornamento della scadenza" });
+    }
+  });
+
+  app.delete("/api/deadlines/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deleteDeadline(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Scadenza non trovata" });
+      }
+      res.json({ message: "Scadenza eliminata con successo" });
+    } catch (error) {
+      res.status(500).json({ message: "Errore nell'eliminazione della scadenza" });
     }
   });
 
