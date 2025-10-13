@@ -138,12 +138,21 @@ export class FileStorage implements IStorage {
     const project: Project = {
       ...insertProject,
       id,
+      clientId: insertProject.clientId || null,
       status: insertProject.status || "in_corso",
       tipoRapporto: insertProject.tipoRapporto || "diretto",
       committenteFinale: insertProject.committenteFinale || null,
       createdAt: new Date(),
       fsRoot: insertProject.fsRoot || null,
       metadata: insertProject.metadata || {},
+      fatturato: insertProject.fatturato || null,
+      numeroFattura: insertProject.numeroFattura || null,
+      dataFattura: insertProject.dataFattura || null,
+      importoFatturato: insertProject.importoFatturato || null,
+      pagato: insertProject.pagato || null,
+      dataPagamento: insertProject.dataPagamento || null,
+      importoPagato: insertProject.importoPagato || null,
+      noteFatturazione: insertProject.noteFatturazione || null,
     };
     
     projects.push(project);
@@ -487,6 +496,7 @@ export class FileStorage implements IStorage {
       recipient: insertCommunication.recipient || null,
       sender: insertCommunication.sender || null,
       createdBy: insertCommunication.createdBy || null,
+      isImportant: insertCommunication.isImportant || null,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -542,7 +552,11 @@ export class FileStorage implements IStorage {
     const deadline: Deadline = {
       ...insertDeadline,
       id,
+      type: insertDeadline.type || "general",
       status: insertDeadline.status || "pending",
+      description: insertDeadline.description || null,
+      priority: insertDeadline.priority || "medium",
+      notifyDaysBefore: insertDeadline.notifyDaysBefore || null,
       completedAt: insertDeadline.completedAt || null,
       createdAt: new Date(),
       updatedAt: new Date(),

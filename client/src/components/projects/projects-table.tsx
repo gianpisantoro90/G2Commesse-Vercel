@@ -674,14 +674,14 @@ export default function ProjectsTable() {
                           const now = new Date();
                           const daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-                          const priorityConfig = {
+                          const priorityConfig: Record<string, { color: string; icon: string }> = {
                             low: { color: 'bg-gray-100 text-gray-700', icon: '🟢' },
                             medium: { color: 'bg-blue-100 text-blue-700', icon: '🟡' },
                             high: { color: 'bg-orange-100 text-orange-700', icon: '🟠' },
                             urgent: { color: 'bg-red-100 text-red-700', icon: '🔴' }
                           };
 
-                          const typeIcon = {
+                          const typeIcon: Record<string, string> = {
                             general: '📌',
                             deposito: '📝',
                             collaudo: '✅',

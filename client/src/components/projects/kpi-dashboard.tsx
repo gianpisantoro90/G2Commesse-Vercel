@@ -39,6 +39,7 @@ export default function KpiDashboard() {
   // Filtra progetti per periodo
   const filteredProjects = projects?.filter(project => {
     if (selectedPeriod === "all") return true;
+    if (!project.createdAt) return false;
     const createdAt = new Date(project.createdAt);
     const now = new Date();
 
@@ -112,6 +113,7 @@ export default function KpiDashboard() {
     const month = i;
     const year = parseInt(selectedYear);
     const count = filteredProjects.filter(p => {
+      if (!p.createdAt) return false;
       const date = new Date(p.createdAt);
       return date.getMonth() === month && date.getFullYear() === year;
     }).length;
