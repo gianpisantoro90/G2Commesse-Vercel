@@ -1,4 +1,5 @@
 import { Client } from '@microsoft/microsoft-graph-client';
+import { oneDriveRetry, fetchWithRetry } from './retry-utils';
 
 export interface OneDriveFile {
   id: string;
@@ -23,9 +24,11 @@ export interface OneDriveUploadResult {
 class OneDriveService {
   async testConnection(): Promise<boolean> {
     try {
-      const response = await fetch('/api/onedrive/test');
+      const response = await oneDriveRetry(() =>
+        fetchWithRetry('/api/onedrive/test', undefined, { maxAttempts: 2 })
+      );
       const data = await response.json();
-      
+
       if (response.ok && data.connected) {
         console.log('✅ OneDrive connection test successful');
         return true;
@@ -80,40 +83,37 @@ class OneDriveService {
   }
 
   async uploadFile(
-    file: File, 
-    projectCode: string, 
+    file: File,
+    projectCode: string,
     targetPath: string
   ): Promise<OneDriveUploadResult | null> {
     try {
       console.log(`📤 Uploading file: ${file.name} to ${targetPath} with project code: ${projectCode}`);
-      
+
       // Convert file to base64 for transmission
       const fileBuffer = await this.fileToBase64(file);
-      
-      const response = await fetch('/api/onedrive/upload-file', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileBuffer: fileBuffer,
-          targetPath: targetPath,
-          projectCode: projectCode
-        }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          console.log(`✅ Uploaded file to OneDrive: ${data.file.name}`);
-          return data.file;
-        } else {
-          console.error('❌ Upload failed - server response:', data);
-          return null;
-        }
+
+      const response = await oneDriveRetry(() =>
+        fetchWithRetry('/api/onedrive/upload-file', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileBuffer: fileBuffer,
+            targetPath: targetPath,
+            projectCode: projectCode
+          }),
+        })
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        console.log(`✅ Uploaded file to OneDrive: ${data.file.name}`);
+        return data.file;
       } else {
-        console.error('❌ Failed to upload file to OneDrive:', response.statusText);
+        console.error('❌ Upload failed - server response:', data);
         return null;
       }
     } catch (error) {
@@ -126,12 +126,20 @@ class OneDriveService {
   private async fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.readAsArrayBuffer(file);
+
+      // Cleanup function to prevent memory leaks
+      const cleanup = () => {
+        reader.onload = null;
+        reader.onerror = null;
+        reader.onabort = null;
+      };
+
       reader.onload = () => {
+        cleanup();
         if (reader.result) {
           const arrayBuffer = reader.result as ArrayBuffer;
           const uint8Array = new Uint8Array(arrayBuffer);
-          
+
           // Convert to base64 in chunks to avoid stack overflow
           let binary = '';
           const chunkSize = 8192;
@@ -139,14 +147,25 @@ class OneDriveService {
             const chunk = uint8Array.subarray(i, i + chunkSize);
             binary += String.fromCharCode.apply(null, Array.from(chunk));
           }
-          
+
           const base64String = btoa(binary);
           resolve(base64String);
         } else {
           reject(new Error('Failed to read file'));
         }
       };
-      reader.onerror = () => reject(reader.error);
+
+      reader.onerror = () => {
+        cleanup();
+        reject(reader.error || new Error('FileReader error'));
+      };
+
+      reader.onabort = () => {
+        cleanup();
+        reject(new Error('FileReader aborted'));
+      };
+
+      reader.readAsArrayBuffer(file);
     });
   }
 
@@ -174,27 +193,52 @@ class OneDriveService {
 
   async syncProjectFolder(projectCode: string, projectDescription: string): Promise<boolean> {
     try {
-      const response = await fetch('/api/onedrive/sync-project', {
+      const response = await oneDriveRetry(() =>
+        fetchWithRetry('/api/onedrive/sync-project', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ projectCode, projectDescription }),
+        })
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        console.log(`✅ Synced project folder to OneDrive: ${projectCode}`);
+      }
+      return data.success;
+    } catch (error) {
+      console.error('❌ Failed to sync project folder:', error);
+      return false;
+    }
+  }
+
+  async mapProjectToFolder(projectCode: string): Promise<{found: boolean; mapped: boolean; folderPath?: string}> {
+    try {
+      const response = await fetch('/api/onedrive/map-project', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ projectCode, projectDescription }),
+        body: JSON.stringify({ projectCode }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
-        if (data.success) {
-          console.log(`✅ Synced project folder to OneDrive: ${projectCode}`);
+        if (data.found) {
+          console.log(`✅ Mapped project to existing folder: ${projectCode} -> ${data.folderPath}`);
+        } else {
+          console.log(`ℹ️ No folder found for project: ${projectCode}`);
         }
-        return data.success;
+        return data;
       } else {
-        console.error('❌ Failed to sync project folder:', response.statusText);
-        return false;
+        console.error('❌ Failed to map project:', response.statusText);
+        return { found: false, mapped: false };
       }
     } catch (error) {
-      console.error('❌ Failed to sync project folder:', error);
-      return false;
+      console.error('❌ Failed to map project:', error);
+      return { found: false, mapped: false };
     }
   }
 
@@ -321,26 +365,19 @@ class OneDriveService {
 
   async bulkRenameFiles(operations: Array<{fileId: string, driveId: string, originalName: string, newName: string}>): Promise<{success: boolean, results: Array<{original: string, renamed: string, success: boolean}>}> {
     try {
-      const response = await fetch('/api/onedrive/bulk-rename', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ operations }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`✅ Bulk rename completed: ${data.results.length} operations processed`);
-        return data;
-      } else {
-        console.error('❌ Failed to bulk rename files:', response.statusText);
-        const errorData = await response.json().catch(() => ({}));
-        return {
-          success: false,
-          results: []
-        };
-      }
+      const response = await oneDriveRetry(() =>
+        fetchWithRetry('/api/onedrive/bulk-rename', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ operations }),
+        })
+      );
+
+      const data = await response.json();
+      console.log(`✅ Bulk rename completed: ${data.results.length} operations processed`);
+      return data;
     } catch (error) {
       console.error('❌ Failed to bulk rename files:', error);
       return {

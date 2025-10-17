@@ -1,9 +1,20 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema } from "@shared/schema";
 import serverOneDriveService from "./lib/onedrive-service";
 import { z } from "zod";
+
+// Security: Rate limiter for login endpoint
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Max 5 login attempts
+  message: 'Troppi tentativi di login da questo IP. Riprova tra 15 minuti.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true // Don't count successful logins
+});
 
 // Extend session interface to include authenticated flag
 declare module 'express-session' {
@@ -51,56 +62,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await storagePromise;
 
   // Authentication routes
-  app.post("/api/auth/login", async (req, res) => {
+  // Security: Apply rate limiting to login endpoint
+  app.post("/api/auth/login", loginLimiter, async (req, res) => {
     try {
       // Trim whitespace from username and password
       const username = req.body.username?.trim();
       const password = req.body.password?.trim();
-      
+
       if (!username || !password) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Username e password sono obbligatori" 
+        return res.status(400).json({
+          success: false,
+          message: "Username e password sono obbligatori"
         });
       }
-      
+
       // Check credentials against environment variables
       const validUsername = process.env.AUTH_USERNAME;
       const validPassword = process.env.AUTH_PASSWORD;
-      
-      // Log for debugging (remove in production)
-      console.log('🔐 Login attempt:', { 
-        receivedUsername: username, 
-        hasValidUsername: !!validUsername,
-        hasValidPassword: !!validPassword,
-        usernameMatch: username === validUsername
-      });
-      
+
+      // Security: Minimal logging (only in development, no credentials)
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('🔐 Login attempt at:', new Date().toISOString());
+      }
+
       if (!validUsername || !validPassword) {
         console.error('❌ AUTH_USERNAME or AUTH_PASSWORD not configured in environment');
-        return res.status(500).json({ 
-          success: false, 
-          message: "Credenziali di sistema non configurate. Contatta l'amministratore." 
+        return res.status(500).json({
+          success: false,
+          message: "Credenziali di sistema non configurate. Contatta l'amministratore."
         });
       }
-      
+
       if (username === validUsername && password === validPassword) {
-        req.session.authenticated = true;
-        return res.json({ 
-          success: true, 
-          message: "Login effettuato con successo" 
+        // Security: Regenerate session ID to prevent session fixation attacks
+        req.session.regenerate((err) => {
+          if (err) {
+            console.error('Session regeneration error:', err);
+            return res.status(500).json({
+              success: false,
+              message: "Errore durante la sessione"
+            });
+          }
+
+          // Set authenticated flag after regeneration
+          req.session.authenticated = true;
+
+          return res.json({
+            success: true,
+            message: "Login effettuato con successo"
+          });
         });
       } else {
-        return res.status(401).json({ 
-          success: false, 
-          message: "Credenziali non valide" 
+        return res.status(401).json({
+          success: false,
+          message: "Credenziali non valide"
         });
       }
     } catch (error) {
       console.error('Login error:', error);
-      return res.status(500).json({ 
-        success: false, 
-        message: "Errore interno del server" 
+      return res.status(500).json({
+        success: false,
+        message: "Errore interno del server"
       });
     }
   });
@@ -798,13 +820,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/onedrive/files", async (req, res) => {
     try {
-      const folderPath = req.query.path as string || '/G2_Progetti';
-      
+      const folderPath = req.query.path as string || '/';
+
       // Input validation
       if (typeof folderPath !== 'string' || folderPath.length > 500) {
         return res.status(400).json({ error: 'Invalid folder path parameter' });
       }
-      
+
       const files = await serverOneDriveService.listFiles(folderPath);
       res.json(files);
     } catch (error: any) {
@@ -816,26 +838,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/onedrive/map-project", async (req, res) => {
+    try {
+      const { projectCode } = req.body;
+
+      if (!projectCode) {
+        return res.status(400).json({ error: 'Project code is required' });
+      }
+
+      console.log(`🔍 Searching for existing OneDrive folder for project: ${projectCode}`);
+
+      // Get root folder configuration
+      const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
+
+      if (!rootConfig || !rootConfig.value || !(rootConfig.value as any).folderPath) {
+        console.error('❌ OneDrive root folder not configured');
+        return res.status(400).json({
+          error: 'OneDrive root folder not configured. Please configure the root folder in system settings.',
+          found: false,
+          mapped: false
+        });
+      }
+
+      const rootPath = (rootConfig.value as any).folderPath;
+      console.log(`📁 Using configured root path: ${rootPath}`);
+
+      // Search for folder matching project code in root path
+      try {
+        const files = await serverOneDriveService.listFiles(rootPath);
+        const matchingFolder = files.find(file =>
+          file.folder &&
+          (file.name === projectCode || file.name.startsWith(`${projectCode}_`))
+        );
+
+        if (matchingFolder) {
+          console.log(`✅ Found existing folder: ${matchingFolder.name}`);
+
+          // Create or update mapping
+          const existingMapping = await storage.getOneDriveMapping(projectCode);
+
+          if (existingMapping) {
+            console.log(`🔄 Updating existing mapping for project: ${projectCode}`);
+          } else {
+            await storage.createOneDriveMapping({
+              projectCode,
+              oneDriveFolderId: matchingFolder.id,
+              oneDriveFolderPath: `${rootPath}/${matchingFolder.name}`,
+              oneDriveFolderName: matchingFolder.name,
+            });
+            console.log(`✅ Created OneDrive mapping for project: ${projectCode} -> ${matchingFolder.name}`);
+          }
+
+          return res.json({
+            found: true,
+            mapped: true,
+            folderPath: `${rootPath}/${matchingFolder.name}`,
+            folderName: matchingFolder.name
+          });
+        } else {
+          console.log(`ℹ️ No existing folder found for project: ${projectCode}`);
+          return res.json({
+            found: false,
+            mapped: false,
+            message: `No folder found matching project code ${projectCode} in ${rootPath}`
+          });
+        }
+      } catch (error) {
+        console.error(`❌ Error searching for folder:`, error);
+        return res.status(500).json({
+          found: false,
+          mapped: false,
+          error: 'Failed to search OneDrive folders'
+        });
+      }
+    } catch (error) {
+      console.error('OneDrive map project failed:', error);
+      res.status(500).json({ error: 'Failed to map project to OneDrive folder' });
+    }
+  });
+
   app.post("/api/onedrive/sync-project", async (req, res) => {
     try {
       const { projectCode, projectDescription } = req.body;
-      
+
       if (!projectCode) {
         return res.status(400).json({ error: 'Project code is required' });
       }
 
       const success = await serverOneDriveService.syncProjectFolder(projectCode, projectDescription || '');
-      
+
       // If sync was successful, create or update the mapping
       if (success) {
         try {
           // const rootConfig = await serverOneDriveService.getRootFolderPath(); // Private method
           const rootPath = '/G2_Progetti'; // Default root path
           const folderPath = `${rootPath}/${projectCode}`;
-          
+
           // Check if mapping already exists
           const existingMapping = await storage.getOneDriveMapping(projectCode);
-          
+
           if (!existingMapping) {
             // Create new mapping
             await storage.createOneDriveMapping({
@@ -853,7 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Don't fail the sync operation if mapping creation fails
         }
       }
-      
+
       res.json({ success });
     } catch (error) {
       console.error('OneDrive sync project failed:', error);
