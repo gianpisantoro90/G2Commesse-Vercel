@@ -119,60 +119,84 @@ export function useOneDriveSync() {
     }
   });
 
-  // Bulk sync all projects
+  // Bulk map all projects to existing OneDrive folders (no folder creation)
   const syncAllProjectsMutation = useMutation({
     mutationFn: async () => {
-      if (!projects || !Array.isArray(projects)) return { total: 0, success: 0 };
-      
+      if (!projects || !Array.isArray(projects)) return { total: 0, success: 0, notFound: 0 };
+
       const results = await Promise.allSettled(
-        projects.map((project: Project) => 
-          oneDriveService.syncProjectFolder(project.code, project.object)
-            .then(success => ({ projectId: project.id, success }))
+        projects.map((project: Project) =>
+          oneDriveService.mapProjectToFolder(project.code)
+            .then(result => ({
+              projectId: project.id,
+              found: result.found,
+              mapped: result.mapped,
+              folderPath: result.folderPath
+            }))
         )
       );
 
       // Update statuses based on results
       results.forEach((result: any, index: number) => {
         const project = projects[index];
-        if (result.status === 'fulfilled' && result.value.success) {
-          setSyncStatuses(prev => ({
-            ...prev,
-            [project.id]: { 
-              projectId: project.id, 
-              status: 'synced', 
-              lastSync: new Date().toISOString() 
-            }
-          }));
+        if (result.status === 'fulfilled') {
+          const { found, mapped } = result.value;
+          if (found && mapped) {
+            setSyncStatuses(prev => ({
+              ...prev,
+              [project.id]: {
+                projectId: project.id,
+                status: 'synced',
+                lastSync: new Date().toISOString()
+              }
+            }));
+          } else {
+            setSyncStatuses(prev => ({
+              ...prev,
+              [project.id]: {
+                projectId: project.id,
+                status: 'not_synced'
+              }
+            }));
+          }
         } else {
           setSyncStatuses(prev => ({
             ...prev,
-            [project.id]: { 
-              projectId: project.id, 
-              status: 'error', 
-              error: 'Sync failed' 
+            [project.id]: {
+              projectId: project.id,
+              status: 'error',
+              error: 'Mapping failed'
             }
           }));
         }
       });
 
-      const successCount = results.filter((r: any) => 
-        r.status === 'fulfilled' && r.value.success
+      const successCount = results.filter((r: any) =>
+        r.status === 'fulfilled' && r.value.found && r.value.mapped
       ).length;
 
-      return { total: results.length, success: successCount };
+      const notFoundCount = results.filter((r: any) =>
+        r.status === 'fulfilled' && !r.value.found
+      ).length;
+
+      return { total: results.length, success: successCount, notFound: notFoundCount };
     },
     onSuccess: (results) => {
+      const message = results?.notFound && results.notFound > 0
+        ? `${results?.success} progetti mappati. ${results?.notFound} progetti senza cartella OneDrive corrispondente.`
+        : `${results?.success}/${results?.total} progetti mappati con successo`;
+
       toast({
-        title: "Sincronizzazione completata",
-        description: `${results?.success}/${results?.total} progetti sincronizzati con successo`,
+        title: "Mapping completato",
+        description: message,
       });
       // Invalidate OneDrive mappings to refresh the UI
       queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
     },
     onError: (error) => {
       toast({
-        title: "Errore sincronizzazione",
-        description: `Errore durante la sincronizzazione: ${error.message}`,
+        title: "Errore mapping",
+        description: `Errore durante il mapping: ${error.message}`,
         variant: "destructive",
       });
     }

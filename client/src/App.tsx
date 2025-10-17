@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import Dashboard from "@/pages/dashboard";
 import { LoginPage } from "@/pages/LoginPage";
 import { useAuth } from "@/hooks/useAuth";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 function LoadingScreen() {
   return (
@@ -44,6 +45,12 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-g2-accent">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-primary focus:text-white focus:px-4 focus:py-2 focus:rounded"
+      >
+        Vai al contenuto principale
+      </a>
       <Toaster />
       <AuthenticatedRouter />
     </div>
@@ -52,11 +59,13 @@ function AppContent() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AppContent />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AppContent />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

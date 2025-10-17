@@ -1,23 +1,86 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { errorHandler } from "./middleware/error-handler";
+import { logger, requestLogger } from "./lib/logger";
 
 const app = express();
+
+// Security: Validate required environment variables
+if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
+  logger.error('SESSION_SECRET environment variable must be set and at least 32 characters long');
+  logger.info('Generate one with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+  process.exit(1);
+}
+
+logger.info('Starting G2 Gestione Commesse server', {
+  nodeEnv: process.env.NODE_ENV,
+  platform: process.platform,
+});
+
+// Security: Apply helmet middleware for security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-eval needed for dev
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https://api.anthropic.com", "https://api.deepseek.com", "https://graph.microsoft.com"],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+    },
+  },
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+}));
+
+// Security: Rate limiting for general API
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: 'Troppe richieste da questo IP. Riprova tra un minuto.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
-// Session configuration
+// Add request logging middleware
+app.use(requestLogger);
+
+// Security: Enhanced session configuration
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback-secret-key',
+  secret: process.env.SESSION_SECRET,
+  name: 'sessionId', // Don't use default 'connect.sid'
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: false, // Set to true in production with HTTPS
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 // 24 hours
-  }
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true, // Prevent XSS
+    maxAge: 1000 * 60 * 30, // 30 minutes (reduced from 24 hours)
+    sameSite: 'strict' // CSRF protection
+  },
+  rolling: true // Extend session on each request
 }));
+
+// Security: Sensitive endpoints that should not be logged in detail
+const sensitiveEndpoints = [
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/get-env-api-key',
+  '/api/test-claude'
+];
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -34,8 +97,13 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+
+      // Don't log response body for sensitive endpoints
+      const isSensitive = sensitiveEndpoints.some(endpoint => path.startsWith(endpoint));
+      if (capturedJsonResponse && !isSensitive) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      } else if (isSensitive) {
+        logLine += ` :: [sensitive data hidden]`;
       }
 
       if (logLine.length > 80) {
@@ -52,13 +120,8 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
-  });
+  // Use centralized error handler (must be after routes)
+  app.use(errorHandler);
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -75,17 +138,17 @@ app.use((req, res, next) => {
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '3000', 10);
   
-  // Gestione errori migliorata per Windows
+  // Enhanced error handling for server
   server.on('error', (err: any) => {
     if (err.code === 'EADDRINUSE' || err.code === 'ENOTSUP') {
-      console.error(`\n❌ Errore: Porta ${port} già in uso o non supportata`);
-      console.error(`💡 Soluzioni:`);
-      console.error(`   1. Chiudi altri processi sulla porta ${port}`);
-      console.error(`   2. Usa una porta diversa: PORT=3001 npm run dev`);
-      console.error(`   3. Su Windows, usa: start-windows.bat o start-windows.ps1\n`);
+      logger.error(`Port ${port} already in use or not supported`, { code: err.code });
+      logger.info('Solutions:');
+      logger.info('1. Close other processes on the port');
+      logger.info(`2. Use a different port: PORT=3001 npm run dev`);
+      logger.info('3. On Windows, use: start-windows.bat or start-windows.ps1');
       process.exit(1);
     } else {
-      console.error('Errore del server:', err);
+      logger.error('Server error', { error: err.message, code: err.code });
       process.exit(1);
     }
   });
@@ -93,9 +156,12 @@ app.use((req, res, next) => {
   server.listen({
     port,
     host: "0.0.0.0",
-    reusePort: process.platform !== 'win32', // reusePort non supportato su Windows
+    reusePort: process.platform !== 'win32', // reusePort not supported on Windows
   }, () => {
-    log(`serving on port ${port}`);
+    logger.info(`Server started successfully on port ${port}`, {
+      url: `http://localhost:${port}`,
+      nodeEnv: process.env.NODE_ENV,
+    });
     console.log(`\n🚀 G2 Ingegneria avviato con successo!`);
     console.log(`📱 Apri: http://localhost:${port}`);
     console.log(`⏹️  Premi Ctrl+C per fermare\n`);

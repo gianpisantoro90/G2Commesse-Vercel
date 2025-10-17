@@ -61,7 +61,7 @@ export default function Dashboard() {
           onTabChange={setActiveTab}
         />
 
-        <main className="p-6">
+        <main className="p-6" id="main-content">
           <div className="animate-fade-in">
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
