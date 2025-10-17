@@ -278,50 +278,50 @@ export default function ProjectsTable() {
         <div className="flex gap-2 flex-wrap items-center mb-4 pb-3 border-b border-gray-200">
           <span className="text-sm text-gray-600 font-medium mr-2">Mostra colonne:</span>
           <Button
-            size="sm"
+            size="default"
             variant={showTechInfo ? "default" : "outline"}
             onClick={() => setShowTechInfo(!showTechInfo)}
-            className="text-xs"
+            className="text-xs min-h-[44px] h-auto py-2"
           >
             ⚙️ Info Tecniche
           </Button>
           <Button
-            size="sm"
+            size="default"
             variant={showPrestazioni ? "default" : "outline"}
             onClick={() => setShowPrestazioni(!showPrestazioni)}
-            className="text-xs"
+            className="text-xs min-h-[44px] h-auto py-2"
           >
             📋 Prestazioni/DM143
           </Button>
           <Button
-            size="sm"
+            size="default"
             variant={showFatturazione ? "default" : "outline"}
             onClick={() => setShowFatturazione(!showFatturazione)}
-            className="text-xs"
+            className="text-xs min-h-[44px] h-auto py-2"
           >
             💰 Fatturazione
           </Button>
           <Button
-            size="sm"
+            size="default"
             variant={showComunicazioni ? "default" : "outline"}
             onClick={() => setShowComunicazioni(!showComunicazioni)}
-            className="text-xs"
+            className="text-xs min-h-[44px] h-auto py-2"
           >
             💬 Comunicazioni
           </Button>
           <Button
-            size="sm"
+            size="default"
             variant={showScadenze ? "default" : "outline"}
             onClick={() => setShowScadenze(!showScadenze)}
-            className="text-xs"
+            className="text-xs min-h-[44px] h-auto py-2"
           >
             📅 Scadenze
           </Button>
           <Button
-            size="sm"
+            size="default"
             variant={showOneDrive ? "default" : "outline"}
             onClick={() => setShowOneDrive(!showOneDrive)}
-            className="text-xs"
+            className="text-xs min-h-[44px] h-auto py-2"
           >
             ☁️ OneDrive
           </Button>
@@ -397,30 +397,31 @@ export default function ProjectsTable() {
       ) : (
         <>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px]">
+            <table className="w-full min-w-[1000px]" aria-label="Tabella delle commesse">
+              <caption className="sr-only">Elenco di tutte le commesse con dettagli, stato e azioni</caption>
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tl-lg w-24">Codice</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">Cliente</th>
+                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tl-lg w-24">Codice</th>
+                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">Cliente</th>
                   {showTechInfo && (
-                    <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-28">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-28">
                       Tipo Rapporto
                       <span className="ml-1 text-xs text-gray-500 cursor-help" title="Chi commissiona il lavoro a G2 Ingegneria">ⓘ</span>
                     </th>
                   )}
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Città</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">Oggetto</th>
+                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Città</th>
+                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">Oggetto</th>
                   {showPrestazioni && (
                     <>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
                         Prestazioni
                         <span className="ml-1 text-xs text-gray-500 cursor-help" title="Tipologia di servizi professionali">ⓘ</span>
                       </th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">
                         Livelli Progettazione
                         <span className="ml-1 text-xs text-gray-500 cursor-help" title="Livelli di progettazione DM 143/2013">ⓘ</span>
                       </th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
                         Classe DM 143/2013
                         <span className="ml-1 text-xs text-gray-500 cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
                       </th>
@@ -428,33 +429,33 @@ export default function ProjectsTable() {
                   )}
                   {showTechInfo && (
                     <>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-16">Anno</th>
-                      <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-20">Template</th>
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-16">Anno</th>
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-20">Template</th>
                     </>
                   )}
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Stato</th>
+                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Stato</th>
                   {showFatturazione && (
-                    <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
                       Fatturazione
                       <span className="ml-1 text-xs text-gray-500 cursor-help" title="Stato fatturazione e pagamento">ⓘ</span>
                     </th>
                   )}
                   {showComunicazioni && (
-                    <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
                       Ultima Comunicazione
                       <span className="ml-1 text-xs text-gray-500 cursor-help" title="Ultima comunicazione relativa alla commessa">ⓘ</span>
                     </th>
                   )}
                   {showScadenze && (
-                    <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">
                       Prossima Scadenza
                       <span className="ml-1 text-xs text-gray-500 cursor-help" title="Prossima scadenza in programma">ⓘ</span>
                     </th>
                   )}
                   {showOneDrive && (
-                    <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">OneDrive</th>
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">OneDrive</th>
                   )}
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tr-lg w-32">Azioni</th>
+                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tr-lg w-32">Azioni</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -779,9 +780,9 @@ export default function ProjectsTable() {
                       <div className="flex gap-2">
                         <EditProjectForm project={project}>
                           <Button
-                            size="sm"
+                            size="default"
                             variant="ghost"
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Modifica"
                             data-testid={`edit-project-${project.id}`}
                           >
@@ -789,31 +790,31 @@ export default function ProjectsTable() {
                           </Button>
                         </EditProjectForm>
                         <Button
-                          size="sm"
+                          size="default"
                           variant="ghost"
                           onClick={() => handleExportProject(project)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Esporta"
                           data-testid={`export-project-${project.id}`}
                         >
                           📄
                         </Button>
                         <Button
-                          size="sm"
+                          size="default"
                           variant="ghost"
                           onClick={() => handleOpenPrestazioniModal(project)}
-                          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          className="min-w-[44px] min-h-[44px] p-3 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
                           title="Dettagli Prestazioni"
                           data-testid={`prestazioni-details-${project.id}`}
                         >
                           🏗️
                         </Button>
                         <Button
-                          size="sm"
+                          size="default"
                           variant="ghost"
                           onClick={() => handleDeleteProject(project)}
                           disabled={deleteProjectMutation.isPending}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="min-w-[44px] min-h-[44px] p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Elimina"
                           data-testid={`delete-project-${project.id}`}
                         >

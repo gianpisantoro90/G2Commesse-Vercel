@@ -86,7 +86,7 @@
 
 @layer components {
   .tab-button {
-    @apply px-6 py-4 text-sm font-semibold border-b-3 border-transparent hover:bg-white transition-all duration-200 flex items-center gap-2 whitespace-nowrap;
+    @apply px-6 py-4 text-sm font-semibold border-b-3 border-transparent hover:bg-white transition-all duration-200 flex items-center gap-2 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
   
   .tab-button.active {
@@ -102,11 +102,11 @@
   }
   
   .button-g2-primary {
-    @apply bg-primary text-white py-3 px-6 rounded-xl font-semibold hover:opacity-90 transition-colors duration-200;
+    @apply bg-primary text-white py-3 px-6 rounded-xl font-semibold hover:opacity-90 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
-  
+
   .button-g2-secondary {
-    @apply border-2 border-primary text-primary py-3 px-6 rounded-xl font-semibold hover:bg-primary hover:text-white transition-colors duration-200;
+    @apply border-2 border-primary text-primary py-3 px-6 rounded-xl font-semibold hover:bg-primary hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
   
   .input-g2 {

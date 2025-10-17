@@ -251,7 +251,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {...form.register("client")}
             />
             {form.formState.errors.client && (
-              <p className="text-sm text-red-600 mt-1">{form.formState.errors.client.message}</p>
+              <p className="text-sm text-red-600 mt-1" role="alert" aria-live="polite">{form.formState.errors.client.message}</p>
             )}
           </div>
           <div>
@@ -266,7 +266,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {...form.register("city")}
             />
             {form.formState.errors.city && (
-              <p className="text-sm text-red-600 mt-1">{form.formState.errors.city.message}</p>
+              <p className="text-sm text-red-600 mt-1" role="alert" aria-live="polite">{form.formState.errors.city.message}</p>
             )}
           </div>
         </div>
@@ -295,7 +295,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               </SelectContent>
             </Select>
             {form.formState.errors.tipoRapporto && (
-              <p className="text-sm text-red-600 mt-1">{form.formState.errors.tipoRapporto.message}</p>
+              <p className="text-sm text-red-600 mt-1" role="alert" aria-live="polite">{form.formState.errors.tipoRapporto.message}</p>
             )}
           </div>
         </div>
@@ -315,7 +315,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {...form.register("committenteFinale")}
             />
             {form.formState.errors.committenteFinale && (
-              <p className="text-sm text-red-600 mt-1">{form.formState.errors.committenteFinale.message}</p>
+              <p className="text-sm text-red-600 mt-1" role="alert" aria-live="polite">{form.formState.errors.committenteFinale.message}</p>
             )}
           </div>
         )}
@@ -332,7 +332,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             {...form.register("object")}
           />
           {form.formState.errors.object && (
-            <p className="text-sm text-red-600 mt-1">{form.formState.errors.object.message}</p>
+            <p className="text-sm text-red-600 mt-1" role="alert" aria-live="polite">{form.formState.errors.object.message}</p>
           )}
         </div>
         
@@ -352,7 +352,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {...form.register("year", { valueAsNumber: true })}
             />
             {form.formState.errors.year && (
-              <p className="text-sm text-red-600 mt-1">{form.formState.errors.year.message}</p>
+              <p className="text-sm text-red-600 mt-1" role="alert" aria-live="polite">{form.formState.errors.year.message}</p>
             )}
           </div>
           <div>
