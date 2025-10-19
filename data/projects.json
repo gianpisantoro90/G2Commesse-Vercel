@@ -1,20 +1,5 @@
 [
   {
-    "id": "9c1dba0f-9547-4094-8475-523373063bc4",
-    "code": "25PARBAC01",
-    "client": "Parco Olimpico",
-    "city": "Bacoli",
-    "object": "Relazione danni giunto edificio",
-    "year": 25,
-    "template": "BREVE",
-    "status": "in_corso",
-    "tipoRapporto": "diretto",
-    "committenteFinale": null,
-    "createdAt": "2025-09-11T13:23:32.984Z",
-    "fsRoot": null,
-    "metadata": {}
-  },
-  {
     "id": "1a6ee16c-98b9-444a-b6a4-574cd2353a4d",
     "code": "24ELEAFR01",
     "client": "Electa Progettazioni Integrate",
