@@ -7,7 +7,15 @@ async function getAccessToken() {
     return connectionSettings.settings.access_token;
   }
   
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+  const hasReplIdentity = !!process.env.REPL_IDENTITY;
+  const hasWebReplRenewal = !!process.env.WEB_REPL_RENEWAL;
+  
+  console.log('🔍 OneDrive connection diagnostics:');
+  console.log('   - REPLIT_CONNECTORS_HOSTNAME:', hostname ? '✅ present' : '❌ missing');
+  console.log('   - REPL_IDENTITY:', hasReplIdentity ? '✅ present (development mode)' : '❌ missing');
+  console.log('   - WEB_REPL_RENEWAL:', hasWebReplRenewal ? '✅ present (production mode)' : '❌ missing');
+  
   const xReplitToken = process.env.REPL_IDENTITY 
     ? 'repl ' + process.env.REPL_IDENTITY 
     : process.env.WEB_REPL_RENEWAL 
@@ -15,8 +23,21 @@ async function getAccessToken() {
     : null;
 
   if (!xReplitToken) {
+    console.error('❌ Missing authentication token for Replit Connectors');
+    console.error('   This means neither REPL_IDENTITY nor WEB_REPL_RENEWAL are set.');
+    console.error('   OneDrive integration requires one of these environment variables.');
     throw new Error('X_REPLIT_TOKEN not found for repl/depl');
   }
+  
+  if (!hostname) {
+    console.error('❌ REPLIT_CONNECTORS_HOSTNAME is not set');
+    console.error('   This environment variable is required to connect to Replit Connectors API');
+    throw new Error('REPLIT_CONNECTORS_HOSTNAME not found');
+  }
+
+  const tokenType = hasReplIdentity ? 'development (REPL_IDENTITY)' : 'production (WEB_REPL_RENEWAL)';
+  console.log(`   - Using ${tokenType} token`);
+  console.log(`   - Connecting to: https://${hostname}/api/v2/connection`);
 
   try {
     const response = await fetch(
@@ -29,7 +50,11 @@ async function getAccessToken() {
       }
     );
     
+    console.log(`   - Response status: ${response.status} ${response.statusText}`);
+    
     if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Could not read error response');
+      console.error(`   - Error response body: ${errorText.substring(0, 200)}`);
       throw new Error(`Failed to fetch connection: ${response.status} ${response.statusText}`);
     }
     
