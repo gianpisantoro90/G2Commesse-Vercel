@@ -75,28 +75,5 @@
     "createdAt": "2025-10-06T16:51:34.793Z",
     "fsRoot": null,
     "metadata": {}
-  },
-  {
-    "id": "67568266-5455-43e9-bb52-dbcfebb68bb1",
-    "code": "25AGOFRA01",
-    "client": "Agostino Lupoli",
-    "city": "Frattamaggiore",
-    "object": "Ristrutturazione Sede Vigili Urbani",
-    "year": 25,
-    "template": "BREVE",
-    "status": "in_corso",
-    "tipoRapporto": "ati",
-    "committenteFinale": "Comune di Frattamaggiore",
-    "createdAt": "2025-10-06T16:59:56.660Z",
-    "fsRoot": null,
-    "metadata": {},
-    "fatturato": true,
-    "numeroFattura": null,
-    "dataFattura": "2025-10-09T00:00:00.000Z",
-    "importoFatturato": 50000,
-    "pagato": false,
-    "dataPagamento": null,
-    "importoPagato": 0,
-    "noteFatturazione": null
   }
 ]

@@ -18,24 +18,20 @@ async function getAccessToken() {
   console.log('   - WEB_REPL_RENEWAL:', hasWebReplRenewal ? '✅ present (production mode)' : '❌ missing');
   console.log('   - REPLIT_DEPLOYMENT:', hasReplitDeployment ? `✅ present (${process.env.REPLIT_DEPLOYMENT})` : '❌ missing');
   
-  // Try different methods to get the token
+  // Strategy: Use REPL_IDENTITY for both development and production
+  // The Connectors API should work with the Repl ID regardless of environment
   let xReplitToken = null;
   
-  // First, check if we have REPL_IDENTITY (for development)
   if (process.env.REPL_IDENTITY) {
+    // Use REPL_IDENTITY for both development and production
     xReplitToken = 'repl ' + process.env.REPL_IDENTITY;
-    console.log('   - Using development (REPL_IDENTITY) token');
+    const envType = process.env.REPLIT_DEPLOYMENT ? 'production (deployment)' : 'development';
+    console.log(`   - Using REPL_IDENTITY token for ${envType}`);
   }
-  // Then check for WEB_REPL_RENEWAL (for standard deployment)
   else if (process.env.WEB_REPL_RENEWAL) {
+    // Fallback to WEB_REPL_RENEWAL only if REPL_IDENTITY is not available
     xReplitToken = 'depl ' + process.env.WEB_REPL_RENEWAL;
-    console.log('   - Using production (WEB_REPL_RENEWAL) token');
-  }
-  // If in deployment but no WEB_REPL_RENEWAL, try using REPL_IDENTITY anyway
-  // This might work for some deployment types
-  else if (process.env.REPLIT_DEPLOYMENT && process.env.REPL_IDENTITY) {
-    console.log('   - In deployment mode, trying REPL_IDENTITY as fallback');
-    xReplitToken = 'repl ' + process.env.REPL_IDENTITY;
+    console.log('   - Using WEB_REPL_RENEWAL token (fallback)');
   }
 
   if (!xReplitToken) {
