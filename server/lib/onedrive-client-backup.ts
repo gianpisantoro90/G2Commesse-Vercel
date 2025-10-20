@@ -10,39 +10,22 @@ async function getAccessToken() {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const hasReplIdentity = !!process.env.REPL_IDENTITY;
   const hasWebReplRenewal = !!process.env.WEB_REPL_RENEWAL;
-  const hasReplitDeployment = !!process.env.REPLIT_DEPLOYMENT;
   
   console.log('🔍 OneDrive connection diagnostics:');
   console.log('   - REPLIT_CONNECTORS_HOSTNAME:', hostname ? '✅ present' : '❌ missing');
   console.log('   - REPL_IDENTITY:', hasReplIdentity ? '✅ present (development mode)' : '❌ missing');
   console.log('   - WEB_REPL_RENEWAL:', hasWebReplRenewal ? '✅ present (production mode)' : '❌ missing');
-  console.log('   - REPLIT_DEPLOYMENT:', hasReplitDeployment ? `✅ present (${process.env.REPLIT_DEPLOYMENT})` : '❌ missing');
   
-  // Try different methods to get the token
-  let xReplitToken = null;
-  
-  // First, check if we have REPL_IDENTITY (for development)
-  if (process.env.REPL_IDENTITY) {
-    xReplitToken = 'repl ' + process.env.REPL_IDENTITY;
-    console.log('   - Using development (REPL_IDENTITY) token');
-  }
-  // Then check for WEB_REPL_RENEWAL (for standard deployment)
-  else if (process.env.WEB_REPL_RENEWAL) {
-    xReplitToken = 'depl ' + process.env.WEB_REPL_RENEWAL;
-    console.log('   - Using production (WEB_REPL_RENEWAL) token');
-  }
-  // If in deployment but no WEB_REPL_RENEWAL, try using REPL_IDENTITY anyway
-  // This might work for some deployment types
-  else if (process.env.REPLIT_DEPLOYMENT && process.env.REPL_IDENTITY) {
-    console.log('   - In deployment mode, trying REPL_IDENTITY as fallback');
-    xReplitToken = 'repl ' + process.env.REPL_IDENTITY;
-  }
+  const xReplitToken = process.env.REPL_IDENTITY 
+    ? 'repl ' + process.env.REPL_IDENTITY 
+    : process.env.WEB_REPL_RENEWAL 
+    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
+    : null;
 
   if (!xReplitToken) {
     console.error('❌ Missing authentication token for Replit Connectors');
     console.error('   This means neither REPL_IDENTITY nor WEB_REPL_RENEWAL are set.');
     console.error('   OneDrive integration requires one of these environment variables.');
-    console.error('   Available environment: REPLIT_DEPLOYMENT=' + process.env.REPLIT_DEPLOYMENT);
     throw new Error('X_REPLIT_TOKEN not found for repl/depl');
   }
   
@@ -52,6 +35,8 @@ async function getAccessToken() {
     throw new Error('REPLIT_CONNECTORS_HOSTNAME not found');
   }
 
+  const tokenType = hasReplIdentity ? 'development (REPL_IDENTITY)' : 'production (WEB_REPL_RENEWAL)';
+  console.log(`   - Using ${tokenType} token`);
   console.log(`   - Connecting to: https://${hostname}/api/v2/connection`);
 
   try {
