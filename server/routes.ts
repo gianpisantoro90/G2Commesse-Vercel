@@ -611,8 +611,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/import", async (req, res) => {
     try {
-      await storage.importAllData(req.body);
-      res.json({ message: "Dati importati con successo" });
+      const { mode, ...data } = req.body;
+      const importMode = mode === 'merge' ? 'merge' : 'overwrite';
+
+      await storage.importAllData(data, importMode);
+
+      const message = importMode === 'merge'
+        ? "Dati importati e uniti con successo"
+        : "Dati importati con successo (sovrascrittura completa)";
+
+      res.json({ message, mode: importMode });
     } catch (error) {
       res.status(500).json({ message: "Errore nell'importazione dei dati" });
     }
