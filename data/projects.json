@@ -1932,7 +1932,13 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {}
+    "metadata": {
+      "prestazioni": [
+        "cse"
+      ],
+      "livelloProgettazione": [],
+      "classeDM143": ""
+    }
   },
   {
     "id": "1ca874b2-b38e-4bd0-ad3e-2bffb6f2b449",

@@ -129,15 +129,17 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
   const showLivelloProgettazione = hasProgettazione(formData.prestazioni);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" data-testid="prestazioni-modal">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto" data-testid="prestazioni-modal">
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={handleClose} aria-hidden="true" />
+        <div className="relative bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900" data-testid="modal-title">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white" data-testid="modal-title">
               Dettagli Prestazioni Professionali
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               Commessa: <span className="font-mono font-semibold text-primary">{project.code}</span> - {project.object}
             </p>
           </div>
@@ -145,7 +147,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
             variant="ghost"
             onClick={handleClose}
             disabled={savePrestazioniMutation.isPending}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
             data-testid="close-modal"
           >
             ✕
@@ -350,6 +352,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
             </Button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
