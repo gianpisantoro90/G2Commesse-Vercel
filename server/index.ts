@@ -80,8 +80,8 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production', // HTTPS only in production
     httpOnly: true, // Prevent XSS
-    maxAge: 1000 * 60 * 30, // 30 minutes (reduced from 24 hours)
-    sameSite: 'strict' // CSRF protection
+    maxAge: 1000 * 60 * 30, // 30 minutes
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax' // Less restrictive in dev for Replit Preview
   },
   rolling: true // Extend session on each request
 }));
