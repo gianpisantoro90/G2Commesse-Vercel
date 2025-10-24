@@ -690,7 +690,7 @@ export default function ProjectsTable() {
                             milestone: '🎯'
                           };
 
-                          const priority = priorityConfig[nextDeadline.priority];
+                          const priority = priorityConfig[nextDeadline.priority] || priorityConfig.medium;
 
                           return (
                             <div className="flex flex-col gap-1">
