@@ -53,6 +53,10 @@ if (process.env.NODE_ENV === 'production') {
   app.use(helmet({
     contentSecurityPolicy: false, // Disable CSP in development
     hsts: false, // Disable HSTS in development
+    frameguard: false, // Disable X-Frame-Options to allow Replit Preview iframe
+    crossOriginEmbedderPolicy: false, // Allow embedding
+    crossOriginOpenerPolicy: false, // Allow embedding
+    crossOriginResourcePolicy: false, // Allow embedding
   }));
 }
 
