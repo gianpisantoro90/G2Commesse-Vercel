@@ -40,5 +40,271 @@
     "name": "Prova",
     "city": "Catanzaro",
     "projectsCount": 0
+  },
+  {
+    "id": "b4f57615-9f35-4995-ab6e-fa3e4fa51736",
+    "sigla": "AGO",
+    "name": "Agostino Lupoli",
+    "city": "Vitulazio",
+    "projectsCount": 3
+  },
+  {
+    "id": "0d4567f7-ed23-4406-9c8b-f21685a6f415",
+    "sigla": "ELE",
+    "name": "ELE",
+    "city": "Afragola",
+    "projectsCount": 31
+  },
+  {
+    "id": "be69f28c-d30a-4e54-87f0-b54b847bf25f",
+    "sigla": "LUC",
+    "name": "LUC",
+    "city": "Frattamaggiore",
+    "projectsCount": 1
+  },
+  {
+    "id": "0f3fbbba-7757-4615-945a-2651a397cac9",
+    "sigla": "ACI",
+    "name": "ACI",
+    "city": "Roma",
+    "projectsCount": 1
+  },
+  {
+    "id": "8e11d13f-faa9-4506-982b-5941aca0dacd",
+    "sigla": "GUA",
+    "name": "Guardia di Finanza",
+    "city": "Roma",
+    "projectsCount": 1
+  },
+  {
+    "id": "96c6f359-6667-40a1-87a6-e65bbc39b414",
+    "sigla": "PAR",
+    "name": "PAR",
+    "city": "Bacoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "e4aeb759-cc6c-46d6-9333-f27939be3c5d",
+    "sigla": "TRA",
+    "name": "Condominio Tralice",
+    "city": "Cardito",
+    "projectsCount": 1
+  },
+  {
+    "id": "a6d2ebf8-d9b4-46fa-a332-61f84c1f3385",
+    "sigla": "COS",
+    "name": "Costanzo Project",
+    "city": "Cardito",
+    "projectsCount": 18
+  },
+  {
+    "id": "297d679e-949b-4f28-adb9-15c42de51853",
+    "sigla": "VAI",
+    "name": "Generoso Vaiano",
+    "city": "Marcianise",
+    "projectsCount": 1
+  },
+  {
+    "id": "b779e039-3601-433e-9e5c-30ac82897ba6",
+    "sigla": "MER",
+    "name": "Massimiliano Mercurio",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "c918757b-6588-48d2-bdd8-ef411d7a2457",
+    "sigla": "RUS",
+    "name": "Francesco Russo",
+    "city": "Casalnuovo",
+    "projectsCount": 1
+  },
+  {
+    "id": "ecd83760-9836-40c5-b86f-72d3b948349c",
+    "sigla": "CON",
+    "name": "Condominio Via Gramsci",
+    "city": "Pollena Trocchia",
+    "projectsCount": 1
+  },
+  {
+    "id": "2ad89a99-2e38-4671-80bb-98b43fcf7722",
+    "sigla": "HOI",
+    "name": "HOIST",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "eea16e32-1d86-43f6-8aaf-04440d706265",
+    "sigla": "EY_",
+    "name": "Ernst & Young",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "1959cc8a-f222-4873-b1f6-1b085202484f",
+    "sigla": "SAR",
+    "name": "SARMETAL",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "b2ecdb08-161c-405d-86bb-0d3f74e902d0",
+    "sigla": "TBP",
+    "name": "TBP",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "9708e4aa-110d-43cc-a55c-517e4836f825",
+    "sigla": "CIR",
+    "name": "Ciro Vitiello",
+    "city": "Boscoreale",
+    "projectsCount": 2
+  },
+  {
+    "id": "d1eaf4fc-20de-404d-b75c-28183f9189f2",
+    "sigla": "MAS_COM",
+    "name": "Comune Massa di Somma",
+    "city": "Massa di Somma",
+    "projectsCount": 1
+  },
+  {
+    "id": "5d214c45-d3b7-4ecd-86a0-7e0001ad38dc",
+    "sigla": "CNP",
+    "name": "CNPADC",
+    "city": "Napoli",
+    "projectsCount": 6
+  },
+  {
+    "id": "2927683d-10f5-4fd7-ae28-2e65ab923ba5",
+    "sigla": "CIS",
+    "name": "Consorzio Intercomunale Servizio Cimiteriale",
+    "city": "Massa di Somma",
+    "projectsCount": 1
+  },
+  {
+    "id": "e19c3136-9566-4486-bd10-862a740edb86",
+    "sigla": "GDF",
+    "name": "Guardia di Finanza",
+    "city": "Pomezia",
+    "projectsCount": 12
+  },
+  {
+    "id": "2204ba1a-d430-4f6f-a139-79423cd2555f",
+    "sigla": "EP_",
+    "name": "EP",
+    "city": "Campagna",
+    "projectsCount": 1
+  },
+  {
+    "id": "6025aaf9-65a5-4e4f-ae46-a1d32f27e4c1",
+    "sigla": "TAV",
+    "name": "TAV Napoli-Bari",
+    "city": "Napoli-Bari",
+    "projectsCount": 5
+  },
+  {
+    "id": "9fa60905-4233-4973-ad84-e054218a7c4c",
+    "sigla": "MAS",
+    "name": "MAS",
+    "city": "Napoli",
+    "projectsCount": 9
+  },
+  {
+    "id": "b0ab0e4f-ff75-4a99-908b-f3f5195f33ec",
+    "sigla": "MEN",
+    "name": "MENS",
+    "city": "Frattamaggiore",
+    "projectsCount": 7
+  },
+  {
+    "id": "ebb83009-c5be-407d-aa21-19fe2f8b859f",
+    "sigla": "CAR",
+    "name": "Pasquale Carbone",
+    "city": "Molfetta",
+    "projectsCount": 7
+  },
+  {
+    "id": "a6142ca7-1075-4533-95ce-9287921080d2",
+    "sigla": "DUE",
+    "name": "DueElle Tecnoservice",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "0e60f0d7-334b-426b-820c-1bcf800064d7",
+    "sigla": "ROM",
+    "name": "Rombo Team",
+    "city": "Orta di Atella",
+    "projectsCount": 1
+  },
+  {
+    "id": "20e2c296-fb15-4ff0-b57f-813c9308c1f2",
+    "sigla": "COS_F",
+    "name": "Francesco Coscia",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "ea2a4aac-f72a-409d-a5a4-1d51a3bf0f82",
+    "sigla": "GAE",
+    "name": "Gaetano",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "4fdda28b-d132-44b1-b397-074bf00c391e",
+    "sigla": "CRI",
+    "name": "Pasquale Cristiano",
+    "city": "Napoli",
+    "projectsCount": 5
+  },
+  {
+    "id": "43464c25-9697-4419-8890-c79598996b1a",
+    "sigla": "RAF",
+    "name": "Pasquale Raffa",
+    "city": "Pianura",
+    "projectsCount": 11
+  },
+  {
+    "id": "7d15f1a9-f4b3-407d-85f9-fa24b957362d",
+    "sigla": "ESP",
+    "name": "Perizie Esposito",
+    "city": "Napoli",
+    "projectsCount": 1
+  },
+  {
+    "id": "da9e80ed-5905-4dde-a726-62961f0f685e",
+    "sigla": "TRI",
+    "name": "Rocco Trifari",
+    "city": "Caserta",
+    "projectsCount": 3
+  },
+  {
+    "id": "98635a06-8b9c-443d-a5a9-fac0a7bfb1c2",
+    "sigla": "PEZ",
+    "name": "Sossio Pezzella",
+    "city": "Casalnuovo",
+    "projectsCount": 4
+  },
+  {
+    "id": "21d7f482-1a3c-47ad-9ea3-698edc1fd30e",
+    "sigla": "SET",
+    "name": "Valentino Setola",
+    "city": "Frattamaggiore",
+    "projectsCount": 1
+  },
+  {
+    "id": "3cb9c768-0446-4ad4-844c-3a51303a79b7",
+    "sigla": "ORF",
+    "name": "ORFEO",
+    "city": "Pomezia",
+    "projectsCount": 1
+  },
+  {
+    "id": "ee11f47f-3df3-4cde-b977-a5ca51133fd0",
+    "sigla": "BAN",
+    "name": "Bando Campania Diagnosi",
+    "city": "Campania",
+    "projectsCount": 1
   }
 ]
