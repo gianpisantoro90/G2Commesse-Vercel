@@ -27,18 +27,7 @@
     "committenteFinale": "Aeronautica Militare",
     "createdAt": "2025-09-25T10:25:54.473Z",
     "fsRoot": null,
-    "metadata": {
-      "classeDM143": "E16",
-      "prestazioni": [
-        "progettazione"
-      ],
-      "livelloProgettazione": [
-        "pfte",
-        "esecutivo"
-      ],
-      "importoOpere": 1000000,
-      "importoServizio": 5000
-    }
+    "metadata": {}
   },
   {
     "id": "975d8705-e5ae-44d4-98d5-d698ed806436",
@@ -53,13 +42,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-06T15:44:11.685Z",
     "fsRoot": null,
-    "metadata": {
-      "classeDM143": "",
-      "prestazioni": [
-        "perizia"
-      ],
-      "livelloProgettazione": []
-    }
+    "metadata": {}
   },
   {
     "id": "e210526c-a757-4c3a-883c-aa1fe8b5c039",
@@ -254,11 +237,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "6ba0273c-414a-48ef-b095-2d1a4b7ea038",
@@ -348,11 +327,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "13a7e853-46a4-413f-8a65-d1c0917b17d4",
@@ -367,12 +342,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza",
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "2e33d3e6-959b-423a-ae60-990401dc72a5",
@@ -387,12 +357,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "363c3b5a-6886-4f2b-be79-de64469110d4",
@@ -407,12 +372,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza",
-        "coordinamento_sicurezza_progettazione"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "06287a82-edf8-4035-830d-728e674cefa5",
@@ -427,12 +387,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "ad1813cd-98e0-40d6-8adc-eca10783a84c",
@@ -447,12 +402,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza",
-        "coordinamento_sicurezza_progettazione"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "31905a3e-43ce-4020-b369-f11979126ff3",
@@ -467,13 +417,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza",
-        "coordinamento_sicurezza_progettazione"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "3f78636d-d8f0-4ef6-b5f8-0ea7f3bdf1ac",
@@ -503,12 +447,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "5dd8b2b0-a583-428b-a8d6-7f28f800635a",
@@ -523,11 +462,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "104eb7d9-a2b6-49ba-91e1-e59fe9b9afa0",
@@ -572,12 +507,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "3ff39d51-f28f-407e-beb4-b619ad50b4c5",
@@ -592,11 +522,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "97221651-4072-4478-a0c9-583d0a1ef76d",
@@ -611,14 +537,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione",
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "4dcd1ffa-3fc3-4097-a635-d4de759c0cda",
@@ -678,12 +597,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "d3bd1cf1-4ec0-40d1-ab9a-6742f6c29fe4",
@@ -698,14 +612,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "livelloProgettazione": [
-        "pfte"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "2b2a5a24-308f-4e1b-8ece-07b336c8d5f0",
@@ -750,12 +657,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "d4d8e544-0051-4b45-8cc1-a70de6b08de5",
@@ -770,12 +672,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "e5842c14-a8c7-441d-8e40-d5ac5655cf70",
@@ -790,11 +687,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "079dc8a7-e4f2-4b23-9b02-21cab3bff4f5",
@@ -809,11 +702,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "f185dd4a-ba4a-4267-9430-f5858ed5778e",
@@ -828,11 +717,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "ca6373b5-3a77-4528-a560-5240821ec3ec",
@@ -847,11 +732,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "36cfcea4-b35f-49d7-aa15-8e898861a522",
@@ -881,11 +762,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "perizia"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "b3f031c8-14c7-4283-8e51-04a8e8ebc1ce",
@@ -900,11 +777,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "perizia"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "9cfb5571-3f0c-4a83-8ab6-ef64829b2286",
@@ -919,11 +792,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "perizia"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "ac55accf-7001-4e4e-832f-f1241ce10964",
@@ -1013,11 +882,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.394Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "388906a8-8256-4790-ba0e-eee66c147000",
@@ -1137,11 +1002,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "perizia"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "745b043b-f6f2-410a-9a4f-3743b18a2e78",
@@ -1171,15 +1032,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "livelloProgettazione": [
-        "esecutivo"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "ac3ce321-8ada-4b65-862e-07fc3e23e376",
@@ -1194,15 +1047,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "livelloProgettazione": [
-        "definitivo"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "b7035d74-ad1a-4d52-a640-b231da67db23",
@@ -1217,12 +1062,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "7da7471c-7029-442d-b0e0-6de1ab4af70d",
@@ -1357,11 +1197,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "2b332135-d3bc-423c-bcb5-9f03b6bdc41b",
@@ -1466,13 +1302,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza",
-        "collaudo"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "4f06d27b-9a7d-4fcf-9b8a-824102373d27",
@@ -1487,12 +1317,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "cbe5fb18-0fa4-474e-adb9-c0d01786abb5",
@@ -1537,12 +1362,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "360bae79-588c-416d-b37d-e8b68e591729",
@@ -1572,11 +1392,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.395Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "3d54e6da-8bdc-4d86-a17c-7bdf9dcea701",
@@ -1831,11 +1647,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "0054a0de-5cf9-4dfa-8fe0-7d28520f7da0",
@@ -1850,11 +1662,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "66ca4a2b-cc82-4b11-9b1e-6ab5f9bd1af3",
@@ -1869,11 +1677,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "b8f8867c-633c-41de-ae30-b690e5830cf9",
@@ -1888,11 +1692,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "76dc450b-c4ff-42ac-8524-a578be50edf7",
@@ -1907,11 +1707,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "3a069029-5c5d-44e0-852a-59f5c2f58244",
@@ -1926,12 +1722,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "58b98554-e2f2-4700-ad3a-31b680e2544d",
@@ -1946,12 +1737,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "0e612777-cc0b-4dbc-9b1a-cf9b8971d2a9",
@@ -2011,11 +1797,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "9a522f3b-a851-47e2-acfb-391b2d22a041",
@@ -2030,11 +1812,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "3ff02123-1801-4705-969a-c19f703c1676",
@@ -2049,11 +1827,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "679d237a-3fd1-4a03-937f-3733475b24a2",
@@ -2083,11 +1857,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "146090b9-a484-43d5-9a66-77ac8f65b426",
@@ -2117,12 +1887,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "82c7decf-80b7-483c-a193-5a0555723134",
@@ -2137,11 +1902,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "00ff587d-9bcb-4dff-be1f-c8da69998708",
@@ -2156,11 +1917,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.396Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "7d396d08-e65c-4d26-a171-b266b8975ea5",
@@ -2190,12 +1947,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "75f00050-a911-4ede-9e66-fd3ee538e578",
@@ -2210,11 +1962,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "ba7755b8-2980-4f5a-8ea5-0ef5a9c1734e",
@@ -2229,12 +1977,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ],
-      "classeDM143": ""
-    }
+    "metadata": {}
   },
   {
     "id": "49ad1689-e7c2-498e-b8d9-481bf4ea4548",
@@ -2264,11 +2007,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "coordinamento_sicurezza"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "28338777-ea3d-42cb-a089-25e96779af3c",
@@ -2283,11 +2022,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "f9e083ef-7c53-4ce5-b0fd-8004e59d9b67",
@@ -2302,11 +2037,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "aa4ecc93-d4ab-4312-afd4-7003df1df27f",
@@ -2336,13 +2067,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza",
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "c4d4dc9a-6b01-4786-a506-6ed235a00cf2",
@@ -2357,13 +2082,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "direzione_lavori",
-        "coordinamento_sicurezza",
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "036d3cc9-8f28-474e-9de0-28cff6f793c5",
@@ -2378,11 +2097,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "4e3d0303-724d-4765-928e-d58cc3ebf67e",
@@ -2397,11 +2112,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "perizia"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "69268826-9e4f-42e0-971b-8fed26f4f69f",
@@ -2461,11 +2172,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "b86fc046-e64e-4a38-8177-0bd6e8383620",
@@ -2480,11 +2187,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "4dd0ca03-bea1-4093-997a-52c40675b854",
@@ -2499,11 +2202,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "1a37b5ec-c517-4ee4-a0e6-f610f50e8d98",
@@ -2518,11 +2217,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "acustica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "f9c1f236-9533-4fce-9663-ad11d41713d2",
@@ -2537,11 +2232,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "perizia"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "fe661353-6b1e-410b-85ba-1f201f0acd90",
@@ -2556,11 +2247,7 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   },
   {
     "id": "ec2e832d-b614-48e5-93b0-167c4621acd8",
@@ -2575,11 +2262,6 @@
     "committenteFinale": null,
     "createdAt": "2025-10-24T17:01:57.397Z",
     "fsRoot": null,
-    "metadata": {
-      "prestazioni": [
-        "progettazione",
-        "certificazione_energetica"
-      ]
-    }
+    "metadata": {}
   }
 ]
