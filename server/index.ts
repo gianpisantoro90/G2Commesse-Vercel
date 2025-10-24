@@ -9,6 +9,9 @@ import { logger, requestLogger } from "./lib/logger";
 
 const app = express();
 
+// Configure trust proxy for Replit's reverse proxy
+app.set('trust proxy', 1);
+
 // Security: Validate required environment variables
 if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
   logger.error('SESSION_SECRET environment variable must be set and at least 32 characters long');
@@ -22,27 +25,36 @@ logger.info('Starting G2 Gestione Commesse server', {
 });
 
 // Security: Apply helmet middleware for security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-eval needed for dev
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:", "https://api.anthropic.com", "https://api.deepseek.com", "https://graph.microsoft.com"],
-      frameSrc: ["'none'"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
+// In development, disable CSP to allow Replit Preview to work
+if (process.env.NODE_ENV === 'production') {
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "wss:", "https://api.anthropic.com", "https://api.deepseek.com", "https://graph.microsoft.com"],
+        frameSrc: ["'none'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
     },
-  },
-  hsts: {
-    maxAge: 31536000, // 1 year
-    includeSubDomains: true,
-    preload: true
-  },
-  noSniff: true,
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
-}));
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
+    noSniff: true,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
+  }));
+} else {
+  // Development: minimal helmet config to allow Replit Preview
+  app.use(helmet({
+    contentSecurityPolicy: false, // Disable CSP in development
+    hsts: false, // Disable HSTS in development
+  }));
+}
 
 // Security: Rate limiting for general API
 const apiLimiter = rateLimit({
