@@ -5,6 +5,7 @@ import { storage, storagePromise } from "./storage";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema } from "@shared/schema";
 import serverOneDriveService from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
+import { emailService } from "./lib/email-service";
 import { z } from "zod";
 
 // Security: Rate limiter for login endpoint
@@ -1964,6 +1965,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(notification);
     } catch (error) {
       res.status(500).json({ message: "Errore nell'invio della notifica" });
+    }
+  });
+
+  // Email Integration Endpoints
+
+  /**
+   * Webhook endpoint for SendGrid Inbound Parse
+   * Receives forwarded emails and automatically imports them as communications
+   */
+  app.post("/api/email/webhook", async (req, res) => {
+    try {
+      console.log('📧 Email webhook received');
+
+      // Parse email from SendGrid webhook
+      const parsedEmail = emailService.parseSendGridWebhook(req.body);
+      console.log(`✉️ Email parsed: From ${parsedEmail.from.email}, Subject: ${parsedEmail.subject}`);
+
+      // Get all projects for AI matching
+      const projects = await storage.getAllProjects();
+
+      // Get AI config for analysis
+      const aiConfigResult = await storage.getSystemConfig('ai_config');
+      const aiApiKey = aiConfigResult?.value?.apiKey || process.env.ANTHROPIC_API_KEY;
+
+      // Analyze email with AI
+      const analysis = await emailService.analyzeEmailWithAI(
+        parsedEmail,
+        projects.map(p => ({
+          id: p.id,
+          code: p.code,
+          client: p.client,
+          object: p.object,
+        })),
+        aiApiKey
+      );
+
+      console.log(`🤖 AI Analysis complete: ${analysis.projectCode || 'No match'} (confidence: ${analysis.confidence})`);
+
+      // If high confidence match, auto-import
+      if (analysis.projectId && analysis.confidence > 0.7) {
+        const communication = await storage.createCommunication({
+          projectId: analysis.projectId,
+          type: parsedEmail.from.email.includes('@pec.') ? 'pec' : 'email',
+          direction: 'incoming',
+          subject: parsedEmail.subject,
+          body: parsedEmail.bodyText,
+          sender: `${parsedEmail.from.name || ''} <${parsedEmail.from.email}>`.trim(),
+          recipient: parsedEmail.to.map(t => t.email).join(', '),
+          isImportant: analysis.isImportant,
+          tags: analysis.suggestedTags,
+          attachments: parsedEmail.attachments.map(a => ({
+            name: a.filename,
+            size: a.size,
+          })),
+          communicationDate: parsedEmail.date,
+          // Email-specific fields
+          emailMessageId: parsedEmail.messageId,
+          emailHeaders: parsedEmail.headers,
+          emailHtml: parsedEmail.bodyHtml,
+          emailText: parsedEmail.bodyText,
+          autoImported: true,
+          aiSuggestions: analysis,
+          importedAt: new Date(),
+        });
+
+        console.log(`✅ Communication auto-imported: ${communication.id}`);
+
+        // Send notification about new email
+        notificationService.sendNotification({
+          type: 'communication',
+          title: 'Nuova email importata',
+          message: `${parsedEmail.subject} - ${analysis.projectCode}`,
+          priority: analysis.isImportant ? 'high' : 'medium',
+          projectId: parseInt(analysis.projectId),
+        });
+
+        res.json({
+          success: true,
+          imported: true,
+          communicationId: communication.id,
+          projectCode: analysis.projectCode,
+          confidence: analysis.confidence,
+        });
+      } else {
+        // Low confidence - store as pending for manual review
+        console.log(`⚠️ Low confidence (${analysis.confidence}), storing for manual review`);
+
+        // TODO: Store in pending emails table for manual assignment
+
+        res.json({
+          success: true,
+          imported: false,
+          reason: 'Low confidence - requires manual review',
+          suggestions: {
+            projectCode: analysis.projectCode,
+            confidence: analysis.confidence,
+            extractedData: analysis.extractedData,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('❌ Email webhook error:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * Send email from the application
+   */
+  app.post("/api/email/send", async (req, res) => {
+    try {
+      const { to, subject, text, html, communicationId, projectId } = req.body;
+
+      if (!to || !subject || !text) {
+        return res.status(400).json({
+          success: false,
+          error: 'Missing required fields: to, subject, text'
+        });
+      }
+
+      // Send email
+      const result = await emailService.sendEmail({
+        to,
+        subject,
+        text,
+        html,
+        from: process.env.EMAIL_FROM,
+      });
+
+      if (!result.success) {
+        return res.status(500).json(result);
+      }
+
+      // If this is linked to a communication, update it with sent info
+      if (communicationId) {
+        await storage.updateCommunication(communicationId, {
+          emailMessageId: result.messageId,
+        });
+      }
+
+      // If projectId provided, create a new outgoing communication record
+      if (projectId && !communicationId) {
+        await storage.createCommunication({
+          projectId,
+          type: 'email',
+          direction: 'outgoing',
+          subject,
+          body: text,
+          recipient: Array.isArray(to) ? to.join(', ') : to,
+          sender: process.env.EMAIL_FROM || 'G2 Ingegneria',
+          emailMessageId: result.messageId,
+          emailText: text,
+          emailHtml: html,
+          communicationDate: new Date(),
+        });
+      }
+
+      res.json({
+        success: true,
+        messageId: result.messageId,
+      });
+    } catch (error) {
+      console.error('Email send error:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  /**
+   * Test SMTP connection and configuration
+   */
+  app.post("/api/email/test", async (req, res) => {
+    try {
+      emailService.initialize();
+      const isConnected = await emailService.verifyConnection();
+
+      if (isConnected) {
+        res.json({
+          success: true,
+          message: 'SMTP connection successful',
+        });
+      } else {
+        res.json({
+          success: false,
+          message: 'SMTP connection failed. Check your configuration.',
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   });
 

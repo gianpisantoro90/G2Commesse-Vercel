@@ -50,7 +50,12 @@ import {
   ArrowUp,
   Plus,
   Search,
-  Filter
+  Filter,
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  ExternalLink,
+  Eye
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -71,6 +76,28 @@ interface Communication {
   isImportant: boolean;
   communicationDate: Date;
   createdBy?: string;
+  // Email integration fields
+  emailMessageId?: string;
+  emailHeaders?: any;
+  emailRaw?: string;
+  emailHtml?: string;
+  emailText?: string;
+  autoImported?: boolean;
+  aiSuggestions?: {
+    projectCode?: string;
+    projectId?: string;
+    confidence: number;
+    extractedData?: {
+      deadlines?: string[];
+      amounts?: string[];
+      actionItems?: string[];
+      keyPoints?: string[];
+    };
+    suggestedTags?: string[];
+    isImportant?: boolean;
+    summary?: string;
+  };
+  importedAt?: Date;
 }
 
 const TYPE_CONFIG = {
@@ -306,13 +333,15 @@ function CommunicationForm({
   );
 }
 
-function CommunicationCard({ comm, onEdit, onDelete }: {
+function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
   comm: Communication;
   onEdit: () => void;
   onDelete: () => void;
+  onSendEmail?: () => void;
 }) {
   const typeConfig = TYPE_CONFIG[comm.type];
   const directionConfig = DIRECTION_CONFIG[comm.direction];
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
 
   return (
     <Card className={comm.isImportant ? 'border-yellow-300 bg-yellow-50' : ''}>
@@ -320,7 +349,7 @@ function CommunicationCard({ comm, onEdit, onDelete }: {
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <Badge className={typeConfig.color}>
                   {typeConfig.icon} {typeConfig.label}
                 </Badge>
@@ -330,10 +359,61 @@ function CommunicationCard({ comm, onEdit, onDelete }: {
                 {comm.isImportant && (
                   <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
                 )}
+                {/* Auto-imported indicator with AI confidence */}
+                {comm.autoImported && comm.aiSuggestions && (
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 gap-1">
+                    <Zap className="h-3 w-3" />
+                    Auto-importata
+                    {comm.aiSuggestions.confidence && (
+                      <span className="ml-1 text-xs">
+                        ({Math.round(comm.aiSuggestions.confidence * 100)}%)
+                      </span>
+                    )}
+                  </Badge>
+                )}
               </div>
               <h4 className="font-semibold text-gray-900 mb-1">{comm.subject}</h4>
+
+              {/* AI Summary if available */}
+              {comm.aiSuggestions?.summary && (
+                <div className="bg-purple-50 border border-purple-200 rounded p-2 mb-2">
+                  <p className="text-xs text-purple-900 flex items-start gap-1">
+                    <Zap className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                    <span className="italic">{comm.aiSuggestions.summary}</span>
+                  </p>
+                </div>
+              )}
+
               {comm.body && (
                 <p className="text-sm text-gray-600 line-clamp-3">{comm.body}</p>
+              )}
+
+              {/* AI Extracted Data */}
+              {comm.aiSuggestions?.extractedData && (
+                <div className="mt-2 space-y-1">
+                  {comm.aiSuggestions.extractedData.actionItems && comm.aiSuggestions.extractedData.actionItems.length > 0 && (
+                    <div className="text-xs">
+                      <span className="font-medium text-orange-700">Azioni:</span>
+                      <ul className="list-disc list-inside ml-2 text-gray-600">
+                        {comm.aiSuggestions.extractedData.actionItems.map((item, i) => (
+                          <li key={i}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {comm.aiSuggestions.extractedData.deadlines && comm.aiSuggestions.extractedData.deadlines.length > 0 && (
+                    <div className="text-xs">
+                      <span className="font-medium text-red-700">Scadenze:</span>
+                      <span className="ml-1 text-gray-600">{comm.aiSuggestions.extractedData.deadlines.join(', ')}</span>
+                    </div>
+                  )}
+                  {comm.aiSuggestions.extractedData.amounts && comm.aiSuggestions.extractedData.amounts.length > 0 && (
+                    <div className="text-xs">
+                      <span className="font-medium text-green-700">Importi:</span>
+                      <span className="ml-1 text-gray-600">{comm.aiSuggestions.extractedData.amounts.join(', ')}</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -344,6 +424,18 @@ function CommunicationCard({ comm, onEdit, onDelete }: {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {comm.emailHtml && (
+                  <DropdownMenuItem onClick={() => setShowEmailPreview(!showEmailPreview)}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    {showEmailPreview ? 'Nascondi' : 'Mostra'} Email
+                  </DropdownMenuItem>
+                )}
+                {(comm.type === 'email' || comm.type === 'pec') && onSendEmail && (
+                  <DropdownMenuItem onClick={onSendEmail}>
+                    <Send className="h-4 w-4 mr-2" />
+                    Invia Email
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={onEdit}>
                   <Edit className="h-4 w-4 mr-2" />
                   Modifica
@@ -355,6 +447,20 @@ function CommunicationCard({ comm, onEdit, onDelete }: {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+
+          {/* Email HTML Preview */}
+          {showEmailPreview && comm.emailHtml && (
+            <div className="border rounded p-3 bg-gray-50 max-h-64 overflow-y-auto">
+              <div className="text-xs text-gray-500 mb-2 flex items-center gap-2">
+                <Mail className="h-3 w-3" />
+                Anteprima Email HTML
+              </div>
+              <div
+                className="prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: comm.emailHtml }}
+              />
+            </div>
+          )}
 
           {(comm.recipient || comm.sender) && (
             <div className="text-sm text-gray-600">
@@ -379,7 +485,7 @@ function CommunicationCard({ comm, onEdit, onDelete }: {
             </div>
           )}
 
-          <div className="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t">
+          <div className="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t flex-wrap">
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {format(new Date(comm.communicationDate), 'dd MMM yyyy', { locale: it })}
@@ -388,6 +494,12 @@ function CommunicationCard({ comm, onEdit, onDelete }: {
               <Clock className="h-3 w-3" />
               {format(new Date(comm.communicationDate), 'HH:mm')}
             </div>
+            {comm.importedAt && (
+              <div className="flex items-center gap-1 text-purple-600">
+                <CheckCircle2 className="h-3 w-3" />
+                Importata {format(new Date(comm.importedAt), 'dd/MM HH:mm')}
+              </div>
+            )}
             {comm.createdBy && (
               <div className="ml-auto">
                 👤 {comm.createdBy}
@@ -400,11 +512,126 @@ function CommunicationCard({ comm, onEdit, onDelete }: {
   );
 }
 
+function EmailSendDialog({
+  open,
+  onOpenChange,
+  replyTo
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  replyTo?: Communication;
+}) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [sending, setSending] = useState(false);
+  const [formData, setFormData] = useState({
+    to: replyTo?.sender || '',
+    subject: replyTo ? `Re: ${replyTo.subject}` : '',
+    body: ''
+  });
+
+  const handleSend = async () => {
+    if (!formData.to || !formData.subject) {
+      toast({
+        title: "Campi mancanti",
+        description: "Inserisci destinatario e oggetto",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSending(true);
+    try {
+      const response = await apiRequest("POST", "/api/email/send", {
+        to: formData.to,
+        subject: formData.subject,
+        text: formData.body,
+        projectId: replyTo?.projectId
+      });
+
+      toast({
+        title: "Email inviata",
+        description: "L'email è stata inviata con successo"
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      onOpenChange(false);
+      setFormData({ to: '', subject: '', body: '' });
+    } catch (error) {
+      toast({
+        title: "Errore invio",
+        description: "Impossibile inviare l'email",
+        variant: "destructive"
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Invia Email</DialogTitle>
+          <DialogDescription>
+            Componi e invia un'email che verrà registrata automaticamente
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Destinatario *</Label>
+            <Input
+              type="email"
+              value={formData.to}
+              onChange={(e) => setFormData({ ...formData, to: e.target.value })}
+              placeholder="email@esempio.it"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Oggetto *</Label>
+            <Input
+              value={formData.subject}
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+              placeholder="Oggetto dell'email..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Messaggio</Label>
+            <Textarea
+              value={formData.body}
+              onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+              placeholder="Testo dell'email..."
+              rows={8}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>
+            Annulla
+          </Button>
+          <Button onClick={handleSend} disabled={sending} className="gap-2">
+            {sending ? (
+              <>Invio...</>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Invia Email
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function RegistroComunicazioni() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingComm, setEditingComm] = useState<Communication | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [replyToComm, setReplyToComm] = useState<Communication | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterDirection, setFilterDirection] = useState<string>('all');
@@ -694,10 +921,21 @@ export default function RegistroComunicazioni() {
               comm={comm}
               onEdit={() => setEditingComm(comm)}
               onDelete={() => handleDelete(comm.id)}
+              onSendEmail={() => {
+                setReplyToComm(comm);
+                setEmailDialogOpen(true);
+              }}
             />
           ))
         )}
       </div>
+
+      {/* Email Send Dialog */}
+      <EmailSendDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        replyTo={replyToComm || undefined}
+      />
 
       {/* Edit Dialog */}
       {editingComm && (
