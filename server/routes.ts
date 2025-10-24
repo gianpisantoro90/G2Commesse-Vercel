@@ -4,6 +4,7 @@ import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema } from "@shared/schema";
 import serverOneDriveService from "./lib/onedrive-service";
+import { notificationService } from "./lib/notification-service";
 import { z } from "zod";
 
 // Security: Rate limiter for login endpoint
@@ -1928,6 +1929,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Notification endpoints
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const unreadOnly = req.query.unreadOnly === 'true';
+      const notifications = notificationService.getNotifications(unreadOnly);
+      res.json(notifications);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero delle notifiche" });
+    }
+  });
+
+  app.post("/api/notifications/mark-read/:id", async (req, res) => {
+    try {
+      notificationService.markAsRead(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Errore nell'aggiornamento della notifica" });
+    }
+  });
+
+  app.post("/api/notifications/mark-all-read", async (req, res) => {
+    try {
+      notificationService.markAllAsRead();
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ message: "Errore nell'aggiornamento delle notifiche" });
+    }
+  });
+
+  app.post("/api/notifications/send", async (req, res) => {
+    try {
+      const notification = notificationService.sendNotification(req.body);
+      res.json(notification);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nell'invio della notifica" });
+    }
+  });
+
   const httpServer = createServer(app);
+
+  // Initialize WebSocket notification service
+  notificationService.initialize(httpServer);
+
+  // Schedule periodic checks for notifications (every 5 minutes)
+  setInterval(() => {
+    notificationService.checkDeadlines(storage);
+    notificationService.checkInvoices(storage);
+    notificationService.checkBudgets(storage);
+    notificationService.clearOldNotifications();
+  }, 5 * 60 * 1000); // 5 minutes
+
+  // Run initial check after 10 seconds
+  setTimeout(() => {
+    notificationService.checkDeadlines(storage);
+    notificationService.checkInvoices(storage);
+    notificationService.checkBudgets(storage);
+  }, 10000);
+
   return httpServer;
 }

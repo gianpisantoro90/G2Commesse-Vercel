@@ -29,7 +29,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-eval needed for dev
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://api.anthropic.com", "https://api.deepseek.com", "https://graph.microsoft.com"],
+      connectSrc: ["'self'", "ws:", "wss:", "https://api.anthropic.com", "https://api.deepseek.com", "https://graph.microsoft.com"],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null,
