@@ -146,14 +146,15 @@ export function renderPrestazioneBadge(
 } {
   const config = PRESTAZIONI_CONFIG[prestazione];
   
-  // Fallback se la prestazione non è riconosciuta
+  // Fallback se la prestazione non è riconosciuta  
   if (!config) {
     const sizeClass = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm';
+    console.warn(`Prestazione non riconosciuta: ${prestazione}`);
     return {
       icon: '❓',
-      label: String(prestazione),
+      label: String(prestazione).substring(0, 10),
       className: `inline-flex items-center gap-1 rounded-full font-medium border bg-gray-100 text-gray-800 border-gray-200 ${sizeClass}`,
-      fullLabel: String(prestazione)
+      fullLabel: `Non riconosciuta: ${prestazione}`
     };
   }
   
