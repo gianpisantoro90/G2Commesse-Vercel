@@ -1,0 +1,33 @@
+Si è verificato un errore
+L'applicazione ha riscontrato un errore imprevisto. Riprova o ricarica la pagina.
+
+Dettagli errore (solo in development)
+TypeError: Cannot read properties of undefined (reading 'icon')
+
+
+    at ProjectsTable (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/src/components/projects/projects-table.tsx:54:39)
+    at div
+    at https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=f63d6164:42:13
+    at Presence (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7QZBBLXT.js?v=f63d6164:24:11)
+    at https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=f63d6164:175:13
+    at _c5 (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/src/components/ui/tabs.tsx:72:12)
+    at div
+    at https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AXMZZQ2X.js?v=f63d6164:42:13
+    at Provider (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=f63d6164:38:15)
+    at https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=f63d6164:53:7
+    at div
+    at div
+    at main
+    at div
+    at div
+    at Dashboard (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/src/pages/dashboard.tsx:45:37)
+    at Route (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=f63d6164:323:16)
+    at Switch (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=f63d6164:379:17)
+    at AuthenticatedRouter
+    at div
+    at AppContent (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/src/App.tsx?v=Z1Lz0TGWVEWtAlfuOPwwb:81:49)
+    at Provider (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=f63d6164:38:15)
+    at TooltipProvider (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=f63d6164:63:5)
+    at QueryClientProvider (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=f63d6164:2805:3)
+    at ErrorBoundary (https://4038656b-33e9-4283-8dc6-43bfbafc700e-00-3ngnh2k4atatf.worf.replit.dev/src/components/error-boundary.tsx:10:5)
+    at App
