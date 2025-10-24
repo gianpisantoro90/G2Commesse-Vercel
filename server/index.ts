@@ -158,12 +158,17 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: process.platform !== 'win32', // reusePort not supported on Windows
   }, () => {
+    // Use Replit domain if available, otherwise fallback to localhost
+    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+      : `http://localhost:${port}`;
+    
     logger.info(`Server started successfully on port ${port}`, {
-      url: `http://localhost:${port}`,
+      url: baseUrl,
       nodeEnv: process.env.NODE_ENV,
     });
     console.log(`\n🚀 G2 Ingegneria avviato con successo!`);
-    console.log(`📱 Apri: http://localhost:${port}`);
+    console.log(`📱 Apri: ${baseUrl}`);
     console.log(`⏹️  Premi Ctrl+C per fermare\n`);
   });
 })();
