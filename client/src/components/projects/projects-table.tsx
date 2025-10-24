@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -38,6 +39,9 @@ import {
   type TipoRapportoType 
 } from "@/lib/prestazioni-utils";
 
+type SortField = "code" | "client" | "city" | "object" | "year" | "status";
+type SortOrder = "asc" | "desc";
+
 export default function ProjectsTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -45,6 +49,10 @@ export default function ProjectsTable() {
   const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
   const [selectedProjectForFatturazione, setSelectedProjectForFatturazione] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
+
+  // Sorting state
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   // Column visibility toggles
   const [showTechInfo, setShowTechInfo] = useState(false);
@@ -109,6 +117,28 @@ export default function ProjectsTable() {
   // Get unique years from projects
   const availableYears = Array.from(new Set(projects.map(p => p.year))).sort((a, b) => b - a);
 
+  // Handle column sorting
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle sort order if clicking same field
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      // Set new field and default to ascending
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  // Sort icon component
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 inline-block text-gray-400" />;
+    }
+    return sortOrder === "asc" 
+      ? <ArrowUp className="h-4 w-4 ml-1 inline-block text-primary" />
+      : <ArrowDown className="h-4 w-4 ml-1 inline-block text-primary" />;
+  };
+
   const filteredProjects = projects.filter(project => {
     // Text search filter
     const matchesSearch = searchTerm === "" ||
@@ -124,6 +154,45 @@ export default function ProjectsTable() {
     const matchesYear = yearFilter === "all" || project.year === parseInt(yearFilter);
 
     return matchesSearch && matchesStatus && matchesYear;
+  });
+
+  // Sort filtered projects
+  const sortedProjects = [...filteredProjects].sort((a, b) => {
+    if (!sortField) return 0;
+
+    let aValue: string | number = "";
+    let bValue: string | number = "";
+
+    switch (sortField) {
+      case "code":
+        aValue = a.code;
+        bValue = b.code;
+        break;
+      case "client":
+        aValue = a.client.toLowerCase();
+        bValue = b.client.toLowerCase();
+        break;
+      case "city":
+        aValue = a.city.toLowerCase();
+        bValue = b.city.toLowerCase();
+        break;
+      case "object":
+        aValue = a.object.toLowerCase();
+        bValue = b.object.toLowerCase();
+        break;
+      case "year":
+        aValue = a.year;
+        bValue = b.year;
+        break;
+      case "status":
+        aValue = a.status;
+        bValue = b.status;
+        break;
+    }
+
+    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+    return 0;
   });
 
   const handleDeleteProject = (project: Project) => {
@@ -401,16 +470,56 @@ export default function ProjectsTable() {
               <caption className="sr-only">Elenco di tutte le commesse con dettagli, stato e azioni</caption>
               <thead className="bg-gray-50">
                 <tr>
-                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tl-lg w-24">Codice</th>
-                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">Cliente</th>
+                  <th 
+                    scope="col" 
+                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tl-lg w-24 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("code")}
+                    data-testid="sort-code"
+                  >
+                    <div className="flex items-center">
+                      Codice
+                      <SortIcon field="code" />
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("client")}
+                    data-testid="sort-client"
+                  >
+                    <div className="flex items-center">
+                      Cliente
+                      <SortIcon field="client" />
+                    </div>
+                  </th>
                   {showTechInfo && (
                     <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-28">
                       Tipo Rapporto
                       <span className="ml-1 text-xs text-gray-500 cursor-help" title="Chi commissiona il lavoro a G2 Ingegneria">ⓘ</span>
                     </th>
                   )}
-                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Città</th>
-                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">Oggetto</th>
+                  <th 
+                    scope="col" 
+                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("city")}
+                    data-testid="sort-city"
+                  >
+                    <div className="flex items-center">
+                      Città
+                      <SortIcon field="city" />
+                    </div>
+                  </th>
+                  <th 
+                    scope="col" 
+                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("object")}
+                    data-testid="sort-object"
+                  >
+                    <div className="flex items-center">
+                      Oggetto
+                      <SortIcon field="object" />
+                    </div>
+                  </th>
                   {showPrestazioni && (
                     <>
                       <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
@@ -429,11 +538,31 @@ export default function ProjectsTable() {
                   )}
                   {showTechInfo && (
                     <>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-16">Anno</th>
+                      <th 
+                        scope="col" 
+                        className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-16 cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={() => handleSort("year")}
+                        data-testid="sort-year"
+                      >
+                        <div className="flex items-center">
+                          Anno
+                          <SortIcon field="year" />
+                        </div>
+                      </th>
                       <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-20">Template</th>
                     </>
                   )}
-                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24">Stato</th>
+                  <th 
+                    scope="col" 
+                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort("status")}
+                    data-testid="sort-status"
+                  >
+                    <div className="flex items-center">
+                      Stato
+                      <SortIcon field="status" />
+                    </div>
+                  </th>
                   {showFatturazione && (
                     <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
                       Fatturazione
@@ -459,7 +588,7 @@ export default function ProjectsTable() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredProjects.map((project) => (
+                {sortedProjects.map((project) => (
                   <tr key={project.id} className="hover:bg-gray-50 transition-colors">
                     <td className="py-4 px-4 font-mono text-sm font-semibold text-primary" data-testid={`project-code-${project.id}`}>
                       {project.code}
