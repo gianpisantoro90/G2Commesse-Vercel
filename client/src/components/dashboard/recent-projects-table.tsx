@@ -100,14 +100,14 @@ export default function RecentProjectsTable() {
   return (
     <div className="card-g2" data-testid="recent-projects-table">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Commesse Recenti</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Commesse Recenti</h3>
         <Button variant="ghost" className="text-primary hover:text-teal-700 font-medium text-sm" data-testid="view-all-projects">
           Vedi Tutte →
         </Button>
       </div>
       
       {recentProjects.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <div className="text-4xl mb-2">📁</div>
           <p>Nessuna commessa presente</p>
           <p className="text-sm">Crea la prima commessa per iniziare</p>
@@ -116,28 +116,28 @@ export default function RecentProjectsTable() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Codice</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Cliente</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Città</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Oggetto</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 text-sm">Status</th>
-                <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm">☁️</th>
+              <tr className="border-b border-gray-200 dark:border-gray-700">
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Codice</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Cliente</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Città</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Oggetto</th>
+                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Status</th>
+                <th className="text-center py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">☁️</th>
               </tr>
             </thead>
             <tbody>
               {recentProjects.map((project) => (
-                <tr key={project.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={project.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                   <td className="py-3 px-4 font-mono text-sm font-semibold text-primary" data-testid={`project-code-${project.id}`}>
                     {project.code}
                   </td>
-                  <td className="py-3 px-4 text-sm" data-testid={`project-client-${project.id}`}>
+                  <td className="py-3 px-4 text-sm dark:text-gray-300" data-testid={`project-client-${project.id}`}>
                     {project.client}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-600" data-testid={`project-city-${project.id}`}>
+                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`project-city-${project.id}`}>
                     {project.city}
                   </td>
-                  <td className="py-3 px-4 text-sm" data-testid={`project-object-${project.id}`}>
+                  <td className="py-3 px-4 text-sm dark:text-gray-300" data-testid={`project-object-${project.id}`}>
                     {project.object}
                   </td>
                   <td className="py-3 px-4" data-testid={`project-status-${project.id}`}>

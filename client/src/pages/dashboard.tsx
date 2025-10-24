@@ -52,7 +52,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-g2-accent">
+    <div className="min-h-screen bg-g2-accent dark:bg-gray-950">
       <Header />
       
       <div className="max-w-7xl mx-auto">
@@ -84,7 +84,7 @@ export default function Dashboard() {
             {activeTab === "gestione" && (
               <div data-testid="management-panel">
                 <Tabs value={activeSubTab.gestione} onValueChange={(value) => handleSubTabChange("gestione", value)}>
-                  <div className="bg-white rounded-t-2xl border-b border-gray-200 overflow-x-auto">
+                  <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                     <TabsList className="inline-flex w-auto min-w-full bg-transparent border-0 p-0">
                       <TabsTrigger
                         value="nuova"
