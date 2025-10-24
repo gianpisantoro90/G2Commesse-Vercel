@@ -9,5 +9,16 @@
       "lastUpdated": "2025-10-06T16:57:50.872Z"
     },
     "updatedAt": "2025-10-06T16:57:50.927Z"
+  },
+  {
+    "id": "8faf2930-8bd4-4644-8b2e-1b2ea7f0b495",
+    "key": "onedrive_root_folder",
+    "value": {
+      "folderId": "",
+      "folderName": "LAVORO_CORRENTE",
+      "folderPath": "/LAVORO_CORRENTE",
+      "lastUpdated": "2025-10-24T17:01:57.397Z"
+    },
+    "updatedAt": "2025-10-24T17:01:57.397Z"
   }
 ]

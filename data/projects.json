@@ -75,5 +75,2511 @@
     "createdAt": "2025-10-06T16:51:34.793Z",
     "fsRoot": null,
     "metadata": {}
+  },
+  {
+    "id": "2a5bc1c1-50ea-43a9-9872-08a34268cc9a",
+    "code": "24AGOVIT01",
+    "client": "Agostino Lupoli",
+    "city": "Vitulazio",
+    "object": "Ristrutturazione Armeria",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "partnership",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "dfb1d991-d2f2-4f79-9bb6-f74c7861685b",
+    "code": "24ELEAFR01",
+    "client": "ELE",
+    "city": "Afragola",
+    "object": "RAP Smart City",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "454e4cce-354a-4aa9-a349-ec32c8f01a7a",
+    "code": "24LUCFRA01",
+    "client": "LUC",
+    "city": "Frattamaggiore",
+    "object": "Valutazione Impatto acustico officina",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "91a2f835-f35e-4d6c-b1fe-24b34e92303f",
+    "code": "25ACIROM01",
+    "client": "ACI",
+    "city": "Roma",
+    "object": "Sostituzione gruppi frigo",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "a8afa8a2-8260-40ac-97fd-b061f1e43d3e",
+    "code": "25AGOFRA01",
+    "client": "Agostino Lupoli",
+    "city": "Frattamaggiore",
+    "object": "Ristrutturazione Sede Vigili Urbani",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "partnership",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "788ddf17-6d69-454e-8014-5b997a379962",
+    "code": "25GUAROM01",
+    "client": "Guardia di Finanza",
+    "city": "Roma",
+    "object": "Rifacimento pavimentazione",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "c1ce0603-bc7d-4242-b10b-8da3de9b43b3",
+    "code": "25PARBAC01",
+    "client": "PAR",
+    "city": "Bacoli",
+    "object": "Relazione danni giunto edificio",
+    "year": 25,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "255112f4-49b1-40d7-8449-8f14b6dcdf10",
+    "code": "22TRACAR01",
+    "client": "Condominio Tralice",
+    "city": "Cardito",
+    "object": "Condominio Tralice",
+    "year": 22,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "8e79028b-f746-4986-9da6-e2ab196edd4b",
+    "code": "22COSCAR01",
+    "client": "Costanzo Project",
+    "city": "Cardito",
+    "object": "Pensilina Fotovoltaica Turino",
+    "year": 22,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "78852226-56d8-4d41-bcb7-e331f1b87b81",
+    "code": "25VAIMAR01",
+    "client": "Generoso Vaiano",
+    "city": "Marcianise",
+    "object": "Marcianise Palazzetto",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "7dd78708-16b4-4e12-924a-a207ea257425",
+    "code": "25MERNAP01",
+    "client": "Massimiliano Mercurio",
+    "city": "Napoli",
+    "object": "CILA Mercurio",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "d32abd4b-d931-4d45-a686-fc2aeb982ca6",
+    "code": "24RUSCAS01",
+    "client": "Francesco Russo",
+    "city": "Casalnuovo",
+    "object": "Relazione Energetica APE",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "6ba0273c-414a-48ef-b095-2d1a4b7ea038",
+    "code": "24CONPOL01",
+    "client": "Condominio Via Gramsci",
+    "city": "Pollena Trocchia",
+    "object": "Condominio Via Gramsci",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "eccd341c-313d-4d16-8eec-ecfcf34ae05e",
+    "code": "24HOINAP01",
+    "client": "HOIST",
+    "city": "Napoli",
+    "object": "CTU Consulenza Tecnica",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "9c89797f-ec06-4eda-9bc8-6fc7a80f0b1d",
+    "code": "24EYNAP01",
+    "client": "Ernst & Young",
+    "city": "Napoli",
+    "object": "Consulenza Regione Campania",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "802a98c3-807f-47df-ac2b-1f5bcbe73edf",
+    "code": "25SARNAP01",
+    "client": "SARMETAL",
+    "city": "Napoli",
+    "object": "Intervento Edilizio",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "48e461a1-996e-4440-a582-d5c6c426bcc7",
+    "code": "22TBPNAP01",
+    "client": "TBP",
+    "city": "Napoli",
+    "object": "Progettazione Elettrica Via Bernini 58",
+    "year": 22,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "70c3bb9a-2168-46a6-a421-5dbc25d987ba",
+    "code": "25CIRBOS01",
+    "client": "Ciro Vitiello",
+    "city": "Boscoreale",
+    "object": "APE Boscoreale",
+    "year": 25,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "13a7e853-46a4-413f-8a65-d1c0917b17d4",
+    "code": "25CIRBOS02",
+    "client": "Ciro Vitiello",
+    "city": "San Severino",
+    "object": "APE San Severino",
+    "year": 25,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza",
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "2e33d3e6-959b-423a-ae60-990401dc72a5",
+    "code": "24COMSAN01",
+    "client": "Comune Massa di Somma",
+    "city": "Massa di Somma",
+    "object": "Centro Polifunzionale DL CSE",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "ati",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "363c3b5a-6886-4f2b-be79-de64469110d4",
+    "code": "23CNPNAP01",
+    "client": "CNPADC",
+    "city": "Napoli",
+    "object": "Manutenzione Ordinaria CSP CSE RL",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza",
+        "coordinamento_sicurezza_progettazione"
+      ]
+    }
+  },
+  {
+    "id": "06287a82-edf8-4035-830d-728e674cefa5",
+    "code": "23CNPNAP02",
+    "client": "CNPADC",
+    "city": "Napoli",
+    "object": "Sfondellamenti DL CSE RL",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "ad1813cd-98e0-40d6-8adc-eca10783a84c",
+    "code": "24CNPNAP03",
+    "client": "CNPADC",
+    "city": "Napoli",
+    "object": "Manutenzione Ordinaria 2 CSP CSE RL",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza",
+        "coordinamento_sicurezza_progettazione"
+      ]
+    }
+  },
+  {
+    "id": "31905a3e-43ce-4020-b369-f11979126ff3",
+    "code": "24CNPNAP04",
+    "client": "CNPADC",
+    "city": "Napoli",
+    "object": "Sostituzione Infissi CSP CSE DL RL",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza",
+        "coordinamento_sicurezza_progettazione"
+      ]
+    }
+  },
+  {
+    "id": "3f78636d-d8f0-4ef6-b5f8-0ea7f3bdf1ac",
+    "code": "24CNPNAP05",
+    "client": "CNPADC",
+    "city": "Napoli",
+    "object": "Via Lauria Validazione Supporto RUP",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "d235d31b-fd95-473c-94e9-5a9ce28893bd",
+    "code": "25CNPNAP06",
+    "client": "CNPADC",
+    "city": "Napoli",
+    "object": "Inertizzazione Serbatoi DL CSE",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "5dd8b2b0-a583-428b-a8d6-7f28f800635a",
+    "code": "23CISMAS01",
+    "client": "Consorzio Intercomunale Servizio Cimiteriale",
+    "city": "Massa di Somma",
+    "object": "Espansione Cimitero CSE",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "104eb7d9-a2b6-49ba-91e1-e59fe9b9afa0",
+    "code": "24GDFPOM01",
+    "client": "Guardia di Finanza",
+    "city": "Pomezia",
+    "object": "Aggiornamento Stati Descrittivi Edifici",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "33387752-7762-49fe-b9c1-0b69f5617ab1",
+    "code": "24GDFROM01",
+    "client": "Guardia di Finanza",
+    "city": "Roma",
+    "object": "Assistenza RUP",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "b59060ab-990a-48e4-80c9-f27f8bb6e46b",
+    "code": "23GDFPOM02",
+    "client": "Guardia di Finanza",
+    "city": "Pomezia",
+    "object": "Centrali 5.0 5.1 A L DL CSE",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "3ff39d51-f28f-407e-beb4-b619ad50b4c5",
+    "code": "24GDFMIL01",
+    "client": "Guardia di Finanza",
+    "city": "Milano",
+    "object": "Ristrutturazione Caserma Malgeri",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori"
+      ]
+    }
+  },
+  {
+    "id": "97221651-4072-4478-a0c9-583d0a1ef76d",
+    "code": "23GDFPOM03",
+    "client": "Guardia di Finanza",
+    "city": "Pomezia",
+    "object": "Edificio K O",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione",
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "4dcd1ffa-3fc3-4097-a635-d4de759c0cda",
+    "code": "24GDFPOM04",
+    "client": "Guardia di Finanza",
+    "city": "Pomezia",
+    "object": "Masterplan",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "9af60f90-e03c-44b5-abe7-721816b1f63f",
+    "code": "20GDFNAP01",
+    "client": "Guardia di Finanza",
+    "city": "Napoli",
+    "object": "Hangar Capodichino",
+    "year": 20,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "b6044a5a-cc4d-4bc5-a5df-09341618c492",
+    "code": "23GDFPOM04",
+    "client": "Guardia di Finanza",
+    "city": "Pomezia",
+    "object": "Hangar L Ampliamento",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "b5010ef0-a0b7-403e-848d-da0e510f59d7",
+    "code": "22GDFPOM05",
+    "client": "Guardia di Finanza",
+    "city": "Pomezia",
+    "object": "Adeguamento Hangar L DL CSE",
+    "year": 22,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "d3bd1cf1-4ec0-40d1-ab9a-6742f6c29fe4",
+    "code": "21GDFPOM01",
+    "client": "Guardia di Finanza",
+    "city": "Pomezia",
+    "object": "PFTE Pomezia",
+    "year": 21,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "livelloProgettazione": [
+        "pfte"
+      ]
+    }
+  },
+  {
+    "id": "2b2a5a24-308f-4e1b-8ece-07b336c8d5f0",
+    "code": "24GDFROM02",
+    "client": "Guardia di Finanza",
+    "city": "Roma",
+    "object": "Rifacimento Archivi Caserma Boglione",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "1ebd1c7e-8115-4ced-8000-fa82da2f02fc",
+    "code": "24GDFROM03",
+    "client": "Guardia di Finanza",
+    "city": "Roma",
+    "object": "Verifica Centro Congressi Nuvola",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "418eba9f-be50-460c-a155-f9ba4940764a",
+    "code": "24EPCAM01",
+    "client": "EP",
+    "city": "Campagna",
+    "object": "Fibra Ottica DL CSE",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "d4d8e544-0051-4b45-8cc1-a70de6b08de5",
+    "code": "24TAVNBA01",
+    "client": "TAV Napoli-Bari",
+    "city": "Napoli-Bari",
+    "object": "TAV Napoli Bari CSE",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "e5842c14-a8c7-441d-8e40-d5ac5655cf70",
+    "code": "24TAVCFT01",
+    "client": "TAV Napoli-Bari",
+    "city": "CFT",
+    "object": "CFT",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "079dc8a7-e4f2-4b23-9b02-21cab3bff4f5",
+    "code": "24TAVFRA01",
+    "client": "TAV Napoli-Bari",
+    "city": "Frasso Telesino",
+    "object": "Frasso",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "f185dd4a-ba4a-4267-9430-f5858ed5778e",
+    "code": "24TAVORS01",
+    "client": "TAV Napoli-Bari",
+    "city": "Orsara di Puglia",
+    "object": "Orsara Bovino",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "ca6373b5-3a77-4528-a560-5240821ec3ec",
+    "code": "24TAVTEL01",
+    "client": "TAV Napoli-Bari",
+    "city": "Telese Terme",
+    "object": "Telese",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "36cfcea4-b35f-49d7-aa15-8e898861a522",
+    "code": "24AGOCAT01",
+    "client": "Agostino Lupoli",
+    "city": "Catanzaro",
+    "object": "Universita Catanzaro",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "partnership",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "b1b22dcd-dcc9-49af-b4ab-6b2ae00bd004",
+    "code": "22MASNAP02",
+    "client": "MAS",
+    "city": "Napoli",
+    "object": "Scala Zuiki",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "perizia"
+      ]
+    }
+  },
+  {
+    "id": "b3f031c8-14c7-4283-8e51-04a8e8ebc1ce",
+    "code": "22MASCER01",
+    "client": "MAS",
+    "city": "Cerreto Guidi",
+    "object": "Solaio REI",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "perizia"
+      ]
+    }
+  },
+  {
+    "id": "9cfb5571-3f0c-4a83-8ab6-ef64829b2286",
+    "code": "22MASNAP03",
+    "client": "MAS",
+    "city": "Napoli",
+    "object": "Struttura Metallica Megawatt",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "perizia"
+      ]
+    }
+  },
+  {
+    "id": "ac55accf-7001-4e4e-832f-f1241ce10964",
+    "code": "20MASPER01",
+    "client": "MAS",
+    "city": "Perugia",
+    "object": "Controsoffitto Antisismico",
+    "year": 20,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "ac224dbf-272c-42cc-97e6-3e336292ab31",
+    "code": "21MASPDS01",
+    "client": "MAS",
+    "city": "Piove di Sacco",
+    "object": "Controsoffitto Antisismico",
+    "year": 21,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "964b2263-3c4e-4760-8541-c1c27600cf52",
+    "code": "21MASSMA01",
+    "client": "MAS",
+    "city": "San Marzano sul Sarno",
+    "object": "Controsoffitto Antincendio",
+    "year": 21,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "c381e348-d488-408f-bad7-7c34a05a421b",
+    "code": "22MASBAT01",
+    "client": "MAS",
+    "city": "Battipaglia",
+    "object": "Frangisole",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "1ad7a1d0-6424-4aba-a9a0-1d4f5b5f5d14",
+    "code": "22MASNAP01",
+    "client": "MAS",
+    "city": "Napoli",
+    "object": "Facciata Ventilata Deco",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "57771525-9177-44cf-87d7-d40e4fc05ae6",
+    "code": "22MASNOL01",
+    "client": "MAS",
+    "city": "Nola",
+    "object": "Facciata Deco",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ]
+    }
+  },
+  {
+    "id": "388906a8-8256-4790-ba0e-eee66c147000",
+    "code": "24MENFRA01",
+    "client": "MENS",
+    "city": "Frattamaggiore",
+    "object": "Ariete",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "e029ead5-39c1-40bd-956e-def13d233d87",
+    "code": "22MENFRA02",
+    "client": "MENS",
+    "city": "Frattamaggiore",
+    "object": "PIMUS Frattamaggiore",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "605c33ab-e48c-4e07-a361-07f1a1745a2b",
+    "code": "23MENGAG01",
+    "client": "MENS",
+    "city": "Gagliole",
+    "object": "PIMUS Gagliole",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "f29e08ea-c9e6-486a-a206-281da9874ba6",
+    "code": "22MENMAR01",
+    "client": "MENS",
+    "city": "Marzani",
+    "object": "PIMUS Marzani",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "ce3ed3a8-be70-449c-9ec7-c746625064ec",
+    "code": "23MENMON01",
+    "client": "MENS",
+    "city": "Monte Vidon Corrado",
+    "object": "PIMUS Monte Vidon Corrado",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "11cb8a3e-8ff3-4775-90c7-a09e3a2364ce",
+    "code": "22MENRAN01",
+    "client": "MENS",
+    "city": "Rande",
+    "object": "PIMUS Rande",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "befedd49-d367-43e0-ab43-10bc47b18fd4",
+    "code": "22MENNAP01",
+    "client": "MENS",
+    "city": "Napoli",
+    "object": "PIMUS Via Palizzi",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "570ef38b-6d4f-4a93-9eb2-dfb76fc4d867",
+    "code": "20CARMOL01",
+    "client": "Pasquale Carbone",
+    "city": "Molfetta",
+    "object": "BNL Molfetta",
+    "year": 20,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "perizia"
+      ]
+    }
+  },
+  {
+    "id": "745b043b-f6f2-410a-9a4f-3743b18a2e78",
+    "code": "21CARMIL01",
+    "client": "Pasquale Carbone",
+    "city": "Milano",
+    "object": "BNL Milano Antincendio",
+    "year": 21,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "b8b19f37-8c16-4be9-a33a-fc39870e6503",
+    "code": "17CARCAR02",
+    "client": "Pasquale Carbone",
+    "city": "Cardito",
+    "object": "Comune Cardito Zona SLAI PE",
+    "year": 17,
+    "template": "LUNGO",
+    "status": "in_corso",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "livelloProgettazione": [
+        "esecutivo"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "ac3ce321-8ada-4b65-862e-07fc3e23e376",
+    "code": "19CARNAP02",
+    "client": "Pasquale Carbone",
+    "city": "Napoli",
+    "object": "Definitivo Campi Napoli",
+    "year": 19,
+    "template": "LUNGO",
+    "status": "in_corso",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "livelloProgettazione": [
+        "definitivo"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "b7035d74-ad1a-4d52-a640-b231da67db23",
+    "code": "19CARNAP03",
+    "client": "Pasquale Carbone",
+    "city": "Napoli",
+    "object": "Internapoli Kennedy Campetti",
+    "year": 19,
+    "template": "LUNGO",
+    "status": "in_corso",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "7da7471c-7029-442d-b0e0-6de1ab4af70d",
+    "code": "20CARSAN01",
+    "client": "Pasquale Carbone",
+    "city": "San Sebastiano al Vesuvio",
+    "object": "Maurizio San Sebastiano",
+    "year": 20,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "22c6c052-a089-482d-8cba-befd9c277f86",
+    "code": "21CARNAP04",
+    "client": "Pasquale Carbone",
+    "city": "Napoli",
+    "object": "SCIA Petrellese",
+    "year": 21,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "4f4068a9-124a-43be-bbef-cdda8e92d5d3",
+    "code": "18COSCAR01",
+    "client": "Costanzo Project",
+    "city": "Cardito",
+    "object": "Capannone Turino",
+    "year": 18,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "539e212e-a69b-45bd-8665-515773f99e25",
+    "code": "19COSCAR03",
+    "client": "Costanzo Project",
+    "city": "Cardito",
+    "object": "Piano Emergenze Opificio Turino",
+    "year": 19,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "84c90fb8-dccd-4c75-be3e-418aef967e08",
+    "code": "24COSNAP13",
+    "client": "Costanzo Project",
+    "city": "Napoli",
+    "object": "Barbato Via Cilea POS",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "a315a6d8-97e6-42f7-9d29-13f2fc3fd115",
+    "code": "24COSAFR01",
+    "client": "Costanzo Project",
+    "city": "Afragola",
+    "object": "Casillo Opificio Impianti Elettrici",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "3185dc8c-3e9a-4933-b6a4-24f4a7d3f4d1",
+    "code": "24COSNAP02",
+    "client": "Costanzo Project",
+    "city": "Napoli",
+    "object": "Condominio Caravaggio",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "3db797c2-0b0c-423e-bc05-721b045cd049",
+    "code": "24COSNAP03",
+    "client": "Costanzo Project",
+    "city": "Napoli",
+    "object": "Del Prete",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "de17cbfc-9e77-441a-ba7f-4fb9f679b96a",
+    "code": "24COSNAP04",
+    "client": "Costanzo Project",
+    "city": "Napoli",
+    "object": "Donato Palmina",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "2b332135-d3bc-423c-bcb5-9f03b6bdc41b",
+    "code": "20COSARZ01",
+    "client": "Costanzo Project",
+    "city": "Arzano",
+    "object": "Condominio Parco Elena PiMUS",
+    "year": 20,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "8fa4e116-0c58-43e6-82d3-1e6cfea63e53",
+    "code": "20COSCAR02",
+    "client": "Costanzo Project",
+    "city": "Cardito",
+    "object": "Casa Privata Turino",
+    "year": 20,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "53472030-40ef-4638-881e-a7de612c2455",
+    "code": "20COSCAR04",
+    "client": "Costanzo Project",
+    "city": "Cardito",
+    "object": "Protocollo COVID Turino",
+    "year": 20,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "0ac4fc8e-a2b4-4dee-b7a4-3abc07a76669",
+    "code": "20COSFIR01",
+    "client": "Costanzo Project",
+    "city": "Firenze",
+    "object": "Firenze Ponteggio PiMUS",
+    "year": 20,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "f76e3d73-86ee-4218-a3c0-395fe16b610c",
+    "code": "20COSFRA01",
+    "client": "Costanzo Project",
+    "city": "Frattamaggiore",
+    "object": "Casillo Scala Emergenza PIP",
+    "year": 20,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "c5678a65-b0e2-425a-95a7-2f78a2541b86",
+    "code": "21COSROV01",
+    "client": "Costanzo Project",
+    "city": "Rovigo",
+    "object": "Rovigo PIMUS Raucci Group",
+    "year": 21,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "3e217082-f832-4716-b02b-d61daecd9e64",
+    "code": "21COSFRA02",
+    "client": "Costanzo Project",
+    "city": "Frattamaggiore",
+    "object": "Giulio Costanzo Abbattimento Ricostruzione",
+    "year": 21,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza",
+        "collaudo"
+      ]
+    }
+  },
+  {
+    "id": "4f06d27b-9a7d-4fcf-9b8a-824102373d27",
+    "code": "19COSNAP08",
+    "client": "Costanzo Project",
+    "city": "Napoli",
+    "object": "Martello Alfonso Piano Casa",
+    "year": 19,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "cbe5fb18-0fa4-474e-adb9-c0d01786abb5",
+    "code": "20COSNAP01",
+    "client": "Costanzo Project",
+    "city": "Napoli",
+    "object": "Soccavo Via Giustiniano PiMUS",
+    "year": 20,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "6b034386-d7e1-4863-bd82-62d719e78416",
+    "code": "21COSNAP01",
+    "client": "Costanzo Project",
+    "city": "Napoli",
+    "object": "Montanino Ponteggio",
+    "year": 21,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "ed03a14e-9809-4905-a724-2efbb287531e",
+    "code": "24DUENAP01",
+    "client": "DueElle Tecnoservice",
+    "city": "Napoli",
+    "object": "DueElle Tecnoservice Cantieri CSE",
+    "year": 24,
+    "template": "CUSTOM",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "360bae79-588c-416d-b37d-e8b68e591729",
+    "code": "23ELEAFR02",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Afragola",
+    "object": "Afragola Storage",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "6d03fab3-aff1-4f56-bf40-fc9ab3b11d71",
+    "code": "24ELEPOR01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Portici",
+    "object": "ASL Portici Acustica",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "3d54e6da-8bdc-4d86-a17c-7bdf9dcea701",
+    "code": "21ELEBAR01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Bari",
+    "object": "CAB Centrale Bari",
+    "year": 21,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "fed11fde-4f86-40d2-be90-b891751aae9a",
+    "code": "24ELECEG01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Ceglie Messapica",
+    "object": "CAB Ceglie Messapica",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "78ef7e59-97a3-42f8-8e2c-8a260e765cd7",
+    "code": "24ELEBAS01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Baselice",
+    "object": "CAB Baselice",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "310330b8-2cf6-41b1-833c-7dea533dc47d",
+    "code": "24ELECAS01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Casarano",
+    "object": "CAB Casarano",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "191005bd-bf86-41d6-9995-b587d1128664",
+    "code": "24ELECOR01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Corsano",
+    "object": "CAB Corsano",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "c567d29e-e957-46bd-9ece-cb92c3dcb2af",
+    "code": "24ELEFAS01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Fasano",
+    "object": "CAB Fasano",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "589937ff-da02-4c63-8e0f-d7c9b46b6020",
+    "code": "24ELEFRA01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Frattamaggiore",
+    "object": "CAB Frattamaggiore",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "4916fed9-4fb4-491f-836a-1a750ef07ad6",
+    "code": "24ELEMES01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Mesagne",
+    "object": "CAB Mesagne",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "0797e01d-01ce-4426-bee1-98afa81e6570",
+    "code": "24ELEMIG01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Miggiano",
+    "object": "CAB Miggiano",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "bc7f74f6-097b-4a33-9034-9b2bf4b6a560",
+    "code": "24ELEOST01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Ostuni",
+    "object": "CAB Ostuni",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "113ca29e-dc7e-4c4b-9ba1-acfc2dd818e7",
+    "code": "24ELESAL01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Salve",
+    "object": "CAB Salve",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "00f77d3e-fba9-4815-b8b3-b510f43d0adc",
+    "code": "24ELETTR01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Trepuzzi",
+    "object": "CAB Trepuzzi",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "a04e0fed-8231-42b7-ac07-6b9c03c4ffe8",
+    "code": "24ELECAR01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Cardito",
+    "object": "Cardito Palazzetto",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "eddac7ff-ea90-4f44-a99c-e428fd91aa29",
+    "code": "24ELECAM01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Casamicciola Terme",
+    "object": "Casamicciola",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "9b68ad39-c2c4-439f-988d-367e7898b75f",
+    "code": "24ELENAP02",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Napoli",
+    "object": "Caserma Zanzur Napoli",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "0b07885b-b880-4d23-ba95-ada0a5727a5a",
+    "code": "24ELECAS04",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Casoria",
+    "object": "Casoria Ristrutturazione Uffici",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "a4c2c67f-6854-4013-b959-1bd28c676af2",
+    "code": "24ELEPOR02",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Portici",
+    "object": "Deroga Emissioni Acustiche",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "0054a0de-5cf9-4dfa-8fe0-7d28520f7da0",
+    "code": "23ELEFAL01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Falconara",
+    "object": "Energetico Falconara",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "66ca4a2b-cc82-4b11-9b1e-6ab5f9bd1af3",
+    "code": "23ELETOL01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Tolentino",
+    "object": "Energetico Tolentino",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "b8f8867c-633c-41de-ae30-b690e5830cf9",
+    "code": "24ELEISC01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Ischia",
+    "object": "Ischia Immissioni Acustiche",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "76dc450b-c4ff-42ac-8524-a578be50edf7",
+    "code": "24ELEMAR01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Marcianise",
+    "object": "Marcianise Impatto Acustico",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "3a069029-5c5d-44e0-852a-59f5c2f58244",
+    "code": "24ELENOL01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Nola",
+    "object": "Nola",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "58b98554-e2f2-4700-ad3a-31b680e2544d",
+    "code": "24ELEPOM01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Pomezia",
+    "object": "Pomezia",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "0e612777-cc0b-4dbc-9b1a-cf9b8971d2a9",
+    "code": "24ELECAM02",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Campobasso",
+    "object": "Scuola Campobasso",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "d2f65104-8838-4f03-b625-eea70b0e2038",
+    "code": "24ELEFIR01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Firenze",
+    "object": "Scuola Ghiberti Firenze",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "2efe5789-937c-4362-9a34-850fe5950431",
+    "code": "24ELEFIR02",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Firenze",
+    "object": "Scuola Minucci Firenze",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "ddcb6c2f-4427-4f52-89ef-49a37e5a5723",
+    "code": "21ELEBEN01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Siano",
+    "object": "Siano Benevento Acustica",
+    "year": 21,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "9a522f3b-a851-47e2-acfb-391b2d22a041",
+    "code": "20ELEVIZ01",
+    "client": "Electa Progettazioni Integrate",
+    "city": "Vizzola Ticino",
+    "object": "Vizzola Ticino Acustica",
+    "year": 20,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "3ff02123-1801-4705-969a-c19f703c1676",
+    "code": "24ROMORT01",
+    "client": "Rombo Team",
+    "city": "Orta di Atella",
+    "object": "Impatto Acustico",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "679d237a-3fd1-4a03-937f-3733475b24a2",
+    "code": "24COSNAP12",
+    "client": "Francesco Coscia",
+    "city": "Napoli",
+    "object": "Occupazione Suolo Pubblico",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "f3e70ee7-a256-49e4-8e6d-c2f21528bc99",
+    "code": "24GAENAP01",
+    "client": "Gaetano",
+    "city": "Napoli",
+    "object": "APE Langella Frediani",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "146090b9-a484-43d5-9a66-77ac8f65b426",
+    "code": "22CRINAP01",
+    "client": "Pasquale Cristiano",
+    "city": "Napoli",
+    "object": "CILA Sanatoria San Giacomo Capri",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "e7550808-95f8-4923-83a2-32aefc5eba8f",
+    "code": "22CRIVOL01",
+    "client": "Pasquale Cristiano",
+    "city": "Volla",
+    "object": "Superbonus Volla Carotenuto",
+    "year": 22,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "82c7decf-80b7-483c-a193-5a0555723134",
+    "code": "23CRINAP02",
+    "client": "Pasquale Cristiano",
+    "city": "Napoli",
+    "object": "Sollo Analisi Energetica",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "00ff587d-9bcb-4dff-be1f-c8da69998708",
+    "code": "24CRIROM01",
+    "client": "Pasquale Cristiano",
+    "city": "Roma",
+    "object": "APE Roma",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "7d396d08-e65c-4d26-a171-b266b8975ea5",
+    "code": "24CRINAP03",
+    "client": "Pasquale Cristiano",
+    "city": "Napoli",
+    "object": "Secondigliano Autorizzazione Sismica",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "1ca874b2-b38e-4bd0-ad3e-2bffb6f2b449",
+    "code": "25RAFPIA01",
+    "client": "Pasquale Raffa",
+    "city": "Pianura",
+    "object": "Capannone ZES Pianura",
+    "year": 25,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "75f00050-a911-4ede-9e66-fd3ee538e578",
+    "code": "24RAFCHI01",
+    "client": "Pasquale Raffa",
+    "city": "Chiaia",
+    "object": "Chiaia Relazione Acustica",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "ba7755b8-2980-4f5a-8ea5-0ef5a9c1734e",
+    "code": "24RAFCHI02",
+    "client": "Pasquale Raffa",
+    "city": "Chiaia",
+    "object": "Chiaia Progetto Strutture",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ],
+      "classeDM143": ""
+    }
+  },
+  {
+    "id": "49ad1689-e7c2-498e-b8d9-481bf4ea4548",
+    "code": "22RAFSGA01",
+    "client": "Pasquale Raffa",
+    "city": "San Gregorio Armeno",
+    "object": "San Gregorio Armeno Condominio",
+    "year": 22,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "650ae22d-c6ba-47a5-bd1d-8134af1087af",
+    "code": "21RAFPIA02",
+    "client": "Pasquale Raffa",
+    "city": "Pianura",
+    "object": "Pianura Via Santa Maria PSC",
+    "year": 21,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "coordinamento_sicurezza"
+      ]
+    }
+  },
+  {
+    "id": "28338777-ea3d-42cb-a089-25e96779af3c",
+    "code": "22RAFAVV01",
+    "client": "Pasquale Raffa",
+    "city": "Via dell'Avvenire",
+    "object": "Via Avvenire PDC Forino",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "f9e083ef-7c53-4ce5-b0fd-8004e59d9b67",
+    "code": "23RAFAVV02",
+    "client": "Pasquale Raffa",
+    "city": "Via dell'Avvenire",
+    "object": "Via Avvenire PDC Alcholor",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "aa4ecc93-d4ab-4312-afd4-7003df1df27f",
+    "code": "22RAFLAU01",
+    "client": "Pasquale Raffa",
+    "city": "Via Lauria",
+    "object": "Via Lauria PSC",
+    "year": 22,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "807dc44f-8b8b-4455-ad95-66add41a1669",
+    "code": "24RAFMIA01",
+    "client": "Pasquale Raffa",
+    "city": "Miano",
+    "object": "Scuola Dacquisto Miano",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza",
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "c4d4dc9a-6b01-4786-a506-6ed235a00cf2",
+    "code": "24RAFPIA03",
+    "client": "Pasquale Raffa",
+    "city": "Pianura",
+    "object": "Scuola Troisi Pianura",
+    "year": 24,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "direzione_lavori",
+        "coordinamento_sicurezza",
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "036d3cc9-8f28-474e-9de0-28cff6f793c5",
+    "code": "24RAFNAP10",
+    "client": "Pasquale Raffa",
+    "city": "Napoli",
+    "object": "Giordano Relazione Acustica",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "4e3d0303-724d-4765-928e-d58cc3ebf67e",
+    "code": "23ESPNAP01",
+    "client": "Perizie Esposito",
+    "city": "Napoli",
+    "object": "Perizia Stima Immobiliare",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "perizia"
+      ]
+    }
+  },
+  {
+    "id": "69268826-9e4f-42e0-971b-8fed26f4f69f",
+    "code": "23TRICAS01",
+    "client": "Rocco Trifari",
+    "city": "Caserta",
+    "object": "Villa Rossella Caserta",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "e4b526e1-bff2-4ced-bb8a-5a993449a39f",
+    "code": "23TRIPOR01",
+    "client": "Rocco Trifari",
+    "city": "Portici",
+    "object": "De Martinis Portici Soppalco",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "6bd29874-90a7-436c-92c4-8a27f524372e",
+    "code": "23TRINAP01",
+    "client": "Rocco Trifari",
+    "city": "Napoli",
+    "object": "Taurino CILA",
+    "year": 23,
+    "template": "LUNGO",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {}
+  },
+  {
+    "id": "f5fd5d0b-deb3-4b1e-b60d-3eff443cd563",
+    "code": "24PEZCAS01",
+    "client": "Sossio Pezzella",
+    "city": "Casalnuovo",
+    "object": "APE Casalnuovo",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "b86fc046-e64e-4a38-8177-0bd6e8383620",
+    "code": "24PEZFRA01",
+    "client": "Sossio Pezzella",
+    "city": "Frattamaggiore",
+    "object": "APE Frattamaggiore",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "4dd0ca03-bea1-4093-997a-52c40675b854",
+    "code": "24PEZSAN01",
+    "client": "Sossio Pezzella",
+    "city": "Sanremo",
+    "object": "Sanremo Staffa",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione"
+      ]
+    }
+  },
+  {
+    "id": "1a37b5ec-c517-4ee4-a0e6-f610f50e8d98",
+    "code": "23PEZROM01",
+    "client": "Sossio Pezzella",
+    "city": "Roma",
+    "object": "Shazam Impatto Acustico",
+    "year": 23,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "acustica"
+      ]
+    }
+  },
+  {
+    "id": "f9c1f236-9533-4fce-9663-ad11d41713d2",
+    "code": "24SETFRA01",
+    "client": "Valentino Setola",
+    "city": "Frattamaggiore",
+    "object": "Perizia Setola",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "perizia"
+      ]
+    }
+  },
+  {
+    "id": "fe661353-6b1e-410b-85ba-1f201f0acd90",
+    "code": "24ORFPOM01",
+    "client": "ORFEO",
+    "city": "Pomezia",
+    "object": "APE Orfeo",
+    "year": 24,
+    "template": "BREVE",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "certificazione_energetica"
+      ]
+    }
+  },
+  {
+    "id": "ec2e832d-b614-48e5-93b0-167c4621acd8",
+    "code": "23BANCAM01",
+    "client": "Bando Campania Diagnosi",
+    "city": "Campania",
+    "object": "Bando Campania Diagnosi Energetiche",
+    "year": 23,
+    "template": "CUSTOM",
+    "status": "conclusa",
+    "tipoRapporto": "diretto",
+    "committenteFinale": null,
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "fsRoot": null,
+    "metadata": {
+      "prestazioni": [
+        "progettazione",
+        "certificazione_energetica"
+      ]
+    }
   }
 ]

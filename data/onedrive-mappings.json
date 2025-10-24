@@ -1,38 +1,1325 @@
 [
   {
-    "id": "2f4bb363-57e5-427d-8262-18251d6f28c5",
+    "id": "ce34949e-af43-48eb-a903-a4e0cc5d6cd9",
     "projectCode": "25GUAROM01",
-    "oneDriveFolderId": "01GOMDZBDNF3CGCGQV4NBZIDVEHYCQGWYG",
+    "oneDriveFolderId": "",
     "oneDriveFolderName": "25GUAROM01_Rifacimento_pavimentazione",
     "oneDriveFolderPath": "/LAVORO_CORRENTE/25GUAROM01_Rifacimento_pavimentazione",
-    "createdAt": "2025-09-25T10:20:32.489Z",
-    "updatedAt": "2025-09-25T10:20:32.489Z"
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
   },
   {
-    "id": "8db72580-4cb2-4365-90e7-5eafb3019cd2",
+    "id": "c14b6215-881d-4a4d-a256-29999a25f3e7",
     "projectCode": "24AGOVIT01",
-    "oneDriveFolderId": "01GOMDZBCMMOC46EVMLRGKGDAGR5Z2BY7C",
+    "oneDriveFolderId": "",
     "oneDriveFolderName": "24AGOVIT01_Ristrutturazione_Armeria",
     "oneDriveFolderPath": "/LAVORO_CORRENTE/24AGOVIT01_Ristrutturazione_Armeria",
-    "createdAt": "2025-09-25T10:27:39.248Z",
-    "updatedAt": "2025-09-25T10:27:39.248Z"
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
   },
   {
-    "id": "514c3ac6-41cf-4626-ab55-84e8e1219f08",
+    "id": "2fe54e93-f73f-4d11-b860-46c1b19fcb16",
     "projectCode": "24LUCFRA01",
     "oneDriveFolderId": "",
-    "oneDriveFolderName": "24LUCFRA01",
-    "oneDriveFolderPath": "/G2_Progetti/24LUCFRA01",
-    "createdAt": "2025-10-06T15:44:17.376Z",
-    "updatedAt": "2025-10-06T15:44:17.376Z"
+    "oneDriveFolderName": "24LUCFRA01_Valutazione_Impatto_acustico_officina",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24LUCFRA01_Valutazione_Impatto_acustico_officina",
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
   },
   {
+    "id": "6d4bf40e-cc56-4ad5-b9d5-25d2d7836d02",
     "projectCode": "24AGOCAT01",
     "oneDriveFolderId": "",
-    "oneDriveFolderPath": "/G2_Progetti/24AGOCAT01",
-    "oneDriveFolderName": "24AGOCAT01",
-    "id": "e3a3891b-aca1-4b0b-853c-4f509af48a92",
-    "createdAt": "2025-10-10T11:08:47.235Z",
-    "updatedAt": "2025-10-10T11:08:47.235Z"
+    "oneDriveFolderName": "24AGOCAT01_Universita_Catanzaro",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24AGOCAT01_Universita_Catanzaro",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "ff769a2b-3a82-48f6-af29-b469ca8679b6",
+    "projectCode": "24ELEAFR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEAFR01_RAP_Smart_City",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEAFR01_RAP_Smart_City",
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
+  },
+  {
+    "id": "d052091a-7a0c-419a-8560-465b4ab9b190",
+    "projectCode": "25ACIROM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25ACIROM01_Sostituzione_gruppi_frigo",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25ACIROM01_Sostituzione_gruppi_frigo",
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
+  },
+  {
+    "id": "856ca28f-f5f1-4f03-979f-2844c395a0b4",
+    "projectCode": "25AGOFRA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25AGOFRA01_Ristrutturazione_Sede_Vigili_Urbani",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25AGOFRA01_Ristrutturazione_Sede_Vigili_Urbani",
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
+  },
+  {
+    "id": "02f86fda-6c8a-4402-895b-0be9785a130f",
+    "projectCode": "25PARBAC01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25PARBAC01_Relazione_danni_giunto_edificio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25PARBAC01_Relazione_danni_giunto_edificio",
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
+  },
+  {
+    "id": "f93b62ec-0a93-44ca-a145-dc664969c724",
+    "projectCode": "22TRACAR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22TRACAR01_Condominio_Tralice",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22TRACAR01_Condominio_Tralice",
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
+  },
+  {
+    "id": "fe51d1f3-350e-4c6f-8e90-a8a4207382aa",
+    "projectCode": "22COSCAR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22COSCAR01_Pensilina_Fotovoltaica_Turino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22COSCAR01_Pensilina_Fotovoltaica_Turino",
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
+  },
+  {
+    "id": "1b581690-d766-4e26-8d84-e91cf1b4cee2",
+    "projectCode": "25VAIMAR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25VAIMAR01_Marcianise_Palazzetto",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25VAIMAR01_Marcianise_Palazzetto",
+    "createdAt": "2025-10-24T17:01:57.393Z",
+    "updatedAt": "2025-10-24T17:01:57.393Z"
+  },
+  {
+    "id": "c01488ca-c03d-4208-aaca-1aa24b6ccd03",
+    "projectCode": "25MERNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25MERNAP01_CILA_Mercurio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "e632c742-a684-4b75-bbb6-2aa38ae53d9d",
+    "projectCode": "24RUSCAS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24RUSCAS01_Relazione_Energetica_APE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24RUSCAS01_Relazione_Energetica_APE",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "ebab2d71-8826-4c97-beb2-a296e129ecf9",
+    "projectCode": "24CONPOL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24CONPOL01_Condominio_Via_Gramsci",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24CONPOL01_Condominio_Via_Gramsci",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "c3a87102-c93e-4b1e-bf17-a352ff91d06c",
+    "projectCode": "24HOINAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24HOINAP01_CTU_Consulenza_Tecnica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24HOINAP01_CTU_Consulenza_Tecnica",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "327223dd-f3d6-40fb-835c-9c7425677bdf",
+    "projectCode": "24EYNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24EYNAP01_Consulenza_Regione_Campania",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24EYNAP01_Consulenza_Regione_Campania",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "b99faba4-2948-4f14-820e-d7761a2c7f7a",
+    "projectCode": "25SARNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25SARNAP01_Intervento_Edilizio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25SARNAP01_Intervento_Edilizio",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "e67cc3f2-aaa5-48da-a8b4-52e8b0885b6a",
+    "projectCode": "22TBPNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22TBPNAP01_Progettazione_Elettrica_Via_Bernini_58",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22TBPNAP01_Progettazione_Elettrica_Via_Bernini_58",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "3a30525b-68b5-4902-a657-a571a9889e75",
+    "projectCode": "25CIRBOS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25CIRBOS01_APE_Boscoreale",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25CIRBOS01_APE_Boscoreale",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "d8887ba0-3973-4ebe-ad27-028dcadce06c",
+    "projectCode": "25CIRBOS02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25CIRBOS02_APE_San_Severino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25CIRBOS02_APE_San_Severino",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "27001f3f-41db-42ce-a2f3-e2fbd203efbe",
+    "projectCode": "24COMSAN01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24COMSAN01_Centro_Polifunzionale_DL_CSE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24COMSAN01_Centro_Polifunzionale_DL_CSE",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "07f30a28-b5be-479f-b261-d1572bdc8a92",
+    "projectCode": "23CNPNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23CNPNAP01_Manutenzione_Ordinaria_CSP_CSE_RL",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23CNPNAP01_Manutenzione_Ordinaria_CSP_CSE_RL",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "bc7d8903-307e-418e-bb74-f81d9afda904",
+    "projectCode": "23CNPNAP02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23CNPNAP02_Sfondellamenti_DL_CSE_RL",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23CNPNAP02_Sfondellamenti_DL_CSE_RL",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "732d03d9-c141-4c2e-b3fd-9a32ef86f36e",
+    "projectCode": "24CNPNAP03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24CNPNAP03_Manutenzione_Ordinaria_2_CSP_CSE_RL",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24CNPNAP03_Manutenzione_Ordinaria_2_CSP_CSE_RL",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "5345043d-c989-4c71-b1be-1fb68acae96b",
+    "projectCode": "24CNPNAP04",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24CNPNAP04_Sostituzione_Infissi_CSP_CSE_DL_RL",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24CNPNAP04_Sostituzione_Infissi_CSP_CSE_DL_RL",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "703e5739-bee4-4ef0-8525-f94084dbb53e",
+    "projectCode": "24CNPNAP05",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24CNPNAP05_Via_Lauria_Validazione_Supporto_RUP",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24CNPNAP05_Via_Lauria_Validazione_Supporto_RUP",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "b2615842-1c10-40e4-8b12-12df0942b906",
+    "projectCode": "25CNPNAP06",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25CNPNAP06_Inertizzazione_Serbatoi_DL_CSE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25CNPNAP06_Inertizzazione_Serbatoi_DL_CSE",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "fe2cdffb-2f9b-4581-9da4-52fc71e1ca01",
+    "projectCode": "23CISMAS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23CISMAS01_Espansione_Cimitero_CSE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23CISMAS01_Espansione_Cimitero_CSE",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "240cd0cd-6210-4a30-b692-b043a1da5593",
+    "projectCode": "24GDFPOM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24GDFPOM01_Aggiornamento_Stati_Descrittivi_Edifici",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24GDFPOM01_Aggiornamento_Stati_Descrittivi_Edifici",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "db17b09e-ed06-4ac0-b14c-7ec35e9d66ae",
+    "projectCode": "24GDFROM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24GDFROM01_Assistenza_RUP",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24GDFROM01_Assistenza_RUP",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "58ed4f03-e613-4429-b00a-817d4caddd85",
+    "projectCode": "23GDFPOM02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23GDFPOM02_Centrali_5.0_5.1_A_L_DL_CSE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23GDFPOM02_Centrali_5.0_5.1_A_L_DL_CSE",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "0ba1fa70-b4ab-409b-adc9-beac2c3d63e0",
+    "projectCode": "24GDFMIL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24GDFMIL01_Ristrutturazione_Caserma_Malgeri",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24GDFMIL01_Ristrutturazione_Caserma_Malgeri",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "f70ed00b-7989-45fb-962f-ea0170072ff8",
+    "projectCode": "23GDFPOM03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23GDFPOM03_Edificio_K_O",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23GDFPOM03_Edificio_K_O",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "1be639da-e662-4eac-b0fa-edbe7b56db0e",
+    "projectCode": "24GDFPOM04",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24GDFPOM04_Masterplan",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24GDFPOM04_Masterplan",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "2aa7d30f-429c-4592-9064-e6eb4d7bdd69",
+    "projectCode": "20GDFNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20GDFNAP01_Hangar_Capodichino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20GDFNAP01_Hangar_Capodichino",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "9600bf33-777b-4f85-a04c-76d4404215b6",
+    "projectCode": "23GDFPOM04",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23GDFPOM04_Hangar_L_Ampliamento",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23GDFPOM04_Hangar_L_Ampliamento",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "5a0f27aa-f33d-46db-8e2a-64fe39cc3d49",
+    "projectCode": "22GDFPOM05",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22GDFPOM05_Adeguamento_Hangar_L_DL_CSE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22GDFPOM05_Adeguamento_Hangar_L_DL_CSE",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "b9a9d6df-1be8-442a-be6c-2202079295e9",
+    "projectCode": "21GDFPOM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21GDFPOM01_PFTE_Pomezia",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21GDFPOM01_PFTE_Pomezia",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "293a9950-b4dc-4398-96af-19db93227438",
+    "projectCode": "24GDFROM02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24GDFROM02_Rifacimento_Archivi_Caserma_Boglione",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24GDFROM02_Rifacimento_Archivi_Caserma_Boglione",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "766ebed4-ee93-4892-b85e-5937e12bd8ea",
+    "projectCode": "24GDFROM03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24GDFROM03_Verifica_Centro_Congressi_Nuvola",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24GDFROM03_Verifica_Centro_Congressi_Nuvola",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "ef8936d0-de89-4948-adc0-18297ba32124",
+    "projectCode": "24EPCAM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24EPCAM01_Fibra_Ottica_DL_CSE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24EPCAM01_Fibra_Ottica_DL_CSE",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "b859e839-5bb2-442e-83bd-afa232311e2d",
+    "projectCode": "24TAVNBA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24TAVNBA01_TAV_Napoli_Bari_CSE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24TAVNBA01_TAV_Napoli_Bari_CSE",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "deb2d6a2-098d-438b-bbbe-68b0df1652d8",
+    "projectCode": "24TAVCFT01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24TAVCFT01_CFT",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24TAVCFT01_CFT",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "23b5d5b5-2827-41c8-a035-cf0019e54378",
+    "projectCode": "24TAVFRA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24TAVFRA01_Frasso",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24TAVFRA01_Frasso",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "ef767c9c-de59-4524-8ec3-ce6fc5840b95",
+    "projectCode": "24TAVORS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24TAVORS01_Orsara_Bovino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24TAVORS01_Orsara_Bovino",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "674dc86b-6ad0-485f-8a71-c734a32c8fab",
+    "projectCode": "24TAVTEL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24TAVTEL01_Telese",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24TAVTEL01_Telese",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "2dc31ee2-4879-4f9a-916a-1e1c8570bce6",
+    "projectCode": "22MASNAP02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MASNAP02_Scala_Zuiki",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MASNAP02_Scala_Zuiki",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "89f051e4-b207-471b-b60b-d1775487f361",
+    "projectCode": "22MASCER01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MASCER01_Solaio_REI",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MASCER01_Solaio_REI",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "773def93-55f6-4b30-a69f-c8376c747f33",
+    "projectCode": "22MASNAP03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MASNAP03_Struttura_Metallica_Megawatt",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MASNAP03_Struttura_Metallica_Megawatt",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "ae0a16db-ca01-47ea-9dbe-993a9f1222a1",
+    "projectCode": "20MASPER01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20MASPER01_Controsoffitto_Antisismico",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20MASPER01_Controsoffitto_Antisismico",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "b68e0df8-caf4-48c6-828f-61e67ef3ec9c",
+    "projectCode": "21MASPDS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21MASPDS01_Controsoffitto_Antisismico",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21MASPDS01_Controsoffitto_Antisismico",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "b531cca6-60c7-4fcb-bf85-38f90d0872b1",
+    "projectCode": "21MASSMA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21MASSMA01_Controsoffitto_Antincendio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21MASSMA01_Controsoffitto_Antincendio",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "71a9ced6-55bc-4d6c-8ac7-57a36f6f45dc",
+    "projectCode": "22MASBAT01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MASBAT01_Frangisole",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MASBAT01_Frangisole",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "17432940-22c9-4f20-bf69-330b3b2695b1",
+    "projectCode": "22MASNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MASNAP01_Facciata_Ventilata_Deco",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MASNAP01_Facciata_Ventilata_Deco",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "f190b70c-c312-4c09-b757-5bac8a9d6812",
+    "projectCode": "22MASNOL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MASNOL01_Facciata_Deco",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MASNOL01_Facciata_Deco",
+    "createdAt": "2025-10-24T17:01:57.394Z",
+    "updatedAt": "2025-10-24T17:01:57.394Z"
+  },
+  {
+    "id": "ed829db0-d0d6-491b-a348-c5aa22fedafb",
+    "projectCode": "24MENFRA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24MENFRA01_Ariete",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24MENFRA01_Ariete",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "c358961b-53c7-4abf-a110-a4d858947bba",
+    "projectCode": "22MENFRA02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MENFRA02_PIMUS_Frattamaggiore",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MENFRA02_PIMUS_Frattamaggiore",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "bf8a8dba-18dc-4881-aee6-c45d9dbfa6d1",
+    "projectCode": "23MENGAG01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23MENGAG01_PIMUS_Gagliole",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23MENGAG01_PIMUS_Gagliole",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "f13ac8d0-d922-4483-9c78-c3fae268f544",
+    "projectCode": "22MENMAR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MENMAR01_PIMUS_Marzani",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MENMAR01_PIMUS_Marzani",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "337b60c7-cc50-4517-88c8-8c79e57fcea0",
+    "projectCode": "23MENMON01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23MENMON01_PIMUS_Monte_Vidon_Corrado",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23MENMON01_PIMUS_Monte_Vidon_Corrado",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "14c2de88-8eea-4da2-b317-08badd6b9605",
+    "projectCode": "22MENRAN01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MENRAN01_PIMUS_Rande",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MENRAN01_PIMUS_Rande",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "33a6e5d2-6ee2-4629-a0a3-23c081684801",
+    "projectCode": "22MENNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22MENNAP01_PIMUS_Via_Palizzi",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22MENNAP01_PIMUS_Via_Palizzi",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "af20704a-7f3c-4b23-a8d8-6365d293f9e8",
+    "projectCode": "20CARMOL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20CARMOL01_BNL_Molfetta",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20CARMOL01_BNL_Molfetta",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "e75e72a5-259c-4785-9310-1e249eadbf66",
+    "projectCode": "21CARMIL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21CARMIL01_BNL_Milano_Antincendio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21CARMIL01_BNL_Milano_Antincendio",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "4d5babf6-b88d-429a-9805-260a309acecc",
+    "projectCode": "17CARCAR02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "17CARCAR02_Comune_Cardito_Zona_SLAI_PE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/17CARCAR02_Comune_Cardito_Zona_SLAI_PE",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "817f7c5d-cfb2-4bf8-9dce-3930877ddc0f",
+    "projectCode": "19CARNAP02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "19CARNAP02_Definitivo_Campi_Napoli",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/19CARNAP02_Definitivo_Campi_Napoli",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "2fe6bf3f-ed79-48d8-9124-0121950b0089",
+    "projectCode": "19CARNAP03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "19CARNAP03_Internapoli_Kennedy_Campetti",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/19CARNAP03_Internapoli_Kennedy_Campetti",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "63eee3c7-84de-4211-83fa-fd737c385987",
+    "projectCode": "20CARSAN01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20CARSAN01_Maurizio_San_Sebastiano",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20CARSAN01_Maurizio_San_Sebastiano",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "a58edd7c-3aef-4b20-8a88-6fd6ad5d8552",
+    "projectCode": "21CARNAP04",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21CARNAP04_SCIA_Petrellese",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21CARNAP04_SCIA_Petrellese",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "9fa5459f-fe18-4cb7-9e11-03ddbc1ed079",
+    "projectCode": "18COSCAR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "18COSCAR01_Capannone_Turino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/18COSCAR01_Capannone_Turino",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "57158c06-01b3-43b2-9ca5-b84599bf0e31",
+    "projectCode": "19COSCAR03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "19COSCAR03_Piano_Emergenze_Opificio_Turino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/19COSCAR03_Piano_Emergenze_Opificio_Turino",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "6fbc0c5b-a291-4a85-9f28-3d032f8ef542",
+    "projectCode": "24COSNAP13",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24COSNAP13_Barbato_Via_Cilea_POS",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24COSNAP13_Barbato_Via_Cilea_POS",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "fe84e8aa-b833-4fbe-a6c9-a1c8ed4d53b7",
+    "projectCode": "24COSAFR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24COSAFR01_Casillo_Opificio_Impianti_Elettrici",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24COSAFR01_Casillo_Opificio_Impianti_Elettrici",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "a689c7f2-fced-4a9f-8eb9-cb5da44bf32d",
+    "projectCode": "24COSNAP02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24COSNAP02_Condominio_Caravaggio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24COSNAP02_Condominio_Caravaggio",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "c39d0ba7-4e85-4d26-ba21-13fed40696f2",
+    "projectCode": "24COSNAP03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24COSNAP03_Del_Prete",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24COSNAP03_Del_Prete",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "60c98574-b256-4a3e-b14f-e51188795eed",
+    "projectCode": "24COSNAP04",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24COSNAP04_Donato_Palmina",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24COSNAP04_Donato_Palmina",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "c6b9580a-39a9-4bc5-b847-5dea8a94397b",
+    "projectCode": "20COSARZ01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20COSARZ01_Condominio_Parco_Elena_PiMUS",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20COSARZ01_Condominio_Parco_Elena_PiMUS",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "e35b3668-b76b-4707-9a7d-9c7d22889912",
+    "projectCode": "20COSCAR02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20COSCAR02_Casa_Privata_Turino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20COSCAR02_Casa_Privata_Turino",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "1f8494f4-ea9b-422e-98de-f54d7dfbcdc0",
+    "projectCode": "20COSCAR04",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20COSCAR04_Protocollo_COVID_Turino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20COSCAR04_Protocollo_COVID_Turino",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "82123f9e-a514-4901-8cb7-b6e07dbdb4db",
+    "projectCode": "20COSFIR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20COSFIR01_Firenze_Ponteggio_PiMUS",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20COSFIR01_Firenze_Ponteggio_PiMUS",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "79e29439-32fc-4e40-ac10-1428b3c92dd1",
+    "projectCode": "20COSFRA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20COSFRA01_Casillo_Scala_Emergenza_PIP",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20COSFRA01_Casillo_Scala_Emergenza_PIP",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "b22161b5-dfe5-44f7-b8f8-1ce50c772353",
+    "projectCode": "21COSROV01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21COSROV01_Rovigo_PIMUS_Raucci_Group",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21COSROV01_Rovigo_PIMUS_Raucci_Group",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "6d4416a9-fb20-4a99-8f89-fabbd691b7f7",
+    "projectCode": "21COSFRA02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21COSFRA02_Giulio_Costanzo_Abbattimento_Ricostruzione",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21COSFRA02_Giulio_Costanzo_Abbattimento_Ricostruzione",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "c950f015-5869-489e-8705-97e26c794aec",
+    "projectCode": "19COSNAP08",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "19COSNAP08_Martello_Alfonso_Piano_Casa",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/19COSNAP08_Martello_Alfonso_Piano_Casa",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "ab558842-b2ec-4962-b8a5-0b9ad24870d0",
+    "projectCode": "20COSNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20COSNAP01_Soccavo_Via_Giustiniano_PiMUS",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20COSNAP01_Soccavo_Via_Giustiniano_PiMUS",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "7d0e8c1b-a9c1-4c7e-b741-d11bfb728b32",
+    "projectCode": "21COSNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21COSNAP01_Montanino_Ponteggio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21COSNAP01_Montanino_Ponteggio",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "5fe3a9d8-4974-4066-923d-3111b0e67f94",
+    "projectCode": "24DUENAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24DUENAP01_DueElle_Tecnoservice_Cantieri_CSE",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24DUENAP01_DueElle_Tecnoservice_Cantieri_CSE",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "00522891-4b6d-430a-b376-b2952b5f3a1c",
+    "projectCode": "23ELEAFR02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23ELEAFR02_Afragola_Storage",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23ELEAFR02_Afragola_Storage",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "4b6dd239-662b-455f-9382-5157246589c6",
+    "projectCode": "24ELEPOR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEPOR01_ASL_Portici_Acustica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEPOR01_ASL_Portici_Acustica",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "0f6ba5b8-5d27-40af-9750-65a213de7bad",
+    "projectCode": "21ELEBAR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21ELEBAR01_CAB_Centrale_Bari",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21ELEBAR01_CAB_Centrale_Bari",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "4cfa6151-4a50-4fbe-9e95-248b2f948a38",
+    "projectCode": "24ELECEG01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELECEG01_CAB_Ceglie_Messapica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELECEG01_CAB_Ceglie_Messapica",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "a6c99a54-a597-41a3-933a-9c47dc76fb7d",
+    "projectCode": "24ELEBAS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEBAS01_CAB_Baselice",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEBAS01_CAB_Baselice",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "a3a80c3b-ba7f-4717-af37-7bf04632e0fe",
+    "projectCode": "24ELECAS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELECAS01_CAB_Casarano",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELECAS01_CAB_Casarano",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "e921d3d2-bc1c-4906-9bc1-7e676415915d",
+    "projectCode": "24ELECOR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELECOR01_CAB_Corsano",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELECOR01_CAB_Corsano",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "b1270b51-bc94-45f0-bdee-09a488568668",
+    "projectCode": "24ELEFAS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEFAS01_CAB_Fasano",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEFAS01_CAB_Fasano",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "c35e164c-c58b-4c9e-a14a-934a5595d2fd",
+    "projectCode": "24ELEFRA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEFRA01_CAB_Frattamaggiore",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEFRA01_CAB_Frattamaggiore",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "9e79c9ae-727e-4a0c-8957-8dae554db28e",
+    "projectCode": "24ELEMES01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEMES01_CAB_Mesagne",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEMES01_CAB_Mesagne",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "a4f3f311-fe65-40bc-89bc-18092216e5f5",
+    "projectCode": "24ELEMIG01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEMIG01_CAB_Miggiano",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEMIG01_CAB_Miggiano",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "08b367cb-260d-42da-b00a-604aefe97d72",
+    "projectCode": "24ELEOST01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEOST01_CAB_Ostuni",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEOST01_CAB_Ostuni",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "fd02cdb3-ebca-4374-bac9-266412f05718",
+    "projectCode": "24ELESAL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELESAL01_CAB_Salve",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELESAL01_CAB_Salve",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "70bd1944-df23-4f8a-9819-3178cd7e1043",
+    "projectCode": "24ELETTR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELETTR01_CAB_Trepuzzi",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELETTR01_CAB_Trepuzzi",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "b027aa3b-c83a-44bc-a2d1-51dc3241723d",
+    "projectCode": "24ELECAR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELECAR01_Cardito_Palazzetto",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELECAR01_Cardito_Palazzetto",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "1de27a97-a675-4954-bd45-483dabefa60d",
+    "projectCode": "24ELECAM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELECAM01_Casamicciola",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELECAM01_Casamicciola",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "2e46cfee-4664-4ba1-9866-b22a719bcec6",
+    "projectCode": "24ELENAP02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELENAP02_Caserma_Zanzur_Napoli",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELENAP02_Caserma_Zanzur_Napoli",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "376cf51d-b91d-43bf-908c-3f0024dde3d9",
+    "projectCode": "24ELECAS04",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELECAS04_Casoria_Ristrutturazione_Uffici",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELECAS04_Casoria_Ristrutturazione_Uffici",
+    "createdAt": "2025-10-24T17:01:57.395Z",
+    "updatedAt": "2025-10-24T17:01:57.395Z"
+  },
+  {
+    "id": "1312ef85-89e9-476c-a1f5-e52b167c474a",
+    "projectCode": "24ELEPOR02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEPOR02_Deroga_Emissioni_Acustiche",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEPOR02_Deroga_Emissioni_Acustiche",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "3e393cc7-2cba-448f-a1b6-1991ae3132a3",
+    "projectCode": "23ELEFAL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23ELEFAL01_Energetico_Falconara",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23ELEFAL01_Energetico_Falconara",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "4451b9a6-70c1-40f0-9f68-e3856cd62c8c",
+    "projectCode": "23ELETOL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23ELETOL01_Energetico_Tolentino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23ELETOL01_Energetico_Tolentino",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "0bde2653-9f8b-4e0b-a565-97d3051994c4",
+    "projectCode": "24ELEISC01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEISC01_Ischia_Immissioni_Acustiche",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEISC01_Ischia_Immissioni_Acustiche",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "db85f26e-5f66-4145-815b-8d0e62f7be26",
+    "projectCode": "24ELEMAR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEMAR01_Marcianise_Impatto_Acustico",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEMAR01_Marcianise_Impatto_Acustico",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "3d8e5104-b20b-4e10-b35c-b866e1b4680b",
+    "projectCode": "24ELENOL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELENOL01_Nola",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELENOL01_Nola",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "4216f1d2-738d-499c-8471-dd280ade8579",
+    "projectCode": "24ELEPOM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEPOM01_Pomezia",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEPOM01_Pomezia",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "904b5724-31a1-4830-905a-8510f7fdbff0",
+    "projectCode": "24ELECAM02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELECAM02_Scuola_Campobasso",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELECAM02_Scuola_Campobasso",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "50ac8010-a3c6-48ac-b61c-3665f9441c80",
+    "projectCode": "24ELEFIR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEFIR01_Scuola_Ghiberti_Firenze",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEFIR01_Scuola_Ghiberti_Firenze",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "aa80e62b-c683-414d-9d14-03de3f425702",
+    "projectCode": "24ELEFIR02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ELEFIR02_Scuola_Minucci_Firenze",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ELEFIR02_Scuola_Minucci_Firenze",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "9552e2c9-03a6-479c-af96-1aadabad5dbe",
+    "projectCode": "21ELEBEN01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21ELEBEN01_Siano_Benevento_Acustica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21ELEBEN01_Siano_Benevento_Acustica",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "9e105c4e-890c-499b-9ad2-f18f5eae5000",
+    "projectCode": "20ELEVIZ01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "20ELEVIZ01_Vizzola_Ticino_Acustica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/20ELEVIZ01_Vizzola_Ticino_Acustica",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "fabc6177-83de-439b-8383-358f69d13da1",
+    "projectCode": "24ROMORT01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ROMORT01_Impatto_Acustico",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ROMORT01_Impatto_Acustico",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "203936d5-0afd-4d4b-b7ca-d691943ad7db",
+    "projectCode": "24COSNAP12",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24COSNAP12_Occupazione_Suolo_Pubblico",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24COSNAP12_Occupazione_Suolo_Pubblico",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "335de23e-be99-42ac-868e-c57be4ff5d2a",
+    "projectCode": "24GAENAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24GAENAP01_APE_Langella_Frediani",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24GAENAP01_APE_Langella_Frediani",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "8e982eca-7b6e-4e1d-89de-f2e7b7f19b4a",
+    "projectCode": "22CRINAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22CRINAP01_CILA_Sanatoria_San_Giacomo_Capri",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22CRINAP01_CILA_Sanatoria_San_Giacomo_Capri",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "96f34830-a8bf-45bc-8e58-46e6f9f38f90",
+    "projectCode": "22CRIVOL01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22CRIVOL01_Superbonus_Volla_Carotenuto",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22CRIVOL01_Superbonus_Volla_Carotenuto",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "0f3456a5-058e-47bf-b5b4-983e0de8a2df",
+    "projectCode": "23CRINAP02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23CRINAP02_Sollo_Analisi_Energetica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23CRINAP02_Sollo_Analisi_Energetica",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "80414a83-4167-4b5d-9997-993494e4c97f",
+    "projectCode": "24CRIROM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24CRIROM01_APE_Roma",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24CRIROM01_APE_Roma",
+    "createdAt": "2025-10-24T17:01:57.396Z",
+    "updatedAt": "2025-10-24T17:01:57.396Z"
+  },
+  {
+    "id": "bd8ec05c-38db-49bf-b5dd-654c0e31a19f",
+    "projectCode": "24CRINAP03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24CRINAP03_Secondigliano_Autorizzazione_Sismica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24CRINAP03_Secondigliano_Autorizzazione_Sismica",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "5352f588-aaea-482b-88df-adf2025ae87e",
+    "projectCode": "25RAFPIA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "25RAFPIA01_Capannone_ZES_Pianura",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/25RAFPIA01_Capannone_ZES_Pianura",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "54a9e4cd-29c0-4e6b-a939-3129b64c4b33",
+    "projectCode": "24RAFCHI01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24RAFCHI01_Chiaia_Relazione_Acustica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24RAFCHI01_Chiaia_Relazione_Acustica",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "7bc3077d-f8ac-4738-9e5c-d4a879613a44",
+    "projectCode": "24RAFCHI02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24RAFCHI02_Chiaia_Progetto_Strutture",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24RAFCHI02_Chiaia_Progetto_Strutture",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "9f5cfa3d-2151-4b12-9f97-f0f2d1bcc39b",
+    "projectCode": "22RAFSGA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22RAFSGA01_San_Gregorio_Armeno_Condominio",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22RAFSGA01_San_Gregorio_Armeno_Condominio",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "642d526d-c026-4a5f-a12c-42f7e1362ca6",
+    "projectCode": "21RAFPIA02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "21RAFPIA02_Pianura_Via_Santa_Maria_PSC",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/21RAFPIA02_Pianura_Via_Santa_Maria_PSC",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "5affed83-fe0c-4406-8c3e-46def57341b8",
+    "projectCode": "22RAFAVV01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22RAFAVV01_Via_Avvenire_PDC_Forino",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22RAFAVV01_Via_Avvenire_PDC_Forino",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "df618c11-c95e-4991-acbd-ec913b21ca30",
+    "projectCode": "23RAFAVV02",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23RAFAVV02_Via_Avvenire_PDC_Alcholor",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23RAFAVV02_Via_Avvenire_PDC_Alcholor",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "8af6f7b4-06a3-4a01-959b-3ec449006f83",
+    "projectCode": "22RAFLAU01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "22RAFLAU01_Via_Lauria_PSC",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/22RAFLAU01_Via_Lauria_PSC",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "00334aad-b95c-4d11-8d0a-4cae1abaa209",
+    "projectCode": "24RAFMIA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24RAFMIA01_Scuola_Dacquisto_Miano",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24RAFMIA01_Scuola_Dacquisto_Miano",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "f8761824-0df0-4254-a4ff-b7d02ad0ca0e",
+    "projectCode": "24RAFPIA03",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24RAFPIA03_Scuola_Troisi_Pianura",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24RAFPIA03_Scuola_Troisi_Pianura",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "f94bed80-a896-40e4-9501-e6c481394cee",
+    "projectCode": "24RAFNAP10",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24RAFNAP10_Giordano_Relazione_Acustica",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24RAFNAP10_Giordano_Relazione_Acustica",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "595b9d51-f2c3-4b00-afb7-bad203b8c265",
+    "projectCode": "23ESPNAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23ESPNAP01_Perizia_Stima_Immobiliare",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23ESPNAP01_Perizia_Stima_Immobiliare",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "3838516b-5975-4a08-a43e-7bd2001bea90",
+    "projectCode": "23TRICAS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23TRICAS01_Villa_Rossella_Caserta",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23TRICAS01_Villa_Rossella_Caserta",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "092d06d5-9d96-4d29-8ebf-b890f7f1512d",
+    "projectCode": "23TRIPOR01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23TRIPOR01_De_Martinis_Portici_Soppalco",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23TRIPOR01_De_Martinis_Portici_Soppalco",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "6a9782fc-761c-487a-a723-6f4bac402484",
+    "projectCode": "23TRINAP01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23TRINAP01_Taurino_CILA",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23TRINAP01_Taurino_CILA",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "63ad41ea-1898-43a1-a1d8-03418265575d",
+    "projectCode": "24PEZCAS01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24PEZCAS01_APE_Casalnuovo",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24PEZCAS01_APE_Casalnuovo",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "551867c5-3ee4-4325-b543-3b457747cf86",
+    "projectCode": "24PEZFRA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24PEZFRA01_APE_Frattamaggiore",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24PEZFRA01_APE_Frattamaggiore",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "84c9ad0b-294e-4fd6-8834-b51ae9849987",
+    "projectCode": "24PEZSAN01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24PEZSAN01_Sanremo_Staffa",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24PEZSAN01_Sanremo_Staffa",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "6d04a820-cc26-44a7-8557-f4736df082d6",
+    "projectCode": "23PEZROM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23PEZROM01_Shazam_Impatto_Acustico",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23PEZROM01_Shazam_Impatto_Acustico",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "3004f3f6-04c2-419a-9f8c-e5ec03aa3d6a",
+    "projectCode": "24SETFRA01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24SETFRA01_Perizia_Setola",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24SETFRA01_Perizia_Setola",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "d34a28ab-4f1b-4273-a094-7d4dec560bfe",
+    "projectCode": "24ORFPOM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "24ORFPOM01_APE_Orfeo",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/24ORFPOM01_APE_Orfeo",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
+  },
+  {
+    "id": "0ac25403-74fb-4fa0-9414-28230e44b1c4",
+    "projectCode": "23BANCAM01",
+    "oneDriveFolderId": "",
+    "oneDriveFolderName": "23BANCAM01_Bando_Campania_Diagnosi_Energetiche",
+    "oneDriveFolderPath": "/LAVORO_CORRENTE/23BANCAM01_Bando_Campania_Diagnosi_Energetiche",
+    "createdAt": "2025-10-24T17:01:57.397Z",
+    "updatedAt": "2025-10-24T17:01:57.397Z"
   }
 ]
