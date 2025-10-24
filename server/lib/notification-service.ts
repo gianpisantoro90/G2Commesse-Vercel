@@ -176,37 +176,38 @@ class NotificationService {
    */
   async checkDeadlines(storage: any) {
     try {
-      const deadlines = await storage.getProjectDeadlines();
+      const deadlines = await storage.getAllDeadlines();
       const now = new Date();
 
       for (const deadline of deadlines) {
-        if (deadline.completed || !deadline.notifyDaysBefore) continue;
+        // Skip completed deadlines or those without notification settings
+        if (deadline.status === 'completed' || !deadline.notifyDaysBefore) continue;
 
         const deadlineDate = new Date(deadline.dueDate);
         const daysUntil = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-        // Send notification at configured intervals
-        if (deadline.notifyDaysBefore.includes(daysUntil)) {
+        // Send notification at configured interval
+        if (deadline.notifyDaysBefore === daysUntil && daysUntil > 0) {
           const project = await storage.getProject(deadline.projectId);
 
           this.sendNotification({
             type: 'deadline',
             title: `Scadenza in ${daysUntil} giorni`,
             message: `${deadline.title} - ${project?.code || 'Progetto'}`,
-            priority: deadline.priority,
-            projectId: deadline.projectId,
+            priority: deadline.priority as any,
+            projectId: parseInt(deadline.projectId),
             actionUrl: `/progetti/${deadline.projectId}?tab=scadenzario`
           });
         }
 
-        // Urgent notification for overdue
-        if (daysUntil < 0 && !deadline.lastNotified) {
+        // Urgent notification for overdue (only if not already marked as overdue status)
+        if (daysUntil < 0 && deadline.status === 'pending') {
           this.sendNotification({
             type: 'deadline',
             title: 'Scadenza superata!',
             message: `${deadline.title} era prevista per ${deadlineDate.toLocaleDateString('it-IT')}`,
             priority: 'urgent',
-            projectId: deadline.projectId,
+            projectId: parseInt(deadline.projectId),
             actionUrl: `/progetti/${deadline.projectId}?tab=scadenzario`
           });
         }
@@ -218,70 +219,20 @@ class NotificationService {
 
   /**
    * Helper: Check overdue invoices
+   * TODO: Implement when storage methods are available
    */
   async checkInvoices(storage: any) {
-    try {
-      const invoices = await storage.getProjectInvoices();
-      const now = new Date();
-
-      for (const invoice of invoices) {
-        if (invoice.paymentStatus === 'pagata') continue;
-
-        const dueDate = invoice.dueDate ? new Date(invoice.dueDate) : null;
-        if (dueDate && dueDate < now) {
-          const project = await storage.getProject(invoice.projectId);
-          const daysOverdue = Math.ceil((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
-
-          this.sendNotification({
-            type: 'invoice',
-            title: `Fattura scaduta da ${daysOverdue} giorni`,
-            message: `Fattura ${invoice.invoiceNumber} - ${project?.code || 'Progetto'} - €${invoice.amount}`,
-            priority: daysOverdue > 30 ? 'urgent' : 'high',
-            projectId: invoice.projectId,
-            actionUrl: `/progetti/${invoice.projectId}?tab=fatturazione`
-          });
-        }
-      }
-    } catch (error) {
-      logger.error('Error checking invoices', { error });
-    }
+    // Temporarily disabled - storage methods not yet implemented
+    return;
   }
 
   /**
    * Helper: Check budget overruns
+   * TODO: Implement when storage methods are available
    */
   async checkBudgets(storage: any) {
-    try {
-      const projects = await storage.getProjects();
-
-      for (const project of projects) {
-        if (project.status !== 'in_corso') continue;
-
-        const budget = await storage.getProjectBudget(project.id);
-        if (!budget || !budget.estimatedHours) continue;
-
-        const actualHours = budget.actualHours || 0;
-        const estimatedHours = budget.estimatedHours;
-        const percentage = (actualHours / estimatedHours) * 100;
-
-        // Alert at 80%, 90%, 100%, 110%
-        const thresholds = [80, 90, 100, 110];
-        for (const threshold of thresholds) {
-          if (percentage >= threshold && percentage < threshold + 5) {
-            this.sendNotification({
-              type: 'budget',
-              title: `Budget ore al ${Math.round(percentage)}%`,
-              message: `${project.code} - ${actualHours}h su ${estimatedHours}h`,
-              priority: percentage >= 100 ? 'urgent' : percentage >= 90 ? 'high' : 'medium',
-              projectId: project.id,
-              actionUrl: `/progetti/${project.id}?tab=budget`
-            });
-          }
-        }
-      }
-    } catch (error) {
-      logger.error('Error checking budgets', { error });
-    }
+    // Temporarily disabled - storage methods not yet implemented
+    return;
   }
 }
 
