@@ -145,6 +145,18 @@ export function renderPrestazioneBadge(
   fullLabel: string;
 } {
   const config = PRESTAZIONI_CONFIG[prestazione];
+  
+  // Fallback se la prestazione non è riconosciuta
+  if (!config) {
+    const sizeClass = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm';
+    return {
+      icon: '❓',
+      label: String(prestazione),
+      className: `inline-flex items-center gap-1 rounded-full font-medium border bg-gray-100 text-gray-800 border-gray-200 ${sizeClass}`,
+      fullLabel: String(prestazione)
+    };
+  }
+  
   const sizeClass = size === 'sm' 
     ? 'px-2 py-1 text-xs' 
     : 'px-3 py-1.5 text-sm';
@@ -262,6 +274,18 @@ export function renderLivelloProgettazioneBadge(
   fullLabel: string;
 } {
   const config = LIVELLO_PROGETTAZIONE_CONFIG[livello];
+  
+  // Fallback se il livello non è riconosciuto
+  if (!config) {
+    const sizeClass = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm';
+    return {
+      icon: '❓',
+      label: String(livello),
+      className: `inline-flex items-center gap-1 rounded-full font-medium border bg-gray-100 text-gray-800 border-gray-200 ${sizeClass}`,
+      fullLabel: String(livello)
+    };
+  }
+  
   const sizeClass = size === 'sm' 
     ? 'px-2 py-1 text-xs' 
     : 'px-3 py-1.5 text-sm';
@@ -346,6 +370,18 @@ export function renderTipoRapportoBadge(
   description: string;
 } {
   const config = TIPO_RAPPORTO_CONFIG[tipo];
+  
+  // Fallback se il tipo non è riconosciuto
+  if (!config) {
+    const sizeClass = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm';
+    return {
+      icon: '❓',
+      label: String(tipo),
+      className: `inline-flex items-center gap-1 rounded-full font-medium border bg-gray-100 text-gray-800 border-gray-200 ${sizeClass}`,
+      description: String(tipo)
+    };
+  }
+  
   const sizeClass = size === 'sm' 
     ? 'px-2 py-1 text-xs' 
     : 'px-3 py-1.5 text-sm';
