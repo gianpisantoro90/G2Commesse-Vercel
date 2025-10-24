@@ -267,6 +267,16 @@ export const projectCommunications = pgTable("project_communications", {
   communicationDate: timestamp("communication_date").defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   createdBy: text("created_by"), // Username dell'utente
+
+  // Email-specific fields for forwarding integration
+  emailMessageId: text("email_message_id"), // Unique email ID from provider
+  emailHeaders: jsonb("email_headers"), // Full email headers for reference
+  emailRaw: text("email_raw"), // Raw email content (optional, for debugging)
+  emailHtml: text("email_html"), // HTML version of email body
+  emailText: text("email_text"), // Plain text version
+  autoImported: boolean("auto_imported").default(false), // Was it auto-imported via forwarding?
+  aiSuggestions: jsonb("ai_suggestions"), // AI analysis results: {projectMatch, confidence, extractedData}
+  importedAt: timestamp("imported_at"), // When was it imported (if auto-imported)
 });
 
 // Gestione SAL (Stati Avanzamento Lavori)
