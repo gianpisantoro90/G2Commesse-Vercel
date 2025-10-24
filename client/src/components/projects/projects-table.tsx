@@ -329,7 +329,7 @@ export default function ProjectsTable() {
         </div>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex gap-4 items-center p-4 bg-white rounded-lg border border-gray-100">
+            <div key={i} className="flex gap-4 items-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
               <Skeleton className="h-6 w-24" />
               <Skeleton className="h-6 w-32" />
               <Skeleton className="h-6 w-24" />
@@ -348,7 +348,7 @@ export default function ProjectsTable() {
     <div data-testid="projects-table">
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Tutte le Commesse</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tutte le Commesse</h3>
           <Button
             variant="outline"
             onClick={() => refetch()}
@@ -360,8 +360,8 @@ export default function ProjectsTable() {
         </div>
 
         {/* Column Toggle Buttons */}
-        <div className="flex gap-2 flex-wrap items-center mb-4 pb-3 border-b border-gray-200">
-          <span className="text-sm text-gray-600 font-medium mr-2">Mostra colonne:</span>
+        <div className="flex gap-2 flex-wrap items-center mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-2">Mostra colonne:</span>
           <Button
             size="default"
             variant={showTechInfo ? "default" : "outline"}
@@ -419,10 +419,10 @@ export default function ProjectsTable() {
               placeholder="Cerca per codice, cliente, città, oggetto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
               data-testid="search-projects"
             />
-            <span className="absolute left-3 top-2.5 text-gray-400 text-lg">🔍</span>
+            <span className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 text-lg">🔍</span>
           </div>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -460,7 +460,7 @@ export default function ProjectsTable() {
                 setYearFilter("all");
                 setSearchTerm("");
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               data-testid="clear-filters"
             >
               ✕ Pulisci filtri
@@ -470,7 +470,7 @@ export default function ProjectsTable() {
       </div>
       
       {filteredProjects.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <div className="text-4xl mb-2">📁</div>
           <p className="text-lg font-medium">
             {searchTerm ? "Nessuna commessa trovata" : "Nessuna commessa presente"}
@@ -484,11 +484,11 @@ export default function ProjectsTable() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px]" aria-label="Tabella delle commesse">
               <caption className="sr-only">Elenco di tutte le commesse con dettagli, stato e azioni</caption>
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tl-lg w-24 cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tl-lg w-24 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort("code")}
                     data-testid="sort-code"
                   >
@@ -499,7 +499,7 @@ export default function ProjectsTable() {
                   </th>
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32 cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-32 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort("client")}
                     data-testid="sort-client"
                   >
@@ -509,14 +509,14 @@ export default function ProjectsTable() {
                     </div>
                   </th>
                   {showTechInfo && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-28">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-28">
                       Tipo Rapporto
-                      <span className="ml-1 text-xs text-gray-500 cursor-help" title="Chi commissiona il lavoro a G2 Ingegneria">ⓘ</span>
+                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Chi commissiona il lavoro a G2 Ingegneria">ⓘ</span>
                     </th>
                   )}
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24 cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-24 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort("city")}
                     data-testid="sort-city"
                   >
@@ -527,7 +527,7 @@ export default function ProjectsTable() {
                   </th>
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40 cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-40 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort("object")}
                     data-testid="sort-object"
                   >
@@ -538,17 +538,17 @@ export default function ProjectsTable() {
                   </th>
                   {showPrestazioni && (
                     <>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-48">
                         Prestazioni
-                        <span className="ml-1 text-xs text-gray-500 cursor-help" title="Tipologia di servizi professionali">ⓘ</span>
+                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Tipologia di servizi professionali">ⓘ</span>
                       </th>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-40">
                         Livelli Progettazione
-                        <span className="ml-1 text-xs text-gray-500 cursor-help" title="Livelli di progettazione DM 143/2013">ⓘ</span>
+                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Livelli di progettazione DM 143/2013">ⓘ</span>
                       </th>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-32">
                         Classe DM 143/2013
-                        <span className="ml-1 text-xs text-gray-500 cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
+                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
                       </th>
                     </>
                   )}
@@ -556,7 +556,7 @@ export default function ProjectsTable() {
                     <>
                       <th 
                         scope="col" 
-                        className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-16 cursor-pointer hover:bg-gray-100 transition-colors"
+                        className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-16 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                         onClick={() => handleSort("year")}
                         data-testid="sort-year"
                       >
@@ -565,12 +565,12 @@ export default function ProjectsTable() {
                           <SortIcon field="year" />
                         </div>
                       </th>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-20">Template</th>
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-20">Template</th>
                     </>
                   )}
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-24 cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-24 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={() => handleSort("status")}
                     data-testid="sort-status"
                   >
@@ -580,40 +580,40 @@ export default function ProjectsTable() {
                     </div>
                   </th>
                   {showFatturazione && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-32">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-32">
                       Fatturazione
-                      <span className="ml-1 text-xs text-gray-500 cursor-help" title="Stato fatturazione e pagamento">ⓘ</span>
+                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Stato fatturazione e pagamento">ⓘ</span>
                     </th>
                   )}
                   {showComunicazioni && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-48">
                       Ultima Comunicazione
-                      <span className="ml-1 text-xs text-gray-500 cursor-help" title="Ultima comunicazione relativa alla commessa">ⓘ</span>
+                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Ultima comunicazione relativa alla commessa">ⓘ</span>
                     </th>
                   )}
                   {showScadenze && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-40">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-40">
                       Prossima Scadenza
-                      <span className="ml-1 text-xs text-gray-500 cursor-help" title="Prossima scadenza in programma">ⓘ</span>
+                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Prossima scadenza in programma">ⓘ</span>
                     </th>
                   )}
                   {showOneDrive && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm w-48">OneDrive</th>
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-48">OneDrive</th>
                   )}
-                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 text-sm rounded-tr-lg w-32">Azioni</th>
+                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tr-lg w-32">Azioni</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {paginatedProjects.map((project) => (
-                  <tr key={project.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={project.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <td className="py-4 px-4 font-mono text-sm font-semibold text-primary" data-testid={`project-code-${project.id}`}>
                       {project.code}
                     </td>
-                    <td className="py-4 px-4 text-sm" data-testid={`project-client-${project.id}`}>
+                    <td className="py-4 px-4 text-sm dark:text-gray-300" data-testid={`project-client-${project.id}`}>
                       <div>
                         <div className="font-medium">{project.client}</div>
                         {project.committenteFinale && project.tipoRapporto !== "diretto" && (
-                          <div className="text-xs text-gray-500 mt-0.5">
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             ↳ Per: {project.committenteFinale}
                           </div>
                         )}
@@ -635,10 +635,10 @@ export default function ProjectsTable() {
                         })()}
                       </td>
                     )}
-                    <td className="py-4 px-4 text-sm text-gray-600" data-testid={`project-city-${project.id}`}>
+                    <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`project-city-${project.id}`}>
                       {project.city}
                     </td>
-                    <td className="py-4 px-4 text-sm" data-testid={`project-object-${project.id}`}>
+                    <td className="py-4 px-4 text-sm dark:text-gray-300" data-testid={`project-object-${project.id}`}>
                       {project.object}
                     </td>
                     {showPrestazioni && (
@@ -697,11 +697,11 @@ export default function ProjectsTable() {
                             return (
                               <div>
                                 <span className={`px-2 py-1 rounded text-xs font-mono font-bold ${
-                                  classeDM.isFormatted ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-600'
+                                  classeDM.isFormatted ? 'bg-gray-800 text-white dark:bg-gray-600' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
                                 }`}>
                                   {classeDM.classe}
                                 </span>
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                   {classeDM.importo}
                                 </div>
                               </div>
@@ -712,7 +712,7 @@ export default function ProjectsTable() {
                     )}
                     {showTechInfo && (
                       <>
-                        <td className="py-4 px-4 text-sm text-gray-600" data-testid={`project-year-${project.id}`}>
+                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`project-year-${project.id}`}>
                           20{project.year.toString().padStart(2, '0')}
                         </td>
                         <td className="py-4 px-4" data-testid={`project-template-${project.id}`}>
@@ -742,31 +742,31 @@ export default function ProjectsTable() {
                     {showFatturazione && (
                       <td className="py-4 px-4" data-testid={`project-fatturazione-${project.id}`}>
                         <div
-                          className="flex flex-col gap-1 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                          className="flex flex-col gap-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-1 rounded transition-colors"
                           onClick={() => setSelectedProjectForFatturazione(project)}
                           title="Clicca per gestire fatturazione"
                         >
                           {project.fatturato ? (
                             <div className="flex items-center gap-1">
-                              <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-medium">
+                              <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded font-medium">
                                 ✓ Fatturato
                               </span>
                               {project.importoFatturato && project.importoFatturato > 0 && (
-                                <span className="text-xs text-gray-600">
+                                <span className="text-xs text-gray-600 dark:text-gray-400">
                                   €{(project.importoFatturato / 100).toFixed(2)}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400 italic">Non fatturato</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 italic">Non fatturato</span>
                           )}
                           {project.pagato && (
-                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 rounded font-medium">
+                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded font-medium">
                               ✓ Pagato
                             </span>
                           )}
                           {project.fatturato && !project.pagato && (
-                            <span className="text-xs text-orange-600 font-medium">⏳ Da incassare</span>
+                            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">⏳ Da incassare</span>
                           )}
                         </div>
                       </td>
@@ -776,7 +776,7 @@ export default function ProjectsTable() {
                         {(() => {
                           const lastComm = getLastCommunication(project.id);
                           if (!lastComm) {
-                            return <span className="text-xs text-gray-400 italic">Nessuna comunicazione</span>;
+                            return <span className="text-xs text-gray-400 dark:text-gray-500 italic">Nessuna comunicazione</span>;
                           }
 
                           const commDate = new Date(lastComm.communicationDate);
@@ -790,17 +790,17 @@ export default function ProjectsTable() {
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-1">
                                 <span title={lastComm.direction === 'in' ? 'In entrata' : 'In uscita'}>{icon}</span>
-                                <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded font-medium">
+                                <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 rounded font-medium">
                                   {typeLabel}
                                 </span>
                                 {lastComm.isImportant && (
-                                  <span className="text-red-500" title="Comunicazione importante">⚠️</span>
+                                  <span className="text-red-500 dark:text-red-400" title="Comunicazione importante">⚠️</span>
                                 )}
                               </div>
-                              <div className="text-xs text-gray-600 truncate max-w-[200px]" title={lastComm.subject}>
+                              <div className="text-xs text-gray-600 dark:text-gray-400 truncate max-w-[200px]" title={lastComm.subject}>
                                 {lastComm.subject}
                               </div>
-                              <div className="text-xs text-gray-400">
+                              <div className="text-xs text-gray-400 dark:text-gray-500">
                                 {commDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                               </div>
                             </div>
@@ -813,7 +813,7 @@ export default function ProjectsTable() {
                         {(() => {
                           const nextDeadline = getNextDeadline(project.id);
                           if (!nextDeadline) {
-                            return <span className="text-xs text-gray-400 italic">Nessuna scadenza</span>;
+                            return <span className="text-xs text-gray-400 dark:text-gray-500 italic">Nessuna scadenza</span>;
                           }
 
                           const dueDate = new Date(nextDeadline.dueDate);
@@ -821,10 +821,10 @@ export default function ProjectsTable() {
                           const daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
                           const priorityConfig: Record<string, { color: string; icon: string }> = {
-                            low: { color: 'bg-gray-100 text-gray-700', icon: '🟢' },
-                            medium: { color: 'bg-blue-100 text-blue-700', icon: '🟡' },
-                            high: { color: 'bg-orange-100 text-orange-700', icon: '🟠' },
-                            urgent: { color: 'bg-red-100 text-red-700', icon: '🔴' }
+                            low: { color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300', icon: '🟢' },
+                            medium: { color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200', icon: '🟡' },
+                            high: { color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200', icon: '🟠' },
+                            urgent: { color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200', icon: '🔴' }
                           };
 
                           const typeIcon: Record<string, string> = {
@@ -847,10 +847,10 @@ export default function ProjectsTable() {
                                      nextDeadline.priority === 'high' ? 'Alta' : 'Urgente'}
                                 </span>
                               </div>
-                              <div className="text-xs font-medium text-gray-700 truncate max-w-[180px]" title={nextDeadline.title}>
+                              <div className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[180px]" title={nextDeadline.title}>
                                 {nextDeadline.title}
                               </div>
-                              <div className={`text-xs font-medium ${daysUntil <= 7 ? 'text-red-600' : 'text-gray-500'}`}>
+                              <div className={`text-xs font-medium ${daysUntil <= 7 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
                                 {dueDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                 {daysUntil <= 7 && <span className="ml-1">⚠️ {daysUntil}gg</span>}
                               </div>
@@ -875,13 +875,13 @@ export default function ProjectsTable() {
                                 <div className="flex flex-col gap-1 min-w-0">
                                   <button
                                     onClick={() => handleOpenOneDriveFolder(mapping)}
-                                    className="text-blue-600 hover:text-blue-800 text-xs underline text-left truncate"
+                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs underline text-left truncate"
                                     title={`Apri cartella: ${mapping.oneDriveFolderPath}`}
                                     data-testid={`onedrive-link-${project.id}`}
                                   >
                                     📁 {mapping.oneDriveFolderName}
                                   </button>
-                                  <span className="text-xs text-gray-500 truncate" title={mapping.oneDriveFolderPath}>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400 truncate" title={mapping.oneDriveFolderPath}>
                                     {mapping.oneDriveFolderPath}
                                   </span>
                                 </div>
@@ -898,7 +898,7 @@ export default function ProjectsTable() {
                                   >
                                     {isSyncing ? '🔄' : '⚙️'} Configura
                                   </Button>
-                                  <span className="text-xs text-gray-400 truncate">
+                                  <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
                                     Non configurato
                                   </span>
                                 </div>
@@ -909,7 +909,7 @@ export default function ProjectsTable() {
                                   size="sm"
                                   variant="ghost"
                                   onClick={() => handleConfigureOneDrive(project)}
-                                  className="text-xs h-6 px-1 text-orange-600 hover:text-orange-800"
+                                  className="text-xs h-6 px-1 text-orange-600 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
                                   title="Riprova sincronizzazione"
                                   data-testid={`retry-sync-${project.id}`}
                                 >
@@ -927,7 +927,7 @@ export default function ProjectsTable() {
                           <Button
                             size="default"
                             variant="ghost"
-                            className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900 rounded-lg transition-colors"
                             title="Modifica"
                             data-testid={`edit-project-${project.id}`}
                           >
@@ -938,7 +938,7 @@ export default function ProjectsTable() {
                           size="default"
                           variant="ghost"
                           onClick={() => handleExportProject(project)}
-                          className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900 rounded-lg transition-colors"
                           title="Esporta"
                           data-testid={`export-project-${project.id}`}
                         >
@@ -948,7 +948,7 @@ export default function ProjectsTable() {
                           size="default"
                           variant="ghost"
                           onClick={() => handleOpenPrestazioniModal(project)}
-                          className="min-w-[44px] min-h-[44px] p-3 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          className="min-w-[44px] min-h-[44px] p-3 text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900 rounded-lg transition-colors"
                           title="Dettagli Prestazioni"
                           data-testid={`prestazioni-details-${project.id}`}
                         >
@@ -959,7 +959,7 @@ export default function ProjectsTable() {
                           variant="ghost"
                           onClick={() => handleDeleteProject(project)}
                           disabled={deleteProjectMutation.isPending}
-                          className="min-w-[44px] min-h-[44px] p-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="min-w-[44px] min-h-[44px] p-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900 rounded-lg transition-colors"
                           title="Elimina"
                           data-testid={`delete-project-${project.id}`}
                         >
@@ -979,7 +979,7 @@ export default function ProjectsTable() {
               <span className="text-gray-600 dark:text-gray-400" data-testid="projects-count">
                 Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, sortedProjects.length)}</strong> di <strong>{sortedProjects.length}</strong> commesse
                 {sortedProjects.length !== projects.length && (
-                  <span className="text-gray-500 ml-1">({projects.length} totali)</span>
+                  <span className="text-gray-500 dark:text-gray-500 ml-1">({projects.length} totali)</span>
                 )}
               </span>
               
