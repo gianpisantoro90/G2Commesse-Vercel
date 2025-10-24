@@ -64,7 +64,7 @@ export interface IStorage {
 
   // Bulk operations
   exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
-  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }): Promise<void>;
+  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode?: 'merge' | 'overwrite'): Promise<void>;
   clearAllData(): Promise<void>;
 }
 
@@ -604,13 +604,51 @@ export class FileStorage implements IStorage {
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }) {
-    this.writeJsonFile(this.projectsFile, data.projects);
-    this.writeJsonFile(this.clientsFile, data.clients);
-    this.writeJsonFile(this.fileRoutingsFile, data.fileRoutings);
-    this.writeJsonFile(this.systemConfigFile, data.systemConfig);
-    this.writeJsonFile(this.oneDriveMappingsFile, data.oneDriveMappings || []);
-    this.writeJsonFile(this.filesIndexFile, data.filesIndex || []);
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode: 'merge' | 'overwrite' = 'overwrite') {
+    if (mode === 'merge') {
+      // Merge mode: combine existing data with new data
+      const existingProjects = this.readJsonFile<Project>(this.projectsFile, []);
+      const existingClients = this.readJsonFile<Client>(this.clientsFile, []);
+      const existingFileRoutings = this.readJsonFile<FileRouting>(this.fileRoutingsFile, []);
+      const existingSystemConfig = this.readJsonFile<SystemConfig>(this.systemConfigFile, []);
+      const existingOneDriveMappings = this.readJsonFile<OneDriveMapping>(this.oneDriveMappingsFile, []);
+      const existingFilesIndex = this.readJsonFile<FilesIndex>(this.filesIndexFile, []);
+
+      // Merge by creating maps keyed by ID, new data overwrites existing
+      const mergedProjects = new Map(existingProjects.map(p => [p.id, p]));
+      data.projects.forEach(p => mergedProjects.set(p.id, p));
+
+      const mergedClients = new Map(existingClients.map(c => [c.id, c]));
+      data.clients.forEach(c => mergedClients.set(c.id, c));
+
+      const mergedFileRoutings = new Map(existingFileRoutings.map(fr => [fr.id, fr]));
+      data.fileRoutings.forEach(fr => mergedFileRoutings.set(fr.id, fr));
+
+      const mergedSystemConfig = new Map(existingSystemConfig.map(sc => [sc.id, sc]));
+      data.systemConfig.forEach(sc => mergedSystemConfig.set(sc.id, sc));
+
+      const mergedOneDriveMappings = new Map(existingOneDriveMappings.map(odm => [odm.projectCode, odm]));
+      data.oneDriveMappings?.forEach(odm => mergedOneDriveMappings.set(odm.projectCode, odm));
+
+      const mergedFilesIndex = new Map(existingFilesIndex.map(fi => [fi.driveItemId, fi]));
+      data.filesIndex?.forEach(fi => mergedFilesIndex.set(fi.driveItemId, fi));
+
+      // Write merged data
+      this.writeJsonFile(this.projectsFile, Array.from(mergedProjects.values()));
+      this.writeJsonFile(this.clientsFile, Array.from(mergedClients.values()));
+      this.writeJsonFile(this.fileRoutingsFile, Array.from(mergedFileRoutings.values()));
+      this.writeJsonFile(this.systemConfigFile, Array.from(mergedSystemConfig.values()));
+      this.writeJsonFile(this.oneDriveMappingsFile, Array.from(mergedOneDriveMappings.values()));
+      this.writeJsonFile(this.filesIndexFile, Array.from(mergedFilesIndex.values()));
+    } else {
+      // Overwrite mode: replace all data
+      this.writeJsonFile(this.projectsFile, data.projects);
+      this.writeJsonFile(this.clientsFile, data.clients);
+      this.writeJsonFile(this.fileRoutingsFile, data.fileRoutings);
+      this.writeJsonFile(this.systemConfigFile, data.systemConfig);
+      this.writeJsonFile(this.oneDriveMappingsFile, data.oneDriveMappings || []);
+      this.writeJsonFile(this.filesIndexFile, data.filesIndex || []);
+    }
   }
 
   async clearAllData() {

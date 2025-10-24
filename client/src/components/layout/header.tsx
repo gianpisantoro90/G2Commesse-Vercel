@@ -2,6 +2,8 @@ import logoUrl from "@assets/G2 - Logo_1755532156423.png";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { NotificationCenter } from "@/components/notifications/notification-center";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export default function Header() {
   const { logout } = useAuth();
@@ -16,10 +18,10 @@ export default function Header() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             {/* Brand Logo */}
-            <img 
-              src={logoUrl} 
-              alt="G2 Ingegneria Logo" 
-              className="w-12 h-12 rounded-xl shadow-lg object-contain" 
+            <img
+              src={logoUrl}
+              alt="G2 Ingegneria Logo"
+              className="w-12 h-12 rounded-xl shadow-lg object-contain"
               data-testid="brand-logo"
             />
             <div>
@@ -31,10 +33,12 @@ export default function Header() {
               </p>
             </div>
           </div>
-          
+
           {/* User Actions */}
-          <div className="flex items-center gap-2">
-            <Button 
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <NotificationCenter />
+            <Button
               variant="outline"
               size="sm"
               onClick={handleLogout}

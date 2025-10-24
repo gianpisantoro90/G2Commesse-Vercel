@@ -117,6 +117,30 @@ export default function StoragePanel() {
   };
 
   const handleImportData = () => {
+    // Show mode selection dialog
+    const confirmed = confirm(
+      "Scegli la modalità di importazione:\n\n" +
+      "OK = UNISCI (Merge): Mantiene i dati esistenti e aggiunge/aggiorna quelli dal file\n" +
+      "Annulla = SOVRASCRIVI (Overwrite): Elimina tutti i dati esistenti e li sostituisce con quelli dal file\n\n" +
+      "ATTENZIONE: La sovrascrittura è irreversibile!"
+    );
+
+    const mode = confirmed ? 'merge' : 'overwrite';
+
+    // Additional confirmation for overwrite mode
+    if (mode === 'overwrite') {
+      const overwriteConfirmed = confirm(
+        "⚠️ ATTENZIONE: Stai per ELIMINARE TUTTI I DATI ESISTENTI!\n\n" +
+        "Sei sicuro di voler sovrascrivere completamente i dati?\n" +
+        "Questa operazione NON può essere annullata.\n\n" +
+        "Consiglio: Esporta prima i dati attuali come backup."
+      );
+
+      if (!overwriteConfirmed) {
+        return; // User cancelled
+      }
+    }
+
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -127,13 +151,17 @@ export default function StoragePanel() {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        
-        await apiRequest("POST", "/api/import", data);
+
+        // Add mode to the request payload
+        const payload = { ...data, mode };
+
+        await apiRequest("POST", "/api/import", payload);
         updateStorageInfo();
-        
+
+        const modeText = mode === 'merge' ? 'uniti' : 'sovrascritti';
         toast({
           title: "Import completato",
-          description: "I dati sono stati importati con successo",
+          description: `I dati sono stati ${modeText} con successo (modalità: ${mode === 'merge' ? 'Unisci' : 'Sovrascrivi'})`,
         });
       } catch (error) {
         toast({
@@ -236,7 +264,11 @@ export default function StoragePanel() {
           <div className="bg-white rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">📥</div>
             <div className="font-semibold text-gray-900 mb-1">Import Dati</div>
-            <div className="text-sm text-gray-600 mb-3">Importa dati da file JSON</div>
+            <div className="text-sm text-gray-600 mb-3">
+              Importa dati da file JSON
+              <br />
+              <span className="text-xs text-blue-600 font-medium">Opzioni: Unisci o Sovrascrivi</span>
+            </div>
             <Button
               onClick={handleImportData}
               variant="outline"

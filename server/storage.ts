@@ -65,7 +65,7 @@ export interface IStorage {
 
   // Bulk operations
   exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
-  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }): Promise<void>;
+  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode?: 'merge' | 'overwrite'): Promise<void>;
   clearAllData(): Promise<void>;
 }
 
@@ -375,14 +375,19 @@ export class MemStorage implements IStorage {
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }) {
-    this.projects.clear();
-    this.clients.clear();
-    this.fileRoutings.clear();
-    this.systemConfig.clear();
-    this.oneDriveMappings.clear();
-    this.filesIndex.clear();
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode: 'merge' | 'overwrite' = 'overwrite') {
+    if (mode === 'overwrite') {
+      // Clear all existing data (old behavior)
+      this.projects.clear();
+      this.clients.clear();
+      this.fileRoutings.clear();
+      this.systemConfig.clear();
+      this.oneDriveMappings.clear();
+      this.filesIndex.clear();
+    }
+    // For merge mode, we don't clear - we just add/update
 
+    // Import data - will add new items or update existing ones (based on ID)
     data.projects.forEach(p => this.projects.set(p.id, p));
     data.clients.forEach(c => this.clients.set(c.id, c));
     data.fileRoutings.forEach(fr => this.fileRoutings.set(fr.id, fr));
@@ -900,26 +905,89 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }) {
-    await this.clearAllData();
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode: 'merge' | 'overwrite' = 'overwrite') {
+    if (mode === 'overwrite') {
+      // Clear all existing data (old behavior)
+      await this.clearAllData();
+    }
 
-    if (data.clients.length > 0) {
-      await db.insert(clients).values(data.clients);
-    }
-    if (data.projects.length > 0) {
-      await db.insert(projects).values(data.projects);
-    }
-    if (data.fileRoutings.length > 0) {
-      await db.insert(fileRoutings).values(data.fileRoutings);
-    }
-    if (data.systemConfig.length > 0) {
-      await db.insert(systemConfig).values(data.systemConfig);
-    }
-    if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
-      await db.insert(oneDriveMappings).values(data.oneDriveMappings);
-    }
-    if (data.filesIndex && data.filesIndex.length > 0) {
-      await db.insert(filesIndex).values(data.filesIndex);
+    // For merge mode, we need to handle conflicts with onConflictDoUpdate
+    if (mode === 'merge') {
+      // Merge: insert new records and update existing ones
+      if (data.clients.length > 0) {
+        for (const client of data.clients) {
+          await db.insert(clients).values(client)
+            .onConflictDoUpdate({
+              target: clients.id,
+              set: client
+            });
+        }
+      }
+      if (data.projects.length > 0) {
+        for (const project of data.projects) {
+          await db.insert(projects).values(project)
+            .onConflictDoUpdate({
+              target: projects.id,
+              set: project
+            });
+        }
+      }
+      if (data.fileRoutings.length > 0) {
+        for (const routing of data.fileRoutings) {
+          await db.insert(fileRoutings).values(routing)
+            .onConflictDoUpdate({
+              target: fileRoutings.id,
+              set: routing
+            });
+        }
+      }
+      if (data.systemConfig.length > 0) {
+        for (const config of data.systemConfig) {
+          await db.insert(systemConfig).values(config)
+            .onConflictDoUpdate({
+              target: systemConfig.id,
+              set: config
+            });
+        }
+      }
+      if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
+        for (const mapping of data.oneDriveMappings) {
+          await db.insert(oneDriveMappings).values(mapping)
+            .onConflictDoUpdate({
+              target: oneDriveMappings.projectCode,
+              set: mapping
+            });
+        }
+      }
+      if (data.filesIndex && data.filesIndex.length > 0) {
+        for (const fileIndex of data.filesIndex) {
+          await db.insert(filesIndex).values(fileIndex)
+            .onConflictDoUpdate({
+              target: filesIndex.driveItemId,
+              set: fileIndex
+            });
+        }
+      }
+    } else {
+      // Overwrite: simple insert after clear
+      if (data.clients.length > 0) {
+        await db.insert(clients).values(data.clients);
+      }
+      if (data.projects.length > 0) {
+        await db.insert(projects).values(data.projects);
+      }
+      if (data.fileRoutings.length > 0) {
+        await db.insert(fileRoutings).values(data.fileRoutings);
+      }
+      if (data.systemConfig.length > 0) {
+        await db.insert(systemConfig).values(data.systemConfig);
+      }
+      if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
+        await db.insert(oneDriveMappings).values(data.oneDriveMappings);
+      }
+      if (data.filesIndex && data.filesIndex.length > 0) {
+        await db.insert(filesIndex).values(data.filesIndex);
+      }
     }
   }
 
@@ -1185,8 +1253,8 @@ class FallbackStorage implements IStorage {
     return this.executeWithFallback(storage => storage.exportAllData());
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }): Promise<void> {
-    return this.executeWithFallback(storage => storage.importAllData(data));
+  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode?: 'merge' | 'overwrite'): Promise<void> {
+    return this.executeWithFallback(storage => storage.importAllData(data, mode));
   }
 
   async clearAllData(): Promise<void> {

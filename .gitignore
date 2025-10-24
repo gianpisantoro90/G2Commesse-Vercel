@@ -4,6 +4,9 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+.claude/
+.local/
+nul
 
 # Environment files
 .env.local
@@ -11,8 +14,10 @@ vite.config.ts.*
 
 # Local data
 data/
-.local/
-.claude/
 
-# Temporary files
-nul
+# Replit specific
+.replit
+replit.nix
+.config/
+.upm/
+.cache/
