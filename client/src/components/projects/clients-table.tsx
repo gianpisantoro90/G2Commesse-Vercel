@@ -6,6 +6,13 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -38,6 +45,10 @@ export default function ClientsTable() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<25 | 50 | 75>(25);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -128,6 +139,12 @@ export default function ClientsTable() {
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (client.city && client.city.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedClients = filteredClients.slice(startIndex, endIndex);
 
   // Handle view client projects
   const handleViewProjects = (client: Client) => {
@@ -250,7 +267,7 @@ export default function ClientsTable() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredClients.map((client) => (
+                {paginatedClients.map((client) => (
                   <tr key={client.id} className="hover:bg-gray-50 transition-colors">
                     <td className="py-4 px-4 font-mono text-sm font-semibold text-primary" data-testid={`client-sigla-${client.id}`}>
                       {client.sigla}
@@ -312,8 +329,64 @@ export default function ClientsTable() {
             </table>
           </div>
           
-          <div className="mt-6 text-sm text-gray-500" data-testid="clients-count">
-            Mostrando <strong>{filteredClients.length}</strong> di <strong>{clients.length}</strong> clienti
+          {/* Pagination Controls */}
+          <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm">
+            <div className="flex items-center gap-4">
+              <span className="text-gray-600 dark:text-gray-400" data-testid="clients-count">
+                Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, filteredClients.length)}</strong> di <strong>{filteredClients.length}</strong> clienti
+                {filteredClients.length !== clients.length && (
+                  <span className="text-gray-500 ml-1">({clients.length} totali)</span>
+                )}
+              </span>
+              
+              <div className="flex items-center gap-2">
+                <label htmlFor="clients-items-per-page" className="text-gray-600 dark:text-gray-400">
+                  Elementi per pagina:
+                </label>
+                <Select 
+                  value={itemsPerPage.toString()} 
+                  onValueChange={(value) => {
+                    setItemsPerPage(parseInt(value) as 25 | 50 | 75);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger id="clients-items-per-page" className="w-20" data-testid="clients-items-per-page-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="75">75</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <span className="text-gray-600 dark:text-gray-400">
+                Pagina <strong>{currentPage}</strong> di <strong>{totalPages || 1}</strong>
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  data-testid="clients-prev-page"
+                >
+                  ← Prec
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  data-testid="clients-next-page"
+                >
+                  Succ →
+                </Button>
+              </div>
+            </div>
           </div>
         </>
       )}
