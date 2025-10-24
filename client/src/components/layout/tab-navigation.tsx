@@ -13,7 +13,7 @@ export default function TabNavigation({ activeTab, onTabChange }: TabNavigationP
   ];
 
   return (
-    <nav className="bg-g2-accent border-b-2 border-primary" role="tablist" data-testid="tab-navigation">
+    <nav className="bg-g2-accent dark:bg-gray-800 border-b-2 border-primary" role="tablist" data-testid="tab-navigation">
       <div className="flex overflow-x-auto">
         {tabs.map((tab) => (
           <button
