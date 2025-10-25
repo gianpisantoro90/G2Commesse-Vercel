@@ -1059,14 +1059,14 @@ export default function ProjectsTable() {
             <AlertDialogDescription className="space-y-2">
               <div>Sei sicuro di voler eliminare questa commessa?</div>
               {projectToDelete && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                   <div className="font-mono font-semibold text-primary text-sm mb-1">
                     {projectToDelete.code}
                   </div>
-                  <div className="text-sm text-gray-700">
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
                     <strong>{projectToDelete.client}</strong> - {projectToDelete.city}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {projectToDelete.object}
                   </div>
                 </div>
