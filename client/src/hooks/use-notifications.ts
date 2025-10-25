@@ -74,7 +74,7 @@ export function useNotifications() {
               }
 
               // Browser notification if permission granted
-              if (Notification.permission === 'granted') {
+              if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                 new Notification(newNotification.title, {
                   body: newNotification.message,
                   icon: '/logo.png',
@@ -138,7 +138,7 @@ export function useNotifications() {
 
   useEffect(() => {
     // Request browser notification permission
-    if (Notification.permission === 'default') {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
       Notification.requestPermission();
     }
 
