@@ -88,56 +88,56 @@ export default function Dashboard() {
                     <TabsList className="inline-flex w-auto min-w-full bg-transparent border-0 p-0">
                       <TabsTrigger
                         value="nuova"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-nuova"
                       >
                         ➕ Nuova
                       </TabsTrigger>
                       <TabsTrigger
                         value="progetti"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-progetti"
                       >
                         📋 Commesse
                       </TabsTrigger>
                       <TabsTrigger
                         value="clienti"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-clienti"
                       >
                         👥 Clienti
                       </TabsTrigger>
                       <TabsTrigger
                         value="risorse"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-risorse"
                       >
                         👷 Risorse
                       </TabsTrigger>
                       <TabsTrigger
                         value="kpi"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-kpi"
                       >
                         📊 KPI
                       </TabsTrigger>
                       <TabsTrigger
                         value="parcella"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-parcella"
                       >
                         💰 Calc. Parcella
                       </TabsTrigger>
                       <TabsTrigger
                         value="scadenzario"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-scadenzario"
                       >
                         📅 Scadenze
                       </TabsTrigger>
                       <TabsTrigger
                         value="comunicazioni"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none whitespace-nowrap"
+                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-comunicazioni"
                       >
                         💬 Comun.
@@ -145,31 +145,31 @@ export default function Dashboard() {
                     </TabsList>
                   </div>
 
-                  <TabsContent value="progetti" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="progetti" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <ProjectsTable />
                   </TabsContent>
 
-                  <TabsContent value="risorse" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="risorse" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <GestioneRisorse />
                   </TabsContent>
 
-                  <TabsContent value="kpi" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="kpi" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <KpiDashboard />
                   </TabsContent>
 
-                  <TabsContent value="parcella" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="parcella" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <ParcellaCalculator />
                   </TabsContent>
 
-                  <TabsContent value="scadenzario" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="scadenzario" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <Scadenzario />
                   </TabsContent>
 
-                  <TabsContent value="comunicazioni" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="comunicazioni" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <RegistroComunicazioni />
                   </TabsContent>
                   
-                  <TabsContent value="nuova" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="nuova" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <div className="max-w-2xl mx-auto space-y-6">
                       <NewProjectForm 
                         onProjectSaved={setPendingProject}
@@ -180,7 +180,7 @@ export default function Dashboard() {
                     </div>
                   </TabsContent>
                   
-                  <TabsContent value="clienti" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="clienti" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <ClientsTable />
                   </TabsContent>
                 </Tabs>
@@ -195,9 +195,9 @@ export default function Dashboard() {
                   <OneDriveAutoRouting />
                   
                   {/* Bulk Rename Tool */}
-                  <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">🔄 Rinomina File in Massa</h3>
-                    <p className="text-gray-600 mb-4">
+                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">🔄 Rinomina File in Massa</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
                       Strumento per rinominare file in massa con pattern personalizzati.
                     </p>
                     <BulkRenameForm onRenameComplete={handleBulkRenameComplete} />
@@ -224,25 +224,25 @@ export default function Dashboard() {
             {activeTab === "sistema" && (
               <div data-testid="system-panel">
                 <Tabs value={activeSubTab.sistema} onValueChange={(value) => handleSubTabChange("sistema", value)}>
-                  <div className="bg-white rounded-t-2xl border-b border-gray-200">
+                  <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700">
                     <TabsList className="flex w-full bg-transparent border-0 p-0">
                       <TabsTrigger 
                         value="storage" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
                         data-testid="tab-storage"
                       >
                         💾 Storage
                       </TabsTrigger>
                       <TabsTrigger 
                         value="ai" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
                         data-testid="tab-ai"
                       >
                         🤖 Configurazione AI
                       </TabsTrigger>
                       <TabsTrigger 
                         value="onedrive" 
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 transition-colors rounded-none"
+                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
                         data-testid="tab-onedrive"
                       >
                         ☁️ OneDrive Config
@@ -250,20 +250,20 @@ export default function Dashboard() {
                     </TabsList>
                   </div>
                   
-                  <TabsContent value="storage" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="storage" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <StoragePanel />
                   </TabsContent>
                   
-                  <TabsContent value="ai" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="ai" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <AiConfigPanel />
                   </TabsContent>
                   
                   
-                  <TabsContent value="onedrive" className="bg-white rounded-b-2xl shadow-lg border border-gray-100 p-6 mt-0">
+                  <TabsContent value="onedrive" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <div className="space-y-8">
                       {/* Sezione Cartelle */}
-                      <div className="border-b border-gray-200 pb-8">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                      <div className="border-b border-gray-200 dark:border-gray-700 pb-8">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                           📁 Gestione Cartelle
                         </h3>
                         <FolderConfigPanel />
@@ -271,7 +271,7 @@ export default function Dashboard() {
                       
                       {/* Sezione Configurazione OneDrive */}
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                           ⚙️ Configurazione OneDrive
                         </h3>
                         <OneDrivePanel />
