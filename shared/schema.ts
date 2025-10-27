@@ -196,6 +196,33 @@ export type InsertCommunication = z.infer<typeof insertCommunicationSchema>;
 export type Communication = typeof communications.$inferSelect;
 
 // ============================================
+// USERS & AUTHENTICATION
+// ============================================
+
+// Users table for multi-user authentication
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  fullName: text("full_name").notNull(), // Nome completo visibile nell'UI
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("user"), // 'admin' | 'user'
+  active: boolean("active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User insert schema and types
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+// ============================================
 // NUOVE TABELLE PER FUNZIONALITÀ AVANZATE
 // ============================================
 

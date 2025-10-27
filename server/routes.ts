@@ -2,7 +2,8 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema } from "@shared/schema";
+import bcrypt from "bcrypt";
 import serverOneDriveService from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
 import { emailService } from "./lib/email-service";
@@ -18,10 +19,14 @@ const loginLimiter = rateLimit({
   skipSuccessfulRequests: true // Don't count successful logins
 });
 
-// Extend session interface to include authenticated flag
+// Extend session interface to include user data
 declare module 'express-session' {
   interface SessionData {
     authenticated?: boolean;
+    userId?: string;
+    username?: string;
+    fullName?: string;
+    role?: 'admin' | 'user';
   }
 }
 
@@ -30,13 +35,22 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   if (req.session.authenticated) {
     return next();
   }
-  
+
   // Allow all auth-related endpoints
   if (req.path.startsWith('/api/auth/')) {
     return next();
   }
-  
+
   return res.status(401).json({ message: "Authentication required" });
+};
+
+// Admin-only middleware
+const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (req.session.authenticated && req.session.role === 'admin') {
+    return next();
+  }
+
+  return res.status(403).json({ message: "Admin access required" });
 };
 
 // OneDrive endpoint validation schemas
@@ -78,25 +92,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check credentials against environment variables
-      const validUsername = process.env.AUTH_USERNAME;
-      const validPassword = process.env.AUTH_PASSWORD;
-
       // Security: Minimal logging (only in development, no credentials)
       if (process.env.NODE_ENV !== 'production') {
         console.log('🔐 Login attempt at:', new Date().toISOString());
       }
 
-      if (!validUsername || !validPassword) {
-        console.error('❌ AUTH_USERNAME or AUTH_PASSWORD not configured in environment');
-        return res.status(500).json({
-          success: false,
-          message: "Credenziali di sistema non configurate. Contatta l'amministratore."
-        });
+      // Try to authenticate against database first
+      const user = await storage.getUserByUsername(username);
+
+      if (user && user.active) {
+        // Verify password
+        const isValid = await bcrypt.compare(password, user.passwordHash);
+
+        if (isValid) {
+          // Security: Regenerate session ID to prevent session fixation attacks
+          req.session.regenerate((err) => {
+            if (err) {
+              console.error('Session regeneration error:', err);
+              return res.status(500).json({
+                success: false,
+                message: "Errore durante la sessione"
+              });
+            }
+
+            // Set authenticated flag and user data after regeneration
+            req.session.authenticated = true;
+            req.session.userId = user.id;
+            req.session.username = user.username;
+            req.session.fullName = user.fullName;
+            req.session.role = user.role as 'admin' | 'user';
+
+            return res.json({
+              success: true,
+              message: "Login effettuato con successo",
+              user: {
+                id: user.id,
+                username: user.username,
+                fullName: user.fullName,
+                role: user.role
+              }
+            });
+          });
+          return;
+        }
       }
 
-      if (username === validUsername && password === validPassword) {
-        // Security: Regenerate session ID to prevent session fixation attacks
+      // Fallback to environment variables for legacy support
+      // This allows the initial admin user to login before migration
+      const envUsername = process.env.AUTH_USERNAME;
+      const envPassword = process.env.AUTH_PASSWORD;
+
+      if (envUsername && envPassword && username === envUsername && password === envPassword) {
+        // Security: Regenerate session ID
         req.session.regenerate((err) => {
           if (err) {
             console.error('Session regeneration error:', err);
@@ -106,20 +153,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
 
-          // Set authenticated flag after regeneration
+          // Set authenticated flag with admin role for env user
           req.session.authenticated = true;
+          req.session.userId = 'legacy-admin';
+          req.session.username = envUsername;
+          req.session.fullName = envUsername;
+          req.session.role = 'admin';
 
           return res.json({
             success: true,
-            message: "Login effettuato con successo"
+            message: "Login effettuato con successo (legacy)",
+            user: {
+              id: 'legacy-admin',
+              username: envUsername,
+              fullName: envUsername,
+              role: 'admin'
+            }
           });
         });
-      } else {
-        return res.status(401).json({
-          success: false,
-          message: "Credenziali non valide"
-        });
+        return;
       }
+
+      // Invalid credentials
+      return res.status(401).json({
+        success: false,
+        message: "Credenziali non valide"
+      });
     } catch (error) {
       console.error('Login error:', error);
       return res.status(500).json({
@@ -147,13 +206,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/status", (req, res) => {
-    return res.json({ 
-      authenticated: !!req.session.authenticated 
+    return res.json({
+      authenticated: !!req.session.authenticated,
+      user: req.session.authenticated ? {
+        id: req.session.userId,
+        username: req.session.username,
+        fullName: req.session.fullName,
+        role: req.session.role
+      } : null
     });
   });
 
   // Apply authentication middleware to all other API routes
   app.use("/api", requireAuth);
+
+  // ============================================
+  // USER MANAGEMENT ENDPOINTS (Admin only)
+  // ============================================
+
+  // Get all users (admin only)
+  app.get("/api/users", requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      // Remove password hashes from response
+      const safeUsers = users.map(({ passwordHash, ...user }) => user);
+      return res.json(safeUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      return res.status(500).json({ message: "Errore nel recupero degli utenti" });
+    }
+  });
+
+  // Create new user (admin only)
+  app.post("/api/users", requireAdmin, async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+
+      // Validate password
+      if (!req.body.password || req.body.password.length < 8) {
+        return res.status(400).json({ message: "La password deve essere di almeno 8 caratteri" });
+      }
+
+      // Check if username or email already exists
+      const existingUsers = await storage.getAllUsers();
+      if (existingUsers.some(u => u.username === userData.username)) {
+        return res.status(400).json({ message: "Username già esistente" });
+      }
+      if (existingUsers.some(u => u.email === userData.email)) {
+        return res.status(400).json({ message: "Email già esistente" });
+      }
+
+      // Hash password
+      const passwordHash = await bcrypt.hash(req.body.password, 10);
+
+      const newUser = await storage.createUser({
+        ...userData,
+        passwordHash
+      });
+
+      // Remove password hash from response
+      const { passwordHash: _, ...safeUser } = newUser;
+      return res.status(201).json(safeUser);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati non validi", errors: error.errors });
+      }
+      console.error('Error creating user:', error);
+      return res.status(500).json({ message: "Errore nella creazione dell'utente" });
+    }
+  });
+
+  // Update user (admin only)
+  app.put("/api/users/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+
+      // Don't allow direct password hash updates through this endpoint
+      if (updates.passwordHash) {
+        delete updates.passwordHash;
+      }
+
+      const updatedUser = await storage.updateUser(id, updates);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      // Remove password hash from response
+      const { passwordHash: _, ...safeUser } = updatedUser;
+      return res.json(safeUser);
+    } catch (error) {
+      console.error('Error updating user:', error);
+      return res.status(500).json({ message: "Errore nell'aggiornamento dell'utente" });
+    }
+  });
+
+  // Delete user (admin only)
+  app.delete("/api/users/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      // Prevent deleting own account
+      if (id === req.session.userId) {
+        return res.status(400).json({ message: "Non puoi eliminare il tuo stesso account" });
+      }
+
+      const deleted = await storage.deleteUser(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      return res.json({ success: true, message: "Utente eliminato con successo" });
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      return res.status(500).json({ message: "Errore nell'eliminazione dell'utente" });
+    }
+  });
+
+  // Change password (any authenticated user)
+  app.post("/api/users/change-password", async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Password attuale e nuova password sono obbligatorie" });
+      }
+
+      if (newPassword.length < 8) {
+        return res.status(400).json({ message: "La nuova password deve essere di almeno 8 caratteri" });
+      }
+
+      // Get current user
+      const user = await storage.getUserById(req.session.userId!);
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      // Verify current password
+      const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({ message: "Password attuale non corretta" });
+      }
+
+      // Hash new password
+      const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+      // Update password
+      await storage.updateUser(user.id, { passwordHash: newPasswordHash });
+
+      return res.json({ success: true, message: "Password aggiornata con successo" });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      return res.status(500).json({ message: "Errore nel cambio password" });
+    }
+  });
 
   // Generate project code
   app.post("/api/generate-code", async (req, res) => {
