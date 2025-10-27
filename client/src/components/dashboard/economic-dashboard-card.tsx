@@ -148,16 +148,16 @@ export default function EconomicDashboardCard() {
 
       <CardContent>
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto bg-gray-100 dark:bg-gray-800">
+            <TabsTrigger value="overview" className="flex items-center gap-2 dark:data-[state=active]:bg-gray-700">
               <Target className="h-4 w-4" />
               Panoramica
             </TabsTrigger>
-            <TabsTrigger value="charts" className="flex items-center gap-2">
+            <TabsTrigger value="charts" className="flex items-center gap-2 dark:data-[state=active]:bg-gray-700">
               <BarChart3 className="h-4 w-4" />
               Grafici
             </TabsTrigger>
-            <TabsTrigger value="top-projects" className="flex items-center gap-2">
+            <TabsTrigger value="top-projects" className="flex items-center gap-2 dark:data-[state=active]:bg-gray-700">
               <Briefcase className="h-4 w-4" />
               Top Commesse
             </TabsTrigger>
@@ -167,34 +167,34 @@ export default function EconomicDashboardCard() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* KPI 1: Importo Totale Opere */}
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-blue-700 font-medium">
+                  <CardDescription className="text-blue-700 dark:text-blue-300 font-medium">
                     Importo Totale Opere
                   </CardDescription>
-                  <CardTitle className="text-3xl font-bold text-blue-900">
+                  <CardTitle className="text-3xl font-bold text-blue-900 dark:text-blue-100">
                     {formatImporto(totalImportoOpere)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xs text-blue-600">
+                  <p className="text-xs text-blue-600 dark:text-blue-400">
                     Base di calcolo compensi professionali
                   </p>
                 </CardContent>
               </Card>
 
               {/* KPI 2: Compensi Professionali */}
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-green-700 font-medium">
+                  <CardDescription className="text-green-700 dark:text-green-300 font-medium">
                     Compensi Professionali
                   </CardDescription>
-                  <CardTitle className="text-3xl font-bold text-green-900">
+                  <CardTitle className="text-3xl font-bold text-green-900 dark:text-green-100">
                     {formatImporto(totalImportoServizi)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-1 text-xs text-green-600">
+                  <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
                     <TrendingUp className="h-3 w-3" />
                     {projectsWithEconomicData.length} commesse
                   </div>
@@ -202,34 +202,34 @@ export default function EconomicDashboardCard() {
               </Card>
 
               {/* KPI 3: In Corso */}
-              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border-yellow-200 dark:border-yellow-800">
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-yellow-700 font-medium">
+                  <CardDescription className="text-yellow-700 dark:text-yellow-300 font-medium">
                     Commesse In Corso
                   </CardDescription>
-                  <CardTitle className="text-3xl font-bold text-yellow-900">
+                  <CardTitle className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
                     {formatImporto(importoServiziInCorso)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xs text-yellow-600">
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
                     {projectsInCorso.length} progetti attivi
                   </p>
                 </CardContent>
               </Card>
 
               {/* KPI 4: Media Compenso */}
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
                 <CardHeader className="pb-2">
-                  <CardDescription className="text-purple-700 font-medium">
+                  <CardDescription className="text-purple-700 dark:text-purple-300 font-medium">
                     Compenso Medio
                   </CardDescription>
-                  <CardTitle className="text-3xl font-bold text-purple-900">
+                  <CardTitle className="text-3xl font-bold text-purple-900 dark:text-purple-100">
                     {formatImporto(averageImportoServizio)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-xs text-purple-600">
+                  <p className="text-xs text-purple-600 dark:text-purple-400">
                     Per commessa ({avgPercentualeParcella.toFixed(2)}% medio)
                   </p>
                 </CardContent>
@@ -240,16 +240,16 @@ export default function EconomicDashboardCard() {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">
+                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
                     Fatturato Realizzato
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
                     {formatImporto(importoServiziConclusi)}
                   </div>
                   <Progress value={(importoServiziConclusi / totalImportoServizi) * 100} className="mt-2 h-2" />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     {projectsConcluse.length} commesse concluse
                   </p>
                 </CardContent>
@@ -257,16 +257,16 @@ export default function EconomicDashboardCard() {
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">
+                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
                     Pipeline Attiva
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
                     {formatImporto(importoServiziInCorso)}
                   </div>
                   <Progress value={(importoServiziInCorso / totalImportoServizi) * 100} className="mt-2 h-2 [&>div]:bg-yellow-500" />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     In fase di realizzazione
                   </p>
                 </CardContent>
@@ -274,16 +274,16 @@ export default function EconomicDashboardCard() {
 
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600">
+                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
                     Tasso di Completamento
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
                     {((projectsConcluse.length / projects.length) * 100).toFixed(1)}%
                   </div>
                   <Progress value={(projectsConcluse.length / projects.length) * 100} className="mt-2 h-2 [&>div]:bg-green-500" />
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                     {projectsConcluse.length}/{projects.length} commesse
                   </p>
                 </CardContent>
@@ -373,9 +373,9 @@ export default function EconomicDashboardCard() {
                       <div key={index} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="text-gray-700">{item.name}</span>
+                          <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
                         </div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-gray-900 dark:text-white">
                           {formatImporto(item.value)} ({item.count})
                         </div>
                       </div>
@@ -401,8 +401,8 @@ export default function EconomicDashboardCard() {
               <CardContent>
                 <div className="space-y-4">
                   {topProjectsByValue.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <AlertCircle className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                      <AlertCircle className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
                       <p>Nessuna commessa con dati economici disponibili</p>
                     </div>
                   ) : (
@@ -424,19 +424,19 @@ export default function EconomicDashboardCard() {
                                 {index + 1}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-gray-900 truncate" title={`${project.code} - ${project.object}`}>
+                                <div className="font-semibold text-gray-900 dark:text-white truncate" title={`${project.code} - ${project.object}`}>
                                   {project.code}
                                 </div>
-                                <div className="text-sm text-gray-500 truncate">
+                                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
                                   {project.client} - {project.city}
                                 </div>
                               </div>
                             </div>
                             <div className="text-right flex-shrink-0 ml-4">
-                              <div className="font-bold text-gray-900">
+                              <div className="font-bold text-gray-900 dark:text-white">
                                 {formatImporto(importoServizio)}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
                                 {percentage.toFixed(1)}% del totale
                               </div>
                             </div>
