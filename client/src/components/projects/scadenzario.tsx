@@ -244,9 +244,9 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
                   {typeConfig.icon} {typeConfig.label}
                 </Badge>
               </div>
-              <h4 className="font-semibold text-gray-900 mb-1">{deadline.title}</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{deadline.title}</h4>
               {deadline.description && (
-                <p className="text-sm text-gray-600 line-clamp-2">{deadline.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{deadline.description}</p>
               )}
             </div>
           </div>
@@ -463,11 +463,11 @@ export default function Scadenzario() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <CalendarClock className="h-6 w-6 text-blue-600" />
             Scadenzario Commesse
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Gestisci scadenze, milestone e notifiche per le tue commesse
           </p>
         </div>
@@ -492,36 +492,36 @@ export default function Scadenzario() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="bg-red-50 border-red-200">
+        <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-red-700 font-medium">Scadute</p>
-                <p className="text-3xl font-bold text-red-900">{overdueCount}</p>
+                <p className="text-sm text-red-700 dark:text-red-300 font-medium">Scadute</p>
+                <p className="text-3xl font-bold text-red-900 dark:text-red-100">{overdueCount}</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-orange-50 border-orange-200">
+        <Card className="bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-orange-700 font-medium">In Scadenza (7gg)</p>
-                <p className="text-3xl font-bold text-orange-900">{upcomingCount}</p>
+                <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">In Scadenza (7gg)</p>
+                <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">{upcomingCount}</p>
               </div>
               <Bell className="h-8 w-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-blue-50 border-blue-200">
+        <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-700 font-medium">In Programma</p>
-                <p className="text-3xl font-bold text-blue-900">
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">In Programma</p>
+                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
                   {enrichedDeadlines.filter(d => d.status === 'pending').length - overdueCount - upcomingCount}
                 </p>
               </div>
@@ -530,12 +530,12 @@ export default function Scadenzario() {
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50 border-green-200">
+        <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-700 font-medium">Completate</p>
-                <p className="text-3xl font-bold text-green-900">{completedCount}</p>
+                <p className="text-sm text-green-700 dark:text-green-300 font-medium">Completate</p>
+                <p className="text-3xl font-bold text-green-900 dark:text-green-100">{completedCount}</p>
               </div>
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>

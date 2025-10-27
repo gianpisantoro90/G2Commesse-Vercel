@@ -372,7 +372,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
                   </Badge>
                 )}
               </div>
-              <h4 className="font-semibold text-gray-900 mb-1">{comm.subject}</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{comm.subject}</h4>
 
               {/* AI Summary if available */}
               {comm.aiSuggestions?.summary && (
@@ -755,11 +755,11 @@ export default function RegistroComunicazioni() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-blue-600" />
             Registro Comunicazioni
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Traccia tutte le comunicazioni per ogni commessa
           </p>
         </div>
