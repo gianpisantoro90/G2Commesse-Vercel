@@ -71,7 +71,6 @@ export default function StoragePanel() {
         const payload = { ...data, mode };
 
         await apiRequest("POST", "/api/import", payload);
-        updateStorageInfo();
 
         const modeText = mode === 'merge' ? 'uniti' : 'sovrascritti';
         toast({
