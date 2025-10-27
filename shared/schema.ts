@@ -405,6 +405,23 @@ export const savedFilters = pgTable("saved_filters", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Tasks - Sistema gestione To Do
+export const tasks = pgTable("tasks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  notes: text("notes"), // Sezione note compilabile dagli utenti
+  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }), // Collegamento commessa (opzionale)
+  assignedToId: text("assigned_to_id").references(() => users.id), // Utente assegnato
+  createdById: text("created_by_id").notNull().references(() => users.id), // Utente creatore
+  priority: text("priority").notNull().default("medium"), // 'low', 'medium', 'high'
+  status: text("status").notNull().default("pending"), // 'pending', 'in_progress', 'completed', 'cancelled'
+  dueDate: timestamp("due_date"), // Scadenza (opzionale)
+  completedAt: timestamp("completed_at"), // Data completamento
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // ============================================
 // INSERT SCHEMAS PER NUOVE TABELLE
 // ============================================
@@ -475,6 +492,13 @@ export const insertSavedFilterSchema = createInsertSchema(savedFilters).omit({
   updatedAt: true,
 });
 
+export const insertTaskSchema = createInsertSchema(tasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  completedAt: true,
+});
+
 // ============================================
 // TYPES PER NUOVE TABELLE
 // ============================================
@@ -515,3 +539,6 @@ export type ProjectResource = typeof projectResources.$inferSelect;
 
 export type InsertSavedFilter = z.infer<typeof insertSavedFilterSchema>;
 export type SavedFilter = typeof savedFilters.$inferSelect;
+
+export type InsertTask = z.infer<typeof insertTaskSchema>;
+export type Task = typeof tasks.$inferSelect;
