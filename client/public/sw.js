@@ -1,6 +1,6 @@
 // Service Worker for G2 Gestione Commesse PWA
-const CACHE_NAME = 'g2-commesse-v11';
-const RUNTIME_CACHE = 'g2-runtime-v11';
+const CACHE_NAME = 'g2-commesse-v12';
+const RUNTIME_CACHE = 'g2-runtime-v12';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
@@ -61,8 +61,9 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Cache successful API responses for offline fallback
-          if (response && response.status === 200) {
+          // Cache successful GET API responses for offline fallback
+          // POST, PUT, DELETE requests cannot be cached
+          if (response && response.status === 200 && request.method === 'GET') {
             const responseClone = response.clone();
             caches.open(RUNTIME_CACHE).then(cache => {
               cache.put(request, responseClone);
@@ -71,8 +72,12 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Try to serve from cache if offline
-          return caches.match(request);
+          // Try to serve from cache if offline (only for GET requests)
+          if (request.method === 'GET') {
+            return caches.match(request);
+          }
+          // For non-GET requests, return network error
+          return Promise.reject(new Error('Network request failed'));
         })
     );
     return;
@@ -87,8 +92,9 @@ self.addEventListener('fetch', (event) => {
         }
 
         return fetch(request).then(response => {
-          // Cache successful responses
-          if (response && response.status === 200) {
+          // Cache successful GET responses only
+          // POST, PUT, DELETE requests cannot be cached
+          if (response && response.status === 200 && request.method === 'GET') {
             const responseClone = response.clone();
             caches.open(RUNTIME_CACHE).then(cache => {
               cache.put(request, responseClone);
