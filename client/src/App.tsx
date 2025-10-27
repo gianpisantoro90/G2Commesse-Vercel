@@ -33,14 +33,14 @@ function AuthenticatedRouter() {
 }
 
 function AppContent() {
-  const { isAuthenticated, isLoading, login } = useAuth();
+  const { isAuthenticated, isLoading, checkAuth } = useAuth();
 
   if (isLoading) {
     return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={login} />;
+    return <LoginPage onLoginSuccess={checkAuth} />;
   }
 
   return (
