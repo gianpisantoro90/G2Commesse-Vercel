@@ -25,6 +25,7 @@ import OneDrivePanel from "@/components/system/onedrive-panel";
 import UserManagementPanel from "@/components/system/user-management-panel";
 import OneDriveFileRouter from "@/components/onedrive/onedrive-file-router";
 import OneDriveBrowser from "@/components/onedrive/onedrive-browser";
+import TodoPanel from "@/components/todo/TodoPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Project } from "@shared/schema";
 
@@ -85,6 +86,9 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+
+            {/* To Do Panel */}
+            {activeTab === "todo" && <TodoPanel />}
 
             {/* Management Panel */}
             {activeTab === "gestione" && (
