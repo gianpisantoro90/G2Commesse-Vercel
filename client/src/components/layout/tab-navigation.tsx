@@ -7,6 +7,7 @@ interface TabNavigationProps {
 export default function TabNavigation({ activeTab, onTabChange, isAdmin = true }: TabNavigationProps) {
   const allTabs = [
     { id: "dashboard", label: "Dashboard", emoji: "🏠", adminOnly: false },
+    { id: "todo", label: "To Do", emoji: "✅", adminOnly: false },
     { id: "gestione", label: "Gestione", emoji: "📁", adminOnly: false },
     { id: "routing", label: "Auto-Routing", emoji: "🤖", adminOnly: true },
     { id: "onedrive", label: "OneDrive Browser", emoji: "☁️", adminOnly: true },
