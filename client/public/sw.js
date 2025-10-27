@@ -1,6 +1,6 @@
 // Service Worker for G2 Gestione Commesse PWA
-const CACHE_NAME = 'g2-commesse-v9';
-const RUNTIME_CACHE = 'g2-runtime-v9';
+const CACHE_NAME = 'g2-commesse-v10';
+const RUNTIME_CACHE = 'g2-runtime-v10';
 
 // Assets to cache on install
 const PRECACHE_ASSETS = [
