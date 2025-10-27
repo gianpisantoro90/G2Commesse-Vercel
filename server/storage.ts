@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -72,6 +72,16 @@ export interface IStorage {
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
   deleteUser(id: string): Promise<boolean>;
 
+  // Tasks
+  getAllTasks(): Promise<Task[]>;
+  getTaskById(id: string): Promise<Task | undefined>;
+  getTasksByProject(projectId: string): Promise<Task[]>;
+  getTasksByAssignee(userId: string): Promise<Task[]>;
+  getTasksByCreator(userId: string): Promise<Task[]>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: string, updates: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: string): Promise<boolean>;
+
   // Bulk operations
   exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
   importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode?: 'merge' | 'overwrite'): Promise<void>;
@@ -88,6 +98,7 @@ export class MemStorage implements IStorage {
   private communications: Map<string, Communication> = new Map();
   private deadlines: Map<string, Deadline> = new Map();
   private users: Map<string, User> = new Map();
+  private tasks: Map<string, Task> = new Map();
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -553,6 +564,66 @@ export class MemStorage implements IStorage {
     return this.users.delete(id);
   }
 
+  // Tasks
+  async getAllTasks(): Promise<Task[]> {
+    return Array.from(this.tasks.values());
+  }
+
+  async getTaskById(id: string): Promise<Task | undefined> {
+    return this.tasks.get(id);
+  }
+
+  async getTasksByProject(projectId: string): Promise<Task[]> {
+    return Array.from(this.tasks.values()).filter(t => t.projectId === projectId);
+  }
+
+  async getTasksByAssignee(userId: string): Promise<Task[]> {
+    return Array.from(this.tasks.values()).filter(t => t.assignedToId === userId);
+  }
+
+  async getTasksByCreator(userId: string): Promise<Task[]> {
+    return Array.from(this.tasks.values()).filter(t => t.createdById === userId);
+  }
+
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    const id = randomUUID();
+    const task: Task = {
+      ...insertTask,
+      id,
+      description: insertTask.description || null,
+      notes: insertTask.notes || null,
+      projectId: insertTask.projectId || null,
+      assignedToId: insertTask.assignedToId || null,
+      priority: insertTask.priority || 'medium',
+      status: insertTask.status || 'pending',
+      dueDate: insertTask.dueDate || null,
+      completedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.tasks.set(id, task);
+    return task;
+  }
+
+  async updateTask(id: string, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    const existing = this.tasks.get(id);
+    if (!existing) return undefined;
+
+    const updated: Task = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+      // Se status diventa completed, setta completedAt
+      completedAt: updates.status === 'completed' ? new Date() : existing.completedAt,
+    };
+    this.tasks.set(id, updated);
+    return updated;
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    return this.tasks.delete(id);
+  }
+
   async clearAllData() {
     this.projects.clear();
     this.clients.clear();
@@ -562,6 +633,7 @@ export class MemStorage implements IStorage {
     this.filesIndex.clear();
     this.communications.clear();
     this.users.clear();
+    this.tasks.clear();
   }
 
   private generateSafeAcronym(text: string): string {
@@ -985,6 +1057,57 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: string): Promise<boolean> {
     const result = await db.delete(users).where(eq(users.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Tasks
+  async getAllTasks(): Promise<Task[]> {
+    return await db.select().from(tasks);
+  }
+
+  async getTaskById(id: string): Promise<Task | undefined> {
+    const [task] = await db.select().from(tasks).where(eq(tasks.id, id));
+    return task || undefined;
+  }
+
+  async getTasksByProject(projectId: string): Promise<Task[]> {
+    return await db.select().from(tasks).where(eq(tasks.projectId, projectId));
+  }
+
+  async getTasksByAssignee(userId: string): Promise<Task[]> {
+    return await db.select().from(tasks).where(eq(tasks.assignedToId, userId));
+  }
+
+  async getTasksByCreator(userId: string): Promise<Task[]> {
+    return await db.select().from(tasks).where(eq(tasks.createdById, userId));
+  }
+
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    const [task] = await db.insert(tasks).values(insertTask).returning();
+    return task;
+  }
+
+  async updateTask(id: string, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    const updateData: any = {
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    // Se status diventa completed, setta completedAt
+    if (updates.status === 'completed') {
+      updateData.completedAt = new Date();
+    }
+    
+    const [updated] = await db
+      .update(tasks)
+      .set(updateData)
+      .where(eq(tasks.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
     return (result.rowCount || 0) > 0;
   }
 
