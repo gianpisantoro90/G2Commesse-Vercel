@@ -7,14 +7,10 @@
  * Usage: tsx scripts/migrate-initial-user.ts
  */
 
-import { config } from 'dotenv';
 import bcrypt from 'bcrypt';
 import { db } from '../server/db';
 import { users } from '../shared/schema';
 import { eq } from 'drizzle-orm';
-
-// Load environment variables
-config();
 
 async function migrateInitialUser() {
   try {
