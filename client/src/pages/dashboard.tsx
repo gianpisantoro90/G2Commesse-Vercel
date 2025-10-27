@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Header from "@/components/layout/header";
 import TabNavigation from "@/components/layout/tab-navigation";
+import { useAuth } from "@/hooks/useAuth";
 import StatsCard from "@/components/dashboard/stats-card";
 import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
@@ -21,20 +22,24 @@ import StoragePanel from "@/components/system/storage-panel";
 import AiConfigPanel from "@/components/system/ai-config-panel";
 import FolderConfigPanel from "@/components/system/folder-config-panel";
 import OneDrivePanel from "@/components/system/onedrive-panel";
+import UserManagementPanel from "@/components/system/user-management-panel";
 import OneDriveFileRouter from "@/components/onedrive/onedrive-file-router";
 import OneDriveBrowser from "@/components/onedrive/onedrive-browser";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Project } from "@shared/schema";
 
 export default function Dashboard() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeSubTab, setActiveSubTab] = useState({
     gestione: "progetti",
-    sistema: "storage",
+    sistema: "users",
     vista: "tabella"
   });
   const [pendingProject, setPendingProject] = useState(null);
-  
+
   // Routing state
   const [bulkRenameResults, setBulkRenameResults] = useState<Array<{original: string, renamed: string}> | null>(null);
 
@@ -56,9 +61,10 @@ export default function Dashboard() {
       <Header />
       
       <div className="max-w-7xl mx-auto">
-        <TabNavigation 
-          activeTab={activeTab} 
+        <TabNavigation
+          activeTab={activeTab}
           onTabChange={setActiveTab}
+          isAdmin={isAdmin}
         />
 
         <main className="p-6" id="main-content">
@@ -66,15 +72,15 @@ export default function Dashboard() {
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
               <div className="space-y-8" data-testid="dashboard-panel">
-                {/* First Row - Economic Dashboard */}
-                <EconomicDashboardCard />
+                {/* First Row - Economic Dashboard (Admin only) */}
+                {isAdmin && <EconomicDashboardCard />}
 
                 {/* Second Row - Recent Projects */}
                 <RecentProjectsTable />
 
                 {/* Third Row - Core System Info */}
                 <div className="grid gap-6 lg:grid-cols-2">
-                  <StatsCard />
+                  {isAdmin && <StatsCard />}
                   <OneDriveStatusCard />
                 </div>
               </div>
@@ -86,13 +92,15 @@ export default function Dashboard() {
                 <Tabs value={activeSubTab.gestione} onValueChange={(value) => handleSubTabChange("gestione", value)}>
                   <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                     <TabsList className="inline-flex w-auto min-w-full bg-transparent border-0 p-0">
-                      <TabsTrigger
-                        value="nuova"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                        data-testid="tab-nuova"
-                      >
-                        ➕ Nuova
-                      </TabsTrigger>
+                      {isAdmin && (
+                        <TabsTrigger
+                          value="nuova"
+                          className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          data-testid="tab-nuova"
+                        >
+                          ➕ Nuova
+                        </TabsTrigger>
+                      )}
                       <TabsTrigger
                         value="progetti"
                         className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
@@ -100,34 +108,42 @@ export default function Dashboard() {
                       >
                         📋 Commesse
                       </TabsTrigger>
-                      <TabsTrigger
-                        value="clienti"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                        data-testid="tab-clienti"
-                      >
-                        👥 Clienti
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="risorse"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                        data-testid="tab-risorse"
-                      >
-                        👷 Risorse
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="kpi"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                        data-testid="tab-kpi"
-                      >
-                        📊 KPI
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="parcella"
-                        className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                        data-testid="tab-parcella"
-                      >
-                        💰 Calc. Parcella
-                      </TabsTrigger>
+                      {isAdmin && (
+                        <TabsTrigger
+                          value="clienti"
+                          className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          data-testid="tab-clienti"
+                        >
+                          👥 Clienti
+                        </TabsTrigger>
+                      )}
+                      {isAdmin && (
+                        <TabsTrigger
+                          value="risorse"
+                          className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          data-testid="tab-risorse"
+                        >
+                          👷 Risorse
+                        </TabsTrigger>
+                      )}
+                      {isAdmin && (
+                        <TabsTrigger
+                          value="kpi"
+                          className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          data-testid="tab-kpi"
+                        >
+                          📊 KPI
+                        </TabsTrigger>
+                      )}
+                      {isAdmin && (
+                        <TabsTrigger
+                          value="parcella"
+                          className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          data-testid="tab-parcella"
+                        >
+                          💰 Calc. Parcella
+                        </TabsTrigger>
+                      )}
                       <TabsTrigger
                         value="scadenzario"
                         className="px-4 py-3 text-xs font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
@@ -149,17 +165,23 @@ export default function Dashboard() {
                     <ProjectsTable />
                   </TabsContent>
 
-                  <TabsContent value="risorse" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                    <GestioneRisorse />
-                  </TabsContent>
+                  {isAdmin && (
+                    <TabsContent value="risorse" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                      <GestioneRisorse />
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="kpi" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                    <KpiDashboard />
-                  </TabsContent>
+                  {isAdmin && (
+                    <TabsContent value="kpi" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                      <KpiDashboard />
+                    </TabsContent>
+                  )}
 
-                  <TabsContent value="parcella" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                    <ParcellaCalculator />
-                  </TabsContent>
+                  {isAdmin && (
+                    <TabsContent value="parcella" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                      <ParcellaCalculator />
+                    </TabsContent>
+                  )}
 
                   <TabsContent value="scadenzario" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <Scadenzario />
@@ -168,27 +190,31 @@ export default function Dashboard() {
                   <TabsContent value="comunicazioni" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <RegistroComunicazioni />
                   </TabsContent>
-                  
-                  <TabsContent value="nuova" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                    <div className="max-w-2xl mx-auto space-y-6">
-                      <NewProjectForm 
-                        onProjectSaved={setPendingProject}
-                      />
-                      <FolderStructureCard 
-                        pendingProject={pendingProject}
-                      />
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="clienti" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                    <ClientsTable />
-                  </TabsContent>
+
+                  {isAdmin && (
+                    <TabsContent value="nuova" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                      <div className="max-w-2xl mx-auto space-y-6">
+                        <NewProjectForm
+                          onProjectSaved={setPendingProject}
+                        />
+                        <FolderStructureCard
+                          pendingProject={pendingProject}
+                        />
+                      </div>
+                    </TabsContent>
+                  )}
+
+                  {isAdmin && (
+                    <TabsContent value="clienti" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                      <ClientsTable />
+                    </TabsContent>
+                  )}
                 </Tabs>
               </div>
             )}
 
-            {/* Auto-Routing Panel */}
-            {activeTab === "routing" && (
+            {/* Auto-Routing Panel (Admin only) */}
+            {activeTab === "routing" && isAdmin && (
               <div className="max-w-6xl mx-auto space-y-6" data-testid="routing-panel">
                 <div className="grid gap-6 lg:grid-cols-1">
                   {/* New OneDrive Auto-Routing System */}
@@ -213,35 +239,42 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* OneDrive Browser Panel */}
-            {activeTab === "onedrive" && (
+            {/* OneDrive Browser Panel (Admin only) */}
+            {activeTab === "onedrive" && isAdmin && (
               <div data-testid="onedrive-browser-panel">
                 <OneDriveBrowser />
               </div>
             )}
 
-            {/* System Panel */}
-            {activeTab === "sistema" && (
+            {/* System Panel (Admin only) */}
+            {activeTab === "sistema" && isAdmin && (
               <div data-testid="system-panel">
                 <Tabs value={activeSubTab.sistema} onValueChange={(value) => handleSubTabChange("sistema", value)}>
                   <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700">
                     <TabsList className="flex w-full bg-transparent border-0 p-0">
-                      <TabsTrigger 
-                        value="storage" 
+                      <TabsTrigger
+                        value="users"
+                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
+                        data-testid="tab-users"
+                      >
+                        👥 Utenti
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="storage"
                         className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
                         data-testid="tab-storage"
                       >
                         💾 Storage
                       </TabsTrigger>
-                      <TabsTrigger 
-                        value="ai" 
+                      <TabsTrigger
+                        value="ai"
                         className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
                         data-testid="tab-ai"
                       >
                         🤖 Configurazione AI
                       </TabsTrigger>
-                      <TabsTrigger 
-                        value="onedrive" 
+                      <TabsTrigger
+                        value="onedrive"
                         className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
                         data-testid="tab-onedrive"
                       >
@@ -249,7 +282,11 @@ export default function Dashboard() {
                       </TabsTrigger>
                     </TabsList>
                   </div>
-                  
+
+                  <TabsContent value="users" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                    <UserManagementPanel />
+                  </TabsContent>
+
                   <TabsContent value="storage" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <StoragePanel />
                   </TabsContent>

@@ -6,7 +6,7 @@ import { NotificationCenter } from "@/components/notifications/notification-cent
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export default function Header() {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const handleLogout = async () => {
     await logout();
@@ -38,6 +38,23 @@ export default function Header() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <NotificationCenter />
+            {user && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
+                    {user.fullName.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {user.fullName}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {user.role === 'admin' ? 'Amministratore' : 'Utilizzatore'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
             <Button
               variant="outline"
               size="sm"
