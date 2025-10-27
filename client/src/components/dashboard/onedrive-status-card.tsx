@@ -108,7 +108,7 @@ export default function OneDriveStatusCard() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           {getConnectionStatusIcon()}
-          <h3 className="text-lg font-semibold text-gray-900">OneDrive Status</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">OneDrive Status</h3>
         </div>
         {getConnectionStatusBadge()}
       </div>
@@ -116,26 +116,26 @@ export default function OneDriveStatusCard() {
       {/* Connection Status and User Info */}
       <div className="space-y-4">
         {isConnected && userInfo ? (
-          <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
-            <User className="h-5 w-5 text-green-600" />
+          <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+            <User className="h-5 w-5 text-green-600 dark:text-green-400" />
             <div>
-              <div className="font-medium text-green-900">{userInfo.name}</div>
-              <div className="text-sm text-green-700">{userInfo.email}</div>
+              <div className="font-medium text-green-900 dark:text-green-100">{userInfo.name}</div>
+              <div className="text-sm text-green-700 dark:text-green-300">{userInfo.email}</div>
             </div>
           </div>
         ) : !isConnected ? (
-          <div className="p-3 bg-red-50 rounded-lg">
-            <div className="flex items-center space-x-2 text-red-800">
+          <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
+            <div className="flex items-center space-x-2 text-red-800 dark:text-red-300">
               <AlertTriangle className="h-4 w-4" />
               <span className="font-medium">OneDrive non connesso</span>
             </div>
-            <p className="text-sm text-red-700 mt-1">
+            <p className="text-sm text-red-700 dark:text-red-400 mt-1">
               Configura la connessione OneDrive nelle impostazioni sistema
             </p>
           </div>
         ) : (
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-center space-x-2 text-gray-700">
+          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
               <Clock className="h-4 w-4" />
               <span>Caricamento informazioni utente...</span>
             </div>
@@ -146,21 +146,21 @@ export default function OneDriveStatusCard() {
         {isConnected && (
           <div className={`flex items-center justify-between p-3 rounded-lg ${
             rootConfig?.folderPath 
-              ? 'bg-blue-50' 
-              : 'bg-amber-50 border-l-4 border-amber-400'
+              ? 'bg-blue-50 dark:bg-blue-950/30' 
+              : 'bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400 dark:border-amber-600'
           }`}>
             <div className="flex items-center space-x-3">
               <FolderOpen className={`h-5 w-5 ${
-                rootConfig?.folderPath ? 'text-blue-600' : 'text-amber-600'
+                rootConfig?.folderPath ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'
               }`} />
               <div className="flex-1">
                 <div className={`font-medium ${
-                  rootConfig?.folderPath ? 'text-blue-900' : 'text-amber-900'
+                  rootConfig?.folderPath ? 'text-blue-900 dark:text-blue-100' : 'text-amber-900 dark:text-amber-100'
                 }`}>
                   Cartella Progetti
                 </div>
                 <div className={`text-sm font-mono ${
-                  rootConfig?.folderPath ? 'text-blue-700' : 'text-amber-700'
+                  rootConfig?.folderPath ? 'text-blue-700 dark:text-blue-300' : 'text-amber-700 dark:text-amber-300'
                 }`}>
                   {rootConfig?.folderPath || 'Non configurata'}
                 </div>
@@ -196,23 +196,23 @@ export default function OneDriveStatusCard() {
         {/* Sync Statistics */}
         {isConnected && (
           <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
+            <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <div className="text-2xl font-bold text-primary" data-testid="sync-stats-total">
                 {syncStats.total}
               </div>
-              <div className="text-sm text-gray-600">Progetti Totali</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">Progetti Totali</div>
             </div>
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600" data-testid="sync-stats-synced">
+            <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="sync-stats-synced">
                 {syncStats.synced}
               </div>
-              <div className="text-sm text-gray-600">Sincronizzati</div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">Sincronizzati</div>
             </div>
           </div>
         )}
 
         {/* Health Indicator */}
-        <div className="p-3 border-l-4 border-gray-300 bg-gray-50">
+        <div className="p-3 border-l-4 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
           <div className={`font-medium ${getHealthColor()}`}>
             {getHealthIndicator()}
           </div>
@@ -302,7 +302,7 @@ export default function OneDriveStatusCard() {
 
         {/* Auto-sync status */}
         {isConnected && (
-          <div className="text-xs text-gray-500 text-center">
+          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
             Auto-sync: {autoSyncEnabled ? '✅ Attivo' : '❌ Disattivo'}
           </div>
         )}
