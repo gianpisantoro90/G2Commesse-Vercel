@@ -40,7 +40,8 @@ export default function UserManagementPanel() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const data = await apiRequest<User[]>("GET", "/api/users");
+      const response = await apiRequest("GET", "/api/users");
+      const data = await response.json();
       setUsers(data);
     } catch (error) {
       toast({
