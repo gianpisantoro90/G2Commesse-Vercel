@@ -141,12 +141,6 @@ export const insertCommunicationSchema = createInsertSchema(communications).omit
   updatedAt: true,
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 // Prestazioni professionali metadata interfaces
 export interface ProjectPrestazioni {
   prestazioni?: Array<'progettazione' | 'dl' | 'csp' | 'cse' | 'contabilita' | 'collaudo' | 'perizia' | 'pratiche'>;
@@ -201,9 +195,6 @@ export type FilesIndex = typeof filesIndex.$inferSelect;
 export type InsertCommunication = z.infer<typeof insertCommunicationSchema>;
 export type Communication = typeof communications.$inferSelect;
 
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-
 // ============================================
 // USERS & AUTHENTICATION
 // ============================================
@@ -220,6 +211,16 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// User insert schema and types
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
 
 // ============================================
 // NUOVE TABELLE PER FUNZIONALITÀ AVANZATE
