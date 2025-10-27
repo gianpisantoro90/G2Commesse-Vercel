@@ -176,12 +176,12 @@ export default function StoragePanel() {
 
   return (
     <div data-testid="storage-panel">
-      <h3 className="text-2xl font-bold text-gray-900 mb-6">Gestione Storage Locale</h3>
+      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Gestione Storage Locale</h3>
       
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Storage Stats */}
         <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200 p-6">
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">📊 Utilizzo Storage</h4>
+          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📊 Utilizzo Storage</h4>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">IndexedDB</span>
@@ -213,8 +213,8 @@ export default function StoragePanel() {
         
         {/* Storage Actions */}
         <div className="space-y-4">
-          <div className="bg-white border-2 border-gray-200 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">🧹 Operazioni di Pulizia</h4>
+          <div className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🧹 Operazioni di Pulizia</h4>
             <div className="space-y-3">
               <Button
                 onClick={handleClearCache}
@@ -246,12 +246,12 @@ export default function StoragePanel() {
       </div>
       
       {/* Data Management */}
-      <div className="mt-8 bg-gray-50 rounded-xl p-6">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">📦 Gestione Dati</h4>
+      <div className="mt-8 bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📦 Gestione Dati</h4>
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="bg-white rounded-lg p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">📤</div>
-            <div className="font-semibold text-gray-900 mb-1">Export Completo</div>
+            <div className="font-semibold text-gray-900 dark:text-white mb-1">Export Completo</div>
             <div className="text-sm text-gray-600 mb-3">Esporta tutti i dati in formato JSON</div>
             <Button
               onClick={handleExportAllData}
@@ -261,9 +261,9 @@ export default function StoragePanel() {
               Esporta
             </Button>
           </div>
-          <div className="bg-white rounded-lg p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">📥</div>
-            <div className="font-semibold text-gray-900 mb-1">Import Dati</div>
+            <div className="font-semibold text-gray-900 dark:text-white mb-1">Import Dati</div>
             <div className="text-sm text-gray-600 mb-3">
               Importa dati da file JSON
               <br />
@@ -278,9 +278,9 @@ export default function StoragePanel() {
               Importa
             </Button>
           </div>
-          <div className="bg-white rounded-lg p-4 text-center">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">🔄</div>
-            <div className="font-semibold text-gray-900 mb-1">Backup Auto</div>
+            <div className="font-semibold text-gray-900 dark:text-white mb-1">Backup Auto</div>
             <div className="text-sm text-gray-600 mb-3">Configura backup automatico</div>
             <Button
               disabled

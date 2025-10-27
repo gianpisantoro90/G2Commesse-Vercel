@@ -182,13 +182,13 @@ export default function AiConfigPanel() {
 
   return (
     <div className="max-w-2xl" data-testid="ai-config-panel">
-      <h3 className="text-2xl font-bold text-gray-900 mb-6">🤖 Configurazione AI</h3>
+      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">🤖 Configurazione AI</h3>
       
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200 p-6 mb-6">
         <div className="flex items-start gap-3">
           <span className="text-2xl">✨</span>
           <div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-2">Integrazione AI Multi-Modello</h4>
+            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Integrazione AI Multi-Modello</h4>
             <p className="text-gray-600 text-sm">
               Configura l'integrazione con Claude AI o DeepSeek per funzionalità avanzate di routing e analisi documenti.
             </p>
@@ -260,10 +260,10 @@ export default function AiConfigPanel() {
           <Label className="block text-sm font-semibold text-gray-700 mb-2">
             Configurazione Avanzata
           </Label>
-          <div className="space-y-4 bg-gray-50 rounded-xl p-4">
+          <div className="space-y-4 bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900">Routing Automatico</div>
+                <div className="font-medium text-gray-900 dark:text-white">Routing Automatico</div>
                 <div className="text-sm text-gray-600">Attiva suggerimenti automatici per file</div>
               </div>
               <Switch
@@ -275,7 +275,7 @@ export default function AiConfigPanel() {
             
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900">Analisi Contenuto</div>
+                <div className="font-medium text-gray-900 dark:text-white">Analisi Contenuto</div>
                 <div className="text-sm text-gray-600">Scansiona contenuto documenti per classificazione</div>
               </div>
               <Switch
@@ -287,7 +287,7 @@ export default function AiConfigPanel() {
             
             <div className="flex items-center justify-between">
               <div>
-                <div className="font-medium text-gray-900">Learning Mode</div>
+                <div className="font-medium text-gray-900 dark:text-white">Learning Mode</div>
                 <div className="text-sm text-gray-600">Impara dalle tue correzioni</div>
               </div>
               <Switch
