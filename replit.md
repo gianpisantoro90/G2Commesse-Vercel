@@ -2,6 +2,19 @@
 
 ## Overview
 
+**To Do Task Management System (October 27, 2025)**
+- ✅ **COMPLETE TASK SYSTEM**: Full task management with creation, assignment, tracking, and completion
+- ✅ **DATABASE SCHEMA**: Tasks table with title, description, priority (low/medium/high), status (pending/in_progress/completed/cancelled), due dates, and notes
+- ✅ **PROJECT INTEGRATION**: Tasks can be linked to specific projects for better organization
+- ✅ **USER ASSIGNMENTS**: Tasks assignable to team members with automatic notification system
+- ✅ **COMPREHENSIVE FILTERING**: Filter tasks by project, status, priority, and view personal/created tasks
+- ✅ **DARK MODE SUPPORT**: Full dark/light theme compatibility across all To Do components
+- ✅ **OVERDUE TRACKING**: Automatic detection and highlighting of overdue tasks
+- ✅ **NOTES SYSTEM**: Dedicated notes field for each task with full editing capabilities
+- ✅ **DASHBOARD INTEGRATION**: Dedicated "To Do" tab in main navigation accessible to all users
+- ✅ **STATS DASHBOARD**: Real-time counters for assigned tasks, overdue items, and high-priority work
+- ✅ **FULL TEST COVERAGE**: Complete data-testid attributes for automation testing
+
 **MAJOR OneDrive Integration Update (September 10, 2025)**
 - ✅ **COMPLETE OneDrive BROWSER**: Full navigation system for exploring existing OneDrive content
 - ✅ **PROJECT-ONEDRIVE LINKING**: Database persistence for connecting projects to OneDrive folders
@@ -76,6 +89,7 @@ Preferred communication style: Simple, everyday language.
 ### Data Models
 - **Projects**: Core entity with code, client, location, description, year, and template type
 - **Clients**: Client registry with unique sigla (code) and project count tracking
+- **Tasks**: Task management with title, description, priority, status, due dates, user assignments, project links, and notes
 - **File Routings**: AI-powered file organization suggestions with confidence scoring and actual file movement tracking
 - **System Config**: Application settings and configuration storage
 
@@ -109,6 +123,20 @@ Preferred communication style: Simple, everyday language.
 - **Auto-Routing**: Intelligent file placement based on content analysis
 - **Folder Structure**: Automated creation of project-specific directory hierarchies
 - **Bulk Folder Rename**: Automatic renaming of all files in selected directories with project code prefixes
+
+### Task Management System
+- **Task Creation**: Create tasks with title, description, priority, status, and due dates
+- **User Assignment**: Assign tasks to team members with automatic email and WebSocket notifications
+- **Project Linking**: Connect tasks to specific projects for organized workflow tracking
+- **Status Tracking**: Four task states (pending, in_progress, completed, cancelled) with visual indicators
+- **Priority Levels**: Three priority levels (low, medium, high) with color-coded badges
+- **Filtering System**: Advanced filtering by project, status, priority, and ownership
+- **Personal Views**: Dedicated tabs for "My Tasks" and "Tasks Created by Me"
+- **Overdue Detection**: Automatic identification and highlighting of overdue tasks
+- **Notes Integration**: Full-featured notes field for task documentation and updates
+- **Dashboard Integration**: Accessible via dedicated "To Do" tab in main navigation
+- **Statistics Display**: Real-time stats for assigned tasks, overdue items, and high-priority work
+- **Dark Mode Compatible**: Full support for light and dark themes across all components
 
 ## External Dependencies
 
