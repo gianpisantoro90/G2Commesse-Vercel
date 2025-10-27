@@ -1,94 +1,9 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
 export default function StoragePanel() {
-  const [storageInfo, setStorageInfo] = useState({
-    indexedDB: "0 KB",
-    localStorage: "0 KB",
-    total: "0 KB",
-    indexedDBPercent: 0,
-    localStoragePercent: 0,
-  });
   const { toast } = useToast();
-
-  useEffect(() => {
-    updateStorageInfo();
-  }, []);
-
-  const updateStorageInfo = async () => {
-    try {
-      // Get localStorage size
-      let localStorageSize = 0;
-      for (let key in localStorage) {
-        if (localStorage.hasOwnProperty(key)) {
-          localStorageSize += localStorage[key].length + key.length;
-        }
-      }
-
-      // Estimate IndexedDB size (simplified)
-      const indexedDBSize = localStorageSize * 10; // Mock estimate
-
-      const formatBytes = (bytes: number) => {
-        if (bytes === 0) return '0 KB';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-      };
-
-      setStorageInfo({
-        indexedDB: formatBytes(indexedDBSize),
-        localStorage: formatBytes(localStorageSize),
-        total: formatBytes(indexedDBSize + localStorageSize),
-        indexedDBPercent: Math.min((indexedDBSize / (10 * 1024 * 1024)) * 100, 100),
-        localStoragePercent: Math.min((localStorageSize / (5 * 1024 * 1024)) * 100, 100),
-      });
-    } catch (error) {
-      console.error("Error calculating storage:", error);
-    }
-  };
-
-  const handleClearCache = () => {
-    if (confirm("Sei sicuro di voler svuotare la cache del browser?")) {
-      // This would require service worker or browser extension
-      toast({
-        title: "Cache svuotata",
-        description: "La cache del browser è stata svuotata",
-      });
-    }
-  };
-
-  const handleClearLocalStorage = () => {
-    if (confirm("Sei sicuro di voler svuotare il localStorage? Questa azione cancellerà le configurazioni salvate.")) {
-      localStorage.clear();
-      updateStorageInfo();
-      toast({
-        title: "LocalStorage svuotato",
-        description: "Il localStorage è stato svuotato con successo",
-      });
-    }
-  };
-
-  const handleClearIndexedDB = async () => {
-    if (confirm("Sei sicuro di voler svuotare l'IndexedDB? Questa azione cancellerà TUTTI i dati delle commesse.")) {
-      try {
-        await apiRequest("DELETE", "/api/clear-all");
-        updateStorageInfo();
-        toast({
-          title: "IndexedDB svuotato",
-          description: "L'IndexedDB è stato svuotato con successo",
-        });
-      } catch (error) {
-        toast({
-          title: "Errore",
-          description: "Si è verificato un errore durante lo svuotamento dell'IndexedDB",
-          variant: "destructive",
-        });
-      }
-    }
-  };
 
   const handleExportAllData = async () => {
     try {
@@ -176,78 +91,10 @@ export default function StoragePanel() {
 
   return (
     <div data-testid="storage-panel">
-      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Gestione Storage Locale</h3>
-      
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Storage Stats */}
-        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200 p-6">
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📊 Utilizzo Storage</h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">IndexedDB</span>
-              <span className="font-semibold" data-testid="indexeddb-size">{storageInfo.indexedDB}</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${storageInfo.indexedDBPercent}%` }}
-              ></div>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">LocalStorage</span>
-              <span className="font-semibold" data-testid="localstorage-size">{storageInfo.localStorage}</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                style={{ width: `${storageInfo.localStoragePercent}%` }}
-              ></div>
-            </div>
-            
-            <div className="pt-2 border-t text-sm text-gray-500">
-              Spazio totale utilizzato: <strong data-testid="total-storage">{storageInfo.total}</strong>
-            </div>
-          </div>
-        </div>
-        
-        {/* Storage Actions */}
-        <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">🧹 Operazioni di Pulizia</h4>
-            <div className="space-y-3">
-              <Button
-                onClick={handleClearCache}
-                className="w-full px-4 py-3 bg-yellow-100 text-yellow-800 border-2 border-yellow-300 rounded-lg font-semibold hover:bg-yellow-200 transition-colors"
-                data-testid="clear-cache"
-              >
-                🗑️ Svuota Cache Browser
-              </Button>
-              <Button
-                onClick={handleClearLocalStorage}
-                className="w-full px-4 py-3 bg-orange-100 text-orange-800 border-2 border-orange-300 rounded-lg font-semibold hover:bg-orange-200 transition-colors"
-                data-testid="clear-localstorage"
-              >
-                ⚠️ Svuota LocalStorage
-              </Button>
-              <Button
-                onClick={handleClearIndexedDB}
-                className="w-full px-4 py-3 bg-red-100 text-red-800 border-2 border-red-300 rounded-lg font-semibold hover:bg-red-200 transition-colors"
-                data-testid="clear-indexeddb"
-              >
-                🚨 Svuota IndexedDB
-              </Button>
-            </div>
-            <div className="mt-4 text-xs text-gray-500">
-              ⚠️ Le operazioni di pulizia sono irreversibili. Assicurati di aver esportato i dati importanti.
-            </div>
-          </div>
-        </div>
-      </div>
+      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Gestione Dati</h3>
       
       {/* Data Management */}
-      <div className="mt-8 bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
-        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📦 Gestione Dati</h4>
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">📤</div>
