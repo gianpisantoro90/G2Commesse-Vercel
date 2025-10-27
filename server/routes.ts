@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, insertTaskSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 import serverOneDriveService from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
@@ -358,6 +358,138 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error changing password:', error);
       return res.status(500).json({ message: "Errore nel cambio password" });
+    }
+  });
+
+  // ============================================
+  // TASKS ENDPOINTS
+  // ============================================
+
+  // Get all tasks
+  app.get("/api/tasks", async (req, res) => {
+    try {
+      const { projectId, assignedTo, createdBy } = req.query;
+
+      let tasks;
+      if (projectId) {
+        tasks = await storage.getTasksByProject(projectId as string);
+      } else if (assignedTo) {
+        tasks = await storage.getTasksByAssignee(assignedTo as string);
+      } else if (createdBy) {
+        tasks = await storage.getTasksByCreator(createdBy as string);
+      } else {
+        tasks = await storage.getAllTasks();
+      }
+
+      return res.json(tasks);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+      return res.status(500).json({ message: "Errore nel recupero delle task" });
+    }
+  });
+
+  // Get task by ID
+  app.get("/api/tasks/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const task = await storage.getTaskById(id);
+
+      if (!task) {
+        return res.status(404).json({ message: "Task non trovata" });
+      }
+
+      return res.json(task);
+    } catch (error) {
+      console.error('Error fetching task:', error);
+      return res.status(500).json({ message: "Errore nel recupero della task" });
+    }
+  });
+
+  // Create new task
+  app.post("/api/tasks", async (req, res) => {
+    try {
+      const taskData = insertTaskSchema.parse(req.body);
+
+      // Set createdById to current user if not provided
+      const dataToInsert = {
+        ...taskData,
+        createdById: taskData.createdById || req.session.userId!
+      };
+
+      const newTask = await storage.createTask(dataToInsert);
+
+      // Send notification if task is assigned to someone
+      if (newTask.assignedToId && newTask.assignedToId !== req.session.userId) {
+        const assignedUser = await storage.getUserById(newTask.assignedToId);
+        if (assignedUser) {
+          await notificationService.sendNotification({
+            userId: assignedUser.id,
+            type: 'task_assigned',
+            title: 'Nuova task assegnata',
+            message: `Ti è stata assegnata una nuova task: ${newTask.title}`,
+            data: { taskId: newTask.id },
+            priority: newTask.priority === 'high' ? 'high' : 'normal'
+          });
+        }
+      }
+
+      return res.status(201).json(newTask);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati non validi", errors: error.errors });
+      }
+      console.error('Error creating task:', error);
+      return res.status(500).json({ message: "Errore nella creazione della task" });
+    }
+  });
+
+  // Update task
+  app.patch("/api/tasks/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+
+      const updatedTask = await storage.updateTask(id, updates);
+      if (!updatedTask) {
+        return res.status(404).json({ message: "Task non trovata" });
+      }
+
+      // Send notification if task was completed
+      if (updates.status === 'completed' && updatedTask.createdById !== req.session.userId) {
+        const creator = await storage.getUserById(updatedTask.createdById);
+        if (creator) {
+          await notificationService.sendNotification({
+            userId: creator.id,
+            type: 'task_completed',
+            title: 'Task completata',
+            message: `La task "${updatedTask.title}" è stata completata`,
+            data: { taskId: updatedTask.id },
+            priority: 'normal'
+          });
+        }
+      }
+
+      return res.json(updatedTask);
+    } catch (error) {
+      console.error('Error updating task:', error);
+      return res.status(500).json({ message: "Errore nell'aggiornamento della task" });
+    }
+  });
+
+  // Delete task
+  app.delete("/api/tasks/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const deleted = await storage.deleteTask(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Task non trovata" });
+      }
+
+      return res.json({ success: true, message: "Task eliminata con successo" });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      return res.status(500).json({ message: "Errore nell'eliminazione della task" });
     }
   });
 
