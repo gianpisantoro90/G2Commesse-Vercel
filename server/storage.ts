@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -63,6 +63,15 @@ export interface IStorage {
   updateDeadline(id: string, updates: Partial<InsertProjectDeadline>): Promise<Deadline | undefined>;
   deleteDeadline(id: string): Promise<boolean>;
 
+  // Users
+  getAllUsers(): Promise<User[]>;
+  getUserById(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser & { passwordHash: string }): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
+
   // Bulk operations
   exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
   importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode?: 'merge' | 'overwrite'): Promise<void>;
@@ -78,6 +87,7 @@ export class MemStorage implements IStorage {
   private filesIndex: Map<string, FilesIndex> = new Map();
   private communications: Map<string, Communication> = new Map();
   private deadlines: Map<string, Deadline> = new Map();
+  private users: Map<string, User> = new Map();
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -495,6 +505,54 @@ export class MemStorage implements IStorage {
     return this.deadlines.delete(id);
   }
 
+  // Users
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.username === username);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(u => u.email === email);
+  }
+
+  async createUser(insertUser: InsertUser & { passwordHash: string }): Promise<User> {
+    const id = randomUUID();
+    const user: User = {
+      ...insertUser,
+      id,
+      role: insertUser.role || 'user',
+      active: insertUser.active !== undefined ? insertUser.active : true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const existing = this.users.get(id);
+    if (!existing) return undefined;
+
+    const updated: User = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.users.set(id, updated);
+    return updated;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    return this.users.delete(id);
+  }
+
   async clearAllData() {
     this.projects.clear();
     this.clients.clear();
@@ -503,6 +561,7 @@ export class MemStorage implements IStorage {
     this.oneDriveMappings.clear();
     this.filesIndex.clear();
     this.communications.clear();
+    this.users.clear();
   }
 
   private generateSafeAcronym(text: string): string {
@@ -884,6 +943,51 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount || 0) > 0;
   }
 
+  // Users
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser & { passwordHash: string }): Promise<User> {
+    const [user] = await db.insert(users).values({
+      ...insertUser,
+      role: insertUser.role || 'user',
+      active: insertUser.active !== undefined ? insertUser.active : true,
+    }).returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [updated] = await db.update(users)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
   // Bulk operations
   async exportAllData() {
     const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData] = await Promise.all([
@@ -1247,6 +1351,35 @@ class FallbackStorage implements IStorage {
 
   async deleteDeadline(id: string): Promise<boolean> {
     return this.executeWithFallback(storage => storage.deleteDeadline(id));
+  }
+
+  // User methods
+  async getAllUsers(): Promise<User[]> {
+    return this.executeWithFallback(storage => storage.getAllUsers());
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.executeWithFallback(storage => storage.getUserById(id));
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    return this.executeWithFallback(storage => storage.getUserByUsername(username));
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return this.executeWithFallback(storage => storage.getUserByEmail(email));
+  }
+
+  async createUser(user: InsertUser & { passwordHash: string }): Promise<User> {
+    return this.executeWithFallback(storage => storage.createUser(user));
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    return this.executeWithFallback(storage => storage.updateUser(id, updates));
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteUser(id));
   }
 
   async exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }> {
