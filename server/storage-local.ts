@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import fs from "fs";
@@ -62,9 +62,50 @@ export interface IStorage {
   updateDeadline(id: string, updates: Partial<InsertProjectDeadline>): Promise<Deadline | undefined>;
   deleteDeadline(id: string): Promise<boolean>;
 
+  // Users
+  getAllUsers(): Promise<User[]>;
+  getUserById(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser & { passwordHash: string }): Promise<User>;
+  updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
+  deleteUser(id: string): Promise<boolean>;
+
+  // Tasks
+  getAllTasks(): Promise<Task[]>;
+  getTaskById(id: string): Promise<Task | undefined>;
+  getTasksByProject(projectId: string): Promise<Task[]>;
+  getTasksByAssignee(userId: string): Promise<Task[]>;
+  getTasksByCreator(userId: string): Promise<Task[]>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: string, updates: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: string): Promise<boolean>;
+
   // Bulk operations
-  exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
-  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode?: 'merge' | 'overwrite'): Promise<void>;
+  exportAllData(): Promise<{
+    projects: Project[],
+    clients: Client[],
+    fileRoutings: FileRouting[],
+    systemConfig: SystemConfig[],
+    oneDriveMappings: OneDriveMapping[],
+    filesIndex: FilesIndex[],
+    communications: Communication[],
+    deadlines: Deadline[],
+    users: User[],
+    tasks: Task[]
+  }>;
+  importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
+    filesIndex?: FilesIndex[],
+    communications?: Communication[],
+    deadlines?: Deadline[],
+    users?: User[],
+    tasks?: Task[]
+  }, mode?: 'merge' | 'overwrite'): Promise<void>;
   clearAllData(): Promise<void>;
 }
 
@@ -79,6 +120,8 @@ export class FileStorage implements IStorage {
   private filesIndexFile = path.join(this.dataDir, 'files-index.json');
   private communicationsFile = path.join(this.dataDir, 'communications.json');
   private deadlinesFile = path.join(this.dataDir, 'deadlines.json');
+  private usersFile = path.join(this.dataDir, 'users.json');
+  private tasksFile = path.join(this.dataDir, 'tasks.json');
 
   constructor() {
     this.ensureDataDir();
@@ -592,6 +635,141 @@ export class FileStorage implements IStorage {
     return false;
   }
 
+  // Users
+  async getAllUsers(): Promise<User[]> {
+    return this.readJsonFile<User>(this.usersFile, []);
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    const users = this.readJsonFile<User>(this.usersFile, []);
+    return users.find(u => u.id === id);
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const users = this.readJsonFile<User>(this.usersFile, []);
+    return users.find(u => u.username === username);
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const users = this.readJsonFile<User>(this.usersFile, []);
+    return users.find(u => u.email === email);
+  }
+
+  async createUser(insertUser: InsertUser & { passwordHash: string }): Promise<User> {
+    const users = this.readJsonFile<User>(this.usersFile, []);
+    const id = randomUUID();
+    const user: User = {
+      ...insertUser,
+      id,
+      role: insertUser.role || "user",
+      isActive: insertUser.isActive !== undefined ? insertUser.isActive : true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    users.push(user);
+    this.writeJsonFile(this.usersFile, users);
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const users = this.readJsonFile<User>(this.usersFile, []);
+    const index = users.findIndex(u => u.id === id);
+    if (index === -1) return undefined;
+
+    const updated: User = {
+      ...users[index],
+      ...updates,
+      updatedAt: new Date(),
+    };
+    users[index] = updated;
+    this.writeJsonFile(this.usersFile, users);
+    return updated;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const users = this.readJsonFile<User>(this.usersFile, []);
+    const initialLength = users.length;
+    const filtered = users.filter(u => u.id !== id);
+    if (filtered.length < initialLength) {
+      this.writeJsonFile(this.usersFile, filtered);
+      return true;
+    }
+    return false;
+  }
+
+  // Tasks
+  async getAllTasks(): Promise<Task[]> {
+    return this.readJsonFile<Task>(this.tasksFile, []);
+  }
+
+  async getTaskById(id: string): Promise<Task | undefined> {
+    const tasks = this.readJsonFile<Task>(this.tasksFile, []);
+    return tasks.find(t => t.id === id);
+  }
+
+  async getTasksByProject(projectId: string): Promise<Task[]> {
+    const tasks = this.readJsonFile<Task>(this.tasksFile, []);
+    return tasks.filter(t => t.projectId === projectId);
+  }
+
+  async getTasksByAssignee(userId: string): Promise<Task[]> {
+    const tasks = this.readJsonFile<Task>(this.tasksFile, []);
+    return tasks.filter(t => t.assignedTo === userId);
+  }
+
+  async getTasksByCreator(userId: string): Promise<Task[]> {
+    const tasks = this.readJsonFile<Task>(this.tasksFile, []);
+    return tasks.filter(t => t.createdBy === userId);
+  }
+
+  async createTask(insertTask: InsertTask): Promise<Task> {
+    const tasks = this.readJsonFile<Task>(this.tasksFile, []);
+    const id = randomUUID();
+    const task: Task = {
+      ...insertTask,
+      id,
+      status: insertTask.status || "todo",
+      priority: insertTask.priority || "medium",
+      description: insertTask.description || null,
+      dueDate: insertTask.dueDate || null,
+      projectId: insertTask.projectId || null,
+      assignedTo: insertTask.assignedTo || null,
+      tags: insertTask.tags || [],
+      completedAt: insertTask.completedAt || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    tasks.push(task);
+    this.writeJsonFile(this.tasksFile, tasks);
+    return task;
+  }
+
+  async updateTask(id: string, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    const tasks = this.readJsonFile<Task>(this.tasksFile, []);
+    const index = tasks.findIndex(t => t.id === id);
+    if (index === -1) return undefined;
+
+    const updated: Task = {
+      ...tasks[index],
+      ...updates,
+      updatedAt: new Date(),
+    };
+    tasks[index] = updated;
+    this.writeJsonFile(this.tasksFile, tasks);
+    return updated;
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    const tasks = this.readJsonFile<Task>(this.tasksFile, []);
+    const initialLength = tasks.length;
+    const filtered = tasks.filter(t => t.id !== id);
+    if (filtered.length < initialLength) {
+      this.writeJsonFile(this.tasksFile, filtered);
+      return true;
+    }
+    return false;
+  }
+
   // Bulk operations
   async exportAllData() {
     return {
@@ -601,10 +779,25 @@ export class FileStorage implements IStorage {
       systemConfig: this.readJsonFile<SystemConfig>(this.systemConfigFile, []),
       oneDriveMappings: this.readJsonFile<OneDriveMapping>(this.oneDriveMappingsFile, []),
       filesIndex: this.readJsonFile<FilesIndex>(this.filesIndexFile, []),
+      communications: this.readJsonFile<Communication>(this.communicationsFile, []),
+      deadlines: this.readJsonFile<Deadline>(this.deadlinesFile, []),
+      users: this.readJsonFile<User>(this.usersFile, []),
+      tasks: this.readJsonFile<Task>(this.tasksFile, []),
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode: 'merge' | 'overwrite' = 'overwrite') {
+  async importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
+    filesIndex?: FilesIndex[],
+    communications?: Communication[],
+    deadlines?: Deadline[],
+    users?: User[],
+    tasks?: Task[]
+  }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (mode === 'merge') {
       // Merge mode: combine existing data with new data
       const existingProjects = this.readJsonFile<Project>(this.projectsFile, []);
@@ -613,25 +806,41 @@ export class FileStorage implements IStorage {
       const existingSystemConfig = this.readJsonFile<SystemConfig>(this.systemConfigFile, []);
       const existingOneDriveMappings = this.readJsonFile<OneDriveMapping>(this.oneDriveMappingsFile, []);
       const existingFilesIndex = this.readJsonFile<FilesIndex>(this.filesIndexFile, []);
+      const existingCommunications = this.readJsonFile<Communication>(this.communicationsFile, []);
+      const existingDeadlines = this.readJsonFile<Deadline>(this.deadlinesFile, []);
+      const existingUsers = this.readJsonFile<User>(this.usersFile, []);
+      const existingTasks = this.readJsonFile<Task>(this.tasksFile, []);
 
       // Merge by creating maps keyed by ID, new data overwrites existing
       const mergedProjects = new Map(existingProjects.map(p => [p.id, p]));
-      data.projects.forEach(p => mergedProjects.set(p.id, p));
+      data.projects?.forEach(p => mergedProjects.set(p.id, p));
 
       const mergedClients = new Map(existingClients.map(c => [c.id, c]));
-      data.clients.forEach(c => mergedClients.set(c.id, c));
+      data.clients?.forEach(c => mergedClients.set(c.id, c));
 
       const mergedFileRoutings = new Map(existingFileRoutings.map(fr => [fr.id, fr]));
-      data.fileRoutings.forEach(fr => mergedFileRoutings.set(fr.id, fr));
+      data.fileRoutings?.forEach(fr => mergedFileRoutings.set(fr.id, fr));
 
       const mergedSystemConfig = new Map(existingSystemConfig.map(sc => [sc.id, sc]));
-      data.systemConfig.forEach(sc => mergedSystemConfig.set(sc.id, sc));
+      data.systemConfig?.forEach(sc => mergedSystemConfig.set(sc.id, sc));
 
       const mergedOneDriveMappings = new Map(existingOneDriveMappings.map(odm => [odm.projectCode, odm]));
       data.oneDriveMappings?.forEach(odm => mergedOneDriveMappings.set(odm.projectCode, odm));
 
       const mergedFilesIndex = new Map(existingFilesIndex.map(fi => [fi.driveItemId, fi]));
       data.filesIndex?.forEach(fi => mergedFilesIndex.set(fi.driveItemId, fi));
+
+      const mergedCommunications = new Map(existingCommunications.map(c => [c.id, c]));
+      data.communications?.forEach(c => mergedCommunications.set(c.id, c));
+
+      const mergedDeadlines = new Map(existingDeadlines.map(d => [d.id, d]));
+      data.deadlines?.forEach(d => mergedDeadlines.set(d.id, d));
+
+      const mergedUsers = new Map(existingUsers.map(u => [u.id, u]));
+      data.users?.forEach(u => mergedUsers.set(u.id, u));
+
+      const mergedTasks = new Map(existingTasks.map(t => [t.id, t]));
+      data.tasks?.forEach(t => mergedTasks.set(t.id, t));
 
       // Write merged data
       this.writeJsonFile(this.projectsFile, Array.from(mergedProjects.values()));
@@ -640,14 +849,22 @@ export class FileStorage implements IStorage {
       this.writeJsonFile(this.systemConfigFile, Array.from(mergedSystemConfig.values()));
       this.writeJsonFile(this.oneDriveMappingsFile, Array.from(mergedOneDriveMappings.values()));
       this.writeJsonFile(this.filesIndexFile, Array.from(mergedFilesIndex.values()));
+      this.writeJsonFile(this.communicationsFile, Array.from(mergedCommunications.values()));
+      this.writeJsonFile(this.deadlinesFile, Array.from(mergedDeadlines.values()));
+      this.writeJsonFile(this.usersFile, Array.from(mergedUsers.values()));
+      this.writeJsonFile(this.tasksFile, Array.from(mergedTasks.values()));
     } else {
       // Overwrite mode: replace all data
-      this.writeJsonFile(this.projectsFile, data.projects);
-      this.writeJsonFile(this.clientsFile, data.clients);
-      this.writeJsonFile(this.fileRoutingsFile, data.fileRoutings);
-      this.writeJsonFile(this.systemConfigFile, data.systemConfig);
+      this.writeJsonFile(this.projectsFile, data.projects || []);
+      this.writeJsonFile(this.clientsFile, data.clients || []);
+      this.writeJsonFile(this.fileRoutingsFile, data.fileRoutings || []);
+      this.writeJsonFile(this.systemConfigFile, data.systemConfig || []);
       this.writeJsonFile(this.oneDriveMappingsFile, data.oneDriveMappings || []);
       this.writeJsonFile(this.filesIndexFile, data.filesIndex || []);
+      this.writeJsonFile(this.communicationsFile, data.communications || []);
+      this.writeJsonFile(this.deadlinesFile, data.deadlines || []);
+      this.writeJsonFile(this.usersFile, data.users || []);
+      this.writeJsonFile(this.tasksFile, data.tasks || []);
     }
   }
 
@@ -658,6 +875,10 @@ export class FileStorage implements IStorage {
     this.writeJsonFile(this.systemConfigFile, []);
     this.writeJsonFile(this.oneDriveMappingsFile, []);
     this.writeJsonFile(this.filesIndexFile, []);
+    this.writeJsonFile(this.communicationsFile, []);
+    this.writeJsonFile(this.deadlinesFile, []);
+    this.writeJsonFile(this.usersFile, []);
+    this.writeJsonFile(this.tasksFile, []);
   }
 }
 

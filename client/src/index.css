@@ -58,19 +58,19 @@
   --card-foreground: hsl(0, 0%, 85%);
   --popover: hsl(222, 15%, 10%);
   --popover-foreground: hsl(200, 7%, 91%);
-  --primary: hsl(182, 88%, 53%);
+  --primary: hsl(160, 84%, 39%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(195, 15%, 95%);
-  --secondary-foreground: hsl(213, 24%, 20%);
+  --secondary: hsl(0, 74%, 49%);
+  --secondary-foreground: hsl(0, 0%, 100%);
   --muted: hsl(0, 0%, 9%);
   --muted-foreground: hsl(210, 3%, 46%);
   --accent: hsl(206, 30%, 18%);
-  --accent-foreground: hsl(182, 88%, 53%);
+  --accent-foreground: hsl(160, 84%, 39%);
   --destructive: hsl(0, 74%, 49%);
   --destructive-foreground: hsl(0, 0%, 100%);
   --border: hsl(210, 10%, 25%);
   --input: hsl(208, 15%, 25%);
-  --ring: hsl(182, 89%, 53%);
+  --ring: hsl(160, 84%, 39%);
 }
 
 @layer base {

@@ -77,22 +77,28 @@ export default function TodoPanel() {
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: z.infer<typeof insertTaskSchema>) => {
-      return await apiRequest('/api/tasks', 'POST', data);
+      console.log('Creating task with data:', data);
+      return await apiRequest('POST', '/api/tasks', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({ title: "Task creata con successo" });
       setIsCreateOpen(false);
     },
-    onError: () => {
-      toast({ title: "Errore nella creazione della task", variant: "destructive" });
+    onError: (error: any) => {
+      console.error('Task creation error:', error);
+      toast({
+        title: "Errore nella creazione della task",
+        description: error?.message || "Verifica i dati inseriti",
+        variant: "destructive"
+      });
     },
   });
 
   // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Task> }) => {
-      return await apiRequest(`/api/tasks/${id}`, 'PATCH', data);
+      return await apiRequest('PATCH', `/api/tasks/${id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
@@ -107,7 +113,7 @@ export default function TodoPanel() {
   // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/tasks/${id}`, 'DELETE');
+      return await apiRequest('DELETE', `/api/tasks/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
@@ -392,11 +398,18 @@ function CreateTaskForm({
   });
 
   const handleSubmit = (data: z.infer<typeof insertTaskSchema>) => {
+    // Validate that createdById is set
+    if (!data.createdById || data.createdById.trim() === '') {
+      console.error('Cannot create task: createdById is missing', { currentUserId, userData: data });
+      return;
+    }
+
     const submitData = {
       ...data,
       projectId: data.projectId === "none" ? null : data.projectId,
       assignedToId: data.assignedToId === "none" ? null : data.assignedToId,
     };
+    console.log('Submitting task data:', submitData);
     onSubmit(submitData);
   };
 

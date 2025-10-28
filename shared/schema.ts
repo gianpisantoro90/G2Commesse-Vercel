@@ -497,6 +497,8 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   createdAt: true,
   updatedAt: true,
   completedAt: true,
+}).extend({
+  dueDate: z.coerce.date().nullable().optional(),
 });
 
 // ============================================
