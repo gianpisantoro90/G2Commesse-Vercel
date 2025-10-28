@@ -675,8 +675,9 @@ export class MemStorage implements IStorage {
     this.oneDriveMappings.clear();
     this.filesIndex.clear();
     this.communications.clear();
-    this.users.clear();
+    this.deadlines.clear();
     this.tasks.clear();
+    // Don't clear users - keep them for authentication
   }
 
   private generateSafeAcronym(text: string): string {
