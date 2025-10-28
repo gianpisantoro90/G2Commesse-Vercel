@@ -51,13 +51,30 @@ export default function TodoPanel() {
   });
 
   // Fetch projects for dropdown
-  const { data: projects = [] } = useQuery<Project[]>({
+  const { data: rawProjects = [] } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
   });
 
   // Fetch users for assignment
-  const { data: users = [] } = useQuery<User[]>({
+  const { data: rawUsers = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
+  });
+
+  // Ensure no empty IDs with debug
+  const projects = rawProjects.filter(p => {
+    if (!p || !p.id || p.id.trim() === '') {
+      console.warn('Found project with invalid ID:', p);
+      return false;
+    }
+    return true;
+  });
+  
+  const users = rawUsers.filter(u => {
+    if (!u || !u.id || u.id.trim() === '') {
+      console.warn('Found user with invalid ID:', u);
+      return false;
+    }
+    return true;
   });
 
   // Filter tasks
@@ -216,37 +233,37 @@ export default function TodoPanel() {
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Select value={filterProject} onValueChange={setFilterProject}>
+              <Select value={filterProject || "all"} onValueChange={setFilterProject}>
                 <SelectTrigger className="w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                   <SelectValue placeholder="Tutti i progetti" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
-                  {projects.filter(p => p.id && p.id.trim() !== '').map(p => (
+                  {projects.map(p => p.id && p.id.trim() !== '' ? (
                     <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
-                  ))}
+                  ) : null)}
                 </SelectContent>
               </Select>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                   <SelectValue placeholder="Tutti gli stati" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti gli stati</SelectItem>
-                  {Object.entries(statusConfig).map(([key, config]) => (
+                  {Object.entries(statusConfig).map(([key, config]) => key && key.trim() !== '' ? (
                     <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
-                  ))}
+                  ) : null)}
                 </SelectContent>
               </Select>
-              <Select value={filterPriority} onValueChange={setFilterPriority}>
+              <Select value={filterPriority || "all"} onValueChange={setFilterPriority}>
                 <SelectTrigger className="w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                   <SelectValue placeholder="Tutte le priorità" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <SelectItem value="all" className="text-gray-900 dark:text-white">Tutte le priorità</SelectItem>
-                  {Object.entries(priorityConfig).map(([key, config]) => (
+                  {Object.entries(priorityConfig).map(([key, config]) => key && key.trim() !== '' ? (
                     <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
-                  ))}
+                  ) : null)}
                 </SelectContent>
               </Select>
             </div>
@@ -442,9 +459,9 @@ function CreateTaskForm({
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="none" className="text-gray-900 dark:text-white">Nessun progetto</SelectItem>
-                    {projects.filter(p => p.id && p.id.trim() !== '').map(p => (
+                    {projects.map(p => p.id && p.id.trim() !== '' ? (
                       <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code} - {p.object}</SelectItem>
-                    ))}
+                    ) : null)}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -466,9 +483,9 @@ function CreateTaskForm({
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
-                    {users.filter(u => u.id && u.id.trim() !== '').map(u => (
+                    {users.map(u => u.id && u.id.trim() !== '' ? (
                       <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
-                    ))}
+                    ) : null)}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -721,9 +738,9 @@ function TaskDetailForm({
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
-                    {users.filter(u => u.id && u.id.trim() !== '').map(u => (
+                    {users.map(u => u.id && u.id.trim() !== '' ? (
                       <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
-                    ))}
+                    ) : null)}
                   </SelectContent>
                 </Select>
                 <FormMessage />
