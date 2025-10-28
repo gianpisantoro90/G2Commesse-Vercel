@@ -434,7 +434,7 @@ function CreateTaskForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
                   <FormControl>
                     <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-task-project">
                       <SelectValue placeholder="Seleziona progetto" />
@@ -458,7 +458,7 @@ function CreateTaskForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Assegna a</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
                   <FormControl>
                     <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-task-assignee">
                       <SelectValue placeholder="Seleziona utente" />
@@ -689,7 +689,7 @@ function TaskDetailForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
                   <FormControl>
                     <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-project">
                       <SelectValue placeholder="Seleziona progetto" />
@@ -713,7 +713,7 @@ function TaskDetailForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Assegna a</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
                   <FormControl>
                     <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-assignee">
                       <SelectValue placeholder="Seleziona utente" />
