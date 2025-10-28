@@ -36,9 +36,9 @@ const priorityConfig = {
 export default function TodoPanel() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
-  const [filterProject, setFilterProject] = useState<string>("");
-  const [filterStatus, setFilterStatus] = useState<string>("");
-  const [filterPriority, setFilterPriority] = useState<string>("");
+  const [filterProject, setFilterProject] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -64,9 +64,9 @@ export default function TodoPanel() {
   const filteredTasks = tasks.filter(task => {
     if (activeTab === "my" && task.assignedToId !== user?.id) return false;
     if (activeTab === "created" && task.createdById !== user?.id) return false;
-    if (filterProject && task.projectId !== filterProject) return false;
-    if (filterStatus && task.status !== filterStatus) return false;
-    if (filterPriority && task.priority !== filterPriority) return false;
+    if (filterProject && filterProject !== "all" && task.projectId !== filterProject) return false;
+    if (filterStatus && filterStatus !== "all" && task.status !== filterStatus) return false;
+    if (filterPriority && filterPriority !== "all" && task.priority !== filterPriority) return false;
     return true;
   });
 
@@ -221,7 +221,7 @@ export default function TodoPanel() {
                   <SelectValue placeholder="Tutti i progetti" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <SelectItem value="" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
+                  <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
                   {projects.map(p => (
                     <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
                   ))}
@@ -232,7 +232,7 @@ export default function TodoPanel() {
                   <SelectValue placeholder="Tutti gli stati" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <SelectItem value="" className="text-gray-900 dark:text-white">Tutti gli stati</SelectItem>
+                  <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti gli stati</SelectItem>
                   {Object.entries(statusConfig).map(([key, config]) => (
                     <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
                   ))}
@@ -243,7 +243,7 @@ export default function TodoPanel() {
                   <SelectValue placeholder="Tutte le priorità" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <SelectItem value="" className="text-gray-900 dark:text-white">Tutte le priorità</SelectItem>
+                  <SelectItem value="all" className="text-gray-900 dark:text-white">Tutte le priorità</SelectItem>
                   {Object.entries(priorityConfig).map(([key, config]) => (
                     <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
                   ))}
