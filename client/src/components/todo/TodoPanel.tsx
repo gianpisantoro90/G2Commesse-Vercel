@@ -387,9 +387,18 @@ function CreateTaskForm({
     },
   });
 
+  const handleSubmit = (data: z.infer<typeof insertTaskSchema>) => {
+    const submitData = {
+      ...data,
+      projectId: data.projectId === "none" ? null : data.projectId,
+      assignedToId: data.assignedToId === "none" ? null : data.assignedToId,
+    };
+    onSubmit(submitData);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="title"
@@ -545,8 +554,8 @@ function TaskDetailForm({
       title: task.title,
       description: task.description || "",
       notes: task.notes || "",
-      projectId: task.projectId || "",
-      assignedToId: task.assignedToId || "",
+      projectId: task.projectId || "none",
+      assignedToId: task.assignedToId || "none",
       priority: task.priority,
       status: task.status,
       dueDate: task.dueDate || null,
