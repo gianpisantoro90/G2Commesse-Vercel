@@ -60,14 +60,18 @@ export default function ToDoPage() {
   });
 
   // Fetch projects for dropdown
-  const { data: projects = [] } = useQuery<Project[]>({
+  const { data: rawProjects = [] } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
   });
 
   // Fetch users for assignment
-  const { data: users = [] } = useQuery<User[]>({
+  const { data: rawUsers = [] } = useQuery<User[]>({
     queryKey: ['/api/users'],
   });
+
+  // Ensure no empty IDs - critical for Radix UI Select in development mode
+  const projects = (rawProjects || []).filter(p => p?.id && typeof p.id === 'string' && p.id.trim() !== '');
+  const users = (rawUsers || []).filter(u => u?.id && typeof u.id === 'string' && u.id.trim() !== '');
 
   // Filter tasks
   const filteredTasks = tasks.filter(task => {
