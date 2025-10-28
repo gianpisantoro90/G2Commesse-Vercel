@@ -83,8 +83,30 @@ export interface IStorage {
   deleteTask(id: string): Promise<boolean>;
 
   // Bulk operations
-  exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }>;
-  importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode?: 'merge' | 'overwrite'): Promise<void>;
+  exportAllData(): Promise<{ 
+    projects: Project[], 
+    clients: Client[], 
+    fileRoutings: FileRouting[], 
+    systemConfig: SystemConfig[], 
+    oneDriveMappings: OneDriveMapping[], 
+    filesIndex: FilesIndex[],
+    users: User[],
+    tasks: Task[],
+    communications: Communication[],
+    deadlines: Deadline[]
+  }>;
+  importAllData(data: { 
+    projects?: Project[], 
+    clients?: Client[], 
+    fileRoutings?: FileRouting[], 
+    systemConfig?: SystemConfig[], 
+    oneDriveMappings?: OneDriveMapping[], 
+    filesIndex?: FilesIndex[],
+    users?: User[],
+    tasks?: Task[],
+    communications?: Communication[],
+    deadlines?: Deadline[]
+  }, mode?: 'merge' | 'overwrite'): Promise<void>;
   clearAllData(): Promise<void>;
 }
 
@@ -393,30 +415,51 @@ export class MemStorage implements IStorage {
       systemConfig: Array.from(this.systemConfig.values()),
       oneDriveMappings: Array.from(this.oneDriveMappings.values()),
       filesIndex: Array.from(this.filesIndex.values()),
+      users: Array.from(this.users.values()),
+      tasks: Array.from(this.tasks.values()),
+      communications: Array.from(this.communications.values()),
+      deadlines: Array.from(this.deadlines.values()),
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode: 'merge' | 'overwrite' = 'overwrite') {
+  async importAllData(data: { 
+    projects?: Project[], 
+    clients?: Client[], 
+    fileRoutings?: FileRouting[], 
+    systemConfig?: SystemConfig[], 
+    oneDriveMappings?: OneDriveMapping[], 
+    filesIndex?: FilesIndex[],
+    users?: User[],
+    tasks?: Task[],
+    communications?: Communication[],
+    deadlines?: Deadline[]
+  }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (mode === 'overwrite') {
-      // Clear all existing data (old behavior)
+      // Clear all existing data
       this.projects.clear();
       this.clients.clear();
       this.fileRoutings.clear();
       this.systemConfig.clear();
       this.oneDriveMappings.clear();
       this.filesIndex.clear();
+      this.users.clear();
+      this.tasks.clear();
+      this.communications.clear();
+      this.deadlines.clear();
     }
     // For merge mode, we don't clear - we just add/update
 
     // Import data - will add new items or update existing ones (based on ID)
-    data.projects.forEach(p => this.projects.set(p.id, p));
-    data.clients.forEach(c => this.clients.set(c.id, c));
-    data.fileRoutings.forEach(fr => this.fileRoutings.set(fr.id, fr));
-    data.systemConfig.forEach(sc => this.systemConfig.set(sc.id, sc));
-    data.oneDriveMappings.forEach(odm => this.oneDriveMappings.set(odm.projectCode, odm));
-    if (data.filesIndex) {
-      data.filesIndex.forEach(fi => this.filesIndex.set(fi.driveItemId, fi));
-    }
+    data.projects?.forEach(p => this.projects.set(p.id, p));
+    data.clients?.forEach(c => this.clients.set(c.id, c));
+    data.fileRoutings?.forEach(fr => this.fileRoutings.set(fr.id, fr));
+    data.systemConfig?.forEach(sc => this.systemConfig.set(sc.id, sc));
+    data.oneDriveMappings?.forEach(odm => this.oneDriveMappings.set(odm.projectCode, odm));
+    data.filesIndex?.forEach(fi => this.filesIndex.set(fi.driveItemId, fi));
+    data.users?.forEach(u => this.users.set(u.id, u));
+    data.tasks?.forEach(t => this.tasks.set(t.id, t));
+    data.communications?.forEach(c => this.communications.set(c.id, c));
+    data.deadlines?.forEach(d => this.deadlines.set(d.id, d));
   }
 
   // Communications methods
@@ -1113,13 +1156,17 @@ export class DatabaseStorage implements IStorage {
 
   // Bulk operations
   async exportAllData() {
-    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData] = await Promise.all([
+    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData, usersData, tasksData, communicationsData, deadlinesData] = await Promise.all([
       this.getAllProjects(),
       this.getAllClients(),
       db.select().from(fileRoutings),
       db.select().from(systemConfig),
       db.select().from(oneDriveMappings),
       db.select().from(filesIndex),
+      this.getAllUsers(),
+      this.getAllTasks(),
+      this.getAllCommunications(),
+      this.getAllDeadlines(),
     ]);
 
     return {
@@ -1129,84 +1176,95 @@ export class DatabaseStorage implements IStorage {
       systemConfig: systemConfigData,
       oneDriveMappings: oneDriveMappingsData,
       filesIndex: filesIndexData,
+      users: usersData,
+      tasks: tasksData,
+      communications: communicationsData,
+      deadlines: deadlinesData,
     };
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode: 'merge' | 'overwrite' = 'overwrite') {
+  async importAllData(data: { 
+    projects?: Project[], 
+    clients?: Client[], 
+    fileRoutings?: FileRouting[], 
+    systemConfig?: SystemConfig[], 
+    oneDriveMappings?: OneDriveMapping[], 
+    filesIndex?: FilesIndex[],
+    users?: User[],
+    tasks?: Task[],
+    communications?: Communication[],
+    deadlines?: Deadline[]
+  }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (mode === 'overwrite') {
-      // Clear all existing data (old behavior)
+      // Clear all existing data
       await this.clearAllData();
     }
 
     // For merge mode, we need to handle conflicts with onConflictDoUpdate
     if (mode === 'merge') {
       // Merge: insert new records and update existing ones
-      if (data.clients.length > 0) {
+      if (data.clients && data.clients.length > 0) {
         for (const client of data.clients) {
-          await db.insert(clients).values(client)
-            .onConflictDoUpdate({
-              target: clients.id,
-              set: client
-            });
+          await db.insert(clients).values(client).onConflictDoUpdate({ target: clients.id, set: client });
         }
       }
-      if (data.projects.length > 0) {
+      if (data.projects && data.projects.length > 0) {
         for (const project of data.projects) {
-          await db.insert(projects).values(project)
-            .onConflictDoUpdate({
-              target: projects.id,
-              set: project
-            });
+          await db.insert(projects).values(project).onConflictDoUpdate({ target: projects.id, set: project });
         }
       }
-      if (data.fileRoutings.length > 0) {
+      if (data.fileRoutings && data.fileRoutings.length > 0) {
         for (const routing of data.fileRoutings) {
-          await db.insert(fileRoutings).values(routing)
-            .onConflictDoUpdate({
-              target: fileRoutings.id,
-              set: routing
-            });
+          await db.insert(fileRoutings).values(routing).onConflictDoUpdate({ target: fileRoutings.id, set: routing });
         }
       }
-      if (data.systemConfig.length > 0) {
+      if (data.systemConfig && data.systemConfig.length > 0) {
         for (const config of data.systemConfig) {
-          await db.insert(systemConfig).values(config)
-            .onConflictDoUpdate({
-              target: systemConfig.id,
-              set: config
-            });
+          await db.insert(systemConfig).values(config).onConflictDoUpdate({ target: systemConfig.id, set: config });
         }
       }
       if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
         for (const mapping of data.oneDriveMappings) {
-          await db.insert(oneDriveMappings).values(mapping)
-            .onConflictDoUpdate({
-              target: oneDriveMappings.projectCode,
-              set: mapping
-            });
+          await db.insert(oneDriveMappings).values(mapping).onConflictDoUpdate({ target: oneDriveMappings.projectCode, set: mapping });
         }
       }
       if (data.filesIndex && data.filesIndex.length > 0) {
         for (const fileIndex of data.filesIndex) {
-          await db.insert(filesIndex).values(fileIndex)
-            .onConflictDoUpdate({
-              target: filesIndex.driveItemId,
-              set: fileIndex
-            });
+          await db.insert(filesIndex).values(fileIndex).onConflictDoUpdate({ target: filesIndex.driveItemId, set: fileIndex });
+        }
+      }
+      if (data.users && data.users.length > 0) {
+        for (const user of data.users) {
+          await db.insert(users).values(user).onConflictDoUpdate({ target: users.id, set: user });
+        }
+      }
+      if (data.tasks && data.tasks.length > 0) {
+        for (const task of data.tasks) {
+          await db.insert(tasks).values(task).onConflictDoUpdate({ target: tasks.id, set: task });
+        }
+      }
+      if (data.communications && data.communications.length > 0) {
+        for (const communication of data.communications) {
+          await db.insert(communications).values(communication).onConflictDoUpdate({ target: communications.id, set: communication });
+        }
+      }
+      if (data.deadlines && data.deadlines.length > 0) {
+        for (const deadline of data.deadlines) {
+          await db.insert(deadlines).values(deadline).onConflictDoUpdate({ target: deadlines.id, set: deadline });
         }
       }
     } else {
       // Overwrite: simple insert after clear
-      if (data.clients.length > 0) {
+      if (data.clients && data.clients.length > 0) {
         await db.insert(clients).values(data.clients);
       }
-      if (data.projects.length > 0) {
+      if (data.projects && data.projects.length > 0) {
         await db.insert(projects).values(data.projects);
       }
-      if (data.fileRoutings.length > 0) {
+      if (data.fileRoutings && data.fileRoutings.length > 0) {
         await db.insert(fileRoutings).values(data.fileRoutings);
       }
-      if (data.systemConfig.length > 0) {
+      if (data.systemConfig && data.systemConfig.length > 0) {
         await db.insert(systemConfig).values(data.systemConfig);
       }
       if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
@@ -1215,16 +1273,32 @@ export class DatabaseStorage implements IStorage {
       if (data.filesIndex && data.filesIndex.length > 0) {
         await db.insert(filesIndex).values(data.filesIndex);
       }
+      if (data.users && data.users.length > 0) {
+        await db.insert(users).values(data.users);
+      }
+      if (data.tasks && data.tasks.length > 0) {
+        await db.insert(tasks).values(data.tasks);
+      }
+      if (data.communications && data.communications.length > 0) {
+        await db.insert(communications).values(data.communications);
+      }
+      if (data.deadlines && data.deadlines.length > 0) {
+        await db.insert(deadlines).values(data.deadlines);
+      }
     }
   }
 
   async clearAllData() {
+    await db.delete(tasks);
+    await db.delete(deadlines);
+    await db.delete(communications);
     await db.delete(filesIndex);
     await db.delete(fileRoutings);
     await db.delete(oneDriveMappings);
     await db.delete(projects);
     await db.delete(clients);
     await db.delete(systemConfig);
+    // Don't delete users - keep them for authentication
   }
 
   private generateSafeAcronym(text: string): string {
@@ -1505,11 +1579,33 @@ class FallbackStorage implements IStorage {
     return this.executeWithFallback(storage => storage.deleteUser(id));
   }
 
-  async exportAllData(): Promise<{ projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }> {
+  async exportAllData(): Promise<{ 
+    projects: Project[], 
+    clients: Client[], 
+    fileRoutings: FileRouting[], 
+    systemConfig: SystemConfig[], 
+    oneDriveMappings: OneDriveMapping[], 
+    filesIndex: FilesIndex[],
+    users: User[],
+    tasks: Task[],
+    communications: Communication[],
+    deadlines: Deadline[]
+  }> {
     return this.executeWithFallback(storage => storage.exportAllData());
   }
 
-  async importAllData(data: { projects: Project[], clients: Client[], fileRoutings: FileRouting[], systemConfig: SystemConfig[], oneDriveMappings: OneDriveMapping[], filesIndex: FilesIndex[] }, mode?: 'merge' | 'overwrite'): Promise<void> {
+  async importAllData(data: { 
+    projects?: Project[], 
+    clients?: Client[], 
+    fileRoutings?: FileRouting[], 
+    systemConfig?: SystemConfig[], 
+    oneDriveMappings?: OneDriveMapping[], 
+    filesIndex?: FilesIndex[],
+    users?: User[],
+    tasks?: Task[],
+    communications?: Communication[],
+    deadlines?: Deadline[]
+  }, mode?: 'merge' | 'overwrite'): Promise<void> {
     return this.executeWithFallback(storage => storage.importAllData(data, mode));
   }
 
