@@ -222,7 +222,7 @@ export default function TodoPanel() {
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                   <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
-                  {projects.map(p => (
+                  {projects.filter(p => p.id && p.id.trim() !== '').map(p => (
                     <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
                   ))}
                 </SelectContent>
@@ -442,7 +442,7 @@ function CreateTaskForm({
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="none" className="text-gray-900 dark:text-white">Nessun progetto</SelectItem>
-                    {projects.map(p => (
+                    {projects.filter(p => p.id && p.id.trim() !== '').map(p => (
                       <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code} - {p.object}</SelectItem>
                     ))}
                   </SelectContent>
@@ -466,7 +466,7 @@ function CreateTaskForm({
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
-                    {users.map(u => (
+                    {users.filter(u => u.id && u.id.trim() !== '').map(u => (
                       <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
                     ))}
                   </SelectContent>
@@ -697,7 +697,7 @@ function TaskDetailForm({
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="none" className="text-gray-900 dark:text-white">Nessun progetto</SelectItem>
-                    {projects.map(p => (
+                    {projects.filter(p => p.id && p.id.trim() !== '').map(p => (
                       <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
                     ))}
                   </SelectContent>
@@ -721,7 +721,7 @@ function TaskDetailForm({
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
-                    {users.map(u => (
+                    {users.filter(u => u.id && u.id.trim() !== '').map(u => (
                       <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
                     ))}
                   </SelectContent>
