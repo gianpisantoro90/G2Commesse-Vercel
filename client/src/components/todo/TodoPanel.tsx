@@ -60,22 +60,9 @@ export default function TodoPanel() {
     queryKey: ['/api/users'],
   });
 
-  // Ensure no empty IDs with debug
-  const projects = rawProjects.filter(p => {
-    if (!p || !p.id || p.id.trim() === '') {
-      console.warn('Found project with invalid ID:', p);
-      return false;
-    }
-    return true;
-  });
-  
-  const users = rawUsers.filter(u => {
-    if (!u || !u.id || u.id.trim() === '') {
-      console.warn('Found user with invalid ID:', u);
-      return false;
-    }
-    return true;
-  });
+  // Ensure no empty IDs - critical for Radix UI Select in development mode
+  const projects = (rawProjects || []).filter(p => p?.id && typeof p.id === 'string' && p.id.trim() !== '');
+  const users = (rawUsers || []).filter(u => u?.id && typeof u.id === 'string' && u.id.trim() !== '');
 
   // Filter tasks
   const filteredTasks = tasks.filter(task => {
