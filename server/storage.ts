@@ -1201,91 +1201,134 @@ export class DatabaseStorage implements IStorage {
       await this.clearAllData();
     }
 
-    // For merge mode, we need to handle conflicts with onConflictDoUpdate
-    if (mode === 'merge') {
-      // Merge: insert new records and update existing ones
-      if (data.clients && data.clients.length > 0) {
-        for (const client of data.clients) {
-          await db.insert(clients).values(client).onConflictDoUpdate({ target: clients.id, set: client });
-        }
-      }
-      if (data.projects && data.projects.length > 0) {
-        for (const project of data.projects) {
-          await db.insert(projects).values(project).onConflictDoUpdate({ target: projects.id, set: project });
-        }
-      }
-      if (data.fileRoutings && data.fileRoutings.length > 0) {
-        for (const routing of data.fileRoutings) {
-          await db.insert(fileRoutings).values(routing).onConflictDoUpdate({ target: fileRoutings.id, set: routing });
-        }
-      }
-      if (data.systemConfig && data.systemConfig.length > 0) {
-        for (const config of data.systemConfig) {
-          await db.insert(systemConfig).values(config).onConflictDoUpdate({ target: systemConfig.id, set: config });
-        }
-      }
-      if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
-        for (const mapping of data.oneDriveMappings) {
-          await db.insert(oneDriveMappings).values(mapping).onConflictDoUpdate({ target: oneDriveMappings.projectCode, set: mapping });
-        }
-      }
-      if (data.filesIndex && data.filesIndex.length > 0) {
-        for (const fileIndex of data.filesIndex) {
-          await db.insert(filesIndex).values(fileIndex).onConflictDoUpdate({ target: filesIndex.driveItemId, set: fileIndex });
-        }
-      }
+    // CRITICAL: Import in correct order to respect foreign key constraints
+    // Order: users, clients, projects, everything else
+
+    try {
+      // 1. Users first (no dependencies)
       if (data.users && data.users.length > 0) {
-        for (const user of data.users) {
-          await db.insert(users).values(user).onConflictDoUpdate({ target: users.id, set: user });
+        console.log(`📥 Importing ${data.users.length} users...`);
+        if (mode === 'merge') {
+          for (const user of data.users) {
+            await db.insert(users).values(user).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(users).values(data.users);
         }
       }
-      if (data.tasks && data.tasks.length > 0) {
-        for (const task of data.tasks) {
-          await db.insert(tasks).values(task).onConflictDoUpdate({ target: tasks.id, set: task });
-        }
-      }
-      if (data.communications && data.communications.length > 0) {
-        for (const communication of data.communications) {
-          await db.insert(communications).values(communication).onConflictDoUpdate({ target: communications.id, set: communication });
-        }
-      }
-      if (data.deadlines && data.deadlines.length > 0) {
-        for (const deadline of data.deadlines) {
-          await db.insert(projectDeadlines).values(deadline).onConflictDoUpdate({ target: projectDeadlines.id, set: deadline });
-        }
-      }
-    } else {
-      // Overwrite: simple insert after clear
+
+      // 2. Clients second (no dependencies)
       if (data.clients && data.clients.length > 0) {
-        await db.insert(clients).values(data.clients);
+        console.log(`📥 Importing ${data.clients.length} clients...`);
+        if (mode === 'merge') {
+          for (const client of data.clients) {
+            await db.insert(clients).values(client).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(clients).values(data.clients);
+        }
       }
-      if (data.projects && data.projects.length > 0) {
-        await db.insert(projects).values(data.projects);
-      }
-      if (data.fileRoutings && data.fileRoutings.length > 0) {
-        await db.insert(fileRoutings).values(data.fileRoutings);
-      }
+
+      // 3. System config (no dependencies)
       if (data.systemConfig && data.systemConfig.length > 0) {
-        await db.insert(systemConfig).values(data.systemConfig);
+        console.log(`📥 Importing ${data.systemConfig.length} system configs...`);
+        if (mode === 'merge') {
+          for (const config of data.systemConfig) {
+            await db.insert(systemConfig).values(config).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(systemConfig).values(data.systemConfig);
+        }
       }
+
+      // 4. Projects (depends on clients)
+      if (data.projects && data.projects.length > 0) {
+        console.log(`📥 Importing ${data.projects.length} projects...`);
+        if (mode === 'merge') {
+          for (const project of data.projects) {
+            await db.insert(projects).values(project).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projects).values(data.projects);
+        }
+      }
+
+      // 5. OneDrive mappings (depends on projects)
       if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
-        await db.insert(oneDriveMappings).values(data.oneDriveMappings);
+        console.log(`📥 Importing ${data.oneDriveMappings.length} OneDrive mappings...`);
+        if (mode === 'merge') {
+          for (const mapping of data.oneDriveMappings) {
+            await db.insert(oneDriveMappings).values(mapping).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(oneDriveMappings).values(data.oneDriveMappings);
+        }
       }
+
+      // 6. Files index (depends on projects)
       if (data.filesIndex && data.filesIndex.length > 0) {
-        await db.insert(filesIndex).values(data.filesIndex);
+        console.log(`📥 Importing ${data.filesIndex.length} files...`);
+        if (mode === 'merge') {
+          for (const fileIndex of data.filesIndex) {
+            await db.insert(filesIndex).values(fileIndex).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(filesIndex).values(data.filesIndex);
+        }
       }
-      if (data.users && data.users.length > 0) {
-        await db.insert(users).values(data.users);
+
+      // 7. File routings (depends on projects)
+      if (data.fileRoutings && data.fileRoutings.length > 0) {
+        console.log(`📥 Importing ${data.fileRoutings.length} file routings...`);
+        if (mode === 'merge') {
+          for (const routing of data.fileRoutings) {
+            await db.insert(fileRoutings).values(routing).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(fileRoutings).values(data.fileRoutings);
+        }
       }
+
+      // 8. Tasks (depends on projects)
       if (data.tasks && data.tasks.length > 0) {
-        await db.insert(tasks).values(data.tasks);
+        console.log(`📥 Importing ${data.tasks.length} tasks...`);
+        if (mode === 'merge') {
+          for (const task of data.tasks) {
+            await db.insert(tasks).values(task).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(tasks).values(data.tasks);
+        }
       }
+
+      // 9. Communications (depends on projects)
       if (data.communications && data.communications.length > 0) {
-        await db.insert(communications).values(data.communications);
+        console.log(`📥 Importing ${data.communications.length} communications...`);
+        if (mode === 'merge') {
+          for (const communication of data.communications) {
+            await db.insert(communications).values(communication).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(communications).values(data.communications);
+        }
       }
+
+      // 10. Deadlines (depends on projects)
       if (data.deadlines && data.deadlines.length > 0) {
-        await db.insert(projectDeadlines).values(data.deadlines);
+        console.log(`📥 Importing ${data.deadlines.length} deadlines...`);
+        if (mode === 'merge') {
+          for (const deadline of data.deadlines) {
+            await db.insert(projectDeadlines).values(deadline).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectDeadlines).values(data.deadlines);
+        }
       }
+
+      console.log('✅ All data imported successfully');
+    } catch (error) {
+      console.error('❌ Error during import:', error);
+      throw error;
     }
   }
 
