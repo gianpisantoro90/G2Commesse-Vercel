@@ -1184,6 +1184,22 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  // Helper function to convert date strings to Date objects
+  private convertTimestampsToDate<T extends Record<string, any>>(
+    records: T[], 
+    timestampFields: string[]
+  ): T[] {
+    return records.map(record => {
+      const converted = { ...record };
+      for (const field of timestampFields) {
+        if (converted[field] && typeof converted[field] === 'string') {
+          converted[field] = new Date(converted[field]);
+        }
+      }
+      return converted;
+    });
+  }
+
   async importAllData(data: { 
     projects?: Project[], 
     clients?: Client[], 
@@ -1208,12 +1224,13 @@ export class DatabaseStorage implements IStorage {
       // 1. Users first (no dependencies)
       if (data.users && data.users.length > 0) {
         console.log(`📥 Importing ${data.users.length} users...`);
+        const usersWithDates = this.convertTimestampsToDate(data.users, ['createdAt', 'updatedAt']);
         if (mode === 'merge') {
-          for (const user of data.users) {
+          for (const user of usersWithDates) {
             await db.insert(users).values(user).onConflictDoNothing();
           }
         } else {
-          await db.insert(users).values(data.users);
+          await db.insert(users).values(usersWithDates);
         }
       }
 
@@ -1232,96 +1249,104 @@ export class DatabaseStorage implements IStorage {
       // 3. System config (no dependencies)
       if (data.systemConfig && data.systemConfig.length > 0) {
         console.log(`📥 Importing ${data.systemConfig.length} system configs...`);
+        const configWithDates = this.convertTimestampsToDate(data.systemConfig, ['updatedAt']);
         if (mode === 'merge') {
-          for (const config of data.systemConfig) {
+          for (const config of configWithDates) {
             await db.insert(systemConfig).values(config).onConflictDoNothing();
           }
         } else {
-          await db.insert(systemConfig).values(data.systemConfig);
+          await db.insert(systemConfig).values(configWithDates);
         }
       }
 
       // 4. Projects (depends on clients)
       if (data.projects && data.projects.length > 0) {
         console.log(`📥 Importing ${data.projects.length} projects...`);
+        const projectsWithDates = this.convertTimestampsToDate(data.projects, ['createdAt', 'dataFattura', 'dataPagamento']);
         if (mode === 'merge') {
-          for (const project of data.projects) {
+          for (const project of projectsWithDates) {
             await db.insert(projects).values(project).onConflictDoNothing();
           }
         } else {
-          await db.insert(projects).values(data.projects);
+          await db.insert(projects).values(projectsWithDates);
         }
       }
 
       // 5. OneDrive mappings (depends on projects)
       if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
         console.log(`📥 Importing ${data.oneDriveMappings.length} OneDrive mappings...`);
+        const mappingsWithDates = this.convertTimestampsToDate(data.oneDriveMappings, ['createdAt', 'updatedAt']);
         if (mode === 'merge') {
-          for (const mapping of data.oneDriveMappings) {
+          for (const mapping of mappingsWithDates) {
             await db.insert(oneDriveMappings).values(mapping).onConflictDoNothing();
           }
         } else {
-          await db.insert(oneDriveMappings).values(data.oneDriveMappings);
+          await db.insert(oneDriveMappings).values(mappingsWithDates);
         }
       }
 
       // 6. Files index (depends on projects)
       if (data.filesIndex && data.filesIndex.length > 0) {
         console.log(`📥 Importing ${data.filesIndex.length} files...`);
+        const filesWithDates = this.convertTimestampsToDate(data.filesIndex, ['createdAt', 'updatedAt', 'lastModified']);
         if (mode === 'merge') {
-          for (const fileIndex of data.filesIndex) {
+          for (const fileIndex of filesWithDates) {
             await db.insert(filesIndex).values(fileIndex).onConflictDoNothing();
           }
         } else {
-          await db.insert(filesIndex).values(data.filesIndex);
+          await db.insert(filesIndex).values(filesWithDates);
         }
       }
 
       // 7. File routings (depends on projects)
       if (data.fileRoutings && data.fileRoutings.length > 0) {
         console.log(`📥 Importing ${data.fileRoutings.length} file routings...`);
+        const routingsWithDates = this.convertTimestampsToDate(data.fileRoutings, ['createdAt']);
         if (mode === 'merge') {
-          for (const routing of data.fileRoutings) {
+          for (const routing of routingsWithDates) {
             await db.insert(fileRoutings).values(routing).onConflictDoNothing();
           }
         } else {
-          await db.insert(fileRoutings).values(data.fileRoutings);
+          await db.insert(fileRoutings).values(routingsWithDates);
         }
       }
 
       // 8. Tasks (depends on projects)
       if (data.tasks && data.tasks.length > 0) {
         console.log(`📥 Importing ${data.tasks.length} tasks...`);
+        const tasksWithDates = this.convertTimestampsToDate(data.tasks, ['createdAt', 'updatedAt', 'dueDate']);
         if (mode === 'merge') {
-          for (const task of data.tasks) {
+          for (const task of tasksWithDates) {
             await db.insert(tasks).values(task).onConflictDoNothing();
           }
         } else {
-          await db.insert(tasks).values(data.tasks);
+          await db.insert(tasks).values(tasksWithDates);
         }
       }
 
       // 9. Communications (depends on projects)
       if (data.communications && data.communications.length > 0) {
         console.log(`📥 Importing ${data.communications.length} communications...`);
+        const communicationsWithDates = this.convertTimestampsToDate(data.communications, ['createdAt', 'updatedAt', 'communicationDate']);
         if (mode === 'merge') {
-          for (const communication of data.communications) {
+          for (const communication of communicationsWithDates) {
             await db.insert(communications).values(communication).onConflictDoNothing();
           }
         } else {
-          await db.insert(communications).values(data.communications);
+          await db.insert(communications).values(communicationsWithDates);
         }
       }
 
       // 10. Deadlines (depends on projects)
       if (data.deadlines && data.deadlines.length > 0) {
         console.log(`📥 Importing ${data.deadlines.length} deadlines...`);
+        const deadlinesWithDates = this.convertTimestampsToDate(data.deadlines, ['createdAt', 'updatedAt', 'dueDate', 'completedAt']);
         if (mode === 'merge') {
-          for (const deadline of data.deadlines) {
+          for (const deadline of deadlinesWithDates) {
             await db.insert(projectDeadlines).values(deadline).onConflictDoNothing();
           }
         } else {
-          await db.insert(projectDeadlines).values(data.deadlines);
+          await db.insert(projectDeadlines).values(deadlinesWithDates);
         }
       }
 

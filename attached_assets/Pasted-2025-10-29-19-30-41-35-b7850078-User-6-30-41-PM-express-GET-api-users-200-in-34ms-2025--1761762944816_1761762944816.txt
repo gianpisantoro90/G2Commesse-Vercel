@@ -1,0 +1,84 @@
+2025-10-29 19:30:41.35
+b7850078
+User
+6:30:41 PM [express] GET /api/users 200 in 34ms :: []
+2025-10-29 19:30:43.17
+b7850078
+User
+[2025-10-29T18:30:43.179Z] ℹ️ INFO: ✅ GET /api/deadlines - 200 {"method":"GET","path":"/api/deadlines","statusCode":200,"duration":"33ms"}
+2025-10-29 19:30:43.18
+b7850078
+User
+6:30:43 PM [express] GET /api/deadlines 200 in 33ms :: []
+2025-10-29 19:30:45.31
+b7850078
+User
+[2025-10-29T18:30:45.318Z] ℹ️ INFO: ✅ GET /api/communications - 200 {"method":"GET","path":"/api/communications","statusCode":200,"duration":"2148ms"}
+2025-10-29 19:30:45.31
+b7850078
+User
+6:30:45 PM [express] GET /api/communications 200 in 2149ms :: []
+2025-10-29 19:30:45.47
+b7850078
+User
+[2025-10-29T18:30:45.472Z] ℹ️ INFO: ✅ GET /api/auth/status - 200 {"method":"GET","path":"/api/auth/status","statusCode":200,"duration":"0ms"}
+2025-10-29 19:30:45.47
+b7850078
+User
+6:30:45 PM [express] GET /api/auth/status 304 in 1ms :: {"authenticated":true,"user":{"id":"legacy-a…
+2025-10-29 19:30:45.47
+b7850078
+User
+[2025-10-29T18:30:45.475Z] ℹ️ INFO: ✅ GET /api/users - 200 {"method":"GET","path":"/api/users","statusCode":200,"duration":"33ms"}
+2025-10-29 19:30:45.47
+b7850078
+User
+6:30:45 PM [express] GET /api/users 304 in 34ms :: []
+2025-10-29 19:30:53.91
+b7850078
+User
+📥 Importing 1 users...
+2025-10-29 19:30:53.91
+b7850078
+User
+❌ Error during import: TypeError: value.toISOString is not a function
+2025-10-29 19:30:53.91
+b7850078
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2025-10-29 19:30:53.91
+b7850078
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2025-10-29 19:30:53.91
+b7850078
+User
+at Array.map ()
+2025-10-29 19:30:53.91
+b7850078
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-10-29 19:30:53.91
+b7850078
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:92:21
+2025-10-29 19:30:53.91
+b7850078
+User
+at Array.map ()
+2025-10-29 19:30:53.91
+b7850078
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2025-10-29 19:30:53.91
+b7850078
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2025-10-29 19:30:53.91
+b7850078
+User
+at Array.map ()
+2025-10-29 19:30:53.91
+b7850078
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
