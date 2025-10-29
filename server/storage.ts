@@ -1251,7 +1251,7 @@ export class DatabaseStorage implements IStorage {
       }
       if (data.deadlines && data.deadlines.length > 0) {
         for (const deadline of data.deadlines) {
-          await db.insert(deadlines).values(deadline).onConflictDoUpdate({ target: deadlines.id, set: deadline });
+          await db.insert(projectDeadlines).values(deadline).onConflictDoUpdate({ target: projectDeadlines.id, set: deadline });
         }
       }
     } else {
@@ -1284,14 +1284,14 @@ export class DatabaseStorage implements IStorage {
         await db.insert(communications).values(data.communications);
       }
       if (data.deadlines && data.deadlines.length > 0) {
-        await db.insert(deadlines).values(data.deadlines);
+        await db.insert(projectDeadlines).values(data.deadlines);
       }
     }
   }
 
   async clearAllData() {
     await db.delete(tasks);
-    await db.delete(deadlines);
+    await db.delete(projectDeadlines);
     await db.delete(communications);
     await db.delete(filesIndex);
     await db.delete(fileRoutings);
@@ -1578,6 +1578,39 @@ class FallbackStorage implements IStorage {
 
   async deleteUser(id: string): Promise<boolean> {
     return this.executeWithFallback(storage => storage.deleteUser(id));
+  }
+
+  // Task methods
+  async getAllTasks(): Promise<Task[]> {
+    return this.executeWithFallback(storage => storage.getAllTasks());
+  }
+
+  async getTaskById(id: string): Promise<Task | undefined> {
+    return this.executeWithFallback(storage => storage.getTaskById(id));
+  }
+
+  async getTasksByProject(projectId: string): Promise<Task[]> {
+    return this.executeWithFallback(storage => storage.getTasksByProject(projectId));
+  }
+
+  async getTasksByAssignee(userId: string): Promise<Task[]> {
+    return this.executeWithFallback(storage => storage.getTasksByAssignee(userId));
+  }
+
+  async getTasksByCreator(userId: string): Promise<Task[]> {
+    return this.executeWithFallback(storage => storage.getTasksByCreator(userId));
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    return this.executeWithFallback(storage => storage.createTask(task));
+  }
+
+  async updateTask(id: string, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    return this.executeWithFallback(storage => storage.updateTask(id, updates));
+  }
+
+  async deleteTask(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteTask(id));
   }
 
   async exportAllData(): Promise<{ 
