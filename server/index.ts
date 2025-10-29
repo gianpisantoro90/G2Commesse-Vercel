@@ -32,9 +32,10 @@ if (process.env.NODE_ENV === 'production') {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "wss:", "https://api.anthropic.com", "https://api.deepseek.com", "https://graph.microsoft.com"],
+        connectSrc: ["'self'", "wss:", "https://api.anthropic.com", "https://api.deepseek.com", "https://graph.microsoft.com", "https://connectors.replit.com"],
         frameSrc: ["'none'"],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
