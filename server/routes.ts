@@ -959,8 +959,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : "Dati importati con successo (sovrascrittura completa)";
 
       res.json({ message, mode: importMode });
-    } catch (error) {
-      res.status(500).json({ message: "Errore nell'importazione dei dati" });
+    } catch (error: any) {
+      console.error('❌ Errore durante importazione dati:', error);
+      console.error('Stack trace:', error.stack);
+      res.status(500).json({ 
+        message: "Errore nell'importazione dei dati", 
+        error: error.message,
+        details: error.toString()
+      });
     }
   });
 
