@@ -219,7 +219,15 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+// Schema for creating a new user (accepts password instead of passwordHash)
+export const createUserSchema = insertUserSchema.omit({
+  passwordHash: true,
+}).extend({
+  password: z.string().min(8, "La password deve essere di almeno 8 caratteri"),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type CreateUser = z.infer<typeof createUserSchema>;
 export type User = typeof users.$inferSelect;
 
 // ============================================
@@ -497,6 +505,8 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
   createdAt: true,
   updatedAt: true,
   completedAt: true,
+}).extend({
+  dueDate: z.coerce.date().nullable().optional(),
 });
 
 // ============================================

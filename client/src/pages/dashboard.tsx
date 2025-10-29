@@ -94,8 +94,8 @@ export default function Dashboard() {
             {activeTab === "gestione" && (
               <div data-testid="management-panel">
                 <Tabs value={activeSubTab.gestione} onValueChange={(value) => handleSubTabChange("gestione", value)}>
-                  <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 overflow-x-auto [&>div>button]:hidden">
-                    <TabsList className="inline-flex w-auto min-w-full bg-transparent border-0 p-0">
+                  <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700">
+                    <TabsList className="flex flex-wrap w-full bg-transparent border-0 p-0">
                       {isAdmin && (
                         <TabsTrigger
                           value="nuova"

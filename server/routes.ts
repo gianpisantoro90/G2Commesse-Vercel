@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, insertTaskSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 import serverOneDriveService from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
@@ -240,12 +240,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new user (admin only)
   app.post("/api/users", requireAdmin, async (req, res) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
-
-      // Validate password
-      if (!req.body.password || req.body.password.length < 8) {
-        return res.status(400).json({ message: "La password deve essere di almeno 8 caratteri" });
-      }
+      // Validate request data with createUserSchema (includes password validation)
+      const userData = createUserSchema.parse(req.body);
 
       // Check if username or email already exists
       const existingUsers = await storage.getAllUsers();
@@ -257,10 +253,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Hash password
-      const passwordHash = await bcrypt.hash(req.body.password, 10);
+      const passwordHash = await bcrypt.hash(userData.password, 10);
 
+      // Create user with hashed password (omit password field, add passwordHash)
+      const { password, ...userDataWithoutPassword } = userData;
       const newUser = await storage.createUser({
-        ...userData,
+        ...userDataWithoutPassword,
         passwordHash
       });
 
