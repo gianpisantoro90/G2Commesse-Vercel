@@ -1,0 +1,80 @@
+{
+  "projects": [
+    {
+      "id": "ae85c319-c6d5-4eba-9b4f-447cd60d5c54",
+      "code": "25PROASF01",
+      "client": "Prova",
+      "clientId": null,
+      "city": "asfas",
+      "object": "asdfasd",
+      "year": 25,
+      "template": "LUNGO",
+      "status": "in_corso",
+      "tipoRapporto": "diretto",
+      "committenteFinale": null,
+      "fatturato": false,
+      "numeroFattura": null,
+      "dataFattura": null,
+      "importoFatturato": 0,
+      "pagato": false,
+      "dataPagamento": null,
+      "importoPagato": 0,
+      "noteFatturazione": null,
+      "createdAt": "2025-10-29T17:55:24.092Z",
+      "fsRoot": null,
+      "metadata": {}
+    }
+  ],
+  "clients": [
+    {
+      "id": "5d00b477-3bea-45b3-82ec-b08c06de160f",
+      "sigla": "PAR",
+      "name": "Parco Olimpico",
+      "city": "Bacoli",
+      "projectsCount": 0
+    },
+    {
+      "id": "387fce2a-2c59-4a3c-89cb-bf7ed984b12a",
+      "sigla": "ELE",
+      "name": "Electa Progettazioni Integrate",
+      "city": "Afragola",
+      "projectsCount": 0
+    },
+    {
+      "id": "877f3001-63c4-4def-bcc2-3b4db96050af",
+      "sigla": "GUA",
+      "name": "Guardia di Finanza - RETLA",
+      "city": "Roma",
+      "projectsCount": 1
+    },
+    {
+      "id": "93166bac-579d-410e-af54-e39eac9c5454",
+      "sigla": "LUC",
+      "name": "Luciano Vitale",
+      "city": "Frattamaggiore",
+      "projectsCount": 1
+    },
+    {
+      "id": "6fbc39c7-24f3-4cc4-a9af-084096d0f381",
+      "sigla": "AGO",
+      "name": "Agostino Lupoli",
+      "city": "VIterbo",
+      "projectsCount": 2
+    },
+    {
+      "id": "2ba905d2-5806-4e81-a5c5-e894fdabebbd",
+      "sigla": "PRO",
+      "name": "Prova",
+      "city": "Catanzaro",
+      "projectsCount": 1
+    }
+  ],
+  "fileRoutings": [],
+  "systemConfig": [],
+  "oneDriveMappings": [],
+  "filesIndex": [],
+  "users": [],
+  "tasks": [],
+  "communications": [],
+  "deadlines": []
+}
