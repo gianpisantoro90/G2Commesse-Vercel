@@ -1,0 +1,104 @@
+2025-10-29 18:48:31.35
+9712873a
+System
+starting up user application
+2025-10-29 18:48:31.35
+9712873a
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-10-29 18:48:33.48
+9712873a
+User
+> rest-express@1.0.0 start
+2025-10-29 18:48:33.48
+9712873a
+User
+> cross-env NODE_ENV=production node dist/index.js
+2025-10-29 18:48:34.80
+9712873a
+User
+✅ Using DATABASE_URL from environment (length: 117 chars)
+2025-10-29 18:48:34.80
+9712873a
+User
+📡 Configured Neon WebSocket for serverless environment
+2025-10-29 18:48:34.80
+9712873a
+User
+🗄️ Connecting to database...
+2025-10-29 18:48:34.80
+9712873a
+User
+🔍 NODE_ENV: production
+2025-10-29 18:48:34.80
+9712873a
+User
+🔍 REPLIT_DEPLOYMENT: 1
+2025-10-29 18:48:34.80
+9712873a
+User
+✅ Neon database connection established
+2025-10-29 18:48:34.80
+9712873a
+User
+🔍 Storage initialization - DATABASE_URL exists: true
+2025-10-29 18:48:34.80
+9712873a
+User
+🔍 Environment NODE_ENV: production
+2025-10-29 18:48:34.81
+9712873a
+User
+[2025-10-29T17:48:34.810Z] ℹ️ INFO: Starting G2 Gestione Commesse server {"nodeEnv":"production","platform":"linux"}
+2025-10-29 18:48:34.81
+9712873a
+User
+Warning: connect.session() MemoryStore is not
+2025-10-29 18:48:34.81
+9712873a
+User
+designed for a production environment, as it will leak
+2025-10-29 18:48:34.81
+9712873a
+User
+memory, and will not scale past a single process.
+2025-10-29 18:48:35.04
+9712873a
+User
+✅ Using DatabaseStorage - connection verified
+2025-10-29 18:48:35.04
+9712873a
+User
+💾 Storage initialized successfully
+2025-10-29 18:48:35.04
+9712873a
+User
+[2025-10-29T17:48:35.042Z] ℹ️ INFO: Notification WebSocket server initialized
+2025-10-29 18:48:35.04
+9712873a
+User
+[2025-10-29T17:48:35.045Z] ℹ️ INFO: Server started successfully on port 5000 {"url":"https://9712873a-3bfa-483a-a119-348234a4b1a8-00-30m69u53se0rg.worf.replit.dev","nodeEnv":"production"}
+2025-10-29 18:48:35.04
+9712873a
+User
+🚀 G2 Ingegneria avviato con successo!
+2025-10-29 18:48:35.04
+9712873a
+User
+📱 Apri: https://9712873a-3bfa-483a-a119-348234a4b1a8-00-30m69u53se0rg.worf.replit.dev
+2025-10-29 18:48:35.04
+9712873a
+User
+⏹️ Premi Ctrl+C per fermare
+2025-10-29 18:49:55.64
+9b4f9f57
+System
+system: received signal terminated
+2025-10-29 18:49:55.64
+9b4f9f57
+User
+[2025-10-29T17:49:55.642Z] ℹ️ INFO: WebSocket notification client disconnected
+2025-10-29 18:50:01.68
+9712873a
+User
+[2025-10-29T17:50:01.683Z] ℹ️ INFO: New WebSocket notification client connected
