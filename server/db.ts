@@ -14,8 +14,13 @@ let db: any = null;
 
 if (!process.env.DATABASE_URL) {
   console.warn('⚠️ DATABASE_URL not set, application will use memory storage');
+  console.warn('🔍 Environment variables available:', Object.keys(process.env).filter(k => k.includes('PG') || k.includes('DATABASE')));
 } else {
-  console.log('🗄️ Connecting to database...' );
+  console.log('🗄️ Connecting to database...');
+  console.log('🔍 DATABASE_URL is set (length:', process.env.DATABASE_URL.length, 'chars)');
+  console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+  console.log('🔍 REPLIT_DEPLOYMENT:', process.env.REPLIT_DEPLOYMENT || 'not set');
+  
   try {
     pool = new Pool({
       connectionString: process.env.DATABASE_URL,
