@@ -596,15 +596,12 @@ function TaskDetailForm({
   });
 
   const handleSubmit = (data: any) => {
-    console.log('[TaskDetailForm] handleSubmit called', { isAdmin, data });
-
     // For non-admin users, only send status and notes
     if (!isAdmin) {
       const payload = {
         status: data.status,
         notes: data.notes,
       };
-      console.log('[TaskDetailForm] Non-admin user, sending limited payload:', payload);
       onUpdate(payload);
     } else {
       // For admin users, send all fields
@@ -613,7 +610,6 @@ function TaskDetailForm({
         projectId: data.projectId === "none" ? null : data.projectId,
         assignedToId: data.assignedToId === "none" ? null : data.assignedToId,
       };
-      console.log('[TaskDetailForm] Admin user, sending full payload:', payload);
       onUpdate(payload);
     }
   };
