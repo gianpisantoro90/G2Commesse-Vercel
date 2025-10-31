@@ -652,12 +652,21 @@ export class MemStorage implements IStorage {
     const existing = this.tasks.get(id);
     if (!existing) return undefined;
 
+    // Remove readonly fields that should not be updated
+    const { id: _, createdAt: __, completedAt: ___, updatedAt: ____, ...safeUpdates } = updates as any;
+
+    // Convert dueDate to Date if it's a string
+    const processedUpdates = { ...safeUpdates };
+    if (processedUpdates.dueDate && typeof processedUpdates.dueDate === 'string') {
+      processedUpdates.dueDate = new Date(processedUpdates.dueDate);
+    }
+
     const updated: Task = {
       ...existing,
-      ...updates,
+      ...processedUpdates,
       updatedAt: new Date(),
       // Se status diventa completed, setta completedAt
-      completedAt: updates.status === 'completed' ? new Date() : existing.completedAt,
+      completedAt: updates.status === 'completed' ? new Date() : (updates.status && updates.status !== 'completed' ? null : existing.completedAt),
     };
     this.tasks.set(id, updated);
     return updated;
@@ -1132,16 +1141,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateTask(id: string, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    // Remove readonly fields that should not be updated
+    const { id: _, createdAt: __, completedAt: ___, updatedAt: ____, ...safeUpdates } = updates as any;
+
     const updateData: any = {
-      ...updates,
+      ...safeUpdates,
       updatedAt: new Date(),
     };
-    
+
+    // Convert dueDate to Date if it's a string
+    if (updateData.dueDate && typeof updateData.dueDate === 'string') {
+      updateData.dueDate = new Date(updateData.dueDate);
+    }
+
     // Se status diventa completed, setta completedAt
     if (updates.status === 'completed') {
       updateData.completedAt = new Date();
+    } else if (updates.status && updates.status !== 'completed') {
+      // Se status cambia a qualcosa che non è completed, resetta completedAt
+      updateData.completedAt = null;
     }
-    
+
     const [updated] = await db
       .update(tasks)
       .set(updateData)

@@ -3,14 +3,16 @@ import { useToast } from './use-toast';
 
 export interface Notification {
   id: string;
-  type: 'deadline' | 'invoice' | 'budget' | 'communication' | 'onedrive' | 'info' | 'warning' | 'error';
+  userId?: string;
+  type: 'deadline' | 'invoice' | 'budget' | 'communication' | 'onedrive' | 'info' | 'warning' | 'error' | 'task_assigned' | 'task_completed';
   title: string;
   message: string;
   timestamp: Date;
   projectId?: number;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: 'low' | 'normal' | 'medium' | 'high' | 'urgent';
   read: boolean;
   actionUrl?: string;
+  data?: any;
 }
 
 export function useNotifications() {
@@ -20,7 +22,17 @@ export function useNotifications() {
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const { toast } = useToast();
 
-  const connect = useCallback(() => {
+  const connect = useCallback(async () => {
+    // Get current user ID from auth API
+    let userId: string | null = null;
+    try {
+      const authResponse = await fetch('/api/auth/status');
+      const authData = await authResponse.json();
+      userId = authData.user?.id;
+    } catch (error) {
+      console.error('Failed to get user ID:', error);
+    }
+
     // Determine WebSocket URL based on current window location
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws/notifications`;
@@ -31,6 +43,11 @@ export function useNotifications() {
       ws.onopen = () => {
         console.log('WebSocket notification connected');
         setConnected(true);
+
+        // Send authentication message with userId
+        if (userId) {
+          ws.send(JSON.stringify({ type: 'auth', userId }));
+        }
 
         // Send ping every 30 seconds to keep connection alive
         const pingInterval = setInterval(() => {
@@ -48,6 +65,11 @@ export function useNotifications() {
           const data = JSON.parse(event.data);
 
           switch (data.type) {
+            case 'auth_success':
+              // Authentication confirmed
+              console.log('WebSocket authentication successful');
+              break;
+
             case 'initial':
               // Initial notifications on connect
               setNotifications(data.notifications.map((n: any) => ({

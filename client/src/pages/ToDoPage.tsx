@@ -314,8 +314,20 @@ export default function ToDoPage() {
                               className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                               data-testid={`task-item-${task.id}`}
                             >
-                              <div className="flex-shrink-0">
-                                <StatusIcon className={`w-5 h-5 ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
+                              <div
+                                className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+                                  updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
+                                }}
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                              >
+                                <StatusIcon className={`w-5 h-5 pointer-events-none ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
@@ -377,6 +389,7 @@ export default function ToDoPage() {
               onUpdate={(data) => updateTaskMutation.mutate({ id: selectedTask.id, data })}
               onDelete={() => deleteTaskMutation.mutate(selectedTask.id)}
               isPending={updateTaskMutation.isPending || deleteTaskMutation.isPending}
+              isAdmin={isAdmin}
             />
           </DialogContent>
         </Dialog>
@@ -559,6 +572,7 @@ function TaskDetailForm({
   onUpdate,
   onDelete,
   isPending,
+  isAdmin,
 }: {
   task: Task;
   projects: Project[];
@@ -566,6 +580,7 @@ function TaskDetailForm({
   onUpdate: (data: Partial<Task>) => void;
   onDelete: () => void;
   isPending: boolean;
+  isAdmin: boolean;
 }) {
   const form = useForm({
     defaultValues: {
@@ -581,11 +596,26 @@ function TaskDetailForm({
   });
 
   const handleSubmit = (data: any) => {
-    onUpdate({
-      ...data,
-      projectId: data.projectId === "none" ? null : data.projectId,
-      assignedToId: data.assignedToId === "none" ? null : data.assignedToId,
-    });
+    console.log('[TaskDetailForm] handleSubmit called', { isAdmin, data });
+
+    // For non-admin users, only send status and notes
+    if (!isAdmin) {
+      const payload = {
+        status: data.status,
+        notes: data.notes,
+      };
+      console.log('[TaskDetailForm] Non-admin user, sending limited payload:', payload);
+      onUpdate(payload);
+    } else {
+      // For admin users, send all fields
+      const payload = {
+        ...data,
+        projectId: data.projectId === "none" ? null : data.projectId,
+        assignedToId: data.assignedToId === "none" ? null : data.assignedToId,
+      };
+      console.log('[TaskDetailForm] Admin user, sending full payload:', payload);
+      onUpdate(payload);
+    }
   };
 
   const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
@@ -613,7 +643,7 @@ function TaskDetailForm({
             <FormItem>
               <FormLabel className="text-gray-900 dark:text-white">Titolo</FormLabel>
               <FormControl>
-                <Input {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="input-edit-task-title" />
+                <Input {...field} disabled={!isAdmin} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed" data-testid="input-edit-task-title" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -627,7 +657,7 @@ function TaskDetailForm({
             <FormItem>
               <FormLabel className="text-gray-900 dark:text-white">Descrizione</FormLabel>
               <FormControl>
-                <Textarea {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" rows={3} data-testid="textarea-edit-task-description" />
+                <Textarea {...field} disabled={!isAdmin} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed" rows={3} data-testid="textarea-edit-task-description" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -682,9 +712,9 @@ function TaskDetailForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Priorità</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={!isAdmin}>
                   <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-priority">
+                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed" data-testid="select-edit-task-priority">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
@@ -707,9 +737,9 @@ function TaskDetailForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                <Select onValueChange={field.onChange} value={field.value || undefined} disabled={!isAdmin}>
                   <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-project">
+                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed" data-testid="select-edit-task-project">
                       <SelectValue placeholder="Seleziona progetto" />
                     </SelectTrigger>
                   </FormControl>
@@ -731,9 +761,9 @@ function TaskDetailForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Assegna a</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
+                <Select onValueChange={field.onChange} value={field.value || undefined} disabled={!isAdmin}>
                   <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-assignee">
+                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed" data-testid="select-edit-task-assignee">
                       <SelectValue placeholder="Seleziona utente" />
                     </SelectTrigger>
                   </FormControl>
@@ -760,9 +790,10 @@ function TaskDetailForm({
                 <Input
                   type="date"
                   {...field}
+                  disabled={!isAdmin}
                   value={field.value && field.value !== null ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
                   onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
                   data-testid="input-edit-task-duedate"
                 />
               </FormControl>
@@ -781,11 +812,13 @@ function TaskDetailForm({
         </div>
 
         <div className="flex justify-between gap-2 pt-4">
-          <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending} data-testid="button-delete-task">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Elimina
-          </Button>
-          <Button type="submit" disabled={isPending} className="bg-secondary hover:bg-secondary/90" data-testid="button-update-task">
+          {isAdmin && (
+            <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending} data-testid="button-delete-task">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Elimina
+            </Button>
+          )}
+          <Button type="submit" disabled={isPending} className="bg-secondary hover:bg-secondary/90 ml-auto" data-testid="button-update-task">
             {isPending ? "Salvataggio..." : "Salva Modifiche"}
           </Button>
         </div>

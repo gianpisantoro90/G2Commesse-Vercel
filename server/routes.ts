@@ -224,8 +224,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // USER MANAGEMENT ENDPOINTS (Admin only)
   // ============================================
 
-  // Get all users (admin only)
-  app.get("/api/users", requireAdmin, async (req, res) => {
+  // Get all users (authenticated users can see list - needed for task assignments)
+  app.get("/api/users", requireAuth, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       // Remove password hashes from response
@@ -446,6 +446,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const updates = req.body;
+      const isAdmin = req.session.role === 'admin';
+
+      // Fields that regular users can update
+      const allowedFields = ['status', 'notes'];
+
+      // Check if non-admin user is trying to update restricted fields
+      if (!isAdmin) {
+        const updateKeys = Object.keys(updates);
+        const restrictedFields = updateKeys.filter(key => !allowedFields.includes(key));
+
+        if (restrictedFields.length > 0) {
+          return res.status(403).json({
+            message: "Non hai i permessi per modificare questi campi. Gli utenti standard possono solo modificare lo stato e le note.",
+            restrictedFields
+          });
+        }
+      }
 
       const updatedTask = await storage.updateTask(id, updates);
       if (!updatedTask) {
@@ -474,8 +491,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete task
-  app.delete("/api/tasks/:id", async (req, res) => {
+  // Delete task (admin only)
+  app.delete("/api/tasks/:id", requireAdmin, async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -2276,7 +2293,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/notifications", async (req, res) => {
     try {
       const unreadOnly = req.query.unreadOnly === 'true';
-      const notifications = notificationService.getNotifications(unreadOnly);
+      // Filter notifications by current user's ID
+      const userId = req.session.userId;
+      const notifications = notificationService.getNotifications(userId, unreadOnly);
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ message: "Errore nel recupero delle notifiche" });
@@ -2374,14 +2393,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`✅ Communication auto-imported: ${communication.id}`);
 
-        // Send notification about new email
-        notificationService.sendNotification({
-          type: 'communication',
-          title: 'Nuova email importata',
-          message: `${parsedEmail.subject} - ${analysis.projectCode}`,
-          priority: analysis.isImportant ? 'high' : 'medium',
-          projectId: parseInt(analysis.projectId),
-        });
+        // TODO: Send notification about new email to project managers or admins
+        // Need to determine which user(s) should receive this notification
+        // notificationService.sendNotification({
+        //   userId: '<project-manager-or-admin-id>',
+        //   type: 'communication',
+        //   title: 'Nuova email importata',
+        //   message: `${parsedEmail.subject} - ${analysis.projectCode}`,
+        //   priority: analysis.isImportant ? 'high' : 'medium',
+        //   projectId: parseInt(analysis.projectId),
+        // });
 
         res.json({
           success: true,

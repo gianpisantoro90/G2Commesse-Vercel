@@ -300,8 +300,20 @@ export default function TodoPanel() {
                         className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                         data-testid={`task-item-${task.id}`}
                       >
-                        <div className="flex-shrink-0">
-                          <StatusIcon className={`w-5 h-5 ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
+                        <div
+                          className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+                            updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                          }}
+                          title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                        >
+                          <StatusIcon className={`w-5 h-5 pointer-events-none ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
