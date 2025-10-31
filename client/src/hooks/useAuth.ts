@@ -40,10 +40,14 @@ export function useAuth() {
       await apiRequest("POST", "/api/auth/logout");
       setIsAuthenticated(false);
       setUser(null);
+      // Force reload to show login page
+      window.location.href = "/";
     } catch (error) {
       console.error("Logout error:", error);
       setIsAuthenticated(false);
       setUser(null);
+      // Force reload even on error
+      window.location.href = "/";
     }
   };
 
