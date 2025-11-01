@@ -3,10 +3,12 @@
   "short_name": "G2 Commesse",
   "description": "Sistema di gestione commesse per G2 Ingegneria",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#F9FAFB",
   "theme_color": "#1B5B5A",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -24,6 +26,8 @@
   "categories": ["business", "productivity"],
   "lang": "it-IT",
   "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [],
   "shortcuts": [
     {
       "name": "Dashboard",
@@ -38,7 +42,15 @@
       "description": "Crea una nuova commessa",
       "url": "/?tab=nuova",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "To Do",
+      "short_name": "Tasks",
+      "description": "Gestisci le tue task",
+      "url": "/?tab=todo",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ],
-  "screenshots": []
+  "screenshots": [],
+  "iarc_rating_id": ""
 }
