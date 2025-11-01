@@ -407,12 +407,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/tasks", async (req, res) => {
     try {
       const taskData = insertTaskSchema.parse(req.body);
+      const isAdmin = req.session.role === 'admin';
 
       // Set createdById to current user if not provided
       const dataToInsert = {
         ...taskData,
         createdById: taskData.createdById || req.session.userId!
       };
+
+      // Non-admin users can only assign tasks to themselves
+      if (!isAdmin && dataToInsert.assignedToId && dataToInsert.assignedToId !== req.session.userId) {
+        return res.status(403).json({
+          message: "Gli utenti standard possono assegnare task solo a se stessi."
+        });
+      }
 
       const newTask = await storage.createTask(dataToInsert);
 
@@ -447,6 +455,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const updates = req.body;
       const isAdmin = req.session.role === 'admin';
+
+      // Get the task first to check permissions
+      const task = await storage.getTaskById(id);
+      if (!task) {
+        return res.status(404).json({ message: "Task non trovata" });
+      }
+
+      // Non-admin users can only modify tasks assigned to them
+      if (!isAdmin && task.assignedToId !== req.session.userId) {
+        return res.status(403).json({
+          message: "Puoi modificare solo le task assegnate a te."
+        });
+      }
 
       // Fields that regular users can update
       const allowedFields = ['status', 'notes'];
