@@ -11,13 +11,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calculator, FileText, Copy, Check } from "lucide-react";
 import {
   CATEGORIE_DM143,
-  calcolaParcella,
+  calcolaParcelDM2016,
   calcolaFattura,
   formatEuro,
-  type ParcellaInput,
-  type ParcellaResult,
+  PARAMETRI_PRESTAZIONI_Q,
+  type ParcellaInputDM2016,
+  type ParcellaResultDM2016,
   type FatturaCalculation
-} from "@/lib/parcella-calculator-complete";
+} from "@/lib/parcella-calculator-dm2016";
 
 type WizardStep = 'categoria' | 'prestazioni' | 'calcolo' | 'risultato';
 
@@ -29,13 +30,18 @@ export default function ParcellaCalculator() {
   const [importoOpere, setImportoOpere] = useState<number>(0);
   const [categoria, setCategoria] = useState<string>('E');
   const [articolazione, setArticolazione] = useState<string>('01');
-  const [complessita, setComplessita] = useState<'minima' | 'bassa' | 'media' | 'alta' | 'altissima'>('media');
+  const [complessita, setComplessita] = useState<'bassa' | 'media' | 'alta'>('media');
 
-  // Prestazioni selezionate
-  const [prestazioni, setPrestazioni] = useState<ParcellaInput['prestazioni']>({});
+  // Prestazioni selezionate (usando codici Q)
+  const [prestazioni, setPrestazioni] = useState<{ [key: string]: boolean }>({});
+
+  // Opzioni aggiuntive
+  const [bimObbligatorio, setBimObbligatorio] = useState(false);
+  const [incrementoBIM, setIncrementoBIM] = useState(25);
+  const [speseAccessorie, setSpeseAccessorie] = useState(true);
 
   // Risultati
-  const [risultatoParcella, setRisultatoParcella] = useState<ParcellaResult | null>(null);
+  const [risultatoParcella, setRisultatoParcella] = useState<ParcellaResultDM2016 | null>(null);
   const [risultatoFattura, setRisultatoFattura] = useState<FatturaCalculation | null>(null);
 
   // Parametri fattura
@@ -51,15 +57,20 @@ export default function ParcellaCalculator() {
   };
 
   const handleCalcola = () => {
-    const input: ParcellaInput = {
+    const input: ParcellaInputDM2016 = {
       importoOpere,
       categoria,
       articolazione,
+      gradoComplessita: complessita,
       prestazioni,
-      complessita
+      opzioni: {
+        bimObbligatorio,
+        incrementoBIM,
+        speseAccessorie
+      }
     };
 
-    const risultato = calcolaParcella(input);
+    const risultato = calcolaParcelDM2016(input);
     setRisultatoParcella(risultato);
 
     const fattura = calcolaFattura(
@@ -80,6 +91,9 @@ export default function ParcellaCalculator() {
     setArticolazione('01');
     setComplessita('media');
     setPrestazioni({});
+    setBimObbligatorio(false);
+    setIncrementoBIM(25);
+    setSpeseAccessorie(true);
     setRisultatoParcella(null);
     setRisultatoFattura(null);
   };
@@ -125,7 +139,9 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
             <Calculator className="w-6 h-6" />
             Calcolatore Parcella Professionale
           </h2>
-          <p className="text-gray-600 mt-1">DM 17 giugno 2016 (ex DM 143/2013)</p>
+          <p className="text-gray-600 mt-1 font-mono text-sm">
+            CP = ∑(V × G × Q × P) | DM 17/06/2016 + D.Lgs. 36/2023
+          </p>
         </div>
         {currentStep === 'risultato' && (
           <Button onClick={handleReset} variant="outline">
@@ -207,19 +223,20 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                 </div>
 
                 <div className="mt-4">
-                  <Label htmlFor="complessita">Grado di Complessità *</Label>
+                  <Label htmlFor="complessita">Grado di Complessità (parametro G) *</Label>
                   <Select value={complessita} onValueChange={(v: any) => setComplessita(v)}>
                     <SelectTrigger id="complessita">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="minima">Minima (0.75x)</SelectItem>
-                      <SelectItem value="bassa">Bassa (0.85x)</SelectItem>
-                      <SelectItem value="media">Media (1.0x)</SelectItem>
-                      <SelectItem value="alta">Alta (1.2x)</SelectItem>
-                      <SelectItem value="altissima">Altissima (1.4x)</SelectItem>
+                      <SelectItem value="bassa">🟢 Bassa - Opera semplice (G≈0.90)</SelectItem>
+                      <SelectItem value="media">🟡 Media - Complessità standard (G≈1.00)</SelectItem>
+                      <SelectItem value="alta">🔴 Alta - Opera complessa (G≈1.15)</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Il parametro G moltiplica il compenso base secondo Tavola Z-1
+                  </p>
                 </div>
               </div>
 
@@ -246,103 +263,49 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
 
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-6">
-                  {/* Progettazione */}
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-3">📐 PROGETTAZIONE</h4>
-                    <div className="space-y-2">
-                      {[
-                        { key: 'rp', label: 'Relazione Paesaggistica' },
-                        { key: 'rilievo', label: 'Rilievo e Restituzione Grafica' },
-                        { key: 'pfte', label: 'Progetto di Fattibilità Tecnico-Economica (PFTE)' },
-                        { key: 'definitivo', label: 'Progettazione Definitiva' },
-                        { key: 'esecutivo', label: 'Progettazione Esecutiva' }
-                      ].map(({ key, label }) => (
-                        <label key={key} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={prestazioni[key as keyof typeof prestazioni] || false}
-                            onChange={() => handlePrestazioneToggle(key)}
-                            className="w-4 h-4"
-                          />
-                          <span className="text-sm">{label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Raggruppa prestazioni per tipo */}
+                  {[
+                    { gruppo: 'progettazione', titolo: '📐 PROGETTAZIONE', icona: '📐' },
+                    { gruppo: 'direzione', titolo: '👷 DIREZIONE E COORDINAMENTO', icona: '👷' },
+                    { gruppo: 'sicurezza', titolo: '🛡️ SICUREZZA', icona: '🛡️' },
+                    { gruppo: 'collaudo', titolo: '✅ COLLAUDI E VERIFICHE', icona: '✅' },
+                    { gruppo: 'altro', titolo: '📋 ALTRE PRESTAZIONI', icona: '📋' }
+                  ].map(({ gruppo, titolo }) => {
+                    const prestazioniGruppo = Object.entries(PARAMETRI_PRESTAZIONI_Q).filter(
+                      ([_, p]) => p.gruppo === gruppo
+                    );
 
-                  {/* Direzione e Coordinamento */}
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-3">👷 DIREZIONE E COORDINAMENTO</h4>
-                    <div className="space-y-2">
-                      {[
-                        { key: 'dl', label: 'Direzione Lavori' },
-                        { key: 'dlStrutture', label: 'Direzione Lavori Strutture' },
-                        { key: 'dlImpianti', label: 'Direzione Lavori Impianti' },
-                        { key: 'mis', label: 'Misura e Contabilità Lavori' },
-                        { key: 'coordinamento', label: 'Coordinamento Sicurezza Progettazione (CSP)' },
-                        { key: 'coordinamentoEsecuzione', label: 'Coordinamento Sicurezza Esecuzione (CSE)' }
-                      ].map(({ key, label }) => (
-                        <label key={key} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={prestazioni[key as keyof typeof prestazioni] || false}
-                            onChange={() => handlePrestazioneToggle(key)}
-                            className="w-4 h-4"
-                          />
-                          <span className="text-sm">{label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                    if (prestazioniGruppo.length === 0) return null;
 
-                  {/* Collaudi e Verifiche */}
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-3">✅ COLLAUDI E VERIFICHE</h4>
-                    <div className="space-y-2">
-                      {[
-                        { key: 'collaudo', label: 'Collaudo Tecnico-Amministrativo' },
-                        { key: 'collaudoStatico', label: 'Collaudo Statico' },
-                        { key: 'verificaProgetto', label: 'Verifica di Progetto' }
-                      ].map(({ key, label }) => (
-                        <label key={key} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={prestazioni[key as keyof typeof prestazioni] || false}
-                            onChange={() => handlePrestazioneToggle(key)}
-                            className="w-4 h-4"
-                          />
-                          <span className="text-sm">{label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Altre Prestazioni */}
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-3">📋 ALTRE PRESTAZIONI</h4>
-                    <div className="space-y-2">
-                      {[
-                        { key: 'durc', label: 'Attestazione Rispetto Norme Sicurezza (DURC)' },
-                        { key: 'praticheVVF', label: 'Pratiche Vigili del Fuoco (VVF)' },
-                        { key: 'certificazioneEnergetica', label: 'Certificazione Energetica (APE)' },
-                        { key: 'sue', label: 'Sicurezza e Salute (SUE)' },
-                        { key: 'pareriEnti', label: 'Acquisizione Pareri Enti e Autorità' },
-                        { key: 'perizia', label: 'Perizia Estimativa / CTU' },
-                        { key: 'valutatoreImmobiliare', label: 'Valutazione Immobiliare' },
-                        { key: 'due', label: 'Documento Unico Regolarità Edilizia (DUE)' }
-                      ].map(({ key, label }) => (
-                        <label key={key} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={prestazioni[key as keyof typeof prestazioni] || false}
-                            onChange={() => handlePrestazioneToggle(key)}
-                            className="w-4 h-4"
-                          />
-                          <span className="text-sm">{label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
+                    return (
+                      <div key={gruppo}>
+                        <h4 className="font-semibold text-sm text-gray-700 mb-3">{titolo}</h4>
+                        <div className="space-y-2">
+                          {prestazioniGruppo.map(([codice, prestazione]) => (
+                            <label key={codice} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={prestazioni[codice] || false}
+                                onChange={() => handlePrestazioneToggle(codice)}
+                                className="w-4 h-4"
+                              />
+                              <div className="flex-1">
+                                <span className="text-sm font-medium">{prestazione.descrizione}</span>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {codice}
+                                  </Badge>
+                                  <span className="text-xs text-gray-600">
+                                    Q = {prestazione.Q.toFixed(3)}
+                                  </span>
+                                </div>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </ScrollArea>
 
@@ -360,57 +323,119 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
             </div>
           )}
 
-          {/* Step 3: Parametri Fattura */}
+          {/* Step 3: Parametri Fattura e Opzioni */}
           {currentStep === 'calcolo' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">3. Parametri Fatturazione</h3>
+                <h3 className="text-lg font-semibold">3. Opzioni di Calcolo e Fatturazione</h3>
                 <Button variant="outline" size="sm" onClick={() => setCurrentStep('prestazioni')}>
                   Indietro
                 </Button>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
-                <div>
-                  <Label htmlFor="cpa">Aliquota CPA (%)</Label>
-                  <Input
-                    id="cpa"
-                    type="number"
-                    value={aliquotaCPA}
-                    onChange={(e) => setAliquotaCPA(parseFloat(e.target.value) || 0)}
-                    min="0"
-                    max="100"
-                    step="0.1"
+              {/* Opzioni Calcolo */}
+              <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+                <h4 className="font-semibold text-sm">Opzioni Calcolo Compenso</h4>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="spese-accessorie" className="text-sm font-medium">
+                      Includi Spese Accessorie
+                    </Label>
+                    <p className="text-xs text-gray-600">
+                      10-25% del compenso base (secondo DM 17/06/2016)
+                    </p>
+                  </div>
+                  <input
+                    id="spese-accessorie"
+                    type="checkbox"
+                    checked={speseAccessorie}
+                    onChange={(e) => setSpeseAccessorie(e.target.checked)}
+                    className="w-5 h-5"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Cassa Previdenziale (di solito 4%)</p>
                 </div>
 
-                <div>
-                  <Label htmlFor="iva">Aliquota IVA (%)</Label>
-                  <Input
-                    id="iva"
-                    type="number"
-                    value={aliquotaIVA}
-                    onChange={(e) => setAliquotaIVA(parseFloat(e.target.value) || 0)}
-                    min="0"
-                    max="100"
-                    step="1"
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label htmlFor="bim-toggle" className="text-sm font-medium">
+                      Metodologia BIM Obbligatoria
+                    </Label>
+                    <p className="text-xs text-gray-600">
+                      Incremento compenso (D.Lgs. 36/2023 - Nuovo Codice Appalti)
+                    </p>
+                  </div>
+                  <input
+                    id="bim-toggle"
+                    type="checkbox"
+                    checked={bimObbligatorio}
+                    onChange={(e) => setBimObbligatorio(e.target.checked)}
+                    className="w-5 h-5"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Di solito 22%</p>
                 </div>
 
-                <div>
-                  <Label htmlFor="ritenuta">Ritenuta d'Acconto (%)</Label>
-                  <Input
-                    id="ritenuta"
-                    type="number"
-                    value={aliquotaRitenuta}
-                    onChange={(e) => setAliquotaRitenuta(parseFloat(e.target.value) || 0)}
-                    min="0"
-                    max="100"
-                    step="1"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Di solito 20%</p>
+                {bimObbligatorio && (
+                  <div>
+                    <Label htmlFor="incremento-bim">Incremento BIM (%)</Label>
+                    <Input
+                      id="incremento-bim"
+                      type="number"
+                      value={incrementoBIM}
+                      onChange={(e) => setIncrementoBIM(parseFloat(e.target.value) || 0)}
+                      min="0"
+                      max="100"
+                      step="5"
+                      className="max-w-xs"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Incremento indicativo: 20-30%</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Parametri Fattura */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-sm">Parametri Fatturazione</h4>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div>
+                    <Label htmlFor="cpa">Aliquota CPA (%)</Label>
+                    <Input
+                      id="cpa"
+                      type="number"
+                      value={aliquotaCPA}
+                      onChange={(e) => setAliquotaCPA(parseFloat(e.target.value) || 0)}
+                      min="0"
+                      max="100"
+                      step="0.1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Cassa Previdenziale (di solito 4%)</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="iva">Aliquota IVA (%)</Label>
+                    <Input
+                      id="iva"
+                      type="number"
+                      value={aliquotaIVA}
+                      onChange={(e) => setAliquotaIVA(parseFloat(e.target.value) || 0)}
+                      min="0"
+                      max="100"
+                      step="1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Di solito 22%</p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="ritenuta">Ritenuta d'Acconto (%)</Label>
+                    <Input
+                      id="ritenuta"
+                      type="number"
+                      value={aliquotaRitenuta}
+                      onChange={(e) => setAliquotaRitenuta(parseFloat(e.target.value) || 0)}
+                      min="0"
+                      max="100"
+                      step="1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Di solito 20%</p>
+                  </div>
                 </div>
               </div>
 
@@ -442,65 +467,125 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                 </Button>
               </div>
 
-              {/* Note */}
-              <Card className="bg-blue-50 border-blue-200">
-                <CardContent className="p-4">
-                  <div className="space-y-1 text-sm">
-                    {risultatoParcella.note.map((nota, i) => (
-                      <p key={i} className="text-blue-900">{nota}</p>
-                    ))}
+              {/* Formula e Parametri */}
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm font-medium text-blue-700 mb-2">Formula Parametrica</p>
+                      <p className="text-2xl font-bold font-mono text-blue-900">
+                        CP = ∑(V × G × Q × P)
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                      <div>
+                        <p className="text-xs text-blue-700">V - Importo Opere</p>
+                        <p className="font-bold text-blue-900">{formatEuro(risultatoParcella.importoBase)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-blue-700">G - Complessità</p>
+                        <p className="font-bold text-blue-900">{risultatoParcella.parametroG.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-blue-700">P - Parametro Base</p>
+                        <p className="font-bold text-blue-900">{risultatoParcella.parametroP.toFixed(6)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-blue-700">Prestazioni</p>
+                        <p className="font-bold text-blue-900">{risultatoParcella.prestazioni.length}</p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Compensi per Gruppo */}
-              <Tabs defaultValue="all">
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="all">Tutte</TabsTrigger>
-                  <TabsTrigger value="progettazione">Prog.</TabsTrigger>
-                  <TabsTrigger value="direzione">Dir.</TabsTrigger>
-                  <TabsTrigger value="sicurezza">Sic.</TabsTrigger>
-                  <TabsTrigger value="altro">Altro</TabsTrigger>
-                </TabsList>
-
-                {['all', 'progettazione', 'direzione', 'sicurezza', 'altro'].map(gruppo => (
-                  <TabsContent key={gruppo} value={gruppo} className="space-y-2 mt-4">
-                    {Object.values(risultatoParcella.compensi)
-                      .filter(c => gruppo === 'all' || c.gruppo === gruppo)
-                      .map((compenso, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div>
-                            <div className="font-medium">{compenso.prestazione}</div>
-                            <div className="text-sm text-gray-600">
-                              {compenso.percentuale.toFixed(2)}% su €{importoOpere.toLocaleString('it-IT')}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold text-lg">{formatEuro(compenso.importo)}</div>
-                            <Badge variant="secondary" className="text-xs">
-                              {compenso.gruppo}
-                            </Badge>
-                          </div>
-                        </div>
-                      ))}
-                  </TabsContent>
-                ))}
-              </Tabs>
-
-              <Separator />
-
-              {/* Riepilogo Compenso */}
-              <Card className="bg-secondary/10">
+              {/* Dettagli Calcolo */}
+              <Card>
                 <CardHeader>
-                  <CardTitle>Compenso Totale</CardTitle>
+                  <CardTitle className="text-lg">Dettagli Calcolo</CardTitle>
+                  <CardDescription>Passaggi della formula parametrica</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-4xl font-bold text-secondary">
-                    {formatEuro(risultatoParcella.compensoTotale)}
+                  <ScrollArea className="h-[300px]">
+                    <pre className="text-xs font-mono whitespace-pre-wrap text-gray-800">
+                      {risultatoParcella.dettagliCalcolo.passaggi.join('\n')}
+                    </pre>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+
+              {/* Prestazioni Calcolate */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Compensi per Prestazione</CardTitle>
+                  <CardDescription>{risultatoParcella.prestazioni.length} prestazioni selezionate</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {risultatoParcella.prestazioni.map((prest, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                      <div className="flex-1">
+                        <div className="font-medium">{prest.descrizione}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="outline" className="text-xs">
+                            {prest.codice}
+                          </Badge>
+                          <span className="text-xs text-gray-600">
+                            Q = {prest.Q.toFixed(3)}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({prest.percentualeEffettiva.toFixed(2)}%)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="font-bold text-lg text-green-700">
+                        {formatEuro(prest.compenso)}
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Riepilogo Totali */}
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="p-6 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-green-900">Compenso Base</span>
+                    <span className="text-xl font-bold text-green-900">{formatEuro(risultatoParcella.compensoBase)}</span>
                   </div>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Percentuale totale: {risultatoParcella.percentualeTotale.toFixed(2)}%
-                  </p>
+
+                  {risultatoParcella.incrementoBIM && (
+                    <div className="flex justify-between items-center text-blue-700">
+                      <span className="text-sm">+ Incremento BIM ({incrementoBIM}%)</span>
+                      <span className="font-semibold">{formatEuro(risultatoParcella.incrementoBIM)}</span>
+                    </div>
+                  )}
+
+                  {risultatoParcella.speseAccessorie && (
+                    <div className="flex justify-between items-center text-blue-700">
+                      <span className="text-sm">
+                        + Spese Accessorie ({((risultatoParcella.speseAccessorie / risultatoParcella.compensoBase) * 100).toFixed(1)}%)
+                      </span>
+                      <span className="font-semibold">{formatEuro(risultatoParcella.speseAccessorie)}</span>
+                    </div>
+                  )}
+
+                  <Separator />
+
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-xl font-bold text-green-900">COMPENSO TOTALE</span>
+                    <span className="text-3xl font-bold text-green-900">{formatEuro(risultatoParcella.compensoTotale)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Note */}
+              <Card className="bg-amber-50 border-amber-200">
+                <CardContent className="p-4">
+                  <div className="space-y-1 text-sm">
+                    {risultatoParcella.note.map((nota, i) => (
+                      <p key={i} className="text-amber-900">{nota}</p>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
 
