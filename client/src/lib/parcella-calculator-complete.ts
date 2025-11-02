@@ -220,6 +220,20 @@ export const CATEGORIE_DM143 = {
       '02': 'Bonifiche di siti contaminati - da €500.000 a €2.500.000',
       '03': 'Bonifiche di siti contaminati - oltre €2.500.000',
     }
+  },
+
+  // TECNOLOGIE INFORMAZIONE E COMUNICAZIONE (ICT)
+  ICT: {
+    nome: 'Tecnologie ICT',
+    descrizione: 'Tecnologie dell\'informazione e della comunicazione',
+    articolazioni: {
+      '01': 'Reti e infrastrutture ICT - fino a €100.000',
+      '02': 'Reti e infrastrutture ICT - da €100.000 a €500.000',
+      '03': 'Reti e infrastrutture ICT - da €500.000 a €2.500.000',
+      '04': 'Reti e infrastrutture ICT - oltre €2.500.000',
+      '05': 'Data center, sistemi complessi - fino a €500.000',
+      '06': 'Data center, sistemi complessi - oltre €500.000',
+    }
   }
 };
 

@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTaskSchema, type Task, type Project, type User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, CheckCircle2, Circle, XCircle, Clock, Trash2, AlertCircle } from "lucide-react";
+import { Plus, CheckCircle2, Circle, XCircle, Clock, Trash2, AlertCircle, StickyNote } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -180,6 +180,7 @@ export default function TodoPanel() {
               projects={projects}
               users={users}
               currentUserId={user?.id || ''}
+              isAdmin={user?.role === 'admin'}
               onSubmit={(data) => createTaskMutation.mutate(data)}
               isPending={createTaskMutation.isPending}
             />
@@ -300,8 +301,20 @@ export default function TodoPanel() {
                         className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
                         data-testid={`task-item-${task.id}`}
                       >
-                        <div className="flex-shrink-0">
-                          <StatusIcon className={`w-5 h-5 ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
+                        <div
+                          className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+                            updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                          }}
+                          title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                        >
+                          <StatusIcon className={`w-5 h-5 pointer-events-none ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
@@ -309,6 +322,12 @@ export default function TodoPanel() {
                             <Badge variant="outline" className={`${priorityInfo.color} flex-shrink-0`}>
                               {priorityInfo.label}
                             </Badge>
+                            {task.notes && task.notes.trim() !== '' && (
+                              <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-400 border-blue-300 dark:border-blue-800 flex-shrink-0">
+                                <StickyNote className="w-3 h-3 mr-1" />
+                                Note
+                              </Badge>
+                            )}
                             {overdueTask && (
                               <Badge variant="outline" className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800 flex-shrink-0">
                                 <AlertCircle className="w-3 h-3 mr-1" />
@@ -357,6 +376,8 @@ export default function TodoPanel() {
               task={selectedTask}
               projects={projects}
               users={users}
+              currentUserId={user?.id || ''}
+              isAdmin={user?.role === 'admin'}
               onUpdate={(data) => updateTaskMutation.mutate({ id: selectedTask.id, data })}
               onDelete={() => deleteTaskMutation.mutate(selectedTask.id)}
               isPending={updateTaskMutation.isPending || deleteTaskMutation.isPending}
@@ -369,17 +390,19 @@ export default function TodoPanel() {
 }
 
 // Create Task Form Component
-function CreateTaskForm({ 
-  projects, 
-  users, 
-  currentUserId, 
-  onSubmit, 
-  isPending 
-}: { 
-  projects: Project[]; 
-  users: User[]; 
+function CreateTaskForm({
+  projects,
+  users,
+  currentUserId,
+  isAdmin,
+  onSubmit,
+  isPending
+}: {
+  projects: Project[];
+  users: User[];
   currentUserId: string;
-  onSubmit: (data: z.infer<typeof insertTaskSchema>) => void; 
+  isAdmin: boolean;
+  onSubmit: (data: z.infer<typeof insertTaskSchema>) => void;
   isPending: boolean;
 }) {
   const form = useForm<z.infer<typeof insertTaskSchema>>({
@@ -412,6 +435,9 @@ function CreateTaskForm({
     console.log('Submitting task data:', submitData);
     onSubmit(submitData);
   };
+
+  // Filter users list for non-admin: they can only assign to themselves
+  const availableUsers = isAdmin ? users : users.filter(u => u.id === currentUserId);
 
   return (
     <Form {...form}>
@@ -483,7 +509,7 @@ function CreateTaskForm({
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                     <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
-                    {users.map(u => u.id && u.id.trim() !== '' ? (
+                    {availableUsers.map(u => u.id && u.id.trim() !== '' ? (
                       <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
                     ) : null)}
                   </SelectContent>
@@ -555,6 +581,8 @@ function TaskDetailForm({
   task,
   projects,
   users,
+  currentUserId,
+  isAdmin,
   onUpdate,
   onDelete,
   isPending,
@@ -562,6 +590,8 @@ function TaskDetailForm({
   task: Task;
   projects: Project[];
   users: User[];
+  currentUserId: string;
+  isAdmin: boolean;
   onUpdate: (data: Partial<Task>) => void;
   onDelete: () => void;
   isPending: boolean;
@@ -580,16 +610,36 @@ function TaskDetailForm({
   });
 
   const handleSubmit = (data: any) => {
-    onUpdate({
-      ...data,
-      projectId: data.projectId === "none" ? null : data.projectId,
-      assignedToId: data.assignedToId === "none" ? null : data.assignedToId,
-    });
+    // If user is not admin, only send status and notes
+    if (!canEditAllFields) {
+      onUpdate({
+        status: data.status,
+        notes: data.notes,
+      });
+    } else {
+      // Admin can update all fields
+      onUpdate({
+        ...data,
+        projectId: data.projectId === "none" ? null : data.projectId,
+        assignedToId: data.assignedToId === "none" ? null : data.assignedToId,
+      });
+    }
   };
 
   const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
   const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
   const StatusIcon = statusInfo.icon;
+
+  // Check if task is assigned to current user
+  const isAssignedToCurrentUser = task.assignedToId === currentUserId;
+
+  // Non-admin users can only edit tasks assigned to them, and only status and notes
+  const canEdit = isAdmin || isAssignedToCurrentUser;
+  const canEditAllFields = isAdmin;
+
+  // Get user and project names
+  const assignedUserName = task.assignedToId ? users.find(u => u.id === task.assignedToId)?.fullName || "Utente sconosciuto" : "Non assegnata";
+  const projectName = task.projectId ? projects.find(p => p.id === task.projectId)?.code || "Progetto sconosciuto" : "Nessun progetto";
 
   return (
     <Form {...form}>
@@ -605,35 +655,107 @@ function TaskDetailForm({
           </Badge>
         </div>
 
+        {/* Non-admin view: Show read-only fields for non-editable data */}
+        {!canEditAllFields && (
+          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titolo</h3>
+              <p className="text-gray-900 dark:text-white">{task.title}</p>
+            </div>
+
+            {task.description && (
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrizione</h3>
+                <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{task.description}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Progetto</h3>
+                <p className="text-gray-900 dark:text-white">{projectName}</p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assegnata a</h3>
+                <p className="text-gray-900 dark:text-white">{assignedUserName}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorità</h3>
+                <p className="text-gray-900 dark:text-white">{priorityInfo.label}</p>
+              </div>
+
+              {task.dueDate && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scadenza</h3>
+                  <p className="text-gray-900 dark:text-white">{format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Admin view: Show all editable fields */}
+        {canEditAllFields && (
+          <>
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-900 dark:text-white">Titolo</FormLabel>
+                  <FormControl>
+                    <Input {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="input-edit-task-title" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-900 dark:text-white">Descrizione</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" rows={3} data-testid="textarea-edit-task-description" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+
+        {/* Status - Editable for both admin and non-admin */}
         <FormField
           control={form.control}
-          name="title"
+          name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-900 dark:text-white">Titolo</FormLabel>
-              <FormControl>
-                <Input {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="input-edit-task-title" />
-              </FormControl>
+              <FormLabel className="text-gray-900 dark:text-white">Stato</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  {Object.entries(statusConfig).map(([key, config]) => (
+                    <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-gray-900 dark:text-white">Descrizione</FormLabel>
-              <FormControl>
-                <Textarea {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" rows={3} data-testid="textarea-edit-task-description" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Notes Section */}
+        {/* Notes Section - Editable for both admin and non-admin */}
         <FormField
           control={form.control}
           name="notes"
@@ -651,124 +773,104 @@ function TaskDetailForm({
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-900 dark:text-white">Stato</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-status">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    {Object.entries(statusConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* Admin-only fields */}
+        {canEditAllFields && (
+          <>
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-900 dark:text-white">Priorità</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-priority">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                      {Object.entries(priorityConfig).map(([key, config]) => (
+                        <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <FormField
-            control={form.control}
-            name="priority"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-900 dark:text-white">Priorità</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-priority">
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    {Object.entries(priorityConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="projectId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
+                      <FormControl>
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-project">
+                          <SelectValue placeholder="Seleziona progetto" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <SelectItem value="none" className="text-gray-900 dark:text-white">Nessun progetto</SelectItem>
+                        {projects.filter(p => p.id && p.id.trim() !== '').map(p => (
+                          <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="projectId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-project">
-                      <SelectValue placeholder="Seleziona progetto" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <SelectItem value="none" className="text-gray-900 dark:text-white">Nessun progetto</SelectItem>
-                    {projects.filter(p => p.id && p.id.trim() !== '').map(p => (
-                      <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="assignedToId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-900 dark:text-white">Assegna a</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
+                      <FormControl>
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-assignee">
+                          <SelectValue placeholder="Seleziona utente" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                        <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
+                        {users.map(u => u.id && u.id.trim() !== '' ? (
+                          <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
+                        ) : null)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-          <FormField
-            control={form.control}
-            name="assignedToId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-gray-900 dark:text-white">Assegna a</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-gray-900 dark:text-white">Scadenza</FormLabel>
                   <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-assignee">
-                      <SelectValue placeholder="Seleziona utente" />
-                    </SelectTrigger>
+                    <Input
+                      type="date"
+                      {...field}
+                      value={field.value && field.value !== null ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
+                      onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      data-testid="input-edit-task-duedate"
+                    />
                   </FormControl>
-                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
-                    {users.map(u => u.id && u.id.trim() !== '' ? (
-                      <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
-                    ) : null)}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="dueDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-gray-900 dark:text-white">Scadenza</FormLabel>
-              <FormControl>
-                <Input
-                  type="date"
-                  {...field}
-                  value={field.value && field.value !== null ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
-                  onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                  data-testid="input-edit-task-duedate"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
 
         {/* Task Meta */}
         <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -780,11 +882,15 @@ function TaskDetailForm({
         </div>
 
         <div className="flex justify-between gap-2 pt-4">
-          <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending} data-testid="button-delete-task">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Elimina
-          </Button>
-          <Button type="submit" disabled={isPending} className="bg-secondary hover:bg-secondary/90" data-testid="button-update-task">
+          {/* Only admin can delete tasks */}
+          {isAdmin && (
+            <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending} data-testid="button-delete-task">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Elimina
+            </Button>
+          )}
+          {!isAdmin && <div />}
+          <Button type="submit" disabled={isPending || !canEdit} className="bg-secondary hover:bg-secondary/90" data-testid="button-update-task">
             {isPending ? "Salvataggio..." : "Salva Modifiche"}
           </Button>
         </div>

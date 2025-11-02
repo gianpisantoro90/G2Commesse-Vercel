@@ -4,6 +4,7 @@ import TabNavigation from "@/components/layout/tab-navigation";
 import { useAuth } from "@/hooks/useAuth";
 import StatsCard from "@/components/dashboard/stats-card";
 import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
+import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
 import NewProjectForm from "@/components/projects/new-project-form";
@@ -79,7 +80,10 @@ export default function Dashboard() {
                 {/* Second Row - Recent Projects */}
                 <RecentProjectsTable />
 
-                {/* Third Row - Core System Info */}
+                {/* Third Row - Recent Tasks (All users) */}
+                <RecentTasksTable />
+
+                {/* Fourth Row - Core System Info */}
                 <div className="grid gap-6 lg:grid-cols-2">
                   {isAdmin && <StatsCard />}
                   <OneDriveStatusCard />
@@ -94,12 +98,12 @@ export default function Dashboard() {
             {activeTab === "gestione" && (
               <div data-testid="management-panel">
                 <Tabs value={activeSubTab.gestione} onValueChange={(value) => handleSubTabChange("gestione", value)}>
-                  <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700">
-                    <TabsList className="flex flex-wrap w-full bg-transparent border-0 p-0">
+                  <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+                    <TabsList className="flex w-full bg-transparent border-0 p-0 min-w-max">
                       {isAdmin && (
                         <TabsTrigger
                           value="nuova"
-                          className="px-6 py-4 text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                           data-testid="tab-nuova"
                         >
                           ➕ Nuova
@@ -107,7 +111,7 @@ export default function Dashboard() {
                       )}
                       <TabsTrigger
                         value="progetti"
-                        className="px-6 py-4 text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-progetti"
                       >
                         📋 Commesse
@@ -115,7 +119,7 @@ export default function Dashboard() {
                       {isAdmin && (
                         <TabsTrigger
                           value="clienti"
-                          className="px-6 py-4 text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                           data-testid="tab-clienti"
                         >
                           👥 Clienti
@@ -124,7 +128,7 @@ export default function Dashboard() {
                       {isAdmin && (
                         <TabsTrigger
                           value="risorse"
-                          className="px-6 py-4 text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                           data-testid="tab-risorse"
                         >
                           👷 Risorse
@@ -133,7 +137,7 @@ export default function Dashboard() {
                       {isAdmin && (
                         <TabsTrigger
                           value="kpi"
-                          className="px-6 py-4 text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                           data-testid="tab-kpi"
                         >
                           📊 KPI
@@ -142,7 +146,7 @@ export default function Dashboard() {
                       {isAdmin && (
                         <TabsTrigger
                           value="parcella"
-                          className="px-6 py-4 text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                           data-testid="tab-parcella"
                         >
                           💰 Calc. Parcella
@@ -150,14 +154,14 @@ export default function Dashboard() {
                       )}
                       <TabsTrigger
                         value="scadenzario"
-                        className="px-6 py-4 text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-scadenzario"
                       >
                         📅 Scadenze
                       </TabsTrigger>
                       <TabsTrigger
                         value="comunicazioni"
-                        className="px-6 py-4 text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-comunicazioni"
                       >
                         💬 Comun.
@@ -254,32 +258,32 @@ export default function Dashboard() {
             {activeTab === "sistema" && isAdmin && (
               <div data-testid="system-panel">
                 <Tabs value={activeSubTab.sistema} onValueChange={(value) => handleSubTabChange("sistema", value)}>
-                  <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700">
-                    <TabsList className="flex w-full bg-transparent border-0 p-0">
+                  <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+                    <TabsList className="flex w-full bg-transparent border-0 p-0 min-w-max">
                       <TabsTrigger
                         value="users"
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-users"
                       >
                         👥 Utenti
                       </TabsTrigger>
                       <TabsTrigger
                         value="storage"
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-storage"
                       >
                         💾 Storage
                       </TabsTrigger>
                       <TabsTrigger
                         value="ai"
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-ai"
                       >
                         🤖 Configurazione AI
                       </TabsTrigger>
                       <TabsTrigger
                         value="onedrive"
-                        className="px-6 py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-onedrive"
                       >
                         ☁️ OneDrive Config

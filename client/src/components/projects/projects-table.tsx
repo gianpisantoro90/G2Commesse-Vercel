@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -43,13 +44,16 @@ type SortField = "code" | "client" | "city" | "object" | "year" | "status";
 type SortOrder = "asc" | "desc";
 
 export default function ProjectsTable() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
   const [selectedProjectForFatturazione, setSelectedProjectForFatturazione] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<25 | 50 | 75>(25);
@@ -378,14 +382,16 @@ export default function ProjectsTable() {
           >
             📋 Prestazioni/DM143
           </Button>
-          <Button
-            size="default"
-            variant={showFatturazione ? "default" : "outline"}
-            onClick={() => setShowFatturazione(!showFatturazione)}
-            className="text-xs min-h-[44px] h-auto py-2"
-          >
-            💰 Fatturazione
-          </Button>
+          {isAdmin && (
+            <Button
+              size="default"
+              variant={showFatturazione ? "default" : "outline"}
+              onClick={() => setShowFatturazione(!showFatturazione)}
+              className="text-xs min-h-[44px] h-auto py-2"
+            >
+              💰 Fatturazione
+            </Button>
+          )}
           <Button
             size="default"
             variant={showComunicazioni ? "default" : "outline"}
@@ -579,7 +585,7 @@ export default function ProjectsTable() {
                       <SortIcon field="status" />
                     </div>
                   </th>
-                  {showFatturazione && (
+                  {showFatturazione && isAdmin && (
                     <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-32">
                       Fatturazione
                       <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Stato fatturazione e pagamento">ⓘ</span>
@@ -739,7 +745,7 @@ export default function ProjectsTable() {
                          '🔴 Sospesa'}
                       </span>
                     </td>
-                    {showFatturazione && (
+                    {showFatturazione && isAdmin && (
                       <td className="py-4 px-4" data-testid={`project-fatturazione-${project.id}`}>
                         <div
                           className="flex flex-col gap-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-1 rounded transition-colors"

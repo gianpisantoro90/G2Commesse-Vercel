@@ -4,19 +4,21 @@ import { logger } from './logger';
 
 export interface Notification {
   id: string;
-  type: 'deadline' | 'invoice' | 'budget' | 'communication' | 'onedrive' | 'info' | 'warning' | 'error';
+  userId: string; // User ID who should receive this notification
+  type: 'deadline' | 'invoice' | 'budget' | 'communication' | 'onedrive' | 'info' | 'warning' | 'error' | 'task_assigned' | 'task_completed';
   title: string;
   message: string;
   timestamp: Date;
   projectId?: number;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: 'low' | 'medium' | 'high' | 'urgent' | 'normal';
   read: boolean;
   actionUrl?: string;
+  data?: any; // Additional data for the notification
 }
 
 class NotificationService {
   private wss: WebSocketServer | null = null;
-  private clients: Set<WebSocket> = new Set();
+  private clients: Map<WebSocket, string | null> = new Map(); // Map WebSocket to userId
   private notifications: Notification[] = [];
 
   initialize(server: Server) {
@@ -27,22 +29,31 @@ class NotificationService {
 
     this.wss.on('connection', (ws: WebSocket) => {
       logger.info('New WebSocket notification client connected');
-      this.clients.add(ws);
-
-      // Send existing unread notifications to newly connected client
-      const unreadNotifications = this.notifications.filter(n => !n.read);
-      if (unreadNotifications.length > 0) {
-        ws.send(JSON.stringify({
-          type: 'initial',
-          notifications: unreadNotifications
-        }));
-      }
+      // Add client with null userId initially (will be set after auth message)
+      this.clients.set(ws, null);
 
       ws.on('message', (data: string) => {
         try {
           const message = JSON.parse(data.toString());
 
-          if (message.type === 'mark_read') {
+          if (message.type === 'auth') {
+            // Client sends userId to authenticate
+            const userId = message.userId;
+            this.clients.set(ws, userId);
+            logger.info('WebSocket client authenticated', { userId });
+
+            // Send existing unread notifications for this user
+            const userNotifications = this.notifications.filter(n => n.userId === userId && !n.read);
+            if (userNotifications.length > 0) {
+              ws.send(JSON.stringify({
+                type: 'initial',
+                notifications: userNotifications
+              }));
+            }
+
+            // Confirm auth
+            ws.send(JSON.stringify({ type: 'auth_success' }));
+          } else if (message.type === 'mark_read') {
             this.markAsRead(message.notificationId);
           } else if (message.type === 'mark_all_read') {
             this.markAllAsRead();
@@ -55,7 +66,8 @@ class NotificationService {
       });
 
       ws.on('close', () => {
-        logger.info('WebSocket notification client disconnected');
+        const userId = this.clients.get(ws);
+        logger.info('WebSocket notification client disconnected', { userId });
         this.clients.delete(ws);
       });
 
@@ -69,7 +81,7 @@ class NotificationService {
   }
 
   /**
-   * Send a notification to all connected clients
+   * Send a notification to a specific user
    */
   sendNotification(notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) {
     const fullNotification: Notification = {
@@ -86,12 +98,14 @@ class NotificationService {
       this.notifications = this.notifications.slice(-100);
     }
 
+    // Send to specific user only
     this.broadcast({
       type: 'notification',
       notification: fullNotification
-    });
+    }, fullNotification.userId);
 
     logger.info('Notification sent', {
+      userId: notification.userId,
       type: notification.type,
       title: notification.title,
       priority: notification.priority
@@ -125,13 +139,22 @@ class NotificationService {
   }
 
   /**
-   * Get all notifications
+   * Get notifications for a specific user
    */
-  getNotifications(unreadOnly = false): Notification[] {
-    if (unreadOnly) {
-      return this.notifications.filter(n => !n.read);
+  getNotifications(userId?: string, unreadOnly = false): Notification[] {
+    let filtered = this.notifications;
+
+    // Filter by userId if provided
+    if (userId) {
+      filtered = filtered.filter(n => n.userId === userId);
     }
-    return this.notifications;
+
+    // Filter by read status if requested
+    if (unreadOnly) {
+      filtered = filtered.filter(n => !n.read);
+    }
+
+    return filtered;
   }
 
   /**
@@ -153,11 +176,18 @@ class NotificationService {
   }
 
   /**
-   * Broadcast message to all connected clients
+   * Broadcast message to specific users or all connected clients
    */
-  private broadcast(message: any) {
+  private broadcast(message: any, targetUserId?: string) {
     const messageStr = JSON.stringify(message);
-    this.clients.forEach(client => {
+    // Map.forEach passes (value, key), so it's (userId, client) for Map<WebSocket, string>
+    this.clients.forEach((userId: string | null, client: WebSocket) => {
+      // Skip if client is not authenticated
+      if (!userId) return;
+
+      // If targetUserId is specified, only send to that user
+      if (targetUserId && userId !== targetUserId) return;
+
       if (client.readyState === WebSocket.OPEN) {
         client.send(messageStr);
       }
@@ -186,31 +216,34 @@ class NotificationService {
         const deadlineDate = new Date(deadline.dueDate);
         const daysUntil = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-        // Send notification at configured interval
-        if (deadline.notifyDaysBefore === daysUntil && daysUntil > 0) {
-          const project = await storage.getProject(deadline.projectId);
+        // TODO: Send notification at configured interval
+        // Need to determine which user(s) should receive deadline notifications (project manager, admins, etc.)
+        // if (deadline.notifyDaysBefore === daysUntil && daysUntil > 0) {
+        //   const project = await storage.getProject(deadline.projectId);
+        //
+        //   this.sendNotification({
+        //     userId: '<project-manager-or-admin-id>',
+        //     type: 'deadline',
+        //     title: `Scadenza in ${daysUntil} giorni`,
+        //     message: `${deadline.title} - ${project?.code || 'Progetto'}`,
+        //     priority: deadline.priority as any,
+        //     projectId: parseInt(deadline.projectId),
+        //     actionUrl: `/progetti/${deadline.projectId}?tab=scadenzario`
+        //   });
+        // }
 
-          this.sendNotification({
-            type: 'deadline',
-            title: `Scadenza in ${daysUntil} giorni`,
-            message: `${deadline.title} - ${project?.code || 'Progetto'}`,
-            priority: deadline.priority as any,
-            projectId: parseInt(deadline.projectId),
-            actionUrl: `/progetti/${deadline.projectId}?tab=scadenzario`
-          });
-        }
-
-        // Urgent notification for overdue (only if not already marked as overdue status)
-        if (daysUntil < 0 && deadline.status === 'pending') {
-          this.sendNotification({
-            type: 'deadline',
-            title: 'Scadenza superata!',
-            message: `${deadline.title} era prevista per ${deadlineDate.toLocaleDateString('it-IT')}`,
-            priority: 'urgent',
-            projectId: parseInt(deadline.projectId),
-            actionUrl: `/progetti/${deadline.projectId}?tab=scadenzario`
-          });
-        }
+        // TODO: Urgent notification for overdue
+        // if (daysUntil < 0 && deadline.status === 'pending') {
+        //   this.sendNotification({
+        //     userId: '<project-manager-or-admin-id>',
+        //     type: 'deadline',
+        //     title: 'Scadenza superata!',
+        //     message: `${deadline.title} era prevista per ${deadlineDate.toLocaleDateString('it-IT')}`,
+        //     priority: 'urgent',
+        //     projectId: parseInt(deadline.projectId),
+        //     actionUrl: `/progetti/${deadline.projectId}?tab=scadenzario`
+        //   });
+        // }
       }
     } catch (error) {
       logger.error('Error checking deadlines', { error });

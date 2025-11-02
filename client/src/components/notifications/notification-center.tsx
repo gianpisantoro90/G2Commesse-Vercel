@@ -1,4 +1,4 @@
-import { Bell, CheckCheck, Clock, AlertCircle, FileText, Euro, Calendar, MessageSquare, Cloud, Info, AlertTriangle, XCircle } from "lucide-react";
+import { Bell, CheckCheck, Clock, AlertCircle, FileText, Euro, Calendar, MessageSquare, Cloud, Info, AlertTriangle, XCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,13 +22,16 @@ const notificationIcons = {
   info: Info,
   warning: AlertTriangle,
   error: XCircle,
+  task_assigned: FileText,
+  task_completed: CheckCircle2,
 };
 
 const priorityColors = {
-  low: 'bg-blue-100 text-blue-800 border-blue-200',
-  medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  high: 'bg-orange-100 text-orange-800 border-orange-200',
-  urgent: 'bg-red-100 text-red-800 border-red-200',
+  low: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+  normal: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700',
+  medium: 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
+  high: 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+  urgent: 'bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800',
 };
 
 export function NotificationCenter() {
@@ -99,7 +102,7 @@ export function NotificationCenter() {
                     key={notification.id}
                     className={cn(
                       "p-3 rounded-lg mb-2 cursor-pointer transition-colors hover:bg-accent",
-                      !notification.read && "bg-blue-50 border border-blue-100"
+                      !notification.read && "bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800/50"
                     )}
                     onClick={() => handleNotificationClick(notification)}
                   >
