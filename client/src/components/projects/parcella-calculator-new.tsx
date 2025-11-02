@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,17 +8,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calculator, FileText, Copy, Check } from "lucide-react";
+import { Calculator, FileText, Copy, Check, Info } from "lucide-react";
 import {
-  CATEGORIE_DM143,
   calcolaParcelDM2016,
   calcolaFattura,
   formatEuro,
-  PARAMETRI_PRESTAZIONI_Q,
   type ParcellaInputDM2016,
   type ParcellaResultDM2016,
   type FatturaCalculation
 } from "@/lib/parcella-calculator-dm2016";
+import {
+  TAVOLA_Z1_COMPLETA,
+  TAVOLA_Z2_COMPLETA,
+  getCategoriaById,
+  getPrestazioniByFase,
+  type CategoriaOpera
+} from "@/lib/dm2016-tavole-ufficiali";
 
 type WizardStep = 'categoria' | 'prestazioni' | 'calcolo' | 'risultato';
 
@@ -28,16 +33,14 @@ export default function ParcellaCalculator() {
 
   // Dati input
   const [importoOpere, setImportoOpere] = useState<number>(0);
-  const [categoria, setCategoria] = useState<string>('E');
-  const [articolazione, setArticolazione] = useState<string>('01');
-  const [complessita, setComplessita] = useState<'bassa' | 'media' | 'alta'>('media');
+  const [categoriaId, setCategoriaId] = useState<string>('E.01'); // ID completo dalla Tavola Z-1
 
   // Prestazioni selezionate (usando codici Q)
   const [prestazioni, setPrestazioni] = useState<{ [key: string]: boolean }>({});
 
   // Opzioni aggiuntive
   const [bimObbligatorio, setBimObbligatorio] = useState(false);
-  const [incrementoBIM, setIncrementoBIM] = useState(25);
+  const [incrementoBIM, setIncrementoBIM] = useState(10);
   const [speseAccessorie, setSpeseAccessorie] = useState(true);
 
   // Risultati
@@ -56,43 +59,57 @@ export default function ParcellaCalculator() {
     }));
   };
 
+  // Categoria selezionata
+  const categoriaSelezionata = useMemo(() =>
+    getCategoriaById(categoriaId),
+    [categoriaId]
+  );
+
   const handleCalcola = () => {
-    const input: ParcellaInputDM2016 = {
-      importoOpere,
-      categoria,
-      articolazione,
-      gradoComplessita: complessita,
-      prestazioni,
-      opzioni: {
-        bimObbligatorio,
-        incrementoBIM,
-        speseAccessorie
-      }
-    };
+    console.log('🔍 handleCalcola chiamato');
+    console.log('Input:', { importoOpere, categoriaId, prestazioni });
 
-    const risultato = calcolaParcelDM2016(input);
-    setRisultatoParcella(risultato);
+    try {
+      const input: ParcellaInputDM2016 = {
+        importoOpere,
+        categoriaId,
+        prestazioni,
+        opzioni: {
+          bimObbligatorio,
+          incrementoBIM,
+          speseAccessorie
+        }
+      };
 
-    const fattura = calcolaFattura(
-      risultato.compensoTotale,
-      aliquotaCPA,
-      aliquotaIVA,
-      aliquotaRitenuta
-    );
-    setRisultatoFattura(fattura);
+      console.log('📊 Calcolo parcella...');
+      const risultato = calcolaParcelDM2016(input);
+      console.log('✅ Risultato:', risultato);
+      setRisultatoParcella(risultato);
 
-    setCurrentStep('risultato');
+      console.log('💰 Calcolo fattura...');
+      const fattura = calcolaFattura(
+        risultato.compensoTotale,
+        aliquotaCPA,
+        aliquotaIVA,
+        aliquotaRitenuta
+      );
+      console.log('✅ Fattura:', fattura);
+      setRisultatoFattura(fattura);
+
+      console.log('🎯 Cambio step a risultato');
+      setCurrentStep('risultato');
+    } catch (error) {
+      console.error('❌ ERRORE nel calcolo:', error);
+    }
   };
 
   const handleReset = () => {
     setCurrentStep('categoria');
     setImportoOpere(0);
-    setCategoria('E');
-    setArticolazione('01');
-    setComplessita('media');
+    setCategoriaId('E.01');
     setPrestazioni({});
     setBimObbligatorio(false);
-    setIncrementoBIM(25);
+    setIncrementoBIM(10);
     setSpeseAccessorie(true);
     setRisultatoParcella(null);
     setRisultatoFattura(null);
@@ -127,8 +144,6 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const categoriaSelezionata = CATEGORIE_DM143[categoria as keyof typeof CATEGORIE_DM143];
 
   return (
     <div className="space-y-6">
@@ -170,7 +185,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
               <div>
                 <h3 className="text-lg font-semibold mb-4">1. Seleziona Categoria e Importo Opere</h3>
 
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
                   <div>
                     <Label htmlFor="importoOpere">Importo Opere (€) *</Label>
                     <Input
@@ -184,66 +199,44 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                   </div>
 
                   <div>
-                    <Label htmlFor="categoria">Categoria Opera *</Label>
-                    <Select value={categoria} onValueChange={(v) => {
-                      setCategoria(v);
-                      setArticolazione('01');
-                    }}>
-                      <SelectTrigger id="categoria">
+                    <Label htmlFor="categoriaId">Categoria Opera (Tavola Z-1) *</Label>
+                    <Select value={categoriaId} onValueChange={setCategoriaId}>
+                      <SelectTrigger id="categoriaId">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(CATEGORIE_DM143).map(([key, cat]) => (
-                          <SelectItem key={key} value={key}>
-                            {key} - {cat.nome}
+                        {TAVOLA_Z1_COMPLETA.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.id} - {cat.descrizione}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                     {categoriaSelezionata && (
-                      <p className="text-xs text-gray-600 mt-1">{categoriaSelezionata.descrizione}</p>
+                      <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <p className="text-xs text-blue-900 font-medium mb-1">
+                          <Info className="w-3 h-3 inline mr-1" />
+                          Destinazione funzionale:
+                        </p>
+                        <p className="text-xs text-blue-800">{categoriaSelezionata.destinazioneFunzionale}</p>
+                        <div className="mt-2 pt-2 border-t border-blue-200">
+                          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                            Parametro G (complessità): {categoriaSelezionata.G.toFixed(2)}
+                          </Badge>
+                          <p className="text-xs text-blue-600 mt-1">
+                            ✓ Il parametro G è assegnato automaticamente dalla normativa
+                          </p>
+                        </div>
+                      </div>
                     )}
                   </div>
-                </div>
-
-                <div className="mt-4">
-                  <Label htmlFor="articolazione">Articolazione / Fascia di Importo *</Label>
-                  <Select value={articolazione} onValueChange={setArticolazione}>
-                    <SelectTrigger id="articolazione">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoriaSelezionata && Object.entries(categoriaSelezionata.articolazioni).map(([key, desc]) => (
-                        <SelectItem key={key} value={key}>
-                          {categoria}.{key} - {desc}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="mt-4">
-                  <Label htmlFor="complessita">Grado di Complessità (parametro G) *</Label>
-                  <Select value={complessita} onValueChange={(v: any) => setComplessita(v)}>
-                    <SelectTrigger id="complessita">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bassa">🟢 Bassa - Opera semplice (G≈0.90)</SelectItem>
-                      <SelectItem value="media">🟡 Media - Complessità standard (G≈1.00)</SelectItem>
-                      <SelectItem value="alta">🔴 Alta - Opera complessa (G≈1.15)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Il parametro G moltiplica il compenso base secondo Tavola Z-1
-                  </p>
                 </div>
               </div>
 
               <div className="flex justify-end">
                 <Button
                   onClick={() => setCurrentStep('prestazioni')}
-                  disabled={importoOpere <= 0}
+                  disabled={importoOpere <= 0 || !categoriaSelezionata}
                 >
                   Avanti: Seleziona Prestazioni
                 </Button>
@@ -263,45 +256,62 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
 
               <ScrollArea className="h-[500px] pr-4">
                 <div className="space-y-6">
-                  {/* Raggruppa prestazioni per tipo */}
+                  {/* Raggruppa prestazioni per fase dalla Tavola Z-2 */}
                   {[
-                    { gruppo: 'progettazione', titolo: '📐 PROGETTAZIONE', icona: '📐' },
-                    { gruppo: 'direzione', titolo: '👷 DIREZIONE E COORDINAMENTO', icona: '👷' },
-                    { gruppo: 'sicurezza', titolo: '🛡️ SICUREZZA', icona: '🛡️' },
-                    { gruppo: 'collaudo', titolo: '✅ COLLAUDI E VERIFICHE', icona: '✅' },
-                    { gruppo: 'altro', titolo: '📋 ALTRE PRESTAZIONI', icona: '📋' }
-                  ].map(({ gruppo, titolo }) => {
-                    const prestazioniGruppo = Object.entries(PARAMETRI_PRESTAZIONI_Q).filter(
-                      ([_, p]) => p.gruppo === gruppo
-                    );
+                    { fase: 'pianificazione', titolo: '🗺️ PIANIFICAZIONE E PROGRAMMAZIONE' },
+                    { fase: 'progettazione_preliminare', titolo: '📋 PROGETTAZIONE PRELIMINARE / PFTE' },
+                    { fase: 'progettazione_definitiva', titolo: '📐 PROGETTAZIONE DEFINITIVA' },
+                    { fase: 'progettazione_esecutiva', titolo: '🔧 PROGETTAZIONE ESECUTIVA' },
+                    { fase: 'direzione', titolo: '👷 DIREZIONE LAVORI' },
+                    { fase: 'sicurezza', titolo: '🛡️ SICUREZZA (CSP/CSE)' },
+                    { fase: 'collaudo', titolo: '✅ COLLAUDI E VERIFICHE' },
+                    { fase: 'altro', titolo: '📋 ALTRE PRESTAZIONI' }
+                  ].map(({ fase, titolo }) => {
+                    const prestazioniGruppo = getPrestazioniByFase(fase as any);
 
-                    if (prestazioniGruppo.length === 0) return null;
+                    // Filtra solo le prestazioni applicabili alla categoria selezionata
+                    const prestazioniApplicabili = categoriaSelezionata
+                      ? prestazioniGruppo.filter(p => p.Q[categoriaSelezionata.categoria] !== undefined)
+                      : prestazioniGruppo;
+
+                    if (prestazioniApplicabili.length === 0) return null;
 
                     return (
-                      <div key={gruppo}>
-                        <h4 className="font-semibold text-sm text-gray-700 mb-3">{titolo}</h4>
+                      <div key={fase}>
+                        <h4 className="font-semibold text-sm text-gray-700 mb-3">
+                          {titolo}
+                          <Badge variant="outline" className="ml-2 text-xs">
+                            {prestazioniApplicabili.length} prestazioni
+                          </Badge>
+                        </h4>
                         <div className="space-y-2">
-                          {prestazioniGruppo.map(([codice, prestazione]) => (
-                            <label key={codice} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={prestazioni[codice] || false}
-                                onChange={() => handlePrestazioneToggle(codice)}
-                                className="w-4 h-4"
-                              />
-                              <div className="flex-1">
-                                <span className="text-sm font-medium">{prestazione.descrizione}</span>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="outline" className="text-xs">
-                                    {codice}
-                                  </Badge>
-                                  <span className="text-xs text-gray-600">
-                                    Q = {prestazione.Q.toFixed(3)}
-                                  </span>
+                          {prestazioniApplicabili.map((prestazione) => {
+                            const Q = categoriaSelezionata ? prestazione.Q[categoriaSelezionata.categoria] : undefined;
+
+                            return (
+                              <label key={prestazione.codice} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={prestazioni[prestazione.codice] || false}
+                                  onChange={() => handlePrestazioneToggle(prestazione.codice)}
+                                  className="w-4 h-4"
+                                />
+                                <div className="flex-1">
+                                  <span className="text-sm font-medium">{prestazione.descrizione}</span>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-xs">
+                                      {prestazione.codice}
+                                    </Badge>
+                                    {Q !== undefined && (
+                                      <span className="text-xs text-gray-600">
+                                        Q = {Q.toFixed(3)}
+                                      </span>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            </label>
-                          ))}
+                              </label>
+                            );
+                          })}
                         </div>
                       </div>
                     );
@@ -386,7 +396,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       step="5"
                       className="max-w-xs"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Incremento indicativo: 20-30%</p>
+                    <p className="text-xs text-gray-500 mt-1">Incremento indicativo: 10% (DM 17/06/2016)</p>
                   </div>
                 )}
               </div>
