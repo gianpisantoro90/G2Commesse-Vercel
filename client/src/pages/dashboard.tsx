@@ -4,6 +4,7 @@ import TabNavigation from "@/components/layout/tab-navigation";
 import { useAuth } from "@/hooks/useAuth";
 import StatsCard from "@/components/dashboard/stats-card";
 import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
+import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
 import NewProjectForm from "@/components/projects/new-project-form";
@@ -79,7 +80,10 @@ export default function Dashboard() {
                 {/* Second Row - Recent Projects */}
                 <RecentProjectsTable />
 
-                {/* Third Row - Core System Info */}
+                {/* Third Row - Recent Tasks (All users) */}
+                <RecentTasksTable />
+
+                {/* Fourth Row - Core System Info */}
                 <div className="grid gap-6 lg:grid-cols-2">
                   {isAdmin && <StatsCard />}
                   <OneDriveStatusCard />
