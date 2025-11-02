@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Calculator, FileText, Copy, Check, Info } from "lucide-react";
 import {
   calcolaParcelDM2016,
@@ -150,11 +151,11 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Calculator className="w-6 h-6" />
             Calcolatore Parcella Professionale
           </h2>
-          <p className="text-gray-600 mt-1 font-mono text-sm">
+          <p className="text-gray-600 dark:text-gray-400 mt-1 font-mono text-sm">
             CP = ∑(V × G × Q × P) | DM 17/06/2016 + D.Lgs. 36/2023
           </p>
         </div>
@@ -171,7 +172,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
           <div key={step} className="flex items-center flex-1">
             <div className={`flex-1 h-2 rounded-full ${
               currentStep === step ? 'bg-secondary' :
-              index < ['categoria', 'prestazioni', 'calcolo', 'risultato'].indexOf(currentStep) ? 'bg-secondary/50' : 'bg-gray-200'
+              index < ['categoria', 'prestazioni', 'calcolo', 'risultato'].indexOf(currentStep) ? 'bg-secondary/50' : 'bg-gray-200 dark:bg-gray-700'
             }`} />
           </div>
         ))}
@@ -213,17 +214,17 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       </SelectContent>
                     </Select>
                     {categoriaSelezionata && (
-                      <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                        <p className="text-xs text-blue-900 font-medium mb-1">
+                      <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
+                        <p className="text-xs text-blue-900 dark:text-blue-100 font-medium mb-1">
                           <Info className="w-3 h-3 inline mr-1" />
                           Destinazione funzionale:
                         </p>
-                        <p className="text-xs text-blue-800">{categoriaSelezionata.destinazioneFunzionale}</p>
-                        <div className="mt-2 pt-2 border-t border-blue-200">
-                          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
+                        <p className="text-xs text-blue-800 dark:text-blue-200">{categoriaSelezionata.destinazioneFunzionale}</p>
+                        <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-800">
+                          <Badge variant="outline" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 border-green-300 dark:border-green-700">
                             Parametro G (complessità): {categoriaSelezionata.G.toFixed(2)}
                           </Badge>
-                          <p className="text-xs text-blue-600 mt-1">
+                          <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
                             ✓ Il parametro G è assegnato automaticamente dalla normativa
                           </p>
                         </div>
@@ -278,7 +279,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
 
                     return (
                       <div key={fase}>
-                        <h4 className="font-semibold text-sm text-gray-700 mb-3">
+                        <h4 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-3">
                           {titolo}
                           <Badge variant="outline" className="ml-2 text-xs">
                             {prestazioniApplicabili.length} prestazioni
@@ -289,12 +290,10 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                             const Q = categoriaSelezionata ? prestazione.Q[categoriaSelezionata.categoria] : undefined;
 
                             return (
-                              <label key={prestazione.codice} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                                <input
-                                  type="checkbox"
+                              <label key={prestazione.codice} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                                <Checkbox
                                   checked={prestazioni[prestazione.codice] || false}
-                                  onChange={() => handlePrestazioneToggle(prestazione.codice)}
-                                  className="w-4 h-4"
+                                  onCheckedChange={() => handlePrestazioneToggle(prestazione.codice)}
                                 />
                                 <div className="flex-1">
                                   <span className="text-sm font-medium">{prestazione.descrizione}</span>
@@ -303,7 +302,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                                       {prestazione.codice}
                                     </Badge>
                                     {Q !== undefined && (
-                                      <span className="text-xs text-gray-600">
+                                      <span className="text-xs text-gray-600 dark:text-gray-400">
                                         Q = {Q.toFixed(3)}
                                       </span>
                                     )}
@@ -344,7 +343,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
               </div>
 
               {/* Opzioni Calcolo */}
-              <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
+              <div className="space-y-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800">
                 <h4 className="font-semibold text-sm">Opzioni Calcolo Compenso</h4>
 
                 <div className="flex items-center justify-between">
@@ -352,15 +351,14 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                     <Label htmlFor="spese-accessorie" className="text-sm font-medium">
                       Includi Spese Accessorie
                     </Label>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       10-25% del compenso base (secondo DM 17/06/2016)
                     </p>
                   </div>
-                  <input
+                  <Checkbox
                     id="spese-accessorie"
-                    type="checkbox"
                     checked={speseAccessorie}
-                    onChange={(e) => setSpeseAccessorie(e.target.checked)}
+                    onCheckedChange={setSpeseAccessorie}
                     className="w-5 h-5"
                   />
                 </div>
@@ -370,15 +368,14 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                     <Label htmlFor="bim-toggle" className="text-sm font-medium">
                       Metodologia BIM Obbligatoria
                     </Label>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
                       Incremento compenso (D.Lgs. 36/2023 - Nuovo Codice Appalti)
                     </p>
                   </div>
-                  <input
+                  <Checkbox
                     id="bim-toggle"
-                    type="checkbox"
                     checked={bimObbligatorio}
-                    onChange={(e) => setBimObbligatorio(e.target.checked)}
+                    onCheckedChange={setBimObbligatorio}
                     className="w-5 h-5"
                   />
                 </div>
@@ -396,7 +393,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       step="5"
                       className="max-w-xs"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Incremento indicativo: 10% (DM 17/06/2016)</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Incremento indicativo: 10% (DM 17/06/2016)</p>
                   </div>
                 )}
               </div>
@@ -416,7 +413,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       max="100"
                       step="0.1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Cassa Previdenziale (di solito 4%)</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cassa Previdenziale (di solito 4%)</p>
                   </div>
 
                   <div>
@@ -430,7 +427,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       max="100"
                       step="1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Di solito 22%</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Di solito 22%</p>
                   </div>
 
                   <div>
@@ -444,7 +441,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       max="100"
                       step="1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">Di solito 20%</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Di solito 20%</p>
                   </div>
                 </div>
               </div>
@@ -517,7 +514,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[300px]">
-                    <pre className="text-xs font-mono whitespace-pre-wrap text-gray-800">
+                    <pre className="text-xs font-mono whitespace-pre-wrap text-gray-800 dark:text-gray-200">
                       {risultatoParcella.dettagliCalcolo.passaggi.join('\n')}
                     </pre>
                   </ScrollArea>
@@ -532,17 +529,17 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {risultatoParcella.prestazioni.map((prest, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
                       <div className="flex-1">
                         <div className="font-medium">{prest.descrizione}</div>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="outline" className="text-xs">
                             {prest.codice}
                           </Badge>
-                          <span className="text-xs text-gray-600">
+                          <span className="text-xs text-gray-600 dark:text-gray-400">
                             Q = {prest.Q.toFixed(3)}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             ({prest.percentualeEffettiva.toFixed(2)}%)
                           </span>
                         </div>
