@@ -34,9 +34,37 @@ export const projects = pgTable("projects", {
 export const clients = pgTable("clients", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sigla: text("sigla").notNull().unique(),
-  name: text("name").notNull(),
-  city: text("city"),
+  name: text("name").notNull(), // Ragione sociale
+
+  // Dati Anagrafici
+  partitaIva: text("partita_iva"),
+  codiceFiscale: text("codice_fiscale"),
+  formaGiuridica: text("forma_giuridica"), // SRL, SPA, Ditta individuale, Ente pubblico, Privato, etc.
+
+  // Indirizzo completo
+  indirizzo: text("indirizzo"),
+  cap: text("cap"),
+  city: text("city"), // Città
+  provincia: text("provincia"),
+
+  // Contatti
+  email: text("email"),
+  telefono: text("telefono"),
+  pec: text("pec"),
+
+  // Dati Amministrativi/Fatturazione
+  codiceDestinatario: text("codice_destinatario"), // SDI per fatturazione elettronica
+
+  // Referente principale
+  nomeReferente: text("nome_referente"),
+  ruoloReferente: text("ruolo_referente"),
+  emailReferente: text("email_referente"),
+  telefonoReferente: text("telefono_referente"),
+
+  // Altro
+  note: text("note"),
   projectsCount: integer("projects_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const fileRoutings = pgTable("file_routings", {
@@ -111,6 +139,17 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 
 export const insertClientSchema = createInsertSchema(clients).omit({
   id: true,
+  createdAt: true,
+}).extend({
+  // Validazioni personalizzate
+  email: z.string().email("Email non valida").optional().or(z.literal("")),
+  pec: z.string().email("PEC non valida").optional().or(z.literal("")),
+  emailReferente: z.string().email("Email referente non valida").optional().or(z.literal("")),
+  partitaIva: z.string().max(16, "Partita IVA troppo lunga").optional().or(z.literal("")),
+  codiceFiscale: z.string().max(16, "Codice Fiscale troppo lungo").optional().or(z.literal("")),
+  codiceDestinatario: z.string().max(7, "Codice Destinatario deve essere di 7 caratteri").optional().or(z.literal("")),
+  cap: z.string().max(5, "CAP non valido").optional().or(z.literal("")),
+  provincia: z.string().max(2, "Provincia deve essere di 2 caratteri").optional().or(z.literal("")),
 });
 
 export const insertFileRoutingSchema = createInsertSchema(fileRoutings).omit({

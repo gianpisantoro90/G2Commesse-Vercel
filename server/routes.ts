@@ -903,6 +903,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Recalculate clients projects count
+  app.post("/api/clients/sync-counts", async (req, res) => {
+    try {
+      await storage.recalculateClientsProjectsCount();
+      res.json({ message: "Conteggi commesse clienti sincronizzati con successo" });
+    } catch (error) {
+      console.error("Error recalculating clients projects count:", error);
+      res.status(500).json({ message: "Errore nella sincronizzazione dei conteggi" });
+    }
+  });
+
   // File Routing
   app.post("/api/file-routing", async (req, res) => {
     try {

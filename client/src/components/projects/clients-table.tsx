@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -24,16 +25,44 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Client, type Project } from "@shared/schema";
 
-// Schema for edit form
+// Schema for edit form - includes all client fields
 const editClientSchema = z.object({
   sigla: z.string().min(1, "Sigla è obbligatoria").max(10, "Sigla troppo lunga"),
   name: z.string().min(1, "Nome è obbligatorio"),
-  city: z.string().optional(),
+
+  // Dati Anagrafici
+  partitaIva: z.string().max(16, "Partita IVA troppo lunga").optional().or(z.literal("")),
+  codiceFiscale: z.string().max(16, "Codice Fiscale troppo lungo").optional().or(z.literal("")),
+  formaGiuridica: z.string().optional().or(z.literal("")),
+
+  // Indirizzo
+  indirizzo: z.string().optional().or(z.literal("")),
+  cap: z.string().max(5, "CAP non valido").optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  provincia: z.string().max(2, "Provincia deve essere di 2 caratteri").optional().or(z.literal("")),
+
+  // Contatti
+  email: z.string().email("Email non valida").optional().or(z.literal("")),
+  telefono: z.string().optional().or(z.literal("")),
+  pec: z.string().email("PEC non valida").optional().or(z.literal("")),
+
+  // Dati Amministrativi
+  codiceDestinatario: z.string().max(7, "Codice Destinatario deve essere di 7 caratteri").optional().or(z.literal("")),
+
+  // Referente
+  nomeReferente: z.string().optional().or(z.literal("")),
+  ruoloReferente: z.string().optional().or(z.literal("")),
+  emailReferente: z.string().email("Email referente non valida").optional().or(z.literal("")),
+  telefonoReferente: z.string().optional().or(z.literal("")),
+
+  // Note
+  note: z.string().optional().or(z.literal("")),
 });
 
 type EditClientForm = z.infer<typeof editClientSchema>;
@@ -68,7 +97,22 @@ export default function ClientsTable() {
     defaultValues: {
       sigla: "",
       name: "",
+      partitaIva: "",
+      codiceFiscale: "",
+      formaGiuridica: "",
+      indirizzo: "",
+      cap: "",
       city: "",
+      provincia: "",
+      email: "",
+      telefono: "",
+      pec: "",
+      codiceDestinatario: "",
+      nomeReferente: "",
+      ruoloReferente: "",
+      emailReferente: "",
+      telefonoReferente: "",
+      note: "",
     },
   });
 
@@ -108,12 +152,12 @@ export default function ClientsTable() {
           'Content-Type': 'application/json',
         },
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Errore sconosciuto' }));
         throw new Error(errorData.message || `Errore HTTP ${response.status}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -129,6 +173,40 @@ export default function ClientsTable() {
       toast({
         title: "Errore nell'eliminazione",
         description: error?.message || "Impossibile eliminare il cliente",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Sync clients counts mutation
+  const syncCountsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/clients/sync-counts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Errore sconosciuto' }));
+        throw new Error(errorData.message || `Errore HTTP ${response.status}`);
+      }
+
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      toast({
+        title: "Sincronizzazione completata",
+        description: "I conteggi delle commesse sono stati aggiornati",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Sync counts error:", error);
+      toast({
+        title: "Errore nella sincronizzazione",
+        description: error?.message || "Impossibile sincronizzare i conteggi",
         variant: "destructive",
       });
     },
@@ -159,7 +237,22 @@ export default function ClientsTable() {
     editForm.reset({
       sigla: client.sigla,
       name: client.name,
+      partitaIva: client.partitaIva || "",
+      codiceFiscale: client.codiceFiscale || "",
+      formaGiuridica: client.formaGiuridica || "",
+      indirizzo: client.indirizzo || "",
+      cap: client.cap || "",
       city: client.city || "",
+      provincia: client.provincia || "",
+      email: client.email || "",
+      telefono: client.telefono || "",
+      pec: client.pec || "",
+      codiceDestinatario: client.codiceDestinatario || "",
+      nomeReferente: client.nomeReferente || "",
+      ruoloReferente: client.ruoloReferente || "",
+      emailReferente: client.emailReferente || "",
+      telefonoReferente: client.telefonoReferente || "",
+      note: client.note || "",
     });
     setShowEditModal(true);
   };
@@ -235,6 +328,16 @@ export default function ClientsTable() {
             <span className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 text-lg">🔍</span>
           </div>
           <Button
+            variant="outline"
+            onClick={() => syncCountsMutation.mutate()}
+            disabled={syncCountsMutation.isPending}
+            className="border-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900"
+            data-testid="sync-counts"
+            title="Sincronizza i conteggi delle commesse per tutti i clienti"
+          >
+            {syncCountsMutation.isPending ? '⏳' : '🔄'} Sincronizza
+          </Button>
+          <Button
             className="button-g2-primary"
             data-testid="add-client"
           >
@@ -260,8 +363,10 @@ export default function ClientsTable() {
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tl-lg">Sigla</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Nome Cliente</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Città Principale</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Ragione Sociale</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Email</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Telefono</th>
+                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Città</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">N. Commesse</th>
                   <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tr-lg">Azioni</th>
                 </tr>
@@ -272,16 +377,27 @@ export default function ClientsTable() {
                     <td className="py-4 px-4 font-mono text-sm font-semibold text-primary" data-testid={`client-sigla-${client.id}`}>
                       {client.sigla}
                     </td>
-                    <td className="py-4 px-4 text-sm font-semibold dark:text-gray-300" data-testid={`client-name-${client.id}`}>
-                      {client.name}
+                    <td className="py-4 px-4 text-sm dark:text-gray-300" data-testid={`client-name-${client.id}`}>
+                      <div className="font-semibold">{client.name}</div>
+                      {client.formaGiuridica && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {client.formaGiuridica.replace(/_/g, ' ')}
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`client-email-${client.id}`}>
+                      {client.email || "-"}
+                    </td>
+                    <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`client-telefono-${client.id}`}>
+                      {client.telefono || "-"}
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`client-city-${client.id}`}>
                       {client.city || "-"}
                     </td>
                     <td className="py-4 px-4" data-testid={`client-projects-count-${client.id}`}>
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        (client.projectsCount || 0) > 5 
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' 
+                        (client.projectsCount || 0) > 5
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
                           : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                       }`}>
                         {client.projectsCount || 0}
@@ -453,71 +569,304 @@ export default function ClientsTable() {
 
       {/* Edit Client Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Modifica Cliente</DialogTitle>
           </DialogHeader>
-          
+
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-4">
-              <FormField
-                control={editForm.control}
-                name="sigla"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Sigla Cliente *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field}
-                        placeholder="es. ABC"
-                        maxLength={10}
-                        disabled={updateClientMutation.isPending}
-                        data-testid="input-edit-client-sigla"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={editForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nome Cliente *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field}
-                        placeholder="Nome completo del cliente"
-                        disabled={updateClientMutation.isPending}
-                        data-testid="input-edit-client-name"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={editForm.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Città</FormLabel>
-                    <FormControl>
-                      <Input 
-                        {...field}
-                        placeholder="Città principale del cliente"
-                        disabled={updateClientMutation.isPending}
-                        data-testid="input-edit-client-city"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
+            <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-6">
+              <Tabs defaultValue="general" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="general">Generali</TabsTrigger>
+                  <TabsTrigger value="address">Indirizzo</TabsTrigger>
+                  <TabsTrigger value="contacts">Contatti</TabsTrigger>
+                  <TabsTrigger value="referente">Referente</TabsTrigger>
+                </TabsList>
+
+                {/* Tab Generali */}
+                <TabsContent value="general" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="sigla"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Sigla Cliente *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="es. ABC" maxLength={10} disabled={updateClientMutation.isPending} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={editForm.control}
+                      name="formaGiuridica"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Forma Giuridica</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value} disabled={updateClientMutation.isPending}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleziona..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="SRL">SRL</SelectItem>
+                              <SelectItem value="SPA">SPA</SelectItem>
+                              <SelectItem value="DITTA_INDIVIDUALE">Ditta Individuale</SelectItem>
+                              <SelectItem value="ENTE_PUBBLICO">Ente Pubblico</SelectItem>
+                              <SelectItem value="PRIVATO">Privato</SelectItem>
+                              <SelectItem value="ALTRO">Altro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={editForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ragione Sociale *</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Nome completo del cliente" disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="partitaIva"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Partita IVA</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="IT12345678901" maxLength={16} disabled={updateClientMutation.isPending} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={editForm.control}
+                      name="codiceFiscale"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Codice Fiscale</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="RSSMRA85M01H501Z" maxLength={16} disabled={updateClientMutation.isPending} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={editForm.control}
+                    name="codiceDestinatario"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Codice Destinatario SDI</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="ABC1234" maxLength={7} disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* Tab Indirizzo */}
+                <TabsContent value="address" className="space-y-4">
+                  <FormField
+                    control={editForm.control}
+                    name="indirizzo"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Indirizzo</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Via, numero civico" disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="cap"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CAP</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="00100" maxLength={5} disabled={updateClientMutation.isPending} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={editForm.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Città</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Roma" disabled={updateClientMutation.isPending} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={editForm.control}
+                      name="provincia"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Provincia</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="RM" maxLength={2} disabled={updateClientMutation.isPending} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* Tab Contatti */}
+                <TabsContent value="contacts" className="space-y-4">
+                  <FormField
+                    control={editForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Principale</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="info@cliente.it" disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="pec"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>PEC</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="pec@cliente.it" disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="telefono"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefono</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" placeholder="+39 06 12345678" disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="note"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Note</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} placeholder="Note aggiuntive sul cliente..." rows={4} disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* Tab Referente */}
+                <TabsContent value="referente" className="space-y-4">
+                  <FormField
+                    control={editForm.control}
+                    name="nomeReferente"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nome Referente</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Mario Rossi" disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="ruoloReferente"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ruolo/Funzione</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="es. Responsabile Tecnico, Amministratore..." disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="emailReferente"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Referente</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="email" placeholder="mario.rossi@cliente.it" disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="telefonoReferente"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Telefono Referente</FormLabel>
+                        <FormControl>
+                          <Input {...field} type="tel" placeholder="+39 333 1234567" disabled={updateClientMutation.isPending} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
+
               <DialogFooter>
                 <Button
                   type="button"
