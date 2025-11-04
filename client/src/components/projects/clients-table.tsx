@@ -228,16 +228,18 @@ export default function ClientsTable() {
   // Handle view client projects
   const handleViewProjects = (client: Client) => {
     // Filtro robusto: confronta case-insensitive e trimmed, gestisce null/undefined
-    const clientSigla = client.sigla?.trim().toLowerCase();
+    // IMPORTANTE: project.client contiene il NOME completo, non la sigla!
+    const clientName = client.name?.trim().toLowerCase();
     const clientProjects = allProjects.filter(project => {
       const projectClient = project.client?.trim().toLowerCase();
-      return projectClient && clientSigla && projectClient === clientSigla;
+      return projectClient && clientName && projectClient === clientName;
     });
-    console.log(`Visualizzazione commesse per cliente ${client.sigla}:`, {
-      clientSigla,
+    console.log(`Visualizzazione commesse per cliente ${client.name} (${client.sigla}):`, {
+      clientName,
+      clientSigla: client.sigla,
       totalProjects: allProjects.length,
       filteredProjects: clientProjects.length,
-      projectClients: allProjects.map(p => p.client)
+      sampleProjectClients: allProjects.slice(0, 5).map(p => ({ code: p.code, client: p.client }))
     });
     setSelectedClient(client);
     setSelectedClientProjects(clientProjects);
@@ -283,10 +285,11 @@ export default function ClientsTable() {
   // Handle delete client
   const handleDeleteClient = async (client: Client) => {
     // Filtro robusto: confronta case-insensitive e trimmed, gestisce null/undefined
-    const clientSigla = client.sigla?.trim().toLowerCase();
+    // IMPORTANTE: project.client contiene il NOME completo, non la sigla!
+    const clientName = client.name?.trim().toLowerCase();
     const clientProjectsCount = allProjects.filter(project => {
       const projectClient = project.client?.trim().toLowerCase();
-      return projectClient && clientSigla && projectClient === clientSigla;
+      return projectClient && clientName && projectClient === clientName;
     }).length;
 
     if (clientProjectsCount > 0) {
