@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +23,7 @@ export default function UserManagementPanel() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -29,6 +32,14 @@ export default function UserManagementPanel() {
     email: '',
     fullName: '',
     password: '',
+    role: 'user' as 'admin' | 'user',
+    active: true,
+  });
+
+  const [editFormData, setEditFormData] = useState({
+    username: '',
+    email: '',
+    fullName: '',
     role: 'user' as 'admin' | 'user',
     active: true,
   });
@@ -113,6 +124,50 @@ export default function UserManagementPanel() {
       toast({
         title: "Errore",
         description: error.message || "Impossibile aggiornare l'utente",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleOpenEditDialog = (user: User) => {
+    setEditingUser(user);
+    setEditFormData({
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      active: user.active,
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!editingUser) return;
+
+    if (!editFormData.username || !editFormData.email || !editFormData.fullName) {
+      toast({
+        title: "Errore",
+        description: "Tutti i campi sono obbligatori",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await apiRequest("PUT", `/api/users/${editingUser.id}`, editFormData);
+      toast({
+        title: "Successo",
+        description: "Utente modificato con successo",
+      });
+      setShowEditDialog(false);
+      setEditingUser(null);
+      loadUsers();
+    } catch (error: any) {
+      toast({
+        title: "Errore",
+        description: error.message || "Impossibile modificare l'utente",
         variant: "destructive",
       });
     }
@@ -330,30 +385,33 @@ export default function UserManagementPanel() {
                     {new Date(user.createdAt).toLocaleDateString('it-IT')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    {user.id !== currentUser?.id && (
+                    {user.id !== currentUser?.id ? (
                       <>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleUpdateUser(user.id, {
-                            role: user.role === 'admin' ? 'user' : 'admin'
-                          })}
+                          onClick={() => handleOpenEditDialog(user)}
+                          className="text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900"
                         >
-                          {user.role === 'admin' ? '↓ User' : '↑ Admin'}
+                          ✏️ Modifica
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
                           onClick={() => handleDeleteUser(user.id, user.username)}
                         >
-                          Elimina
+                          🗑️ Elimina
                         </Button>
                       </>
-                    )}
-                    {user.id === currentUser?.id && (
-                      <span className="text-xs text-gray-400 italic">
-                        (Tu)
-                      </span>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditDialog(user)}
+                        className="text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900"
+                      >
+                        ✏️ Modifica Profilo
+                      </Button>
                     )}
                   </td>
                 </tr>
@@ -368,6 +426,124 @@ export default function UserManagementPanel() {
           Nessun utente trovato
         </div>
       )}
+
+      {/* Edit User Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingUser?.id === currentUser?.id ? 'Modifica Profilo' : 'Modifica Utente'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveEdit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-username">Username *</Label>
+                <Input
+                  id="edit-username"
+                  value={editFormData.username}
+                  onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })}
+                  placeholder="mario.rossi"
+                  required
+                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-fullName">Nome Completo *</Label>
+                <Input
+                  id="edit-fullName"
+                  value={editFormData.fullName}
+                  onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
+                  placeholder="Mario Rossi"
+                  required
+                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-email">Email *</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  placeholder="mario.rossi@example.com"
+                  required
+                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-role">Ruolo *</Label>
+                <Select
+                  value={editFormData.role}
+                  onValueChange={(value) => setEditFormData({ ...editFormData, role: value as 'admin' | 'user' })}
+                  disabled={editingUser?.id === currentUser?.id}
+                >
+                  <SelectTrigger id="edit-role" className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <SelectItem value="user" className="text-gray-900 dark:text-white">Utilizzatore</SelectItem>
+                    <SelectItem value="admin" className="text-gray-900 dark:text-white">Amministratore</SelectItem>
+                  </SelectContent>
+                </Select>
+                {editingUser?.id === currentUser?.id && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Non puoi modificare il tuo ruolo
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                id="edit-active"
+                type="checkbox"
+                checked={editFormData.active}
+                onChange={(e) => setEditFormData({ ...editFormData, active: e.target.checked })}
+                className="w-4 h-4"
+                disabled={editingUser?.id === currentUser?.id}
+              />
+              <Label htmlFor="edit-active">Utente attivo</Label>
+              {editingUser?.id === currentUser?.id && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  (Non puoi disattivare il tuo account)
+                </span>
+              )}
+            </div>
+
+            {editingUser && (
+              <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-sm">
+                <p className="text-gray-600 dark:text-gray-400">
+                  <strong>Creato il:</strong> {new Date(editingUser.createdAt).toLocaleDateString('it-IT', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowEditDialog(false)}
+              >
+                Annulla
+              </Button>
+              <Button type="submit" className="bg-primary hover:bg-primary/90">
+                Salva Modifiche
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

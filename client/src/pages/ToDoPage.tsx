@@ -12,11 +12,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTaskSchema, type Task, type Project, type User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, CheckCircle2, Circle, XCircle, Clock, Trash2, Edit, AlertCircle } from "lucide-react";
+import { Plus, CheckCircle2, Circle, XCircle, Clock, Trash2, Edit, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -51,6 +52,7 @@ export default function ToDoPage() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -155,6 +157,19 @@ export default function ToDoPage() {
 
   const counts = getTaskCounts();
 
+  const toggleTaskExpansion = (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedTasks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId);
+      } else {
+        newSet.add(taskId);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-g2-accent dark:bg-gray-950">
       <Header />
@@ -232,16 +247,16 @@ export default function ToDoPage() {
             {/* Tasks List */}
             <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                   <div>
                     <CardTitle className="text-gray-900 dark:text-white">Task</CardTitle>
                     <CardDescription className="text-gray-600 dark:text-gray-400">
                       Visualizza e gestisci le task
                     </CardDescription>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                     <Select value={filterProject} onValueChange={setFilterProject}>
-                      <SelectTrigger className="w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                      <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                         <SelectValue placeholder="Tutti i progetti" />
                       </SelectTrigger>
                       <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -252,7 +267,7 @@ export default function ToDoPage() {
                       </SelectContent>
                     </Select>
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger className="w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                      <SelectTrigger className="w-full sm:w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                         <SelectValue placeholder="Tutti gli stati" />
                       </SelectTrigger>
                       <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -263,7 +278,7 @@ export default function ToDoPage() {
                       </SelectContent>
                     </Select>
                     <Select value={filterPriority} onValueChange={setFilterPriority}>
-                      <SelectTrigger className="w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
+                      <SelectTrigger className="w-full sm:w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                         <SelectValue placeholder="Tutte le priorità" />
                       </SelectTrigger>
                       <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -307,58 +322,89 @@ export default function ToDoPage() {
                           const StatusIcon = statusInfo.icon;
                           const overdueTask = isOverdue(task);
 
+                          const isExpanded = expandedTasks.has(task.id);
+                          const hasDescription = task.description && task.description.trim() !== '';
+
                           return (
                             <div
                               key={task.id}
-                              onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
-                              className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                              className="rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                               data-testid={`task-item-${task.id}`}
                             >
+                              {/* Main task row */}
                               <div
-                                className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-                                  updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
-                                }}
-                                onMouseDown={(e) => {
-                                  e.stopPropagation();
-                                }}
-                                title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                                onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
+                                className="flex items-center gap-4 p-4 cursor-pointer"
                               >
-                                <StatusIcon className={`w-5 h-5 pointer-events-none ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-semibold text-gray-900 dark:text-white truncate">{task.title}</h4>
-                                  <Badge variant="outline" className={`${priorityInfo.color} flex-shrink-0`}>
-                                    {priorityInfo.label}
-                                  </Badge>
-                                  {overdueTask && (
-                                    <Badge variant="outline" className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800 flex-shrink-0">
-                                      <AlertCircle className="w-3 h-3 mr-1" />
-                                      Scaduta
+                                <div
+                                  className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+                                    updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
+                                  }}
+                                  onMouseDown={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                  title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                                >
+                                  <StatusIcon className={`w-5 h-5 pointer-events-none ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <h4 className="font-semibold text-gray-900 dark:text-white truncate">{task.title}</h4>
+                                    <Badge variant="outline" className={`${priorityInfo.color} flex-shrink-0`}>
+                                      {priorityInfo.label}
                                     </Badge>
-                                  )}
+                                    {overdueTask && (
+                                      <Badge variant="outline" className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800 flex-shrink-0">
+                                        <AlertCircle className="w-3 h-3 mr-1" />
+                                        Scaduta
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                    <span>{getProjectName(task.projectId)}</span>
+                                    <span>•</span>
+                                    <span>Assegnata a: {getUserName(task.assignedToId)}</span>
+                                    {task.dueDate && (
+                                      <>
+                                        <span>•</span>
+                                        <span className={overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : ''}>
+                                          Scadenza: {format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                  <span>{getProjectName(task.projectId)}</span>
-                                  <span>•</span>
-                                  <span>Assegnata a: {getUserName(task.assignedToId)}</span>
-                                  {task.dueDate && (
-                                    <>
-                                      <span>•</span>
-                                      <span className={overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : ''}>
-                                        Scadenza: {format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}
-                                      </span>
-                                    </>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
+                                  {hasDescription && (
+                                    <button
+                                      onClick={(e) => toggleTaskExpansion(task.id, e)}
+                                      className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+                                      title={isExpanded ? "Nascondi descrizione" : "Mostra descrizione"}
+                                    >
+                                      {isExpanded ? (
+                                        <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                      ) : (
+                                        <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                      )}
+                                    </button>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex-shrink-0">
-                                <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
-                              </div>
+
+                              {/* Expandable description */}
+                              {hasDescription && isExpanded && (
+                                <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-800">
+                                  <div className="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                                    <p className="font-medium text-gray-900 dark:text-white mb-1">Descrizione:</p>
+                                    {task.description}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -465,19 +511,15 @@ function CreateTaskForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-task-project">
-                      <SelectValue placeholder="Seleziona progetto" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <SelectItem value="none" className="text-gray-900 dark:text-white">Nessun progetto</SelectItem>
-                    {projects.map(p => (
-                      <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code} - {p.object}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <ProjectCombobox
+                    projects={projects}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Cerca per codice..."
+                    data-testid="select-task-project"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -733,19 +775,16 @@ function TaskDetailForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || undefined} disabled={!isAdmin}>
-                  <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed" data-testid="select-edit-task-project">
-                      <SelectValue placeholder="Seleziona progetto" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <SelectItem value="none" className="text-gray-900 dark:text-white">Nessun progetto</SelectItem>
-                    {projects.map(p => (
-                      <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <ProjectCombobox
+                    projects={projects}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    placeholder="Cerca per codice..."
+                    disabled={!isAdmin}
+                    data-testid="select-edit-task-project"
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

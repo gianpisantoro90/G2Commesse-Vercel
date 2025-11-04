@@ -22,6 +22,7 @@ export interface IStorage {
   createClient(client: InsertClient): Promise<Client>;
   updateClient(id: string, client: Partial<InsertClient>): Promise<Client | undefined>;
   deleteClient(id: string): Promise<boolean>;
+  recalculateClientsProjectsCount(): Promise<void>;
   
   // File Routings
   getFileRouting(id: string): Promise<FileRouting | undefined>;
@@ -238,6 +239,27 @@ export class MemStorage implements IStorage {
 
   async deleteClient(id: string): Promise<boolean> {
     return this.clients.delete(id);
+  }
+
+  async recalculateClientsProjectsCount(): Promise<void> {
+    const allProjects = await this.getAllProjects();
+    const allClients = await this.getAllClients();
+
+    // Count projects for each client by matching client name
+    const projectCounts = new Map<string, number>();
+
+    for (const project of allProjects) {
+      const count = projectCounts.get(project.client) || 0;
+      projectCounts.set(project.client, count + 1);
+    }
+
+    // Update each client's projectsCount
+    for (const client of allClients) {
+      const count = projectCounts.get(client.name) || 0;
+      client.projectsCount = count;
+    }
+
+    console.log('✅ Recalculated projects count for all clients (MemStorage)');
   }
 
   // File Routings
@@ -831,6 +853,32 @@ export class DatabaseStorage implements IStorage {
   async deleteClient(id: string): Promise<boolean> {
     const result = await db.delete(clients).where(eq(clients.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  async recalculateClientsProjectsCount(): Promise<void> {
+    const allProjects = await this.getAllProjects();
+    const allClients = await this.getAllClients();
+
+    // Count projects for each client by matching client name
+    const projectCounts = new Map<string, number>();
+
+    for (const project of allProjects) {
+      const count = projectCounts.get(project.client) || 0;
+      projectCounts.set(project.client, count + 1);
+    }
+
+    // Update each client's projectsCount in database
+    for (const client of allClients) {
+      const count = projectCounts.get(client.name) || 0;
+      if (client.projectsCount !== count) {
+        await db
+          .update(clients)
+          .set({ projectsCount: count })
+          .where(eq(clients.id, client.id));
+      }
+    }
+
+    console.log('✅ Recalculated projects count for all clients (DatabaseStorage)');
   }
 
   // File Routings
@@ -1523,6 +1571,10 @@ class FallbackStorage implements IStorage {
 
   async deleteClient(id: string): Promise<boolean> {
     return this.executeWithFallback(storage => storage.deleteClient(id));
+  }
+
+  async recalculateClientsProjectsCount(): Promise<void> {
+    return this.executeWithFallback(storage => storage.recalculateClientsProjectsCount());
   }
 
   async getFileRouting(id: string): Promise<FileRouting | undefined> {
