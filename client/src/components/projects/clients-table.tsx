@@ -69,6 +69,7 @@ type EditClientForm = z.infer<typeof editClientSchema>;
 
 export default function ClientsTable() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedClientProjects, setSelectedClientProjects] = useState<Project[] | null>(null);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -226,7 +227,19 @@ export default function ClientsTable() {
 
   // Handle view client projects
   const handleViewProjects = (client: Client) => {
-    const clientProjects = allProjects.filter(project => project.client === client.sigla);
+    // Filtro robusto: confronta case-insensitive e trimmed, gestisce null/undefined
+    const clientSigla = client.sigla?.trim().toLowerCase();
+    const clientProjects = allProjects.filter(project => {
+      const projectClient = project.client?.trim().toLowerCase();
+      return projectClient && clientSigla && projectClient === clientSigla;
+    });
+    console.log(`Visualizzazione commesse per cliente ${client.sigla}:`, {
+      clientSigla,
+      totalProjects: allProjects.length,
+      filteredProjects: clientProjects.length,
+      projectClients: allProjects.map(p => p.client)
+    });
+    setSelectedClient(client);
     setSelectedClientProjects(clientProjects);
     setShowProjectsModal(true);
   };
@@ -269,7 +282,12 @@ export default function ClientsTable() {
 
   // Handle delete client
   const handleDeleteClient = async (client: Client) => {
-    const clientProjectsCount = allProjects.filter(project => project.client === client.sigla).length;
+    // Filtro robusto: confronta case-insensitive e trimmed, gestisce null/undefined
+    const clientSigla = client.sigla?.trim().toLowerCase();
+    const clientProjectsCount = allProjects.filter(project => {
+      const projectClient = project.client?.trim().toLowerCase();
+      return projectClient && clientSigla && projectClient === clientSigla;
+    }).length;
 
     if (clientProjectsCount > 0) {
       toast({
@@ -512,9 +530,7 @@ export default function ClientsTable() {
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Commesse Cliente: {selectedClientProjects && selectedClientProjects.length > 0 
-                ? allProjects.find(p => p.client === selectedClientProjects[0]?.client)?.client 
-                : 'Cliente'}
+              Commesse Cliente: {selectedClient?.name || 'Cliente'} ({selectedClient?.sigla})
             </DialogTitle>
           </DialogHeader>
           
