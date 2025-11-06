@@ -231,6 +231,52 @@ class EmailPoller {
   }
 
   /**
+   * Decide if email should be auto-imported based on AI analysis
+   *
+   * Rules:
+   * - Single match with confidence > 0.9 → Auto-import
+   * - Multiple matches: auto-import only if best match > 0.9 AND gap to 2nd > 0.2
+   * - Otherwise → Manual review required
+   */
+  private shouldAutoImportEmail(analysis: any): boolean {
+    const matches = analysis.projectMatches || [];
+
+    // No matches at all
+    if (matches.length === 0) {
+      return false;
+    }
+
+    // Single match
+    if (matches.length === 1) {
+      return matches[0].confidence > 0.9;
+    }
+
+    // Multiple matches: require very high confidence AND clear winner
+    const bestMatch = matches[0]; // Already sorted by confidence
+    const secondBest = matches[1];
+
+    const isHighConfidence = bestMatch.confidence > 0.9;
+    const hasClearGap = (bestMatch.confidence - secondBest.confidence) > 0.2;
+
+    if (isHighConfidence && hasClearGap) {
+      logger.info('Auto-import decision: Clear winner among multiple matches', {
+        bestConfidence: bestMatch.confidence,
+        secondConfidence: secondBest.confidence,
+        gap: (bestMatch.confidence - secondBest.confidence).toFixed(2),
+      });
+      return true;
+    }
+
+    logger.info('Manual review required: Multiple plausible matches', {
+      matchesCount: matches.length,
+      bestConfidence: bestMatch.confidence,
+      secondConfidence: secondBest.confidence,
+    });
+
+    return false;
+  }
+
+  /**
    * Process a single email
    */
   private async processEmail(emailData: { uid: number; parsed: ParsedMail }) {
@@ -292,10 +338,14 @@ class EmailPoller {
       logger.info('AI analysis complete', {
         projectCode: analysis.projectCode || 'No match',
         confidence: analysis.confidence,
+        matchesCount: analysis.projectMatches?.length || 0,
       });
 
-      // If high confidence, auto-import
-      if (analysis.projectId && analysis.confidence > 0.7) {
+      // Intelligent auto-import decision based on matches
+      const shouldAutoImport = this.shouldAutoImportEmail(analysis);
+
+      if (shouldAutoImport && analysis.projectId) {
+        // Auto-import with high confidence
         const communication = await this.storage.createCommunication({
           projectId: analysis.projectId,
           type: parsedEmail.from.email.includes('@pec.') ? 'pec' : 'email',
@@ -323,16 +373,29 @@ class EmailPoller {
         logger.info('Communication auto-imported', {
           communicationId: communication.id,
           projectCode: analysis.projectCode,
+          confidence: analysis.confidence,
+          reasoning: analysis.projectMatches?.[0]?.reasoning,
         });
 
         // Mark email as read
         await this.markAsRead(emailData.uid);
       } else {
-        logger.warn('Low confidence, email not auto-imported', {
+        // Multiple matches or low confidence - requires manual review
+        const matchesInfo = analysis.projectMatches?.map(m => ({
+          code: m.projectCode,
+          confidence: m.confidence,
+          reasoning: m.reasoning.substring(0, 100),
+        })) || [];
+
+        logger.warn('Email requires manual review', {
+          reason: !analysis.projectId ? 'No project match' : 'Multiple plausible matches or low confidence',
           confidence: analysis.confidence,
-          projectCode: analysis.projectCode,
+          matchesCount: analysis.projectMatches?.length || 0,
+          matches: matchesInfo,
         });
-        // TODO: Store in pending emails for manual review
+
+        // TODO: Store in pending emails table for manual review by admin
+        // This will be implemented in Phase 2 UI
       }
     } catch (error) {
       logger.error('Failed to process email', { error });
