@@ -394,8 +394,40 @@ class EmailPoller {
           matches: matchesInfo,
         });
 
-        // TODO: Store in pending emails table for manual review by admin
-        // This will be implemented in Phase 2 UI
+        // Store email for manual review (no projectId assigned yet)
+        const communication = await this.storage.createCommunication({
+          projectId: null, // Will be assigned when user selects from suggestions
+          type: parsedEmail.from.email.includes('@pec.') ? 'pec' : 'email',
+          direction: 'incoming',
+          subject: parsedEmail.subject,
+          body: parsedEmail.bodyText,
+          sender: `${parsedEmail.from.name || ''} <${parsedEmail.from.email}>`.trim(),
+          recipient: parsedEmail.to.map(t => t.email).join(', '),
+          isImportant: analysis.isImportant,
+          tags: analysis.suggestedTags,
+          attachments: parsedEmail.attachments.map(a => ({
+            name: a.filename,
+            size: a.size,
+          })),
+          communicationDate: parsedEmail.date,
+          emailMessageId: parsedEmail.messageId,
+          emailHeaders: parsedEmail.headers,
+          emailHtml: parsedEmail.bodyHtml,
+          emailText: parsedEmail.bodyText,
+          autoImported: false, // Requires manual review
+          aiSuggestions: analysis, // Contains all projectMatches for UI
+          importedAt: new Date(),
+        });
+
+        logger.info('Communication saved for manual review', {
+          communicationId: communication.id,
+          matchesCount: analysis.projectMatches?.length || 0,
+          bestMatch: analysis.projectMatches?.[0]?.projectCode,
+          bestConfidence: analysis.projectMatches?.[0]?.confidence,
+        });
+
+        // Mark email as read to avoid reprocessing
+        await this.markAsRead(emailData.uid);
       }
     } catch (error) {
       logger.error('Failed to process email', { error });

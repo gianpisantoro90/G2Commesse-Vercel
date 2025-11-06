@@ -16,6 +16,9 @@ import Scadenzario from "@/components/projects/scadenzario";
 import RegistroComunicazioni from "@/components/projects/registro-comunicazioni";
 import GestioneRisorse from "@/components/projects/gestione-risorse";
 import KpiDashboard from "@/components/projects/kpi-dashboard";
+import { CommunicationsReview } from "@/components/ai-review/communications-review";
+import { TasksReview } from "@/components/ai-review/tasks-review";
+import { DeadlinesReview } from "@/components/ai-review/deadlines-review";
 import BulkRenameForm from "@/components/routing/bulk-rename-form";
 import BulkRenameResults from "@/components/routing/bulk-rename-results";
 import OneDriveAutoRouting from "@/components/routing/onedrive-auto-routing";
@@ -217,6 +220,31 @@ export default function Dashboard() {
                       <ClientsTable />
                     </TabsContent>
                   )}
+                </Tabs>
+              </div>
+            )}
+
+            {/* Revisione AI Panel (Admin only) */}
+            {activeTab === "revisione-ai" && isAdmin && (
+              <div className="space-y-6" data-testid="revisione-ai-panel">
+                <Tabs defaultValue="communications" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="communications">Comunicazioni da Rivedere</TabsTrigger>
+                    <TabsTrigger value="tasks">Task Proposte</TabsTrigger>
+                    <TabsTrigger value="deadlines">Scadenze Proposte</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="communications">
+                    <CommunicationsReview />
+                  </TabsContent>
+
+                  <TabsContent value="tasks">
+                    <TasksReview />
+                  </TabsContent>
+
+                  <TabsContent value="deadlines">
+                    <DeadlinesReview />
+                  </TabsContent>
                 </Tabs>
               </div>
             )}

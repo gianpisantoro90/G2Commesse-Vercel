@@ -1059,7 +1059,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCommunication(insertCommunication: InsertCommunication): Promise<Communication> {
-    const [communication] = await db.insert(communications).values(insertCommunication).returning();
+    // CRITICAL FIX: Drizzle/Neon doesn't serialize JavaScript objects to JSONB correctly
+    // We need to explicitly serialize object-type JSONB fields (arrays work fine)
+    const dataToInsert = {
+      ...insertCommunication,
+      // Force serialization of object-type JSONB fields by round-tripping through JSON
+      emailHeaders: insertCommunication.emailHeaders
+        ? JSON.parse(JSON.stringify(insertCommunication.emailHeaders))
+        : insertCommunication.emailHeaders,
+      aiSuggestions: insertCommunication.aiSuggestions
+        ? JSON.parse(JSON.stringify(insertCommunication.aiSuggestions))
+        : insertCommunication.aiSuggestions,
+      aiSuggestionsStatus: insertCommunication.aiSuggestionsStatus
+        ? JSON.parse(JSON.stringify(insertCommunication.aiSuggestionsStatus))
+        : insertCommunication.aiSuggestionsStatus,
+    };
+
+    const [communication] = await db.insert(communications).values(dataToInsert).returning();
     return communication;
   }
 

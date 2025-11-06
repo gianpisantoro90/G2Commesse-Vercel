@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
 import Dashboard from "@/pages/dashboard";
+import RevisioneAI from "@/pages/revisione-ai";
 import { LoginPage } from "@/pages/LoginPage";
 import { useAuth } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -25,6 +26,7 @@ function AuthenticatedRouter() {
     <Switch>
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/revisione-ai" component={RevisioneAI} />
       <Route>
         <Dashboard />
       </Route>

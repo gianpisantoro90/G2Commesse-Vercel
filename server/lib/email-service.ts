@@ -168,15 +168,23 @@ class EmailService {
         }
       }
 
-      // Use AI if API key is available and no high-confidence match yet
-      if (anthropicApiKey && confidence < 0.8) {
+      // ALWAYS use AI if available to do intelligent matching on all fields
+      if (anthropicApiKey) {
         try {
+          logger.info('Calling AI for intelligent project matching', {
+            hasRegexMatch: !!projectCode,
+            regexConfidence: confidence,
+            totalProjects: projects.length
+          });
+
           const aiResult = await this.callClaudeForEmailAnalysis(email, projects, anthropicApiKey);
-          if (aiResult.confidence > confidence) {
-            projectCode = aiResult.projectCode;
-            projectId = aiResult.projectId;
-            confidence = aiResult.confidence;
-          }
+
+          // AI result is always better than regex because it analyzes all fields
+          logger.info('AI analysis returned', {
+            projectCode: aiResult.projectCode,
+            confidence: aiResult.confidence,
+            matchesCount: aiResult.projectMatches?.length || 0
+          });
 
           return aiResult;
         } catch (aiError) {
@@ -188,10 +196,30 @@ class EmailService {
       const extractedData = this.extractBasicData(email);
       const suggestedTags = this.generateBasicTags(email);
 
+      // Populate projectMatches if we have a match from regex
+      const projectMatches: AIEmailAnalysis['projectMatches'] = [];
+      if (projectCode && projectId) {
+        const matchedProject = projects.find(p => p.id === projectId);
+        if (matchedProject) {
+          projectMatches.push({
+            projectId: matchedProject.id,
+            projectCode: matchedProject.code,
+            confidence: confidence,
+            reasoning: `Codice progetto "${matchedProject.code}" trovato nell'oggetto dell'email (regex match)`,
+            matchedFields: ['code']
+          });
+          logger.info('Regex-based project match converted to projectMatches format', {
+            projectCode: matchedProject.code,
+            confidence
+          });
+        }
+      }
+
       return {
         projectCode,
         projectId,
         confidence,
+        projectMatches,
         extractedData,
         suggestedTags,
         isImportant: this.detectImportance(email),
@@ -201,6 +229,7 @@ class EmailService {
       logger.error('Error analyzing email', { error });
       return {
         confidence: 0,
+        projectMatches: [],
         extractedData: {},
         suggestedTags: [],
         isImportant: false,
@@ -322,9 +351,37 @@ RISPOSTA IN JSON (esempio):
 
       // Legacy: Find projectId from projectCode if provided
       if (analysis.projectCode) {
+        logger.info('AI returned projectCode in legacy format, searching in database', {
+          projectCode: analysis.projectCode,
+          totalProjects: projects.length,
+          projectCodes: projects.map(p => p.code).slice(0, 10) // Show first 10 for debugging
+        });
+
         const matchedProject = projects.find(p => p.code.toUpperCase() === analysis.projectCode.toUpperCase());
+
         if (matchedProject) {
           analysis.projectId = matchedProject.id;
+
+          // If projectMatches is empty but we have legacy fields, convert to new format
+          if (analysis.projectMatches.length === 0 && analysis.confidence > 0) {
+            analysis.projectMatches.push({
+              projectId: matchedProject.id,
+              projectCode: matchedProject.code,
+              confidence: analysis.confidence,
+              reasoning: `Codice progetto "${matchedProject.code}" trovato nell'oggetto dell'email`,
+              matchedFields: ['code']
+            });
+
+            logger.info('✅ Converted legacy AI response to projectMatches format', {
+              projectCode: matchedProject.code,
+              confidence: analysis.confidence
+            });
+          }
+        } else {
+          logger.warn('⚠️ Project code from AI not found in database', {
+            searchedCode: analysis.projectCode,
+            availableProjects: projects.length
+          });
         }
       }
 

@@ -869,6 +869,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Communications pending AI review - have aiSuggestions but no projectId assigned
+  app.get("/api/communications/pending-review", async (req, res) => {
+    try {
+      const allCommunications = await storage.getAllCommunications();
+
+      // Filter communications that need manual review:
+      // - Have aiSuggestions (AI analysis completed)
+      // - Don't have a projectId assigned yet
+      // - Haven't been dismissed (no aiSuggestionsStatus.action = 'dismissed')
+      const pendingReview = allCommunications.filter((comm: any) => {
+        const hasAiSuggestions = comm.aiSuggestions &&
+                                comm.aiSuggestions.projectMatches &&
+                                comm.aiSuggestions.projectMatches.length > 0;
+        const noProjectAssigned = !comm.projectId;
+        const notDismissed = !comm.aiSuggestionsStatus ||
+                            comm.aiSuggestionsStatus.action !== 'dismissed';
+
+        return hasAiSuggestions && noProjectAssigned && notDismissed;
+      });
+
+      // Sort by communication date (most recent first)
+      pendingReview.sort((a: any, b: any) =>
+        new Date(b.communicationDate).getTime() - new Date(a.communicationDate).getTime()
+      );
+
+      res.json(pendingReview);
+    } catch (error) {
+      console.error('Error fetching pending review communications:', error);
+      res.status(500).json({ message: "Errore nel recupero delle comunicazioni da rivedere" });
+    }
+  });
+
   app.post("/api/communications", async (req, res) => {
     try {
       const communication = await storage.createCommunication(req.body);
@@ -899,6 +931,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Comunicazione eliminata con successo" });
     } catch (error) {
       res.status(500).json({ message: "Errore nell'eliminazione della comunicazione" });
+    }
+  });
+
+  // AI Suggestions - Select project from multiple matches
+  app.post("/api/communications/:id/select-project", async (req, res) => {
+    try {
+      const { projectId } = req.body;
+
+      if (!projectId) {
+        return res.status(400).json({ message: "projectId è richiesto" });
+      }
+
+      // Update communication with selected project
+      const updated = await storage.updateCommunication(req.params.id, {
+        projectId: projectId,
+        // Update aiSuggestionsStatus to mark as manually reviewed/selected
+        aiSuggestionsStatus: {
+          selectedAt: new Date(),
+          selectedBy: req.session.username,
+          selectedProjectId: projectId,
+          action: 'project_selected'
+        }
+      });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Comunicazione non trovata" });
+      }
+
+      res.json({
+        success: true,
+        projectId: updated.projectId,
+        message: "Progetto selezionato con successo"
+      });
+    } catch (error) {
+      console.error('Error selecting project:', error);
+      res.status(500).json({ message: "Errore nella selezione del progetto" });
+    }
+  });
+
+  // AI Suggestions - Dismiss all suggestions
+  app.post("/api/communications/:id/dismiss-suggestions", async (req, res) => {
+    try {
+      // Update aiSuggestionsStatus to mark as dismissed
+      const updated = await storage.updateCommunication(req.params.id, {
+        aiSuggestionsStatus: {
+          dismissedAt: new Date(),
+          dismissedBy: req.session.username,
+          action: 'dismissed'
+        }
+      });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Comunicazione non trovata" });
+      }
+
+      res.json({
+        success: true,
+        message: "Suggerimenti AI ignorati"
+      });
+    } catch (error) {
+      console.error('Error dismissing suggestions:', error);
+      res.status(500).json({ message: "Errore nell'operazione" });
     }
   });
 
