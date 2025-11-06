@@ -1,5 +1,5 @@
 import { logger } from './logger';
-import nodemailer from 'nodemailer';
+import { createTransport } from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 
 export interface ParsedEmail {
@@ -57,7 +57,7 @@ class EmailService {
   initialize() {
     if (this.initialized) return;
 
-    const smtpConfig = {
+    const smtpConfig: any = {
       host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
       port: parseInt(process.env.SMTP_PORT || '587'),
       secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
@@ -67,6 +67,16 @@ class EmailService {
       },
     };
 
+    // Gmail-specific configuration
+    if (smtpConfig.host === 'smtp.gmail.com') {
+      smtpConfig.secure = false; // Use STARTTLS on port 587
+      smtpConfig.requireTLS = true;
+      smtpConfig.tls = {
+        ciphers: 'SSLv3',
+        rejectUnauthorized: false
+      };
+    }
+
     if (!smtpConfig.auth.pass) {
       logger.warn('SMTP not configured - email sending will not work');
       logger.info('Set SENDGRID_API_KEY or SMTP_PASSWORD environment variable');
@@ -74,11 +84,23 @@ class EmailService {
     }
 
     try {
-      this.transporter = nodemailer.createTransporter(smtpConfig);
+      logger.info('Initializing email service', { 
+        host: smtpConfig.host, 
+        port: smtpConfig.port,
+        user: smtpConfig.auth.user,
+        secure: smtpConfig.secure 
+      });
+      this.transporter = createTransport(smtpConfig);
       this.initialized = true;
       logger.info('Email service initialized successfully');
     } catch (error) {
-      logger.error('Failed to initialize email service', { error });
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      logger.error('Failed to initialize email service', { 
+        message: errorMessage,
+        stack: errorStack,
+        error: JSON.stringify(error)
+      });
     }
   }
 
