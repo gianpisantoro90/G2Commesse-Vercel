@@ -6,6 +6,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { errorHandler } from "./middleware/error-handler";
 import { logger, requestLogger } from "./lib/logger";
+import { emailService } from "./lib/email-service";
 
 const app = express();
 
@@ -136,6 +137,9 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  // Initialize email service for AI-powered email processing
+  emailService.initialize();
 
   // Use centralized error handler (must be after routes)
   app.use(errorHandler);

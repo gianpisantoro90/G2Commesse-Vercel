@@ -1,8 +1,6 @@
 import { logger } from './logger';
-// TODO: Install nodemailer package first
-// import nodemailer from 'nodemailer';
-// import type { Transporter } from 'nodemailer';
-type Transporter = any;
+import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 
 export interface ParsedEmail {
   messageId: string;
@@ -63,10 +61,9 @@ class EmailService {
     }
 
     try {
-      // TODO: Uncomment when nodemailer is installed
-      // this.transporter = nodemailer.createTransporter(smtpConfig);
-      // this.initialized = true;
-      logger.info('Email service temporarily disabled - nodemailer not installed');
+      this.transporter = nodemailer.createTransporter(smtpConfig);
+      this.initialized = true;
+      logger.info('Email service initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize email service', { error });
     }
