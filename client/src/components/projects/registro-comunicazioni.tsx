@@ -60,6 +60,14 @@ import {
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
+interface ProjectMatch {
+  projectId: string;
+  projectCode: string;
+  confidence: number;
+  reasoning: string;
+  matchedFields: string[];
+}
+
 interface Communication {
   id: string;
   projectId: string;
@@ -87,6 +95,7 @@ interface Communication {
     projectCode?: string;
     projectId?: string;
     confidence: number;
+    projectMatches?: ProjectMatch[];
     extractedData?: {
       deadlines?: string[];
       amounts?: string[];
@@ -415,6 +424,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
                   )}
                 </div>
               )}
+
             </div>
 
             <DropdownMenu>

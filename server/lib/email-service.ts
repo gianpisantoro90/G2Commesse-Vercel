@@ -1,8 +1,6 @@
 import { logger } from './logger';
-// TODO: Install nodemailer package first
-// import nodemailer from 'nodemailer';
-// import type { Transporter } from 'nodemailer';
-type Transporter = any;
+import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 
 export interface ParsedEmail {
   messageId: string;
@@ -21,10 +19,23 @@ export interface ParsedEmail {
   date: Date;
 }
 
+export interface ProjectMatch {
+  projectId: string;
+  projectCode: string;
+  confidence: number;
+  reasoning: string; // Why this project was suggested
+  matchedFields: string[]; // Which fields matched (e.g., ["client", "city"])
+}
+
 export interface AIEmailAnalysis {
+  // Legacy single match (kept for backward compatibility)
   projectCode?: string;
   projectId?: string;
   confidence: number;
+
+  // New: Multiple project matches ranked by confidence
+  projectMatches: ProjectMatch[];
+
   extractedData: {
     deadlines?: string[];
     amounts?: string[];
@@ -63,10 +74,9 @@ class EmailService {
     }
 
     try {
-      // TODO: Uncomment when nodemailer is installed
-      // this.transporter = nodemailer.createTransporter(smtpConfig);
-      // this.initialized = true;
-      logger.info('Email service temporarily disabled - nodemailer not installed');
+      this.transporter = nodemailer.createTransporter(smtpConfig);
+      this.initialized = true;
+      logger.info('Email service initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize email service', { error });
     }
@@ -158,15 +168,23 @@ class EmailService {
         }
       }
 
-      // Use AI if API key is available and no high-confidence match yet
-      if (anthropicApiKey && confidence < 0.8) {
+      // ALWAYS use AI if available to do intelligent matching on all fields
+      if (anthropicApiKey) {
         try {
+          logger.info('Calling AI for intelligent project matching', {
+            hasRegexMatch: !!projectCode,
+            regexConfidence: confidence,
+            totalProjects: projects.length
+          });
+
           const aiResult = await this.callClaudeForEmailAnalysis(email, projects, anthropicApiKey);
-          if (aiResult.confidence > confidence) {
-            projectCode = aiResult.projectCode;
-            projectId = aiResult.projectId;
-            confidence = aiResult.confidence;
-          }
+
+          // AI result is always better than regex because it analyzes all fields
+          logger.info('AI analysis returned', {
+            projectCode: aiResult.projectCode,
+            confidence: aiResult.confidence,
+            matchesCount: aiResult.projectMatches?.length || 0
+          });
 
           return aiResult;
         } catch (aiError) {
@@ -178,10 +196,30 @@ class EmailService {
       const extractedData = this.extractBasicData(email);
       const suggestedTags = this.generateBasicTags(email);
 
+      // Populate projectMatches if we have a match from regex
+      const projectMatches: AIEmailAnalysis['projectMatches'] = [];
+      if (projectCode && projectId) {
+        const matchedProject = projects.find(p => p.id === projectId);
+        if (matchedProject) {
+          projectMatches.push({
+            projectId: matchedProject.id,
+            projectCode: matchedProject.code,
+            confidence: confidence,
+            reasoning: `Codice progetto "${matchedProject.code}" trovato nell'oggetto dell'email (regex match)`,
+            matchedFields: ['code']
+          });
+          logger.info('Regex-based project match converted to projectMatches format', {
+            projectCode: matchedProject.code,
+            confidence
+          });
+        }
+      }
+
       return {
         projectCode,
         projectId,
         confidence,
+        projectMatches,
         extractedData,
         suggestedTags,
         isImportant: this.detectImportance(email),
@@ -191,6 +229,7 @@ class EmailService {
       logger.error('Error analyzing email', { error });
       return {
         confidence: 0,
+        projectMatches: [],
         extractedData: {},
         suggestedTags: [],
         isImportant: false,
@@ -206,36 +245,68 @@ class EmailService {
     projects: Array<{ id: string; code: string; client: string; object: string }>,
     apiKey: string
   ): Promise<AIEmailAnalysis> {
-    const prompt = `Analizza questa email e abbinala al progetto corretto.
+    const prompt = `Analizza questa email e trova i progetti più pertinenti confrontando TUTTI i dati disponibili.
 
-EMAIL:
+EMAIL RICEVUTA:
 Da: ${email.from.email}${email.from.name ? ` (${email.from.name})` : ''}
 Oggetto: ${email.subject}
 Contenuto: ${email.bodyText.substring(0, 2000)}
 
 PROGETTI DISPONIBILI:
-${projects.map(p => `- ${p.code}: ${p.client} - ${p.object}`).join('\n')}
+${projects.map(p => `ID: ${p.id} | Codice: ${p.code} | Cliente: ${p.client} | Oggetto: ${p.object}`).join('\n')}
 
-COMPITI:
-1. Identifica il codice progetto più probabile (formato: YYSIGLACITTA##, es: 25G2MI01)
-2. Estrai informazioni chiave: scadenze, importi, richieste
-3. Genera 3-5 tag rilevanti
-4. Determina se l'email è importante/urgente
-5. Crea un riassunto di 2-3 righe
+ISTRUZIONI MATCHING INTELLIGENTE:
+1. NON limitarti a cercare il codice progetto nell'email
+2. Analizza il CONTENUTO dell'email e confrontalo con:
+   - Nome del cliente/committente
+   - Descrizione/oggetto del progetto
+   - Città/località menzionate
+   - Contesto e dettagli tecnici
+3. Identifica TUTTI i progetti potenzialmente rilevanti (massimo 5)
+4. Per ogni match, calcola confidence (0.0-1.0) basata su:
+   - Codice esatto nell'email → 1.0
+   - Cliente + oggetto + contesto → 0.8-0.95
+   - Cliente + contesto → 0.6-0.8
+   - Solo cliente o solo oggetto → 0.3-0.6
+   - Nessun match chiaro → 0.1-0.3
+5. Spiega il PERCHÉ di ogni match (reasoning)
+6. Lista i campi che hanno fatto match
 
-RISPOSTA IN JSON:
+COMPITI AGGIUNTIVI:
+- Estrai scadenze, importi, azioni da fare, punti chiave
+- Genera 3-5 tag rilevanti
+- Determina importanza/urgenza
+- Crea riassunto di 2-3 righe
+
+RISPOSTA IN JSON (esempio):
 {
+  "projectMatches": [
+    {
+      "projectId": "123",
+      "projectCode": "25G2MI01",
+      "confidence": 0.95,
+      "reasoning": "Email menziona esplicitamente 'Villa Rossi' che corrisponde all'oggetto del progetto. Il cliente 'Rossi SpA' è citato nell'email.",
+      "matchedFields": ["client", "object", "code"]
+    },
+    {
+      "projectId": "456",
+      "projectCode": "25G2MI03",
+      "confidence": 0.60,
+      "reasoning": "Email parla di Milano e il progetto è a Milano, ma non ci sono altri match chiari.",
+      "matchedFields": ["city"]
+    }
+  ],
   "projectCode": "25G2MI01",
   "confidence": 0.95,
   "extractedData": {
-    "deadlines": ["data1", "data2"],
-    "amounts": ["€1000", "€2000"],
-    "actionItems": ["azione1", "azione2"],
-    "keyPoints": ["punto1", "punto2"]
+    "deadlines": ["15/12/2024"],
+    "amounts": ["€50.000"],
+    "actionItems": ["Inviare progetto esecutivo", "Programmare sopralluogo"],
+    "keyPoints": ["Cliente urgente", "Budget approvato"]
   },
-  "suggestedTags": ["tag1", "tag2"],
+  "suggestedTags": ["urgente", "villa", "milano"],
   "isImportant": true,
-  "summary": "Riassunto breve"
+  "summary": "Cliente Rossi richiede progetto esecutivo per Villa a Milano entro 15/12. Budget 50k approvato."
 }`;
 
     try {
@@ -273,12 +344,67 @@ RISPOSTA IN JSON:
 
       const analysis = JSON.parse(jsonMatch[0]);
 
-      // Find projectId from projectCode
+      // Ensure projectMatches array exists (fallback for old AI responses)
+      if (!analysis.projectMatches) {
+        analysis.projectMatches = [];
+      }
+
+      // Legacy: Find projectId from projectCode if provided
       if (analysis.projectCode) {
+        logger.info('AI returned projectCode in legacy format, searching in database', {
+          projectCode: analysis.projectCode,
+          totalProjects: projects.length,
+          projectCodes: projects.map(p => p.code).slice(0, 10) // Show first 10 for debugging
+        });
+
         const matchedProject = projects.find(p => p.code.toUpperCase() === analysis.projectCode.toUpperCase());
+
         if (matchedProject) {
           analysis.projectId = matchedProject.id;
+
+          // If projectMatches is empty but we have legacy fields, convert to new format
+          if (analysis.projectMatches.length === 0 && analysis.confidence > 0) {
+            analysis.projectMatches.push({
+              projectId: matchedProject.id,
+              projectCode: matchedProject.code,
+              confidence: analysis.confidence,
+              reasoning: `Codice progetto "${matchedProject.code}" trovato nell'oggetto dell'email`,
+              matchedFields: ['code']
+            });
+
+            logger.info('✅ Converted legacy AI response to projectMatches format', {
+              projectCode: matchedProject.code,
+              confidence: analysis.confidence
+            });
+          }
+        } else {
+          logger.warn('⚠️ Project code from AI not found in database', {
+            searchedCode: analysis.projectCode,
+            availableProjects: projects.length
+          });
         }
+      }
+
+      // New: Set projectCode and projectId from best match in projectMatches
+      if (analysis.projectMatches.length > 0) {
+        // Sort by confidence descending
+        analysis.projectMatches.sort((a, b) => b.confidence - a.confidence);
+
+        const bestMatch = analysis.projectMatches[0];
+
+        // Override legacy fields with best match
+        analysis.projectCode = bestMatch.projectCode;
+        analysis.projectId = bestMatch.projectId;
+        analysis.confidence = bestMatch.confidence;
+
+        logger.info('Multiple project matches found', {
+          count: analysis.projectMatches.length,
+          bestMatch: {
+            code: bestMatch.projectCode,
+            confidence: bestMatch.confidence,
+            reasoning: bestMatch.reasoning
+          }
+        });
       }
 
       return analysis;

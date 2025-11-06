@@ -115,7 +115,7 @@ export const filesIndex = pgTable("files_index", {
 
 export const communications = pgTable("communications", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: text("project_id").notNull().references(() => projects.id),
+  projectId: text("project_id").references(() => projects.id), // Nullable to allow unassigned communications
   type: text("type").notNull(), // 'email', 'pec', 'raccomandata', 'telefono', 'meeting', 'nota_interna'
   direction: text("direction").notNull(), // 'incoming', 'outgoing', 'internal'
   subject: text("subject").notNull(),
@@ -129,6 +129,16 @@ export const communications = pgTable("communications", {
   createdBy: text("created_by"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+
+  // Email-specific fields for email integration
+  emailMessageId: text("email_message_id"),
+  emailHeaders: jsonb("email_headers"),
+  emailHtml: text("email_html"),
+  emailText: text("email_text"),
+  autoImported: boolean("auto_imported").default(false),
+  aiSuggestions: jsonb("ai_suggestions"), // AI analysis with projectMatches array
+  aiSuggestionsStatus: jsonb("ai_suggestions_status"),
+  importedAt: timestamp("imported_at"),
 });
 
 // Insert schemas
@@ -350,6 +360,7 @@ export const projectCommunications = pgTable("project_communications", {
   emailText: text("email_text"), // Plain text version
   autoImported: boolean("auto_imported").default(false), // Was it auto-imported via forwarding?
   aiSuggestions: jsonb("ai_suggestions"), // AI analysis results: {projectMatch, confidence, extractedData}
+  aiSuggestionsStatus: jsonb("ai_suggestions_status"), // Track approval status of AI suggestions
   importedAt: timestamp("imported_at"), // When was it imported (if auto-imported)
 });
 

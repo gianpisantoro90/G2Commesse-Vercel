@@ -217,6 +217,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // ============================================
+  // PUBLIC API ENDPOINTS (No authentication required)
+  // ============================================
+
+  /**
+   * Webhook endpoint for email forwarding (SendGrid or manual)
+   * Receives forwarded emails and automatically imports them as communications
+   * NOTE: This must be BEFORE requireAuth middleware as it's called by external services
+   */
+  app.post("/api/email/webhook", async (req, res) => {
+    try {
+      console.log('📧 Email webhook received');
+
+      // Parse email from SendGrid webhook
+      const parsedEmail = emailService.parseSendGridWebhook(req.body);
+      console.log(`✉️ Email parsed: From ${parsedEmail.from.email}, Subject: ${parsedEmail.subject}`);
+
+      // Get all projects for AI matching
+      const projects = await storage.getAllProjects();
+
+      // Get AI config for analysis
+      const aiConfigResult = await storage.getSystemConfig('ai_config');
+      const aiApiKey = aiConfigResult?.value?.apiKey || process.env.ANTHROPIC_API_KEY;
+
+      // Analyze email with AI
+      const analysis = await emailService.analyzeEmailWithAI(
+        parsedEmail,
+        projects.map(p => ({
+          id: p.id,
+          code: p.code,
+          client: p.client,
+          object: p.object,
+        })),
+        aiApiKey
+      );
+
+      console.log(`🤖 AI Analysis complete: ${analysis.projectCode || 'No match'} (confidence: ${analysis.confidence})`);
+
+      // If high confidence match, auto-import
+      if (analysis.projectId && analysis.confidence > 0.7) {
+        const communication = await storage.createCommunication({
+          projectId: analysis.projectId,
+          type: parsedEmail.from.email.includes('@pec.') ? 'pec' : 'email',
+          direction: 'incoming',
+          subject: parsedEmail.subject,
+          body: parsedEmail.bodyText,
+          sender: `${parsedEmail.from.name || ''} <${parsedEmail.from.email}>`.trim(),
+          recipient: parsedEmail.to.map(t => t.email).join(', '),
+          isImportant: analysis.isImportant,
+          tags: analysis.suggestedTags,
+          attachments: parsedEmail.attachments.map(a => ({
+            name: a.filename,
+            size: a.size,
+          })),
+          communicationDate: parsedEmail.date,
+          // Email-specific fields
+          emailMessageId: parsedEmail.messageId,
+          emailHeaders: parsedEmail.headers,
+          emailHtml: parsedEmail.bodyHtml,
+          emailText: parsedEmail.bodyText,
+          autoImported: true,
+          aiSuggestions: analysis,
+          importedAt: new Date(),
+        });
+
+        console.log(`✅ Communication auto-imported: ${communication.id}`);
+
+        res.json({
+          success: true,
+          imported: true,
+          communicationId: communication.id,
+          projectCode: analysis.projectCode,
+          confidence: analysis.confidence,
+        });
+      } else {
+        // Low confidence - store as pending for manual review
+        console.log(`⚠️ Low confidence (${analysis.confidence}), storing for manual review`);
+
+        res.json({
+          success: true,
+          imported: false,
+          reason: 'Low confidence - requires manual review',
+          suggestions: {
+            projectCode: analysis.projectCode,
+            confidence: analysis.confidence,
+            extractedData: analysis.extractedData,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('❌ Email webhook error:', error);
+      res.status(500).json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Apply authentication middleware to all other API routes
   app.use("/api", requireAuth);
 
@@ -771,6 +869,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Communications pending AI review - have aiSuggestions but no projectId assigned
+  app.get("/api/communications/pending-review", async (req, res) => {
+    try {
+      const allCommunications = await storage.getAllCommunications();
+
+      // Filter communications that need manual review:
+      // - Have aiSuggestions (AI analysis completed)
+      // - Don't have a projectId assigned yet
+      // - Haven't been dismissed (no aiSuggestionsStatus.action = 'dismissed')
+      const pendingReview = allCommunications.filter((comm: any) => {
+        const hasAiSuggestions = comm.aiSuggestions &&
+                                comm.aiSuggestions.projectMatches &&
+                                comm.aiSuggestions.projectMatches.length > 0;
+        const noProjectAssigned = !comm.projectId;
+        const notDismissed = !comm.aiSuggestionsStatus ||
+                            comm.aiSuggestionsStatus.action !== 'dismissed';
+
+        return hasAiSuggestions && noProjectAssigned && notDismissed;
+      });
+
+      // Sort by communication date (most recent first)
+      pendingReview.sort((a: any, b: any) =>
+        new Date(b.communicationDate).getTime() - new Date(a.communicationDate).getTime()
+      );
+
+      res.json(pendingReview);
+    } catch (error) {
+      console.error('Error fetching pending review communications:', error);
+      res.status(500).json({ message: "Errore nel recupero delle comunicazioni da rivedere" });
+    }
+  });
+
   app.post("/api/communications", async (req, res) => {
     try {
       const communication = await storage.createCommunication(req.body);
@@ -801,6 +931,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Comunicazione eliminata con successo" });
     } catch (error) {
       res.status(500).json({ message: "Errore nell'eliminazione della comunicazione" });
+    }
+  });
+
+  // AI Suggestions - Select project from multiple matches
+  app.post("/api/communications/:id/select-project", async (req, res) => {
+    try {
+      const { projectId } = req.body;
+
+      if (!projectId) {
+        return res.status(400).json({ message: "projectId è richiesto" });
+      }
+
+      // Update communication with selected project
+      const updated = await storage.updateCommunication(req.params.id, {
+        projectId: projectId,
+        // Update aiSuggestionsStatus to mark as manually reviewed/selected
+        aiSuggestionsStatus: {
+          selectedAt: new Date(),
+          selectedBy: req.session.username,
+          selectedProjectId: projectId,
+          action: 'project_selected'
+        }
+      });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Comunicazione non trovata" });
+      }
+
+      res.json({
+        success: true,
+        projectId: updated.projectId,
+        message: "Progetto selezionato con successo"
+      });
+    } catch (error) {
+      console.error('Error selecting project:', error);
+      res.status(500).json({ message: "Errore nella selezione del progetto" });
+    }
+  });
+
+  // AI Suggestions - Dismiss all suggestions
+  app.post("/api/communications/:id/dismiss-suggestions", async (req, res) => {
+    try {
+      // Update aiSuggestionsStatus to mark as dismissed
+      const updated = await storage.updateCommunication(req.params.id, {
+        aiSuggestionsStatus: {
+          dismissedAt: new Date(),
+          dismissedBy: req.session.username,
+          action: 'dismissed'
+        }
+      });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Comunicazione non trovata" });
+      }
+
+      res.json({
+        success: true,
+        message: "Suggerimenti AI ignorati"
+      });
+    } catch (error) {
+      console.error('Error dismissing suggestions:', error);
+      res.status(500).json({ message: "Errore nell'operazione" });
     }
   });
 
@@ -2362,112 +2554,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Email Integration Endpoints
-
-  /**
-   * Webhook endpoint for SendGrid Inbound Parse
-   * Receives forwarded emails and automatically imports them as communications
-   */
-  app.post("/api/email/webhook", async (req, res) => {
-    try {
-      console.log('📧 Email webhook received');
-
-      // Parse email from SendGrid webhook
-      const parsedEmail = emailService.parseSendGridWebhook(req.body);
-      console.log(`✉️ Email parsed: From ${parsedEmail.from.email}, Subject: ${parsedEmail.subject}`);
-
-      // Get all projects for AI matching
-      const projects = await storage.getAllProjects();
-
-      // Get AI config for analysis
-      const aiConfigResult = await storage.getSystemConfig('ai_config');
-      const aiApiKey = aiConfigResult?.value?.apiKey || process.env.ANTHROPIC_API_KEY;
-
-      // Analyze email with AI
-      const analysis = await emailService.analyzeEmailWithAI(
-        parsedEmail,
-        projects.map(p => ({
-          id: p.id,
-          code: p.code,
-          client: p.client,
-          object: p.object,
-        })),
-        aiApiKey
-      );
-
-      console.log(`🤖 AI Analysis complete: ${analysis.projectCode || 'No match'} (confidence: ${analysis.confidence})`);
-
-      // If high confidence match, auto-import
-      if (analysis.projectId && analysis.confidence > 0.7) {
-        const communication = await storage.createCommunication({
-          projectId: analysis.projectId,
-          type: parsedEmail.from.email.includes('@pec.') ? 'pec' : 'email',
-          direction: 'incoming',
-          subject: parsedEmail.subject,
-          body: parsedEmail.bodyText,
-          sender: `${parsedEmail.from.name || ''} <${parsedEmail.from.email}>`.trim(),
-          recipient: parsedEmail.to.map(t => t.email).join(', '),
-          isImportant: analysis.isImportant,
-          tags: analysis.suggestedTags,
-          attachments: parsedEmail.attachments.map(a => ({
-            name: a.filename,
-            size: a.size,
-          })),
-          communicationDate: parsedEmail.date,
-          // Email-specific fields
-          emailMessageId: parsedEmail.messageId,
-          emailHeaders: parsedEmail.headers,
-          emailHtml: parsedEmail.bodyHtml,
-          emailText: parsedEmail.bodyText,
-          autoImported: true,
-          aiSuggestions: analysis,
-          importedAt: new Date(),
-        });
-
-        console.log(`✅ Communication auto-imported: ${communication.id}`);
-
-        // TODO: Send notification about new email to project managers or admins
-        // Need to determine which user(s) should receive this notification
-        // notificationService.sendNotification({
-        //   userId: '<project-manager-or-admin-id>',
-        //   type: 'communication',
-        //   title: 'Nuova email importata',
-        //   message: `${parsedEmail.subject} - ${analysis.projectCode}`,
-        //   priority: analysis.isImportant ? 'high' : 'medium',
-        //   projectId: parseInt(analysis.projectId),
-        // });
-
-        res.json({
-          success: true,
-          imported: true,
-          communicationId: communication.id,
-          projectCode: analysis.projectCode,
-          confidence: analysis.confidence,
-        });
-      } else {
-        // Low confidence - store as pending for manual review
-        console.log(`⚠️ Low confidence (${analysis.confidence}), storing for manual review`);
-
-        // TODO: Store in pending emails table for manual assignment
-
-        res.json({
-          success: true,
-          imported: false,
-          reason: 'Low confidence - requires manual review',
-          suggestions: {
-            projectCode: analysis.projectCode,
-            confidence: analysis.confidence,
-            extractedData: analysis.extractedData,
-          },
-        });
-      }
-    } catch (error) {
-      console.error('❌ Email webhook error:', error);
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
+  // NOTE: Webhook endpoint moved before authentication middleware (line ~229)
 
   /**
    * Send email from the application
