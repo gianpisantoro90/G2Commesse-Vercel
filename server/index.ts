@@ -7,6 +7,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { errorHandler } from "./middleware/error-handler";
 import { logger, requestLogger } from "./lib/logger";
 import { emailService } from "./lib/email-service";
+import { emailPoller } from "./lib/email-poller";
+import { storage, storagePromise } from "./storage";
 
 const app = express();
 
@@ -138,8 +140,14 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Wait for storage to be ready
+  await storagePromise;
+
   // Initialize email service for AI-powered email processing
   emailService.initialize();
+
+  // Initialize email poller for automatic email checking (IMAP)
+  emailPoller.initialize(storage);
 
   // Use centralized error handler (must be after routes)
   app.use(errorHandler);
