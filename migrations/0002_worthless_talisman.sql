@@ -1,0 +1,1 @@
+ALTER TABLE "communications" ADD COLUMN "ai_deadlines_status" jsonb;

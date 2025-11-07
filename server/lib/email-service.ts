@@ -27,6 +27,24 @@ export interface ProjectMatch {
   matchedFields: string[]; // Which fields matched (e.g., ["client", "city"])
 }
 
+export interface SuggestedTask {
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high';
+  dueDate?: string; // ISO date string
+  reasoning: string; // Why this task is suggested
+}
+
+export interface SuggestedDeadline {
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  type: 'general' | 'deposito' | 'collaudo' | 'scadenza_assicurazione' | 'milestone';
+  dueDate: string; // ISO date string (required for deadlines)
+  notifyDaysBefore?: number;
+  reasoning: string; // Why this deadline is suggested
+}
+
 export interface AIEmailAnalysis {
   // Legacy single match (kept for backward compatibility)
   projectCode?: string;
@@ -45,6 +63,12 @@ export interface AIEmailAnalysis {
   suggestedTags: string[];
   isImportant: boolean;
   summary?: string;
+
+  // AI-suggested tasks with details
+  suggestedTasks?: SuggestedTask[];
+
+  // AI-suggested deadlines with details
+  suggestedDeadlines?: SuggestedDeadline[];
 }
 
 class EmailService {
@@ -299,6 +323,45 @@ COMPITI AGGIUNTIVI:
 - Genera 3-5 tag rilevanti
 - Determina importanza/urgenza
 - Crea riassunto di 2-3 righe
+- IMPORTANTE: Suggerisci task/azioni specifiche derivate dall'email
+
+ESTRAZIONE TASK SUGGERITI:
+Analizza l'email e suggerisci task specifici che dovrebbero essere creati:
+1. Identifica azioni concrete richieste o necessarie (max 5 task)
+2. Per ogni task specifica:
+   - title: Titolo breve e chiaro (max 60 caratteri)
+   - description: Descrizione dettagliata dell'azione richiesta
+   - priority: 'high' se urgente/importante, 'medium' se normale, 'low' se opzionale
+   - dueDate: Data scadenza in formato ISO (YYYY-MM-DD) se menzionata, altrimenti null
+   - reasoning: Perché questo task è necessario (citare fonte nell'email)
+
+Esempi di task da suggerire:
+- "Inviare documentazione richiesta" se il cliente chiede documenti
+- "Programmare sopralluogo" se si menziona necessità di verifica in loco
+- "Rispondere a richiesta informazioni" se c'è una domanda
+- "Aggiornare progetto con modifiche" se si richiedono varianti
+- "Preparare preventivo" se si chiede un'offerta
+
+ESTRAZIONE SCADENZE SUGGERITE:
+Analizza l'email e suggerisci scadenze/milestone che dovrebbero essere registrate:
+1. Identifica date importanti, scadenze formali, milestone del progetto (max 5 scadenze)
+2. Per ogni scadenza specifica:
+   - title: Titolo breve della scadenza (max 60 caratteri)
+   - description: Descrizione dettagliata
+   - priority: 'urgent' se critica, 'high' se importante, 'medium' se normale, 'low' se informativa
+   - type: 'deposito' se riguarda depositi ufficiali, 'collaudo' se test/collaudo, 'scadenza_assicurazione' se assicurazioni, 'milestone' se traguardo progetto, 'general' per altre
+   - dueDate: Data scadenza in formato ISO (YYYY-MM-DD) - OBBLIGATORIO
+   - notifyDaysBefore: Quanti giorni prima notificare (default 7, urgente 3, importante 7, normale 14)
+   - reasoning: Perché questa scadenza è importante (citare fonte nell'email)
+
+Esempi di scadenze da suggerire:
+- "Deposito progetto al Genio Civile" type: 'deposito' se si menziona depositi ufficiali
+- "Collaudo impianti elettrici" type: 'collaudo' se si parla di test/collaudi
+- "Scadenza polizza assicurativa cantiere" type: 'scadenza_assicurazione' se si menzionano assicurazioni
+- "Completamento Fase 1 - Fondazioni" type: 'milestone' se si parla di fasi/traguardi progetto
+- "Consegna elaborati al committente" type: 'general' se non rientra in altre categorie
+
+IMPORTANTE: Suggerisci solo scadenze con date esplicite o deducibili dal contesto. Non inventare date!
 
 RISPOSTA IN JSON (esempio):
 {
@@ -326,6 +389,42 @@ RISPOSTA IN JSON (esempio):
     "actionItems": ["Inviare progetto esecutivo", "Programmare sopralluogo"],
     "keyPoints": ["Cliente urgente", "Budget approvato"]
   },
+  "suggestedTasks": [
+    {
+      "title": "Inviare progetto esecutivo Villa Rossi",
+      "description": "Il cliente ha richiesto l'invio del progetto esecutivo aggiornato entro il 15/12/2024",
+      "priority": "high",
+      "dueDate": "2024-12-15",
+      "reasoning": "Email richiede esplicitamente: 'Potete inviarci il progetto esecutivo entro il 15/12?'"
+    },
+    {
+      "title": "Programmare sopralluogo a Milano",
+      "description": "Organizzare sopralluogo presso Villa Rossi per verifica stato avanzamento lavori",
+      "priority": "medium",
+      "dueDate": null,
+      "reasoning": "Email suggerisce: 'Sarebbe utile fare un sopralluogo per verificare'"
+    }
+  ],
+  "suggestedDeadlines": [
+    {
+      "title": "Deposito progetto al Genio Civile",
+      "description": "Scadenza per il deposito del progetto esecutivo presso il Genio Civile",
+      "priority": "urgent",
+      "type": "deposito",
+      "dueDate": "2024-12-15",
+      "notifyDaysBefore": 3,
+      "reasoning": "Email menziona: 'Il deposito deve essere fatto entro il 15 dicembre'"
+    },
+    {
+      "title": "Completamento Fase 1 - Fondazioni",
+      "description": "Milestone per completamento lavori di fondazione",
+      "priority": "high",
+      "type": "milestone",
+      "dueDate": "2024-12-31",
+      "notifyDaysBefore": 7,
+      "reasoning": "Email indica: 'Le fondazioni devono essere completate entro fine anno'"
+    }
+  ],
   "suggestedTags": ["urgente", "villa", "milano"],
   "isImportant": true,
   "summary": "Cliente Rossi richiede progetto esecutivo per Villa a Milano entro 15/12. Budget 50k approvato."

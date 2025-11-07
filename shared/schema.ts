@@ -136,8 +136,10 @@ export const communications = pgTable("communications", {
   emailHtml: text("email_html"),
   emailText: text("email_text"),
   autoImported: boolean("auto_imported").default(false),
-  aiSuggestions: jsonb("ai_suggestions"), // AI analysis with projectMatches array
+  aiSuggestions: jsonb("ai_suggestions"), // AI analysis with projectMatches array and suggestedTasks
   aiSuggestionsStatus: jsonb("ai_suggestions_status"),
+  aiTasksStatus: jsonb("ai_tasks_status"), // Status for each suggested task (approved/dismissed with taskId)
+  aiDeadlinesStatus: jsonb("ai_deadlines_status"), // Status for each suggested deadline (approved/dismissed with deadlineId)
   importedAt: timestamp("imported_at"),
 });
 
