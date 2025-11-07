@@ -54,12 +54,18 @@ interface Communication {
   isImportant: boolean;
   tags: string[];
   aiSuggestions?: {
-    projectId: string | null;
-    projectCode: string;
+    projectId?: string;
+    projectCode?: string;
     confidence: number;
-    reasoning: string;
-    isImportant: boolean;
-    suggestedTags: string[];
+    reasoning?: string;
+    isImportant?: boolean;
+    suggestedTags?: string[];
+    extractedData?: {
+      deadlines?: string[];
+      amounts?: string[];
+      actionItems?: string[];
+      keyPoints?: string[];
+    };
     projectMatches: Array<{
       projectId: string;
       projectCode: string;
@@ -349,8 +355,21 @@ export function CommunicationsReview() {
                 </div>
                 <AISuggestionsPanel
                   communicationId={selectedComm.id}
-                  aiSuggestions={selectedComm.aiSuggestions}
-                  currentProjectId={null}
+                  aiSuggestions={{
+                    projectCode: selectedComm.aiSuggestions.projectCode,
+                    projectId: selectedComm.aiSuggestions.projectId,
+                    confidence: selectedComm.aiSuggestions.confidence,
+                    projectMatches: selectedComm.aiSuggestions.projectMatches,
+                    suggestedTags: selectedComm.aiSuggestions.suggestedTags || [],
+                    isImportant: selectedComm.aiSuggestions.isImportant || false,
+                    extractedData: selectedComm.aiSuggestions.extractedData || {
+                      deadlines: [],
+                      amounts: [],
+                      actionItems: [],
+                      keyPoints: []
+                    }
+                  }}
+                  currentProjectId={undefined}
                   onProjectSelected={handleProjectAssigned}
                 />
               </div>
