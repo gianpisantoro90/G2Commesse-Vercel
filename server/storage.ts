@@ -1063,6 +1063,10 @@ export class DatabaseStorage implements IStorage {
     // We need to explicitly serialize object-type JSONB fields (arrays work fine)
     const dataToInsert = {
       ...insertCommunication,
+      // Convert date strings to Date objects for timestamp columns
+      communicationDate: typeof insertCommunication.communicationDate === 'string'
+        ? new Date(insertCommunication.communicationDate)
+        : insertCommunication.communicationDate,
       // Force serialization of object-type JSONB fields by round-tripping through JSON
       emailHeaders: insertCommunication.emailHeaders
         ? JSON.parse(JSON.stringify(insertCommunication.emailHeaders))
@@ -1111,7 +1115,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDeadline(insertDeadline: InsertProjectDeadline): Promise<Deadline> {
-    const [deadline] = await db.insert(projectDeadlines).values(insertDeadline).returning();
+    // Convert date strings to Date objects for timestamp columns
+    const dataToInsert = {
+      ...insertDeadline,
+      dueDate: typeof insertDeadline.dueDate === 'string'
+        ? new Date(insertDeadline.dueDate)
+        : insertDeadline.dueDate,
+      completedAt: insertDeadline.completedAt && typeof insertDeadline.completedAt === 'string'
+        ? new Date(insertDeadline.completedAt)
+        : insertDeadline.completedAt,
+    };
+
+    const [deadline] = await db.insert(projectDeadlines).values(dataToInsert).returning();
     return deadline;
   }
 
