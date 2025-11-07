@@ -1,8 +1,23 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   CheckSquare,
@@ -12,13 +27,22 @@ import {
   AlertTriangle,
   Sparkles,
   CalendarClock,
-  FileText,
   Mail,
-  Calendar
+  Calendar,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface SuggestedDeadline {
   title: string;
@@ -54,10 +78,28 @@ interface Communication {
 export function DeadlinesReview() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [selectedComm, setSelectedComm] = useState<{ comm: Communication; deadlineIndex: number } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Fetch communications with suggested deadlines
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
     queryKey: ["/api/ai/suggested-deadlines"],
+  });
+
+  // Flatten deadlines for table view
+  const allDeadlines = communications.flatMap((comm) => {
+    const suggestedDeadlines = comm.aiSuggestions?.suggestedDeadlines || [];
+    const deadlinesStatus = comm.aiDeadlinesStatus || {};
+
+    return suggestedDeadlines
+      .map((deadline, index) => ({
+        comm,
+        deadline,
+        index,
+        isPending: !deadlinesStatus[index] || deadlinesStatus[index].action === 'pending'
+      }))
+      .filter(item => item.isPending);
   });
 
   // Approve deadline mutation
@@ -84,6 +126,7 @@ export function DeadlinesReview() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/ai/suggested-deadlines"] });
       queryClient.invalidateQueries({ queryKey: ["/api/deadlines"] });
+      setSelectedComm(null);
     },
     onError: (error: Error) => {
       toast({
@@ -117,6 +160,7 @@ export function DeadlinesReview() {
         description: "La scadenza suggerita è stata rifiutata",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/ai/suggested-deadlines"] });
+      setSelectedComm(null);
     },
     onError: (error: Error) => {
       toast({
@@ -157,6 +201,17 @@ export function DeadlinesReview() {
     }
   };
 
+  // Pagination logic
+  const totalPages = Math.ceil(allDeadlines.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedDeadlines = allDeadlines.slice(startIndex, endIndex);
+
+  const handlePageSizeChange = (newSize: string) => {
+    setPageSize(parseInt(newSize));
+    setCurrentPage(1);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -165,11 +220,11 @@ export function DeadlinesReview() {
     );
   }
 
-  if (communications.length === 0) {
+  if (allDeadlines.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center space-y-4">
-        <div className="p-4 bg-green-100 rounded-full">
-          <CheckSquare className="h-12 w-12 text-green-600" />
+        <div className="p-4 bg-green-100 dark:bg-green-900/20 rounded-full">
+          <CheckSquare className="h-12 w-12 text-green-600 dark:text-green-400" />
         </div>
         <div className="space-y-2">
           <h3 className="font-semibold text-lg">Nessuna Scadenza da Rivedere</h3>
@@ -183,149 +238,256 @@ export function DeadlinesReview() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Header with summary and controls */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Scadenze Proposte dall'AI</h2>
-          <p className="text-muted-foreground">
-            {communications.length} comunicazion{communications.length === 1 ? 'e' : 'i'} con scadenze suggerite
-          </p>
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary" className="text-base py-1.5 px-3">
+            <Sparkles className="h-3 w-3 mr-1" />
+            {allDeadlines.length} scadenz{allDeadlines.length === 1 ? 'a' : 'e'} suggerite dall'AI
+          </Badge>
         </div>
-        <Badge variant="outline" className="h-8">
-          <Sparkles className="h-3 w-3 mr-1" />
-          AI Analysis
-        </Badge>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Mostra:</span>
+          <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        {communications.map((comm) => {
-          const suggestedDeadlines = comm.aiSuggestions?.suggestedDeadlines || [];
-          const deadlinesStatus = comm.aiDeadlinesStatus || {};
-          const pendingDeadlines = suggestedDeadlines.filter((_, idx) => !deadlinesStatus[idx] || deadlinesStatus[idx].action === 'pending');
-
-          if (pendingDeadlines.length === 0) return null;
-
-          return (
-            <Card key={comm.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      {comm.subject}
-                    </CardTitle>
-                    <CardDescription className="mt-2 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <User className="h-3 w-3" />
-                        Da: {comm.sender}
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[30%]">Scadenza</TableHead>
+                <TableHead className="w-[15%]">Data</TableHead>
+                <TableHead className="w-[10%]">Priorità</TableHead>
+                <TableHead className="w-[15%]">Tipo</TableHead>
+                <TableHead className="w-[20%]">Comunicazione</TableHead>
+                <TableHead className="w-[10%] text-right">Azioni</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedDeadlines.map(({ comm, deadline, index }) => {
+                const typeConfig = getTypeConfig(deadline.type);
+                return (
+                  <TableRow
+                    key={`${comm.id}-${index}`}
+                    className="cursor-pointer hover:bg-muted/50"
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-start gap-2">
+                        <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                        <span className="line-clamp-2">{deadline.title}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-3 w-3" />
-                        {format(new Date(comm.communicationDate), "dd MMM yyyy 'alle' HH:mm", { locale: it })}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                        <span className="font-medium">
+                          {format(new Date(deadline.dueDate), "dd/MM/yy", { locale: it })}
+                        </span>
                       </div>
-                      {comm.aiSuggestions?.projectMatches?.[0] && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline">
-                            Progetto: {comm.aiSuggestions.projectMatches[0].projectCode}
-                          </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getPriorityColor(deadline.priority)} className="text-xs">
+                        {getPriorityLabel(deadline.priority)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {typeConfig.icon} {typeConfig.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate text-xs">{comm.subject}</span>
                         </div>
-                      )}
-                    </CardDescription>
+                        {comm.aiSuggestions?.projectMatches?.[0] && (
+                          <Badge variant="outline" className="text-xs">
+                            {comm.aiSuggestions.projectMatches[0].projectCode}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedComm({ comm, deadlineIndex: index })}
+                      >
+                        Revisiona
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Pagina {currentPage} di {totalPages} ({startIndex + 1}-{Math.min(endIndex, allDeadlines.length)} di {allDeadlines.length})
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Precedente
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Successiva
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Deadline Detail Dialog */}
+      <Dialog open={!!selectedComm} onOpenChange={() => setSelectedComm(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              {selectedComm && selectedComm.comm.aiSuggestions.suggestedDeadlines?.[selectedComm.deadlineIndex]?.title}
+            </DialogTitle>
+            <DialogDescription>
+              <div className="space-y-2">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>Da: {selectedComm?.comm.sender}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {selectedComm && format(new Date(selectedComm.comm.communicationDate), "dd MMM yyyy 'alle' HH:mm", { locale: it })}
                   </div>
                 </div>
-              </CardHeader>
+                <div className="flex items-center gap-2">
+                  <Mail className="h-3 w-3" />
+                  <span className="text-xs">{selectedComm?.comm.subject}</span>
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
 
-              <CardContent className="space-y-4">
-                {suggestedDeadlines.map((deadline, deadlineIndex) => {
-                  const deadlineStatus = deadlinesStatus[deadlineIndex];
+          {selectedComm && (() => {
+            const deadline = selectedComm.comm.aiSuggestions.suggestedDeadlines![selectedComm.deadlineIndex];
+            const typeConfig = getTypeConfig(deadline.type);
 
-                  // Skip if already processed
-                  if (deadlineStatus && deadlineStatus.action !== 'pending') return null;
+            return (
+              <div className="space-y-4">
+                {/* Deadline Details */}
+                <div className="space-y-3 p-4 bg-muted/50 dark:bg-muted/20 rounded-lg">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant={getPriorityColor(deadline.priority)}>
+                      {getPriorityLabel(deadline.priority)}
+                    </Badge>
+                    <Badge variant="outline">
+                      {typeConfig.icon} {typeConfig.label}
+                    </Badge>
+                  </div>
 
-                  const typeConfig = getTypeConfig(deadline.type);
+                  {deadline.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {deadline.description}
+                    </p>
+                  )}
 
-                  return (
-                    <div key={deadlineIndex} className="border rounded-lg p-4 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <CalendarClock className="h-4 w-4 text-blue-600" />
-                            <h4 className="font-semibold">{deadline.title}</h4>
-                            <Badge variant={getPriorityColor(deadline.priority)}>
-                              {getPriorityLabel(deadline.priority)}
-                            </Badge>
-                            <Badge variant="outline">
-                              {typeConfig.icon} {typeConfig.label}
-                            </Badge>
-                          </div>
-
-                          {deadline.description && (
-                            <p className="text-sm text-muted-foreground pl-6">
-                              {deadline.description}
-                            </p>
-                          )}
-
-                          <div className="flex items-center gap-4 pl-6 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-3 w-3" />
-                              <span className="font-medium">Scadenza: {format(new Date(deadline.dueDate), "dd MMM yyyy", { locale: it })}</span>
-                            </div>
-                            {deadline.notifyDaysBefore && (
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <AlertTriangle className="h-3 w-3" />
-                                <span>Notifica {deadline.notifyDaysBefore}gg prima</span>
-                              </div>
-                            )}
-                          </div>
-
-                          <Alert className="bg-blue-50 border-blue-200">
-                            <Sparkles className="h-4 w-4 text-blue-600" />
-                            <AlertDescription className="text-sm">
-                              <strong>Perché l'AI suggerisce questa scadenza:</strong><br />
-                              {deadline.reasoning}
-                            </AlertDescription>
-                          </Alert>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => dismissDeadline.mutate({ communicationId: comm.id, deadlineIndex })}
-                          disabled={dismissDeadline.isPending}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Rifiuta
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => approveDeadline.mutate({ communicationId: comm.id, deadlineIndex })}
-                          disabled={approveDeadline.isPending || !comm.projectId}
-                        >
-                          <CheckSquare className="h-4 w-4 mr-1" />
-                          Approva e Crea Scadenza
-                        </Button>
-                      </div>
-
-                      {!comm.projectId && (
-                        <Alert variant="destructive">
-                          <AlertTriangle className="h-4 w-4" />
-                          <AlertDescription className="text-sm">
-                            La comunicazione deve essere associata a un progetto prima di poter creare la scadenza.
-                          </AlertDescription>
-                        </Alert>
-                      )}
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3 w-3" />
+                      <span className="font-medium">Scadenza: {format(new Date(deadline.dueDate), "dd MMM yyyy", { locale: it })}</span>
                     </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                    {deadline.notifyDaysBefore && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <AlertTriangle className="h-3 w-3" />
+                        <span>Notifica {deadline.notifyDaysBefore}gg prima</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* AI Reasoning */}
+                <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                  <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <AlertDescription className="text-sm">
+                    <strong>Perché l'AI suggerisce questa scadenza:</strong><br />
+                    {deadline.reasoning}
+                  </AlertDescription>
+                </Alert>
+
+                {/* Project Warning */}
+                {!selectedComm.comm.projectId && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription className="text-sm">
+                      La comunicazione deve essere associata a un progetto prima di poter creare la scadenza.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            );
+          })()}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedComm) {
+                  dismissDeadline.mutate({
+                    communicationId: selectedComm.comm.id,
+                    deadlineIndex: selectedComm.deadlineIndex
+                  });
+                }
+              }}
+              disabled={dismissDeadline.isPending}
+            >
+              <XCircle className="h-4 w-4 mr-1" />
+              Rifiuta
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedComm) {
+                  approveDeadline.mutate({
+                    communicationId: selectedComm.comm.id,
+                    deadlineIndex: selectedComm.deadlineIndex
+                  });
+                }
+              }}
+              disabled={approveDeadline.isPending || !selectedComm?.comm.projectId}
+            >
+              <CheckSquare className="h-4 w-4 mr-1" />
+              Approva e Crea Scadenza
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

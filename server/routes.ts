@@ -1145,6 +1145,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const communication = await storage.createCommunication(req.body);
       res.status(201).json(communication);
     } catch (error) {
+      console.error('❌ Error creating communication:', error);
+      console.error('📋 Request body:', JSON.stringify(req.body, null, 2));
       res.status(500).json({ message: "Errore nella creazione della comunicazione" });
     }
   });
@@ -1253,6 +1255,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deadline = await storage.createDeadline(req.body);
       res.status(201).json(deadline);
     } catch (error) {
+      console.error('❌ Error creating deadline:', error);
+      console.error('📋 Request body:', JSON.stringify(req.body, null, 2));
       res.status(500).json({ message: "Errore nella creazione della scadenza" });
     }
   });

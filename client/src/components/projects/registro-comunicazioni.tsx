@@ -30,8 +30,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { type Project } from "@shared/schema";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 import {
   Mail,
   Phone,
@@ -55,7 +64,10 @@ import {
   CheckCircle2,
   AlertCircle,
   ExternalLink,
-  Eye
+  Eye,
+  ChevronLeft,
+  ChevronRight,
+  User
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -186,18 +198,12 @@ function CommunicationForm({
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label>Commessa *</Label>
-          <Select value={formData.projectId} onValueChange={(value) => setFormData({ ...formData, projectId: value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleziona commessa..." />
-            </SelectTrigger>
-            <SelectContent>
-              {projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  {project.code} - {project.client}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ProjectCombobox
+            projects={projects}
+            value={formData.projectId}
+            onValueChange={(value) => setFormData({ ...formData, projectId: value || '' })}
+            placeholder="Seleziona commessa..."
+          />
         </div>
 
         <div className="space-y-2">
@@ -353,7 +359,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
   const [showEmailPreview, setShowEmailPreview] = useState(false);
 
   return (
-    <Card className={comm.isImportant ? 'border-yellow-300 bg-yellow-50' : ''}>
+    <Card className={comm.isImportant ? 'border-yellow-300 bg-yellow-50 dark:border-yellow-600 dark:bg-yellow-950/20' : ''}>
       <CardContent className="pt-4">
         <div className="space-y-3">
           <div className="flex items-start justify-between gap-2">
@@ -366,11 +372,11 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
                   {directionConfig.icon} {directionConfig.label}
                 </Badge>
                 {comm.isImportant && (
-                  <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                  <Star className="h-4 w-4 fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400" />
                 )}
                 {/* Auto-imported indicator with AI confidence */}
                 {comm.autoImported && comm.aiSuggestions && (
-                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 gap-1">
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-700 gap-1">
                     <Zap className="h-3 w-3" />
                     Auto-importata
                     {comm.aiSuggestions.confidence && (
@@ -385,8 +391,8 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
 
               {/* AI Summary if available */}
               {comm.aiSuggestions?.summary && (
-                <div className="bg-purple-50 border border-purple-200 rounded p-2 mb-2">
-                  <p className="text-xs text-purple-900 flex items-start gap-1">
+                <div className="bg-purple-50 border border-purple-200 rounded p-2 mb-2 dark:bg-purple-950/30 dark:border-purple-700">
+                  <p className="text-xs text-purple-900 dark:text-purple-300 flex items-start gap-1">
                     <Zap className="h-3 w-3 mt-0.5 flex-shrink-0" />
                     <span className="italic">{comm.aiSuggestions.summary}</span>
                   </p>
@@ -394,7 +400,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
               )}
 
               {comm.body && (
-                <p className="text-sm text-gray-600 line-clamp-3">{comm.body}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{comm.body}</p>
               )}
 
               {/* AI Extracted Data */}
@@ -647,6 +653,9 @@ export default function RegistroComunicazioni() {
   const [filterDirection, setFilterDirection] = useState<string>('all');
   const [filterProject, setFilterProject] = useState<string>('all');
   const [showImportantOnly, setShowImportantOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -754,6 +763,18 @@ export default function RegistroComunicazioni() {
     if (showImportantOnly && !c.isImportant) return false;
     return true;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredComms.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedComms = filteredComms.slice(startIndex, endIndex);
+
+  // Reset to page 1 when page size changes
+  const handlePageSizeChange = (newSize: string) => {
+    setPageSize(parseInt(newSize));
+    setCurrentPage(1);
+  };
 
   // Stats
   const totalComms = communications.length;
@@ -917,28 +938,372 @@ export default function RegistroComunicazioni() {
       </Card>
 
       {/* Lista Comunicazioni */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredComms.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <MessageSquare className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">Nessuna comunicazione trovata</p>
-            <p className="text-sm text-gray-400 mt-1">Registra la prima comunicazione per iniziare</p>
+      <div className="space-y-4">
+        {/* Header with page size selector */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="text-base py-1.5 px-3">
+              {filteredComms.length} comunicazion{filteredComms.length === 1 ? "e" : "i"}
+            </Badge>
           </div>
-        ) : (
-          filteredComms.map((comm) => (
-            <CommunicationCard
-              key={comm.id}
-              comm={comm}
-              onEdit={() => setEditingComm(comm)}
-              onDelete={() => handleDelete(comm.id)}
-              onSendEmail={() => {
-                setReplyToComm(comm);
-                setEmailDialogOpen(true);
-              }}
-            />
-          ))
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Mostra:</span>
+            <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Table */}
+        <Card>
+          <CardContent className="p-0">
+            {filteredComms.length === 0 ? (
+              <div className="text-center py-12">
+                <MessageSquare className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-500">Nessuna comunicazione trovata</p>
+                <p className="text-sm text-gray-400 mt-1">Registra la prima comunicazione per iniziare</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[35%]">Oggetto</TableHead>
+                    <TableHead className="w-[15%]">Tipo</TableHead>
+                    <TableHead className="w-[15%]">Mittente/Destinatario</TableHead>
+                    <TableHead className="w-[15%]">Commessa</TableHead>
+                    <TableHead className="w-[12%]">Data</TableHead>
+                    <TableHead className="w-[8%] text-right">Azioni</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedComms.map((comm) => {
+                    const typeConfig = TYPE_CONFIG[comm.type];
+                    const directionConfig = DIRECTION_CONFIG[comm.direction];
+
+                    return (
+                      <TableRow
+                        key={comm.id}
+                        className={`cursor-pointer hover:bg-muted/50 ${
+                          comm.isImportant ? 'bg-yellow-50 dark:bg-yellow-950/20' : ''
+                        }`}
+                        onClick={() => setSelectedComm(comm)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-start gap-2">
+                            <div className="space-y-1 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="line-clamp-1">{comm.subject}</span>
+                                {comm.isImportant && (
+                                  <Star className="h-3 w-3 fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400 flex-shrink-0" />
+                                )}
+                              </div>
+                              {comm.tags && comm.tags.length > 0 && (
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {comm.tags.slice(0, 2).map((tag: string, index: number) => (
+                                    <Badge
+                                      key={index}
+                                      variant="outline"
+                                      className="text-xs h-5 px-1.5"
+                                    >
+                                      #{tag}
+                                    </Badge>
+                                  ))}
+                                  {comm.tags.length > 2 && (
+                                    <span className="text-xs text-muted-foreground">
+                                      +{comm.tags.length - 2}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {comm.autoImported && comm.aiSuggestions && (
+                                <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-700 text-xs h-5 px-1.5 gap-1">
+                                  <Zap className="h-2 w-2" />
+                                  Auto
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <Badge className={`${typeConfig.color} text-xs w-fit`}>
+                              {typeConfig.icon} {typeConfig.label}
+                            </Badge>
+                            <Badge variant="outline" className={`${directionConfig.color} text-xs w-fit`}>
+                              {directionConfig.icon} {directionConfig.label}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm truncate">
+                              {comm.direction === 'outgoing' ? comm.recipient : comm.sender}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            <div className="font-medium">{comm.projectCode}</div>
+                            {comm.projectClient && (
+                              <div className="text-xs text-muted-foreground truncate">
+                                {comm.projectClient}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm text-muted-foreground">
+                            {format(new Date(comm.communicationDate), "dd/MM/yy", { locale: it })}
+                            <div className="text-xs">
+                              {format(new Date(comm.communicationDate), "HH:mm")}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedComm(comm);
+                              }}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                Visualizza
+                              </DropdownMenuItem>
+                              {(comm.type === 'email' || comm.type === 'pec') && (
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  setReplyToComm(comm);
+                                  setEmailDialogOpen(true);
+                                }}>
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Invia Email
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingComm(comm);
+                              }}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Modifica
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(comm.id);
+                                }}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Elimina
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              Pagina {currentPage} di {totalPages} ({startIndex + 1}-{Math.min(endIndex, filteredComms.length)} di {filteredComms.length})
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Precedente
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Successiva
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
+
+      {/* Communication Detail Dialog */}
+      <Dialog open={!!selectedComm} onOpenChange={() => setSelectedComm(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              {selectedComm?.subject}
+            </DialogTitle>
+            <DialogDescription className="space-y-2">
+              <div className="flex items-center gap-4 text-sm flex-wrap">
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  <span>
+                    {selectedComm?.direction === 'outgoing'
+                      ? `A: ${selectedComm.recipient}`
+                      : `Da: ${selectedComm.sender}`}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>
+                    {selectedComm && format(new Date(selectedComm.communicationDate), "dd MMM yyyy 'alle' HH:mm", {
+                      locale: it,
+                    })}
+                  </span>
+                </div>
+                {selectedComm?.projectCode && (
+                  <div className="flex items-center gap-1">
+                    <span className="font-medium">📁 {selectedComm.projectCode}</span>
+                    {selectedComm.projectClient && (
+                      <span className="text-muted-foreground">- {selectedComm.projectClient}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              {selectedComm?.tags && selectedComm.tags.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  {selectedComm.tags.map((tag: string, index: number) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      #{tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Email Content */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Contenuto</h4>
+              <div className="bg-muted/50 dark:bg-muted/20 p-4 rounded-lg max-h-[400px] overflow-y-auto">
+                {selectedComm?.emailHtml ? (
+                  <div
+                    className="prose prose-sm max-w-none dark:prose-invert"
+                    dangerouslySetInnerHTML={{ __html: selectedComm.emailHtml }}
+                  />
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{selectedComm?.body}</p>
+                )}
+              </div>
+            </div>
+
+            {/* AI Summary if available */}
+            {selectedComm?.aiSuggestions?.summary && (
+              <div className="bg-purple-50 border border-purple-200 rounded p-3 dark:bg-purple-950/30 dark:border-purple-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <h4 className="font-medium text-sm text-purple-900 dark:text-purple-300">AI Summary</h4>
+                </div>
+                <p className="text-sm text-purple-800 dark:text-purple-200 italic">
+                  {selectedComm.aiSuggestions.summary}
+                </p>
+              </div>
+            )}
+
+            {/* AI Extracted Data */}
+            {selectedComm?.aiSuggestions?.extractedData && (
+              <div className="grid gap-3 md:grid-cols-2">
+                {selectedComm.aiSuggestions.extractedData.actionItems &&
+                 selectedComm.aiSuggestions.extractedData.actionItems.length > 0 && (
+                  <div className="border rounded p-3">
+                    <h4 className="font-medium text-sm mb-2 text-orange-700 dark:text-orange-400">Azioni</h4>
+                    <ul className="list-disc list-inside text-sm space-y-1">
+                      {selectedComm.aiSuggestions.extractedData.actionItems.map((item, i) => (
+                        <li key={i} className="text-gray-700 dark:text-gray-300">{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {selectedComm.aiSuggestions.extractedData.deadlines &&
+                 selectedComm.aiSuggestions.extractedData.deadlines.length > 0 && (
+                  <div className="border rounded p-3">
+                    <h4 className="font-medium text-sm mb-2 text-red-700 dark:text-red-400">Scadenze</h4>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {selectedComm.aiSuggestions.extractedData.deadlines.join(', ')}
+                    </p>
+                  </div>
+                )}
+                {selectedComm.aiSuggestions.extractedData.amounts &&
+                 selectedComm.aiSuggestions.extractedData.amounts.length > 0 && (
+                  <div className="border rounded p-3">
+                    <h4 className="font-medium text-sm mb-2 text-green-700 dark:text-green-400">Importi</h4>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      {selectedComm.aiSuggestions.extractedData.amounts.join(', ')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2 justify-end pt-4 border-t">
+              {(selectedComm?.type === 'email' || selectedComm?.type === 'pec') && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setReplyToComm(selectedComm);
+                    setEmailDialogOpen(true);
+                    setSelectedComm(null);
+                  }}
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Rispondi
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setEditingComm(selectedComm);
+                  setSelectedComm(null);
+                }}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Modifica
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (selectedComm) {
+                    handleDelete(selectedComm.id);
+                    setSelectedComm(null);
+                  }
+                }}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Elimina
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Email Send Dialog */}
       <EmailSendDialog

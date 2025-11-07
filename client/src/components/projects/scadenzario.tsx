@@ -36,6 +36,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Project } from "@shared/schema";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 import {
   CalendarIcon,
   Clock,
@@ -109,18 +110,12 @@ function DeadlineForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="project">Commessa *</Label>
-        <Select value={formData.projectId} onValueChange={(value) => setFormData({ ...formData, projectId: value })}>
-          <SelectTrigger>
-            <SelectValue placeholder="Seleziona commessa..." />
-          </SelectTrigger>
-          <SelectContent>
-            {projects.map((project) => (
-              <SelectItem key={project.id} value={project.id}>
-                {project.code} - {project.client}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <ProjectCombobox
+          projects={projects}
+          value={formData.projectId}
+          onValueChange={(value) => setFormData({ ...formData, projectId: value || '' })}
+          placeholder="Seleziona commessa..."
+        />
       </div>
 
       <div className="space-y-2">
@@ -227,10 +222,10 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
 
   return (
     <Card className={`${
-      isOverdue && deadline.status === 'pending' ? 'border-red-300 bg-red-50' :
-      isUpcoming && deadline.status === 'pending' ? 'border-orange-300 bg-orange-50' :
-      deadline.status === 'completed' ? 'border-green-300 bg-green-50' :
-      'border-gray-200'
+      isOverdue && deadline.status === 'pending' ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-950/20' :
+      isUpcoming && deadline.status === 'pending' ? 'border-orange-300 bg-orange-50 dark:border-orange-600 dark:bg-orange-950/20' :
+      deadline.status === 'completed' ? 'border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-950/20' :
+      'border-gray-200 dark:border-gray-700'
     }`}>
       <CardContent className="pt-4">
         <div className="space-y-3">
