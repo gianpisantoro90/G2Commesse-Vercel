@@ -35,6 +35,16 @@ export interface SuggestedTask {
   reasoning: string; // Why this task is suggested
 }
 
+export interface SuggestedDeadline {
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  type: 'general' | 'deposito' | 'collaudo' | 'scadenza_assicurazione' | 'milestone';
+  dueDate: string; // ISO date string (required for deadlines)
+  notifyDaysBefore?: number;
+  reasoning: string; // Why this deadline is suggested
+}
+
 export interface AIEmailAnalysis {
   // Legacy single match (kept for backward compatibility)
   projectCode?: string;
@@ -56,6 +66,9 @@ export interface AIEmailAnalysis {
 
   // AI-suggested tasks with details
   suggestedTasks?: SuggestedTask[];
+
+  // AI-suggested deadlines with details
+  suggestedDeadlines?: SuggestedDeadline[];
 }
 
 class EmailService {
@@ -329,6 +342,27 @@ Esempi di task da suggerire:
 - "Aggiornare progetto con modifiche" se si richiedono varianti
 - "Preparare preventivo" se si chiede un'offerta
 
+ESTRAZIONE SCADENZE SUGGERITE:
+Analizza l'email e suggerisci scadenze/milestone che dovrebbero essere registrate:
+1. Identifica date importanti, scadenze formali, milestone del progetto (max 5 scadenze)
+2. Per ogni scadenza specifica:
+   - title: Titolo breve della scadenza (max 60 caratteri)
+   - description: Descrizione dettagliata
+   - priority: 'urgent' se critica, 'high' se importante, 'medium' se normale, 'low' se informativa
+   - type: 'deposito' se riguarda depositi ufficiali, 'collaudo' se test/collaudo, 'scadenza_assicurazione' se assicurazioni, 'milestone' se traguardo progetto, 'general' per altre
+   - dueDate: Data scadenza in formato ISO (YYYY-MM-DD) - OBBLIGATORIO
+   - notifyDaysBefore: Quanti giorni prima notificare (default 7, urgente 3, importante 7, normale 14)
+   - reasoning: Perché questa scadenza è importante (citare fonte nell'email)
+
+Esempi di scadenze da suggerire:
+- "Deposito progetto al Genio Civile" type: 'deposito' se si menziona depositi ufficiali
+- "Collaudo impianti elettrici" type: 'collaudo' se si parla di test/collaudi
+- "Scadenza polizza assicurativa cantiere" type: 'scadenza_assicurazione' se si menzionano assicurazioni
+- "Completamento Fase 1 - Fondazioni" type: 'milestone' se si parla di fasi/traguardi progetto
+- "Consegna elaborati al committente" type: 'general' se non rientra in altre categorie
+
+IMPORTANTE: Suggerisci solo scadenze con date esplicite o deducibili dal contesto. Non inventare date!
+
 RISPOSTA IN JSON (esempio):
 {
   "projectMatches": [
@@ -369,6 +403,26 @@ RISPOSTA IN JSON (esempio):
       "priority": "medium",
       "dueDate": null,
       "reasoning": "Email suggerisce: 'Sarebbe utile fare un sopralluogo per verificare'"
+    }
+  ],
+  "suggestedDeadlines": [
+    {
+      "title": "Deposito progetto al Genio Civile",
+      "description": "Scadenza per il deposito del progetto esecutivo presso il Genio Civile",
+      "priority": "urgent",
+      "type": "deposito",
+      "dueDate": "2024-12-15",
+      "notifyDaysBefore": 3,
+      "reasoning": "Email menziona: 'Il deposito deve essere fatto entro il 15 dicembre'"
+    },
+    {
+      "title": "Completamento Fase 1 - Fondazioni",
+      "description": "Milestone per completamento lavori di fondazione",
+      "priority": "high",
+      "type": "milestone",
+      "dueDate": "2024-12-31",
+      "notifyDaysBefore": 7,
+      "reasoning": "Email indica: 'Le fondazioni devono essere completate entro fine anno'"
     }
   ],
   "suggestedTags": ["urgente", "villa", "milano"],

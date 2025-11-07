@@ -139,6 +139,7 @@ export const communications = pgTable("communications", {
   aiSuggestions: jsonb("ai_suggestions"), // AI analysis with projectMatches array and suggestedTasks
   aiSuggestionsStatus: jsonb("ai_suggestions_status"),
   aiTasksStatus: jsonb("ai_tasks_status"), // Status for each suggested task (approved/dismissed with taskId)
+  aiDeadlinesStatus: jsonb("ai_deadlines_status"), // Status for each suggested deadline (approved/dismissed with deadlineId)
   importedAt: timestamp("imported_at"),
 });
 

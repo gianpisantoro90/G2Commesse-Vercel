@@ -15,6 +15,13 @@
       "when": 1762516815537,
       "tag": "0001_curly_layla_miller",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762519703013,
+      "tag": "0002_worthless_talisman",
+      "breakpoints": true
     }
   ]
 }
