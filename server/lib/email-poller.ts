@@ -2,7 +2,7 @@ import Imap from 'imap';
 import { simpleParser, ParsedMail } from 'mailparser';
 import { logger } from './logger';
 import { emailService } from './email-service';
-import type { Storage } from '../storage';
+import type { IStorage } from '../storage';
 
 interface EmailPollerConfig {
   host: string;
@@ -18,12 +18,12 @@ class EmailPoller {
   private imap: Imap | null = null;
   private intervalId: NodeJS.Timeout | null = null;
   private isProcessing = false;
-  private storage: Storage | null = null;
+  private storage: IStorage | null = null;
 
   /**
    * Initialize email poller with configuration
    */
-  initialize(storage: Storage) {
+  initialize(storage: IStorage) {
     this.storage = storage;
 
     // Read config from environment
@@ -231,6 +231,87 @@ class EmailPoller {
   }
 
   /**
+   * Extract original sender from forwarded email
+   * Looks for "From:" or "Da:" patterns in the email body
+   */
+  private extractOriginalSender(parsed: ParsedMail): { email: string; name?: string } | null {
+    const bodyText = parsed.text || '';
+    const bodyHtml = parsed.html || '';
+
+    // Check if email is forwarded (subject starts with Fwd: or I:)
+    const isForwarded = /^(Fwd:|FWD:|I:|Inoltro:)/i.test(parsed.subject || '');
+
+    if (!isForwarded) {
+      return null; // Not a forwarded email
+    }
+
+    // Common forwarded email patterns (English and Italian)
+    const patterns = [
+      // English patterns
+      /From:\s*([^<\n]+?)\s*<([^>\n]+)>/i,           // From: Name <email@example.com>
+      /From:\s*<([^>\n]+)>/i,                        // From: <email@example.com>
+      /From:\s*([^\n<]+@[^\n\s]+)/i,                 // From: email@example.com
+
+      // Italian patterns
+      /Da:\s*([^<\n]+?)\s*<([^>\n]+)>/i,             // Da: Nome <email@example.com>
+      /Da:\s*<([^>\n]+)>/i,                          // Da: <email@example.com>
+      /Da:\s*([^\n<]+@[^\n\s]+)/i,                   // Da: email@example.com
+
+      // Alternative patterns (sometimes in headers)
+      /Sender:\s*([^<\n]+?)\s*<([^>\n]+)>/i,
+      /Mittente:\s*([^<\n]+?)\s*<([^>\n]+)>/i,
+    ];
+
+    // Try to extract from body text first
+    for (const pattern of patterns) {
+      const match = bodyText.match(pattern);
+      if (match) {
+        if (match[2]) {
+          // Pattern with name and email
+          return {
+            name: match[1].trim(),
+            email: match[2].trim(),
+          };
+        } else if (match[1]) {
+          // Pattern with email only
+          return {
+            email: match[1].trim(),
+          };
+        }
+      }
+    }
+
+    // Try HTML body if text didn't work
+    if (bodyHtml) {
+      // Strip HTML tags for easier matching
+      const strippedHtml = bodyHtml.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ');
+
+      for (const pattern of patterns) {
+        const match = strippedHtml.match(pattern);
+        if (match) {
+          if (match[2]) {
+            return {
+              name: match[1].trim(),
+              email: match[2].trim(),
+            };
+          } else if (match[1]) {
+            return {
+              email: match[1].trim(),
+            };
+          }
+        }
+      }
+    }
+
+    logger.debug('Could not extract original sender from forwarded email', {
+      subject: parsed.subject,
+      bodyPreview: bodyText.substring(0, 200),
+    });
+
+    return null; // Could not extract original sender
+  }
+
+  /**
    * Decide if email should be auto-imported based on AI analysis
    *
    * Rules:
@@ -277,21 +358,99 @@ class EmailPoller {
   }
 
   /**
+   * Check if email already exists in database (anti-duplicate logic)
+   */
+  private async isDuplicateEmail(messageId: string, subject: string, sender: string, date: Date): Promise<boolean> {
+    if (!this.storage) {
+      return false;
+    }
+
+    try {
+      // Strategy 1: Check by emailMessageId (most reliable)
+      if (messageId) {
+        const allComms = await this.storage.getAllCommunications();
+        const existsByMessageId = allComms.some(comm => comm.emailMessageId === messageId);
+
+        if (existsByMessageId) {
+          logger.info('Duplicate email detected by messageId', { messageId });
+          return true;
+        }
+      }
+
+      // Strategy 2: Check by subject + sender + similar date (within 1 hour)
+      // This catches forwards/re-sends that might have different message IDs
+      const allComms = await this.storage.getAllCommunications();
+      const oneHourMs = 60 * 60 * 1000;
+
+      const existsBySimilarity = allComms.some(comm => {
+        if (!comm.subject || !comm.sender || !comm.communicationDate) {
+          return false;
+        }
+
+        const isSameSubject = comm.subject.trim() === subject.trim();
+        const isSameSender = comm.sender.toLowerCase().includes(sender.toLowerCase()) ||
+                             sender.toLowerCase().includes(comm.sender.toLowerCase());
+
+        const timeDiff = Math.abs(new Date(comm.communicationDate).getTime() - date.getTime());
+        const isSimilarTime = timeDiff < oneHourMs;
+
+        return isSameSubject && isSameSender && isSimilarTime;
+      });
+
+      if (existsBySimilarity) {
+        logger.info('Duplicate email detected by similarity', {
+          subject: subject.substring(0, 50),
+          sender
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      logger.error('Error checking for duplicate email', { error });
+      // In case of error, allow the email through (better to have duplicates than lose emails)
+      return false;
+    }
+  }
+
+  /**
    * Process a single email
    */
   private async processEmail(emailData: { uid: number; parsed: ParsedMail }) {
     const { parsed } = emailData;
 
+    // Try to extract original sender from forwarded email
+    const originalSender = this.extractOriginalSender(parsed);
+
+    // Use original sender if found, otherwise use email header sender
+    const defaultFrom = parsed.from?.value?.[0];
+    const effectiveFrom = originalSender || {
+      email: defaultFrom?.address || '',
+      name: defaultFrom?.name,
+    };
+
     logger.info('Processing email', {
       from: parsed.from?.text,
+      originalSender: originalSender ? `${originalSender.name || ''} <${originalSender.email}>` : null,
+      effectiveFrom: `${effectiveFrom.name || ''} <${effectiveFrom.email}>`,
       subject: parsed.subject,
       date: parsed.date,
     });
 
     // Convert to SendGrid webhook format for compatibility with existing email service
-    const webhookPayload = {
-      from: parsed.from?.text || '',
-      to: parsed.to?.text || '',
+    // Use effective sender (original if forwarded, otherwise header sender)
+    const fromText = effectiveFrom.name
+      ? `${effectiveFrom.name} <${effectiveFrom.email}>`
+      : effectiveFrom.email;
+
+    // Get 'to' text - handle both single AddressObject and array
+    const toText = Array.isArray(parsed.to)
+      ? parsed.to.map((t: any) => t.text).join(', ')
+      : parsed.to?.text || '';
+
+    const webhookPayload: any = {
+      from: fromText,
+      to: toText,
       subject: parsed.subject || '',
       text: parsed.text || '',
       html: parsed.html || '',
@@ -340,6 +499,26 @@ class EmailPoller {
         confidence: analysis.confidence,
         matchesCount: analysis.projectMatches?.length || 0,
       });
+
+      // Check for duplicates before importing
+      const isDuplicate = await this.isDuplicateEmail(
+        parsedEmail.messageId,
+        parsedEmail.subject,
+        `${parsedEmail.from.name || ''} <${parsedEmail.from.email}>`.trim(),
+        parsedEmail.date
+      );
+
+      if (isDuplicate) {
+        logger.warn('Skipping duplicate email', {
+          subject: parsedEmail.subject,
+          from: parsedEmail.from.email,
+          messageId: parsedEmail.messageId
+        });
+
+        // Mark as read to avoid re-processing
+        await this.markAsRead(emailData.uid);
+        return;
+      }
 
       // Intelligent auto-import decision based on matches
       const shouldAutoImport = this.shouldAutoImportEmail(analysis);
