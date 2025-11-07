@@ -1166,8 +1166,8 @@ export default function RegistroComunicazioni() {
                   <User className="h-3 w-3" />
                   <span>
                     {selectedComm?.direction === 'outgoing'
-                      ? `A: ${selectedComm.recipient}`
-                      : `Da: ${selectedComm.sender}`}
+                      ? `A: ${selectedComm?.recipient || 'N/D'}`
+                      : `Da: ${selectedComm?.sender || 'N/D'}`}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
