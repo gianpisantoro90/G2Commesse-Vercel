@@ -1,14 +1,45 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Mail, Calendar, User, Tag, AlertCircle, CheckCircle2, Sparkles, Eye, EyeOff, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Mail,
+  Calendar,
+  User,
+  Tag,
+  AlertCircle,
+  CheckCircle2,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { AISuggestionsPanel } from "@/components/projects/ai-suggestions-panel";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Communication {
   id: string;
@@ -39,135 +70,14 @@ interface Communication {
   };
 }
 
-// Component for individual communication card
-function CommunicationCard({ comm, onProjectAssigned }: { comm: Communication; onProjectAssigned: () => void }) {
-  const [showFullEmail, setShowFullEmail] = useState(false);
-
-  return (
-    <Card key={comm.id} className="border-l-4 border-l-purple-500">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1 flex-1">
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              {comm.subject}
-              {comm.isImportant && (
-                <Badge variant="destructive" className="ml-2">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Importante
-                </Badge>
-              )}
-            </CardTitle>
-            <CardDescription className="space-y-1">
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-1">
-                  <User className="h-3 w-3" />
-                  <span>{comm.sender}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  <span>
-                    {format(new Date(comm.communicationDate), "dd MMM yyyy 'alle' HH:mm", {
-                      locale: it,
-                    })}
-                  </span>
-                </div>
-              </div>
-            </CardDescription>
-          </div>
-        </div>
-
-        {/* Tags */}
-        {comm.tags && comm.tags.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap mt-2">
-            <Tag className="h-3 w-3 text-muted-foreground" />
-            {comm.tags.map((tag: string, index: number) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        {/* Email Content with Expand/Collapse */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h5 className="font-medium text-sm">Contenuto Email</h5>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowFullEmail(!showFullEmail)}
-              className="h-8"
-            >
-              {showFullEmail ? (
-                <>
-                  <ChevronUp className="h-4 w-4 mr-1" />
-                  Comprimi
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                  Espandi
-                </>
-              )}
-            </Button>
-          </div>
-
-          <div className="bg-muted/50 p-4 rounded-lg">
-            {showFullEmail ? (
-              comm.emailHtml ? (
-                <div
-                  className="prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: comm.emailHtml }}
-                />
-              ) : (
-                <p className="text-sm whitespace-pre-wrap">{comm.body}</p>
-              )
-            ) : (
-              <p className="text-sm line-clamp-3">{comm.body}</p>
-            )}
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* AI Suggestions Panel */}
-        {comm.aiSuggestions?.projectMatches && comm.aiSuggestions.projectMatches.length > 0 ? (
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="h-5 w-5 text-purple-600" />
-              <h4 className="font-semibold">Suggerimenti AI</h4>
-              <Badge variant="secondary">
-                {comm.aiSuggestions.projectMatches.length} progetti suggeriti
-              </Badge>
-            </div>
-            <AISuggestionsPanel
-              communicationId={comm.id}
-              aiSuggestions={comm.aiSuggestions}
-              currentProjectId={null}
-              onProjectSelected={onProjectAssigned}
-            />
-          </div>
-        ) : (
-          <div className="text-center p-6 bg-yellow-50 rounded-lg">
-            <AlertCircle className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-            <p className="text-sm text-yellow-800">
-              Nessun progetto suggerito dall'AI per questa comunicazione
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
 export function CommunicationsReview() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
-  // Fetch communications that need review (have aiSuggestions but no projectId)
+  // Fetch communications that need review
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
     queryKey: ["/api/communications/pending-review"],
     queryFn: async () => {
@@ -178,9 +88,21 @@ export function CommunicationsReview() {
   });
 
   const handleProjectAssigned = () => {
-    // Refresh the list after a project is assigned
     queryClient.invalidateQueries({ queryKey: ["/api/communications/pending-review"] });
     queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+    setSelectedComm(null);
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(communications.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedComms = communications.slice(startIndex, endIndex);
+
+  // Reset to page 1 when page size changes
+  const handlePageSizeChange = (newSize: string) => {
+    setPageSize(parseInt(newSize));
+    setCurrentPage(1);
   };
 
   if (isLoading) {
@@ -197,8 +119,8 @@ export function CommunicationsReview() {
   if (communications.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center space-y-3">
-        <div className="p-4 bg-green-100 rounded-full">
-          <CheckCircle2 className="h-12 w-12 text-green-600" />
+        <div className="p-4 bg-green-100 dark:bg-green-900/20 rounded-full">
+          <CheckCircle2 className="h-12 w-12 text-green-600 dark:text-green-400" />
         </div>
         <div>
           <h3 className="font-semibold text-lg">Tutto Revisionato!</h3>
@@ -211,24 +133,238 @@ export function CommunicationsReview() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Summary Badge */}
-      <div className="flex items-center gap-2">
-        <Badge variant="secondary" className="text-lg py-2 px-4">
-          {communications.length} {communications.length === 1 ? "comunicazione" : "comunicazioni"} da rivedere
-        </Badge>
+    <div className="space-y-4">
+      {/* Header with summary and controls */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary" className="text-base py-1.5 px-3">
+            {communications.length} comunicazion{communications.length === 1 ? "e" : "i"} da rivedere
+          </Badge>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Mostra:</span>
+          <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
+            <SelectTrigger className="w-[100px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Communications List */}
-      <div className="space-y-6">
-        {communications.map((comm) => (
-          <CommunicationCard
-            key={comm.id}
-            comm={comm}
-            onProjectAssigned={handleProjectAssigned}
-          />
-        ))}
-      </div>
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[40%]">Oggetto</TableHead>
+                <TableHead className="w-[20%]">Mittente</TableHead>
+                <TableHead className="w-[15%]">Data</TableHead>
+                <TableHead className="w-[15%]">Progetti Suggeriti</TableHead>
+                <TableHead className="w-[10%] text-right">Azioni</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedComms.map((comm) => (
+                <TableRow
+                  key={comm.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-start gap-2">
+                      <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="line-clamp-2">{comm.subject}</span>
+                          {comm.isImportant && (
+                            <Badge variant="destructive" className="text-xs">
+                              !
+                            </Badge>
+                          )}
+                        </div>
+                        {comm.tags && comm.tags.length > 0 && (
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {comm.tags.slice(0, 3).map((tag: string, index: number) => (
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs h-5 px-1.5"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                            {comm.tags.length > 3 && (
+                              <span className="text-xs text-muted-foreground">
+                                +{comm.tags.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm truncate">{comm.sender}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="text-muted-foreground">
+                        {format(new Date(comm.communicationDate), "dd/MM/yy HH:mm", {
+                          locale: it,
+                        })}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {comm.aiSuggestions?.projectMatches && comm.aiSuggestions.projectMatches.length > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                        <Badge variant="secondary" className="text-xs">
+                          {comm.aiSuggestions.projectMatches.length} progett{comm.aiSuggestions.projectMatches.length === 1 ? 'o' : 'i'}
+                        </Badge>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                        <span className="text-xs text-muted-foreground">Nessuno</span>
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedComm(comm)}
+                    >
+                      Revisiona
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Pagina {currentPage} di {totalPages} ({startIndex + 1}-{Math.min(endIndex, communications.length)} di {communications.length})
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Precedente
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Successiva
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Communication Detail Dialog */}
+      <Dialog open={!!selectedComm} onOpenChange={() => setSelectedComm(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              {selectedComm?.subject}
+            </DialogTitle>
+            <DialogDescription className="space-y-2">
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  <span>{selectedComm?.sender}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  <span>
+                    {selectedComm && format(new Date(selectedComm.communicationDate), "dd MMM yyyy 'alle' HH:mm", {
+                      locale: it,
+                    })}
+                  </span>
+                </div>
+              </div>
+              {selectedComm?.tags && selectedComm.tags.length > 0 && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Tag className="h-3 w-3 text-muted-foreground" />
+                  {selectedComm.tags.map((tag: string, index: number) => (
+                    <Badge key={index} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Email Content */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm">Contenuto Email</h4>
+              <div className="bg-muted/50 dark:bg-muted/20 p-4 rounded-lg max-h-[300px] overflow-y-auto">
+                {selectedComm?.emailHtml ? (
+                  <div
+                    className="prose prose-sm max-w-none dark:prose-invert"
+                    dangerouslySetInnerHTML={{ __html: selectedComm.emailHtml }}
+                  />
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{selectedComm?.body}</p>
+                )}
+              </div>
+            </div>
+
+            {/* AI Suggestions */}
+            {selectedComm?.aiSuggestions?.projectMatches && selectedComm.aiSuggestions.projectMatches.length > 0 ? (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  <h4 className="font-semibold">Suggerimenti AI</h4>
+                  <Badge variant="secondary">
+                    {selectedComm.aiSuggestions.projectMatches.length} progetti suggeriti
+                  </Badge>
+                </div>
+                <AISuggestionsPanel
+                  communicationId={selectedComm.id}
+                  aiSuggestions={selectedComm.aiSuggestions}
+                  currentProjectId={null}
+                  onProjectSelected={handleProjectAssigned}
+                />
+              </div>
+            ) : (
+              <div className="text-center p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                <AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mx-auto mb-2" />
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  Nessun progetto suggerito dall'AI per questa comunicazione
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
