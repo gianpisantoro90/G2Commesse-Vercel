@@ -27,6 +27,14 @@ export interface ProjectMatch {
   matchedFields: string[]; // Which fields matched (e.g., ["client", "city"])
 }
 
+export interface SuggestedTask {
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high';
+  dueDate?: string; // ISO date string
+  reasoning: string; // Why this task is suggested
+}
+
 export interface AIEmailAnalysis {
   // Legacy single match (kept for backward compatibility)
   projectCode?: string;
@@ -45,6 +53,9 @@ export interface AIEmailAnalysis {
   suggestedTags: string[];
   isImportant: boolean;
   summary?: string;
+
+  // AI-suggested tasks with details
+  suggestedTasks?: SuggestedTask[];
 }
 
 class EmailService {
@@ -299,6 +310,24 @@ COMPITI AGGIUNTIVI:
 - Genera 3-5 tag rilevanti
 - Determina importanza/urgenza
 - Crea riassunto di 2-3 righe
+- IMPORTANTE: Suggerisci task/azioni specifiche derivate dall'email
+
+ESTRAZIONE TASK SUGGERITI:
+Analizza l'email e suggerisci task specifici che dovrebbero essere creati:
+1. Identifica azioni concrete richieste o necessarie (max 5 task)
+2. Per ogni task specifica:
+   - title: Titolo breve e chiaro (max 60 caratteri)
+   - description: Descrizione dettagliata dell'azione richiesta
+   - priority: 'high' se urgente/importante, 'medium' se normale, 'low' se opzionale
+   - dueDate: Data scadenza in formato ISO (YYYY-MM-DD) se menzionata, altrimenti null
+   - reasoning: Perché questo task è necessario (citare fonte nell'email)
+
+Esempi di task da suggerire:
+- "Inviare documentazione richiesta" se il cliente chiede documenti
+- "Programmare sopralluogo" se si menziona necessità di verifica in loco
+- "Rispondere a richiesta informazioni" se c'è una domanda
+- "Aggiornare progetto con modifiche" se si richiedono varianti
+- "Preparare preventivo" se si chiede un'offerta
 
 RISPOSTA IN JSON (esempio):
 {
@@ -326,6 +355,22 @@ RISPOSTA IN JSON (esempio):
     "actionItems": ["Inviare progetto esecutivo", "Programmare sopralluogo"],
     "keyPoints": ["Cliente urgente", "Budget approvato"]
   },
+  "suggestedTasks": [
+    {
+      "title": "Inviare progetto esecutivo Villa Rossi",
+      "description": "Il cliente ha richiesto l'invio del progetto esecutivo aggiornato entro il 15/12/2024",
+      "priority": "high",
+      "dueDate": "2024-12-15",
+      "reasoning": "Email richiede esplicitamente: 'Potete inviarci il progetto esecutivo entro il 15/12?'"
+    },
+    {
+      "title": "Programmare sopralluogo a Milano",
+      "description": "Organizzare sopralluogo presso Villa Rossi per verifica stato avanzamento lavori",
+      "priority": "medium",
+      "dueDate": null,
+      "reasoning": "Email suggerisce: 'Sarebbe utile fare un sopralluogo per verificare'"
+    }
+  ],
   "suggestedTags": ["urgente", "villa", "milano"],
   "isImportant": true,
   "summary": "Cliente Rossi richiede progetto esecutivo per Villa a Milano entro 15/12. Budget 50k approvato."

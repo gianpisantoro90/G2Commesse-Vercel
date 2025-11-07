@@ -901,6 +901,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Suggested Tasks endpoints
+  app.get("/api/ai/suggested-tasks", async (req, res) => {
+    try {
+      const allCommunications = await storage.getAllCommunications();
+
+      // Filter communications with suggested tasks that haven't been processed yet
+      const withSuggestedTasks = allCommunications.filter((comm: any) => {
+        const hasSuggestedTasks = comm.aiSuggestions &&
+                                 comm.aiSuggestions.suggestedTasks &&
+                                 comm.aiSuggestions.suggestedTasks.length > 0;
+
+        // Only show if there are tasks that haven't been approved/dismissed
+        if (!hasSuggestedTasks) return false;
+
+        const aiTasksStatus = comm.aiTasksStatus || {};
+        const hasPendingTasks = comm.aiSuggestions.suggestedTasks.some((task: any, index: number) => {
+          const taskStatus = aiTasksStatus[index];
+          return !taskStatus || taskStatus.action === 'pending';
+        });
+
+        return hasPendingTasks;
+      });
+
+      // Sort by communication date (most recent first)
+      withSuggestedTasks.sort((a: any, b: any) =>
+        new Date(b.communicationDate).getTime() - new Date(a.communicationDate).getTime()
+      );
+
+      res.json(withSuggestedTasks);
+    } catch (error) {
+      console.error('Error fetching suggested tasks:', error);
+      res.status(500).json({ message: "Errore nel recupero dei task suggeriti" });
+    }
+  });
+
+  app.post("/api/ai/suggested-tasks/approve", async (req, res) => {
+    try {
+      const { communicationId, taskIndex, assignedToId } = req.body;
+
+      if (!communicationId || taskIndex === undefined) {
+        return res.status(400).json({ message: "communicationId e taskIndex sono richiesti" });
+      }
+
+      // Get communication
+      const communication = await storage.getCommunication(communicationId);
+      if (!communication) {
+        return res.status(404).json({ message: "Comunicazione non trovata" });
+      }
+
+      const suggestedTask = communication.aiSuggestions?.suggestedTasks?.[taskIndex];
+      if (!suggestedTask) {
+        return res.status(404).json({ message: "Task suggerito non trovato" });
+      }
+
+      // Create the task
+      const newTask = await storage.createTask({
+        title: suggestedTask.title,
+        description: suggestedTask.description || null,
+        projectId: communication.projectId || null,
+        assignedToId: assignedToId || null,
+        createdById: (req as any).user.id, // From auth middleware
+        priority: suggestedTask.priority,
+        status: 'pending',
+        dueDate: suggestedTask.dueDate ? new Date(suggestedTask.dueDate) : null,
+        notes: `Task suggerito dall'AI dalla comunicazione: ${communication.subject}\n\nRagionamento: ${suggestedTask.reasoning}`,
+      });
+
+      // Update communication with task approval status
+      const aiTasksStatus = communication.aiTasksStatus || {};
+      aiTasksStatus[taskIndex] = {
+        action: 'approved',
+        taskId: newTask.id,
+        approvedAt: new Date().toISOString(),
+        approvedBy: (req as any).user.id,
+      };
+
+      await storage.updateCommunication(communicationId, {
+        aiTasksStatus: aiTasksStatus,
+      });
+
+      res.json({ task: newTask, message: "Task creato con successo" });
+    } catch (error) {
+      console.error('Error approving suggested task:', error);
+      res.status(500).json({ message: "Errore nella creazione del task" });
+    }
+  });
+
+  app.post("/api/ai/suggested-tasks/dismiss", async (req, res) => {
+    try {
+      const { communicationId, taskIndex } = req.body;
+
+      if (!communicationId || taskIndex === undefined) {
+        return res.status(400).json({ message: "communicationId e taskIndex sono richiesti" });
+      }
+
+      // Get communication
+      const communication = await storage.getCommunication(communicationId);
+      if (!communication) {
+        return res.status(404).json({ message: "Comunicazione non trovata" });
+      }
+
+      // Update communication with task dismissal status
+      const aiTasksStatus = communication.aiTasksStatus || {};
+      aiTasksStatus[taskIndex] = {
+        action: 'dismissed',
+        dismissedAt: new Date().toISOString(),
+        dismissedBy: (req as any).user.id,
+      };
+
+      await storage.updateCommunication(communicationId, {
+        aiTasksStatus: aiTasksStatus,
+      });
+
+      res.json({ message: "Task rifiutato" });
+    } catch (error) {
+      console.error('Error dismissing suggested task:', error);
+      res.status(500).json({ message: "Errore nel rifiuto del task" });
+    }
+  });
+
   app.post("/api/communications", async (req, res) => {
     try {
       const communication = await storage.createCommunication(req.body);
