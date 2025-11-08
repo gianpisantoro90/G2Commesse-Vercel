@@ -975,12 +975,12 @@ export default function RegistroComunicazioni() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[35%]">Oggetto</TableHead>
-                    <TableHead className="w-[15%]">Tipo</TableHead>
-                    <TableHead className="w-[15%]">Mittente/Destinatario</TableHead>
-                    <TableHead className="w-[15%]">Commessa</TableHead>
-                    <TableHead className="w-[12%]">Data</TableHead>
-                    <TableHead className="w-[8%] text-right">Azioni</TableHead>
+                    <TableHead className="w-[50%]">Oggetto</TableHead>
+                    <TableHead className="w-[12%]">Tipo</TableHead>
+                    <TableHead className="w-[10%]">Mittente/Dest.</TableHead>
+                    <TableHead className="w-[12%]">Commessa</TableHead>
+                    <TableHead className="w-[10%]">Data</TableHead>
+                    <TableHead className="w-[6%] text-right">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
