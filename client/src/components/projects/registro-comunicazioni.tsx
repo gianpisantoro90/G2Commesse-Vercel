@@ -913,7 +913,7 @@ export default function RegistroComunicazioni() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tutte le commesse</SelectItem>
-                  {projects.map((p) => (
+                  {(projects || []).map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.code}
                     </SelectItem>
