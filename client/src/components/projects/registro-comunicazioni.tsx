@@ -657,17 +657,17 @@ export default function RegistroComunicazioni() {
   const [pageSize, setPageSize] = useState(25);
   const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
 
-  const { data: projects = [] } = useQuery<Project[]>({
+  const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
-  const { data: allCommunications = [] } = useQuery<Communication[]>({
+  const { data: allCommunications = [], isLoading: commsLoading, error: commsError } = useQuery<Communication[]>({
     queryKey: ["/api/communications"],
   });
 
   // Enrich communications with project data
-  const communications = allCommunications.map(comm => {
-    const project = projects.find(p => p.id === comm.projectId);
+  const communications = (allCommunications || []).map(comm => {
+    const project = (projects || []).find(p => p.id === comm.projectId);
     return {
       ...comm,
       projectCode: project?.code,
