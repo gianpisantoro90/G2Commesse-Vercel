@@ -1,0 +1,136 @@
+2025-11-10 17:42:56.34
+534a7d9c
+User
+❌ Error updating project: error: update or delete on table "projects" violates foreign key constraint "onedrive_mappings_project_code_projects_code_fk" on table "onedrive_mappings"
+2025-11-10 17:42:56.34
+534a7d9c
+User
+at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+2025-11-10 17:42:56.34
+534a7d9c
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+2025-11-10 17:42:56.34
+534a7d9c
+User
+at async NeonPreparedQuery.execute (file:///home/runner/workspace/node_modules/drizzle-orm/neon-serverless/session.js:76:20)
+2025-11-10 17:42:56.34
+534a7d9c
+User
+at async DatabaseStorage.updateProject (file:///home/runner/workspace/dist/index.js:1931:27)
+2025-11-10 17:42:56.34
+534a7d9c
+User
+at async updateProjectHandler (file:///home/runner/workspace/dist/index.js:4901:23) {
+2025-11-10 17:42:56.34
+534a7d9c
+User
+length: 369,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+severity: 'ERROR',
+2025-11-10 17:42:56.34
+534a7d9c
+User
+code: '23503',
+2025-11-10 17:42:56.34
+534a7d9c
+User
+detail: 'Key (code)=(24GDFMIL01) is still referenced from table "onedrive_mappings".',
+2025-11-10 17:42:56.34
+534a7d9c
+User
+hint: undefined,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+position: undefined,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+internalPosition: undefined,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+internalQuery: undefined,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+where: undefined,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+schema: 'public',
+2025-11-10 17:42:56.34
+534a7d9c
+User
+table: 'onedrive_mappings',
+2025-11-10 17:42:56.34
+534a7d9c
+User
+column: undefined,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+dataType: undefined,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+constraint: 'onedrive_mappings_project_code_projects_code_fk',
+2025-11-10 17:42:56.34
+534a7d9c
+User
+file: 'ri_triggers.c',
+2025-11-10 17:42:56.34
+534a7d9c
+User
+line: '2621',
+2025-11-10 17:42:56.34
+534a7d9c
+User
+routine: 'ri_ReportViolation'
+2025-11-10 17:42:56.34
+534a7d9c
+User
+}
+2025-11-10 17:42:56.34
+534a7d9c
+User
+📋 Project ID: 3ff39d51-f28f-407e-beb4-b619ad50b4c5
+2025-11-10 17:42:56.34
+534a7d9c
+User
+📋 Request body: {
+2025-11-10 17:42:56.34
+534a7d9c
+User
+"code": "24GUAMIL01",
+2025-11-10 17:42:56.34
+534a7d9c
+User
+"client": "Guardia di Finanza",
+2025-11-10 17:42:56.34
+534a7d9c
+User
+"city": "Milano",
+2025-11-10 17:42:56.34
+534a7d9c
+User
+"object": "Ristrutturazione Caserma Malgeri",
+2025-11-10 17:42:56.34
+534a7d9c
+User
+"year": 24,
+2025-11-10 17:42:56.34
+534a7d9c
+User
+"metadata": {}
+2025-11-10 17:42:56.34
+534a7d9c
+User
+}
+2025-11-10 17:42:56.34
+534a7d9c
+User
+[2025-11-10T16:42:56.342Z] ℹ️ INFO: ❌ PUT /api/projects/3ff39d51-f28f-407e-beb4-b619ad50b4c5 - 500 {"method":"PUT","path":"/api/projects/3ff39d51-f28f-407e-beb4-b619ad50b4c5","statusCode":500,"duration":"183ms"}
