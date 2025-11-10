@@ -67,14 +67,21 @@ export default function TodoPanel() {
   const users = (rawUsers || []).filter(u => u?.id && typeof u.id === 'string' && u.id.trim() !== '');
 
   // Filter tasks
-  const filteredTasks = tasks.filter(task => {
-    if (activeTab === "my" && task.assignedToId !== user?.id) return false;
-    if (activeTab === "created" && task.createdById !== user?.id) return false;
-    if (filterProject && filterProject !== "all" && task.projectId !== filterProject) return false;
-    if (filterStatus && filterStatus !== "all" && task.status !== filterStatus) return false;
-    if (filterPriority && filterPriority !== "all" && task.priority !== filterPriority) return false;
-    return true;
-  });
+  const filteredTasks = tasks
+    .filter(task => {
+      if (activeTab === "my" && task.assignedToId !== user?.id) return false;
+      if (activeTab === "created" && task.createdById !== user?.id) return false;
+      if (filterProject && filterProject !== "all" && task.projectId !== filterProject) return false;
+      if (filterStatus && filterStatus !== "all" && task.status !== filterStatus) return false;
+      if (filterPriority && filterPriority !== "all" && task.priority !== filterPriority) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Completed tasks go to the bottom
+      if (a.status === 'completed' && b.status !== 'completed') return 1;
+      if (a.status !== 'completed' && b.status === 'completed') return -1;
+      return 0;
+    });
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -312,10 +319,16 @@ export default function TodoPanel() {
                     const isExpanded = expandedTasks.has(task.id);
                     const hasDescription = task.description && task.description.trim() !== '';
 
+                    const isCompleted = task.status === 'completed';
+
                     return (
                       <div
                         key={task.id}
-                        className="rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        className={`rounded-lg border border-gray-200 dark:border-gray-700 transition-colors ${
+                          isCompleted 
+                            ? 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30' 
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                        }`}
                         data-testid={`task-item-${task.id}`}
                       >
                         {/* Main task row */}
