@@ -731,26 +731,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Support both PUT and PATCH for updates
   const updateProjectHandler = async (req: Request, res: Response) => {
     try {
-      console.log('📝 PATCH request body:', JSON.stringify(req.body, null, 2));
+      console.log('📝 PATCH/PUT request for project:', req.params.id);
+      console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
 
       // Convert date strings to Date objects for validation
       const bodyWithDates = { ...req.body };
-      if (bodyWithDates.dataFattura) bodyWithDates.dataFattura = new Date(bodyWithDates.dataFattura);
-      if (bodyWithDates.dataPagamento) bodyWithDates.dataPagamento = new Date(bodyWithDates.dataPagamento);
+      if (bodyWithDates.dataFattura && typeof bodyWithDates.dataFattura === 'string') {
+        bodyWithDates.dataFattura = new Date(bodyWithDates.dataFattura);
+      }
+      if (bodyWithDates.dataPagamento && typeof bodyWithDates.dataPagamento === 'string') {
+        bodyWithDates.dataPagamento = new Date(bodyWithDates.dataPagamento);
+      }
 
       const validatedData = insertProjectSchema.partial().parse(bodyWithDates);
+      console.log('✅ Data validated successfully');
+      
       const project = await storage.updateProject(req.params.id, validatedData);
 
       if (!project) {
+        console.log('❌ Project not found:', req.params.id);
         return res.status(404).json({ message: "Commessa non trovata" });
       }
 
+      console.log('✅ Project updated successfully:', project.code);
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.log('❌ Validation errors:', JSON.stringify(error.errors, null, 2));
+        console.error('❌ Validation errors:', JSON.stringify(error.errors, null, 2));
         return res.status(400).json({ message: "Dati non validi", errors: error.errors });
       }
+      console.error('❌ Error updating project:', error);
+      console.error('📋 Project ID:', req.params.id);
+      console.error('📋 Request body:', JSON.stringify(req.body, null, 2));
       res.status(500).json({ message: "Errore nell'aggiornamento della commessa" });
     }
   };
