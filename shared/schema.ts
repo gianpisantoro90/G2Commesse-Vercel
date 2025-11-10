@@ -88,7 +88,7 @@ export const systemConfig = pgTable("system_config", {
 
 export const oneDriveMappings = pgTable("onedrive_mappings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectCode: text("project_code").notNull().references(() => projects.code),
+  projectCode: text("project_code").notNull().references(() => projects.code, { onUpdate: "cascade", onDelete: "cascade" }),
   oneDriveFolderId: text("onedrive_folder_id").notNull(),
   oneDriveFolderName: text("onedrive_folder_name").notNull(),
   oneDriveFolderPath: text("onedrive_folder_path").notNull(),
@@ -104,7 +104,7 @@ export const filesIndex = pgTable("files_index", {
   size: integer("size").default(0),
   mimeType: text("mime_type"),
   lastModified: timestamp("last_modified"),
-  projectCode: text("project_code").references(() => projects.code),
+  projectCode: text("project_code").references(() => projects.code, { onUpdate: "cascade", onDelete: "set null" }),
   parentFolderId: text("parent_folder_id"), // OneDrive parent folder ID
   isFolder: boolean("is_folder").default(false),
   webUrl: text("web_url"), // OneDrive web URL for direct access
