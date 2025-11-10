@@ -1263,12 +1263,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/deadlines/:id", async (req, res) => {
     try {
-      const updated = await storage.updateDeadline(req.params.id, req.body);
+      const data = { ...req.body };
+      
+      // Convert date strings to Date objects
+      if (data.dueDate && typeof data.dueDate === 'string') {
+        data.dueDate = new Date(data.dueDate);
+      }
+      if (data.completedAt && typeof data.completedAt === 'string') {
+        data.completedAt = new Date(data.completedAt);
+      }
+      
+      const updated = await storage.updateDeadline(req.params.id, data);
       if (!updated) {
         return res.status(404).json({ message: "Scadenza non trovata" });
       }
       res.json(updated);
     } catch (error) {
+      console.error('❌ Error updating deadline:', error);
+      console.error('📋 Request params:', req.params);
+      console.error('📋 Request body:', JSON.stringify(req.body, null, 2));
       res.status(500).json({ message: "Errore nell'aggiornamento della scadenza" });
     }
   });
