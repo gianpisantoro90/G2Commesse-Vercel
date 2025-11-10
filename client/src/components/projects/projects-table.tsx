@@ -166,6 +166,21 @@ export default function ProjectsTable() {
 
   // Sort filtered projects
   const sortedProjects = [...filteredProjects].sort((a, b) => {
+    // Primary sort: always prioritize status (in_corso first, then sospesa, then conclusa)
+    const statusPriority = {
+      'in_corso': 1,
+      'sospesa': 2,
+      'conclusa': 3
+    };
+    
+    const aStatusPriority = statusPriority[a.status as keyof typeof statusPriority] || 999;
+    const bStatusPriority = statusPriority[b.status as keyof typeof statusPriority] || 999;
+    
+    if (aStatusPriority !== bStatusPriority) {
+      return aStatusPriority - bStatusPriority;
+    }
+
+    // Secondary sort: user-selected field
     if (!sortField) return 0;
 
     let aValue: string | number = "";
