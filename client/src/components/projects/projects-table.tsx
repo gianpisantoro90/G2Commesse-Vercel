@@ -241,21 +241,6 @@ export default function ProjectsTable() {
     }
   };
 
-  const handleExportProject = (project: Project) => {
-    const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${project.code}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Esportazione completata",
-      description: `Commessa ${project.code} esportata con successo`,
-    });
-  };
-
   // Handler for opening prestazioni modal
   const handleOpenPrestazioniModal = (project: Project) => {
     setSelectedProjectForPrestazioni(project);
@@ -955,16 +940,6 @@ export default function ProjectsTable() {
                             ✏️
                           </Button>
                         </EditProjectForm>
-                        <Button
-                          size="default"
-                          variant="ghost"
-                          onClick={() => handleExportProject(project)}
-                          className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900 rounded-lg transition-colors"
-                          title="Esporta"
-                          data-testid={`export-project-${project.id}`}
-                        >
-                          📄
-                        </Button>
                         <Button
                           size="default"
                           variant="ghost"
