@@ -56,7 +56,7 @@ export default function ProjectsTable() {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState<25 | 50 | 75>(25);
+  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
 
   // Sorting state
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -1011,7 +1011,7 @@ export default function ProjectsTable() {
                 <Select 
                   value={itemsPerPage.toString()} 
                   onValueChange={(value) => {
-                    setItemsPerPage(parseInt(value) as 25 | 50 | 75);
+                    setItemsPerPage(parseInt(value) as 10 | 25 | 50);
                     setCurrentPage(1);
                   }}
                 >
@@ -1019,9 +1019,9 @@ export default function ProjectsTable() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
                     <SelectItem value="25">25</SelectItem>
                     <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="75">75</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
