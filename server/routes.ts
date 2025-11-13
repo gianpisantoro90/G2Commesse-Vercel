@@ -237,9 +237,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all projects for AI matching
       const projects = await storage.getAllProjects();
 
-      // Get AI config for analysis
+      // Get AI config for analysis (includes API key from server-side storage)
       const aiConfigResult = await storage.getSystemConfig('ai_config');
-      const aiApiKey = aiConfigResult?.value?.apiKey || process.env.ANTHROPIC_API_KEY;
+      const storedConfig = aiConfigResult?.value;
+      
+      const finalConfig: AIConfig | string | undefined = storedConfig || process.env.ANTHROPIC_API_KEY;
 
       // Analyze email with AI
       const analysis = await emailService.analyzeEmailWithAI(
@@ -250,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           client: p.client,
           object: p.object,
         })),
-        aiApiKey
+        finalConfig
       );
 
       console.log(`🤖 AI Analysis complete: ${analysis.projectCode || 'No match'} (confidence: ${analysis.confidence})`);
@@ -1451,7 +1453,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (key === 'ai_config') {
         try {
-          const validatedConfig = aiConfigSchema.parse(value);
+          const existingConfig = await storage.getSystemConfig('ai_config');
+          const existingApiKey = existingConfig?.value?.apiKey;
+          
+          const configToValidate = {
+            ...value,
+            apiKey: value.apiKey || existingApiKey || '',
+          };
+          
+          const validatedConfig = aiConfigSchema.parse(configToValidate);
           const modelToProvider: Record<string, 'anthropic' | 'deepseek'> = {
             'claude-sonnet-4-20250514': 'anthropic',
             'claude-3-5-sonnet-20241022': 'anthropic',

@@ -1,6 +1,8 @@
 import { logger } from './logger';
 import { createTransport } from 'nodemailer';
 import type { Transporter } from 'nodemailer';
+import { analyzeEmail as analyzeEmailWithRouter } from './ai-email-analyzer';
+import type { AIConfig } from '@shared/schema';
 
 export interface ParsedEmail {
   messageId: string;
@@ -197,11 +199,11 @@ class EmailService {
   async analyzeEmailWithAI(
     email: ParsedEmail,
     projects: Array<{ id: string; code: string; client: string; object: string }>,
-    anthropicApiKey?: string
+    aiConfig?: AIConfig | string
   ): Promise<AIEmailAnalysis> {
     try {
       // Try to extract project code from subject using regex
-      const codeMatch = email.subject.match(/\[?(\d{2}[A-Z]{3,6}\d{2,3})\]?/i);
+      const codeMatch = email.subject?.match(/\[?(\d{2}[A-Z]{3,6}\d{2,3})\]?/i);
       let projectCode = codeMatch ? codeMatch[1].toUpperCase() : undefined;
       let confidence = projectCode ? 0.95 : 0;
 
@@ -215,18 +217,47 @@ class EmailService {
       }
 
       // ALWAYS use AI if available to do intelligent matching on all fields
-      if (anthropicApiKey) {
+      if (aiConfig) {
         try {
+          let config: AIConfig;
+          
+          if (typeof aiConfig === 'string') {
+            config = {
+              provider: 'anthropic',
+              model: 'claude-sonnet-4-20250514',
+              apiKey: aiConfig,
+              autoRouting: true,
+              contentAnalysis: true,
+              learningMode: true,
+            };
+          } else {
+            config = {
+              ...aiConfig,
+              apiKey: aiConfig.apiKey || process.env.ANTHROPIC_API_KEY || '',
+            };
+          }
+          
+          if (!config.apiKey) {
+            throw new Error('AI API key not configured');
+          }
+
           logger.info('Calling AI for intelligent project matching', {
+            provider: config.provider,
+            model: config.model,
             hasRegexMatch: !!projectCode,
             regexConfidence: confidence,
             totalProjects: projects.length
           });
 
-          const aiResult = await this.callClaudeForEmailAnalysis(email, projects, anthropicApiKey);
+          const aiResult = await analyzeEmailWithRouter({
+            email,
+            projects,
+            config,
+          });
 
           // AI result is always better than regex because it analyzes all fields
           logger.info('AI analysis returned', {
+            provider: config.provider,
             projectCode: aiResult.projectCode,
             confidence: aiResult.confidence,
             matchesCount: aiResult.projectMatches?.length || 0
