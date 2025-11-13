@@ -58,6 +58,7 @@ interface Communication {
     projectCode?: string;
     confidence: number;
     reasoning?: string;
+    summary?: string;
     isImportant?: boolean;
     suggestedTags?: string[];
     extractedData?: {
@@ -359,6 +360,7 @@ export function CommunicationsReview() {
                     projectCode: selectedComm.aiSuggestions.projectCode,
                     projectId: selectedComm.aiSuggestions.projectId,
                     confidence: selectedComm.aiSuggestions.confidence,
+                    summary: selectedComm.aiSuggestions.summary,
                     projectMatches: selectedComm.aiSuggestions.projectMatches,
                     suggestedTags: selectedComm.aiSuggestions.suggestedTags || [],
                     isImportant: selectedComm.aiSuggestions.isImportant || false,
