@@ -3,6 +3,20 @@ import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const aiConfigSchema = z.object({
+  provider: z.enum(['anthropic', 'deepseek']).default('anthropic'),
+  model: z.string().min(1),
+  apiKey: z.string().min(1),
+  autoRouting: z.boolean().optional().default(true),
+  contentAnalysis: z.boolean().optional().default(true),
+  learningMode: z.boolean().optional().default(true),
+});
+
+export type AIConfig = z.infer<typeof aiConfigSchema>;
+
+export const aiConfigResponseSchema = aiConfigSchema.omit({ apiKey: true });
+export type AIConfigResponse = z.infer<typeof aiConfigResponseSchema>;
+
 export const projects = pgTable("projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),

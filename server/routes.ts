@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema, aiConfigSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 import serverOneDriveService from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
@@ -1427,6 +1427,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!config) {
         return res.status(404).json({ message: "Configurazione non trovata" });
       }
+      
+      if (req.params.key === 'ai_config' && config.value && typeof config.value === 'object' && 'apiKey' in config.value) {
+        const { apiKey, ...safeConfig } = config.value as any;
+        return res.json({
+          ...config,
+          value: safeConfig,
+        });
+      }
+      
       res.json(config);
     } catch (error) {
       res.status(500).json({ message: "Errore nel recupero della configurazione" });
@@ -1439,6 +1448,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!key) {
         return res.status(400).json({ message: "Chiave richiesta" });
       }
+      
+      if (key === 'ai_config') {
+        try {
+          const validatedConfig = aiConfigSchema.parse(value);
+          const modelToProvider: Record<string, 'anthropic' | 'deepseek'> = {
+            'claude-sonnet-4-20250514': 'anthropic',
+            'claude-3-5-sonnet-20241022': 'anthropic',
+            'claude-3-haiku-20240307': 'anthropic',
+            'deepseek-reasoner': 'deepseek',
+            'deepseek-chat': 'deepseek',
+          };
+          
+          const configWithProvider = {
+            ...validatedConfig,
+            provider: modelToProvider[validatedConfig.model] || 'anthropic',
+          };
+          
+          const config = await storage.setSystemConfig(key, configWithProvider);
+          
+          const { apiKey, ...safeValue } = configWithProvider;
+          return res.json({
+            ...config,
+            value: safeValue,
+          });
+        } catch (validationError) {
+          return res.status(400).json({
+            message: "Configurazione AI non valida",
+            error: validationError instanceof Error ? validationError.message : 'Invalid config',
+          });
+        }
+      }
+      
       const config = await storage.setSystemConfig(key, value);
       res.json(config);
     } catch (error) {
