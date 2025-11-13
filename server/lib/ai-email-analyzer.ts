@@ -223,12 +223,17 @@ const providers: Record<Provider, ProviderAdapter> = {
 };
 
 export function buildPrompt(email: ParsedEmail, projects: ProjectInfo[]): string {
+  const fromEmail = email.from?.email || 'unknown';
+  const fromName = email.from?.name ? ` (${email.from.name})` : '';
+  const subject = email.subject || '(Nessun oggetto)';
+  const bodyText = email.bodyText || '(Nessun contenuto)';
+  
   return `Analizza questa email e trova i progetti più pertinenti confrontando TUTTI i dati disponibili.
 
 EMAIL RICEVUTA:
-Da: ${email.from.email}${email.from.name ? ` (${email.from.name})` : ''}
-Oggetto: ${email.subject}
-Contenuto: ${email.bodyText.substring(0, 2000)}
+Da: ${fromEmail}${fromName}
+Oggetto: ${subject}
+Contenuto: ${bodyText.substring(0, 2000)}
 
 PROGETTI DISPONIBILI:
 ${projects.map(p => `ID: ${p.id} | Codice: ${p.code} | Cliente: ${p.client} | Oggetto: ${p.object}`).join('\n')}

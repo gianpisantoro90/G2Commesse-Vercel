@@ -478,9 +478,10 @@ class EmailPoller {
       // Get all projects for AI matching
       const projects = await this.storage.getAllProjects();
 
-      // Get AI config
+      // Get AI config (includes API key from server-side storage)
       const aiConfigResult = await this.storage.getSystemConfig('ai_config');
-      const aiApiKey = aiConfigResult?.value?.apiKey || process.env.ANTHROPIC_API_KEY;
+      const storedConfig = aiConfigResult?.value;
+      const finalConfig = storedConfig || process.env.ANTHROPIC_API_KEY;
 
       // Analyze with AI
       const analysis = await emailService.analyzeEmailWithAI(
@@ -491,7 +492,7 @@ class EmailPoller {
           client: p.client,
           object: p.object,
         })),
-        aiApiKey
+        finalConfig
       );
 
       logger.info('AI analysis complete', {
