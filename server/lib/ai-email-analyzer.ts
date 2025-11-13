@@ -171,8 +171,24 @@ const deepseekAdapter: ProviderAdapter = {
     return retryWithBackoff(async () => {
       const systemMessage = "You are an expert Italian structural engineer analyzing emails for G2 Ingegneria. Always respond with valid JSON only.";
       
-      const isReasonerModel = config.model.includes('reasoner');
-      const timeout = isReasonerModel ? REASONER_TIMEOUT_MS : ANALYSIS_TIMEOUT_MS;
+      const isThinkingModel = config.model.includes('reasoner') || config.model.includes('v3.2');
+      const timeout = isThinkingModel ? REASONER_TIMEOUT_MS : ANALYSIS_TIMEOUT_MS;
+      
+      const requestBody: any = {
+        model: config.model,
+        messages: [
+          {
+            role: 'system',
+            content: systemMessage,
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        max_tokens: 4096,
+        temperature: 0.7,
+      };
       
       const response = await fetchWithTimeout(
         'https://api.deepseek.com/v1/chat/completions',
@@ -182,21 +198,7 @@ const deepseekAdapter: ProviderAdapter = {
             'content-type': 'application/json',
             'Authorization': `Bearer ${config.apiKey}`,
           },
-          body: JSON.stringify({
-            model: config.model,
-            messages: [
-              {
-                role: 'system',
-                content: systemMessage,
-              },
-              {
-                role: 'user',
-                content: prompt,
-              },
-            ],
-            max_tokens: 4096,
-            temperature: 0.7,
-          }),
+          body: JSON.stringify(requestBody),
         },
         timeout
       );
