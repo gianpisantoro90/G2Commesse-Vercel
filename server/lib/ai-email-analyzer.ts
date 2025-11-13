@@ -66,6 +66,7 @@ interface ProviderAdapter {
 }
 
 const ANALYSIS_TIMEOUT_MS = 25000;
+const REASONER_TIMEOUT_MS = 120000; // 2 minutes for reasoning models
 
 async function fetchWithTimeout(
   url: string,
@@ -170,6 +171,9 @@ const deepseekAdapter: ProviderAdapter = {
     return retryWithBackoff(async () => {
       const systemMessage = "You are an expert Italian structural engineer analyzing emails for G2 Ingegneria. Always respond with valid JSON only.";
       
+      const isReasonerModel = config.model.includes('reasoner');
+      const timeout = isReasonerModel ? REASONER_TIMEOUT_MS : ANALYSIS_TIMEOUT_MS;
+      
       const response = await fetchWithTimeout(
         'https://api.deepseek.com/v1/chat/completions',
         {
@@ -194,7 +198,7 @@ const deepseekAdapter: ProviderAdapter = {
             temperature: 0.7,
           }),
         },
-        ANALYSIS_TIMEOUT_MS
+        timeout
       );
 
       if (!response.ok) {
