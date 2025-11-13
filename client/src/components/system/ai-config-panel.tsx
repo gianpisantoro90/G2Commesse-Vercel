@@ -42,44 +42,68 @@ export default function AiConfigPanel() {
   });
 
   useEffect(() => {
-    // Load current config and update form with improved error handling
-    let decodedApiKey = '';
-    if (aiConfig.apiKey) {
+    const loadServerConfig = async () => {
       try {
-        // Check if it looks like base64 (no spaces and proper format)
-        if (typeof aiConfig.apiKey === 'string' && !aiConfig.apiKey.includes(' ') && aiConfig.apiKey.length > 10) {
-          try {
-            decodedApiKey = atob(aiConfig.apiKey);
-            // Validate that decoded result looks like an API key
-            if (!decodedApiKey.startsWith('sk-') && !decodedApiKey.includes('ant-')) {
-              throw new Error('Decoded key format invalid');
+        const response = await fetch('/api/system-config/ai_config');
+        if (response.ok) {
+          const { value } = await response.json();
+          if (value) {
+            const mergedConfig = {
+              apiKey: aiConfig.apiKey || '',
+              model: value.model || aiConfig.model,
+              autoRouting: value.autoRouting ?? aiConfig.autoRouting,
+              contentAnalysis: value.contentAnalysis ?? aiConfig.contentAnalysis,
+              learningMode: value.learningMode ?? aiConfig.learningMode,
+            };
+            
+            setAiConfig(mergedConfig);
+            form.reset(mergedConfig);
+            
+            if (mergedConfig.apiKey) {
+              checkAiStatus();
             }
-          } catch (decodeError) {
-            // If base64 decoding fails, assume it's already plain text
-            console.warn('API Key appears to be plain text or invalid base64, using as-is');
-            decodedApiKey = aiConfig.apiKey;
+            return;
           }
-        } else {
-          // Use as-is if it doesn't look like base64
-          decodedApiKey = aiConfig.apiKey;
         }
       } catch (error) {
-        console.warn('API Key processing failed, using as-is:', error);
-        decodedApiKey = aiConfig.apiKey;
+        console.warn('Could not load server config, using localStorage:', error);
       }
-    }
-    
-    const currentConfig = {
-      ...aiConfig,
-      apiKey: decodedApiKey
+      
+      let decodedApiKey = '';
+      if (aiConfig.apiKey) {
+        try {
+          if (typeof aiConfig.apiKey === 'string' && !aiConfig.apiKey.includes(' ') && aiConfig.apiKey.length > 10) {
+            try {
+              decodedApiKey = atob(aiConfig.apiKey);
+              if (!decodedApiKey.startsWith('sk-') && !decodedApiKey.includes('ant-')) {
+                throw new Error('Decoded key format invalid');
+              }
+            } catch (decodeError) {
+              console.warn('API Key appears to be plain text or invalid base64, using as-is');
+              decodedApiKey = aiConfig.apiKey;
+            }
+          } else {
+            decodedApiKey = aiConfig.apiKey;
+          }
+        } catch (error) {
+          console.warn('API Key processing failed, using as-is:', error);
+          decodedApiKey = aiConfig.apiKey;
+        }
+      }
+      
+      const currentConfig = {
+        ...aiConfig,
+        apiKey: decodedApiKey
+      };
+      form.reset(currentConfig);
+      
+      if (aiConfig.apiKey) {
+        checkAiStatus();
+      }
     };
-    form.reset(currentConfig);
     
-    // Check AI status on load
-    if (aiConfig.apiKey) {
-      checkAiStatus();
-    }
-  }, [aiConfig]);  // Add aiConfig dependency
+    loadServerConfig();
+  }, []);
 
   const checkAiStatus = async () => {
     if (!aiConfig.apiKey) return;
@@ -139,18 +163,52 @@ export default function AiConfigPanel() {
     }
   };
 
-  const onSubmit = (data: AiConfigForm) => {
-    // Save config directly (encryption handled by useEncryptedLocalStorage)
-    setAiConfig(data);
-    
-    toast({
-      title: "Configurazione salvata",
-      description: "Le impostazioni AI sono state salvate con successo",
-    });
+  const onSubmit = async (data: AiConfigForm) => {
+    try {
+      setAiConfig(data);
+      
+      const modelToProvider: Record<string, 'anthropic' | 'deepseek'> = {
+        'claude-sonnet-4-20250514': 'anthropic',
+        'claude-3-5-sonnet-20241022': 'anthropic',
+        'claude-3-haiku-20240307': 'anthropic',
+        'deepseek-reasoner': 'deepseek',
+        'deepseek-chat': 'deepseek',
+      };
+      
+      const configToSave = {
+        ...data,
+        provider: modelToProvider[data.model] || 'anthropic',
+      };
+      
+      const response = await fetch('/api/system-config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key: 'ai_config',
+          value: configToSave,
+        }),
+      });
 
-    // Test connection after saving
-    if (data.apiKey) {
-      checkAiStatus();
+      if (!response.ok) {
+        throw new Error('Errore nel salvataggio della configurazione');
+      }
+
+      toast({
+        title: "Configurazione salvata",
+        description: "Le impostazioni AI sono state salvate con successo nel database",
+      });
+
+      if (data.apiKey) {
+        checkAiStatus();
+      }
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Errore nel salvataggio della configurazione",
+        variant: "destructive",
+      });
     }
   };
 
