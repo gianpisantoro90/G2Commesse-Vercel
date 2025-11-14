@@ -2,6 +2,16 @@
 
 ## Overview
 
+**CRITICAL FIX - DeepSeek Reasoner AI Analysis (November 14, 2025)**
+- ✅ **FIXED DeepSeek JSON PARSING**: Resolved critical bug where DeepSeek Reasoner never suggested project matches
+- ✅ **ARRAY-BASED CONTENT HANDLING**: DeepSeek adapter now correctly filters reasoning segments and extracts final JSON
+- ✅ **IMPROVED JSON EXTRACTION**: normalizeAnalysis now parses last valid JSON object instead of first (greedy match)
+- ✅ **DEBUG LOGGING**: Added sanitized response preview logging for troubleshooting AI responses
+- ✅ **VALIDATION ENHANCED**: JSON validation checks for projectMatches array before accepting parsed result
+- **ROOT CAUSE**: DeepSeek Reasoner returns multi-part content (reasoning + JSON). Original regex captured first `{...}` from reasoning block which had no projectMatches
+- **SOLUTION**: Filter non-reasoning segments, extract last complete JSON, validate structure before normalization
+- **FILES MODIFIED**: `server/lib/ai-email-analyzer.ts` (deepseekAdapter, normalizeAnalysis functions)
+
 **To Do Task Management System (October 27, 2025)**
 - ✅ **COMPLETE TASK SYSTEM**: Full task management with creation, assignment, tracking, and completion
 - ✅ **DATABASE SCHEMA**: Tasks table with title, description, priority (low/medium/high), status (pending/in_progress/completed/cancelled), due dates, and notes
