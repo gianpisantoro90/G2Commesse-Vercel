@@ -189,7 +189,7 @@ const deepseekAdapter: ProviderAdapter = {
       };
       
       const response = await fetchWithTimeout(
-        'https://api.deepseek.com/v1/chat/completions',
+        'https://api.deepseek.com/chat/completions',
         {
           method: 'POST',
           headers: {
@@ -218,11 +218,10 @@ const deepseekAdapter: ProviderAdapter = {
         choicesLength: data.choices?.length,
         firstChoice: data.choices?.[0] ? {
           hasMessage: !!data.choices[0].message,
-          hasExtra: !!data.choices[0].extra,
-          hasOutputText: !!data.choices[0].output_text,
           messageContentType: typeof data.choices[0].message?.content,
-          extraOutputTextType: typeof data.choices[0].extra?.output_text,
-          outputTextType: typeof data.choices[0].output_text
+          messageReasoningContentType: typeof data.choices[0].message?.reasoning_content,
+          contentLength: data.choices[0].message?.content?.length || 0,
+          reasoningContentLength: data.choices[0].message?.reasoning_content?.length || 0
         } : null
       });
       
@@ -233,19 +232,28 @@ const deepseekAdapter: ProviderAdapter = {
       const choice = data.choices[0];
       let content: any;
       
-      // DeepSeek Reasoner models use extra.output_text or output_text
-      // Regular models use message.content
-      if (choice.extra?.output_text !== undefined && choice.extra.output_text !== null) {
-        content = choice.extra.output_text;
-        logger.debug('Using extra.output_text from DeepSeek response');
-      } else if (choice.output_text !== undefined && choice.output_text !== null) {
-        content = choice.output_text;
-        logger.debug('Using output_text from DeepSeek response');
-      } else if (choice.message?.content !== undefined && choice.message.content !== null) {
-        content = choice.message.content;
+      // DeepSeek Reasoner returns reasoning_content (Chain-of-Thought) + content (final answer)
+      // We need to combine both to get the complete response with JSON
+      const message = choice.message || {};
+      const reasoningContent = message.reasoning_content || '';
+      const finalContent = message.content || '';
+      
+      // For reasoner models, combine reasoning + final content
+      // The JSON response is usually at the end of reasoning_content or in content
+      if (isThinkingModel && reasoningContent) {
+        content = reasoningContent + (finalContent ? '\n' + finalContent : '');
+        logger.debug('Using reasoning_content + content from DeepSeek Reasoner', {
+          reasoningLength: reasoningContent.length,
+          contentLength: finalContent.length
+        });
+      } else if (finalContent) {
+        content = finalContent;
         logger.debug('Using message.content from DeepSeek response');
+      } else if (reasoningContent) {
+        content = reasoningContent;
+        logger.debug('Using reasoning_content fallback from DeepSeek response');
       } else {
-        throw new Error('Invalid DeepSeek API response format - no content field found');
+        throw new Error('Invalid DeepSeek API response format - no content or reasoning_content found');
       }
       
       // DeepSeek Reasoner returns array with reasoning + final response
