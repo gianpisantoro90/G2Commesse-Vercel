@@ -216,7 +216,25 @@ const deepseekAdapter: ProviderAdapter = {
         throw new Error('Invalid DeepSeek API response format');
       }
 
-      return data.choices[0].message.content;
+      let content = data.choices[0].message.content;
+      
+      // DeepSeek Reasoner returns array with reasoning + final response
+      // We need to extract only the JSON part, ignoring the <think>...</think> reasoning
+      if (Array.isArray(content)) {
+        // Filter out reasoning segments and join text segments
+        content = content
+          .filter((segment: any) => segment.type !== 'reasoning')
+          .map((segment: any) => segment.text || segment.content || '')
+          .join('\n');
+      }
+      
+      // Log sanitized response for debugging (first 500 chars to avoid PII leakage)
+      logger.debug('DeepSeek response (sanitized)', {
+        responsePreview: typeof content === 'string' ? content.substring(0, 500) : 'non-string content',
+        isThinkingModel: isThinkingModel
+      });
+
+      return content;
     });
   },
 };
@@ -367,12 +385,46 @@ CRITICAL: Respond ONLY with valid JSON. No additional text before or after the J
 
 export function normalizeAnalysis(rawResponse: string, provider: Provider): AIEmailAnalysis {
   try {
-    const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error(`No JSON found in ${provider} response`);
+    // For reasoner models, extract the LAST complete JSON object to avoid parsing reasoning blocks
+    // Try to find all potential JSON objects and parse the last valid one
+    let parsed: any = null;
+    let lastValidJson: string | null = null;
+    
+    // Find all potential JSON blocks (greedy match from { to })
+    const allMatches = rawResponse.match(/\{[\s\S]*?\}(?=\s*(?:\{|$))/g) || [];
+    
+    // Try parsing from the last match backwards to find the first valid JSON
+    for (let i = allMatches.length - 1; i >= 0; i--) {
+      try {
+        const candidate = allMatches[i];
+        const testParse = JSON.parse(candidate);
+        // Validate it has the expected structure (projectMatches array)
+        if (testParse && (testParse.projectMatches || testParse.confidence !== undefined)) {
+          parsed = testParse;
+          lastValidJson = candidate;
+          break;
+        }
+      } catch {
+        // Try next candidate
+        continue;
+      }
     }
-
-    const parsed = JSON.parse(jsonMatch[0]);
+    
+    // Fallback to original greedy regex if no valid JSON found above
+    if (!parsed) {
+      const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error(`No JSON found in ${provider} response`);
+      }
+      parsed = JSON.parse(jsonMatch[0]);
+    }
+    
+    logger.debug('JSON parsing successful', {
+      provider,
+      hasProjectMatches: !!parsed.projectMatches,
+      matchCount: parsed.projectMatches?.length || 0,
+      jsonPreview: lastValidJson ? lastValidJson.substring(0, 200) : 'fallback'
+    });
 
     const projectMatches = parsed.projectMatches || [];
     const bestMatch = projectMatches[0];
