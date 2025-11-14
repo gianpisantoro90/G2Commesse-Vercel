@@ -212,11 +212,41 @@ const deepseekAdapter: ProviderAdapter = {
 
       const data = await response.json();
       
-      if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-        throw new Error('Invalid DeepSeek API response format');
+      // Debug logging: log the entire response structure
+      logger.debug('DeepSeek raw API response', {
+        hasChoices: !!data.choices,
+        choicesLength: data.choices?.length,
+        firstChoice: data.choices?.[0] ? {
+          hasMessage: !!data.choices[0].message,
+          hasExtra: !!data.choices[0].extra,
+          hasOutputText: !!data.choices[0].output_text,
+          messageContentType: typeof data.choices[0].message?.content,
+          extraOutputTextType: typeof data.choices[0].extra?.output_text,
+          outputTextType: typeof data.choices[0].output_text
+        } : null
+      });
+      
+      if (!data.choices || !data.choices[0]) {
+        throw new Error('Invalid DeepSeek API response format - no choices');
       }
-
-      let content = data.choices[0].message.content;
+      
+      const choice = data.choices[0];
+      let content: any;
+      
+      // DeepSeek Reasoner models use extra.output_text or output_text
+      // Regular models use message.content
+      if (choice.extra?.output_text !== undefined && choice.extra.output_text !== null) {
+        content = choice.extra.output_text;
+        logger.debug('Using extra.output_text from DeepSeek response');
+      } else if (choice.output_text !== undefined && choice.output_text !== null) {
+        content = choice.output_text;
+        logger.debug('Using output_text from DeepSeek response');
+      } else if (choice.message?.content !== undefined && choice.message.content !== null) {
+        content = choice.message.content;
+        logger.debug('Using message.content from DeepSeek response');
+      } else {
+        throw new Error('Invalid DeepSeek API response format - no content field found');
+      }
       
       // DeepSeek Reasoner returns array with reasoning + final response
       // We need to extract only the JSON part, ignoring the <think>...</think> reasoning
