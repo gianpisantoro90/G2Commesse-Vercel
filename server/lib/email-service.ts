@@ -3,6 +3,7 @@ import { createTransport } from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { analyzeEmail as analyzeEmailWithRouter } from './ai-email-analyzer';
 import type { AIConfig } from '@shared/schema';
+import type { AIEmailAnalysis, ProjectInfo, ParsedEmail as AIParserEmail } from './ai-email-analyzer';
 
 export interface ParsedEmail {
   messageId: string;
@@ -21,57 +22,7 @@ export interface ParsedEmail {
   date: Date;
 }
 
-export interface ProjectMatch {
-  projectId: string;
-  projectCode: string;
-  confidence: number;
-  reasoning: string; // Why this project was suggested
-  matchedFields: string[]; // Which fields matched (e.g., ["client", "city"])
-}
-
-export interface SuggestedTask {
-  title: string;
-  description?: string;
-  priority: 'low' | 'medium' | 'high';
-  dueDate?: string; // ISO date string
-  reasoning: string; // Why this task is suggested
-}
-
-export interface SuggestedDeadline {
-  title: string;
-  description?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  type: 'general' | 'deposito' | 'collaudo' | 'scadenza_assicurazione' | 'milestone';
-  dueDate: string; // ISO date string (required for deadlines)
-  notifyDaysBefore?: number;
-  reasoning: string; // Why this deadline is suggested
-}
-
-export interface AIEmailAnalysis {
-  // Legacy single match (kept for backward compatibility)
-  projectCode?: string;
-  projectId?: string;
-  confidence: number;
-
-  // New: Multiple project matches ranked by confidence
-  projectMatches: ProjectMatch[];
-
-  extractedData: {
-    deadlines?: string[];
-    amounts?: string[];
-    actionItems?: string[];
-    keyPoints?: string[];
-  };
-  suggestedTags: string[];
-  isImportant: boolean;
-  summary?: string;
-
-  // AI-suggested tasks with details
-  suggestedTasks?: SuggestedTask[];
-
-  // AI-suggested deadlines with details
-  suggestedDeadlines?: SuggestedDeadline[];
-}
+// AIEmailAnalysis and related types are now imported from ai-email-analyzer.ts
 
 class EmailService {
   private transporter: Transporter | null = null;
@@ -258,7 +209,7 @@ class EmailService {
           // AI result is always better than regex because it analyzes all fields
           logger.info('AI analysis returned', {
             provider: config.provider,
-            projectCode: aiResult.projectCode,
+            bestMatchCode: aiResult.projectMatches?.[0]?.projectCode || 'No match',
             confidence: aiResult.confidence,
             matchesCount: aiResult.projectMatches?.length || 0
           });
@@ -293,8 +244,6 @@ class EmailService {
       }
 
       return {
-        projectCode,
-        projectId,
         confidence,
         projectMatches,
         extractedData,

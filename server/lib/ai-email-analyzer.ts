@@ -378,8 +378,6 @@ export function normalizeAnalysis(rawResponse: string, provider: Provider): AIEm
     const bestMatch = projectMatches[0];
 
     return {
-      projectCode: bestMatch?.projectCode || parsed.projectCode,
-      projectId: bestMatch?.projectId || parsed.projectId,
       confidence: bestMatch?.confidence || parsed.confidence || 0,
       projectMatches: projectMatches.map((match: any) => ({
         projectId: match.projectId || '',

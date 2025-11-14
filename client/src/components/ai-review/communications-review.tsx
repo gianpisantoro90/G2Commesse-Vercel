@@ -54,8 +54,6 @@ interface Communication {
   isImportant: boolean;
   tags: string[];
   aiSuggestions?: {
-    projectId?: string;
-    projectCode?: string;
     confidence: number;
     reasoning?: string;
     summary?: string;
@@ -357,8 +355,6 @@ export function CommunicationsReview() {
                 <AISuggestionsPanel
                   communicationId={selectedComm.id}
                   aiSuggestions={{
-                    projectCode: selectedComm.aiSuggestions.projectCode,
-                    projectId: selectedComm.aiSuggestions.projectId,
                     confidence: selectedComm.aiSuggestions.confidence,
                     summary: selectedComm.aiSuggestions.summary,
                     projectMatches: selectedComm.aiSuggestions.projectMatches,

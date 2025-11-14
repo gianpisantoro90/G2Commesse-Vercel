@@ -496,7 +496,7 @@ class EmailPoller {
       );
 
       logger.info('AI analysis complete', {
-        projectCode: analysis.projectCode || 'No match',
+        bestMatchCode: analysis.projectMatches?.[0]?.projectCode || 'No match',
         confidence: analysis.confidence,
         matchesCount: analysis.projectMatches?.length || 0,
       });
