@@ -57,6 +57,7 @@ import {
   Clock,
   ArrowDown,
   ArrowUp,
+  ArrowUpDown,
   Plus,
   Search,
   Filter,
@@ -656,6 +657,11 @@ export default function RegistroComunicazioni() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
+  
+  // Sorting states
+  type SortField = 'subject' | 'type' | 'projectCode' | 'communicationDate';
+  const [sortField, setSortField] = useState<SortField>('communicationDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -751,6 +757,25 @@ export default function RegistroComunicazioni() {
     deleteMutation.mutate(id);
   };
 
+  // Sorting handlers
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className="h-4 w-4 ml-1 inline-block text-gray-400" />;
+    }
+    return sortOrder === "asc" 
+      ? <ArrowUp className="h-4 w-4 ml-1 inline-block text-primary" />
+      : <ArrowDown className="h-4 w-4 ml-1 inline-block text-primary" />;
+  };
+
   // Filtra comunicazioni
   const filteredComms = communications.filter(c => {
     if (searchTerm && !c.subject.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -764,11 +789,33 @@ export default function RegistroComunicazioni() {
     return true;
   });
 
+  // Sort communications
+  const sortedComms = [...filteredComms].sort((a, b) => {
+    let compareValue = 0;
+    
+    switch (sortField) {
+      case 'subject':
+        compareValue = a.subject.localeCompare(b.subject);
+        break;
+      case 'type':
+        compareValue = a.type.localeCompare(b.type);
+        break;
+      case 'projectCode':
+        compareValue = (a.projectCode || '').localeCompare(b.projectCode || '');
+        break;
+      case 'communicationDate':
+        compareValue = new Date(a.communicationDate).getTime() - new Date(b.communicationDate).getTime();
+        break;
+    }
+    
+    return sortOrder === 'asc' ? compareValue : -compareValue;
+  });
+
   // Pagination logic
-  const totalPages = Math.ceil(filteredComms.length / pageSize);
+  const totalPages = Math.ceil(sortedComms.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = startIndex + pageSize;
-  const paginatedComms = filteredComms.slice(startIndex, endIndex);
+  const paginatedComms = sortedComms.slice(startIndex, endIndex);
 
   // Reset to page 1 when page size changes
   const handlePageSizeChange = (newSize: string) => {
@@ -975,11 +1022,39 @@ export default function RegistroComunicazioni() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50%]">Oggetto</TableHead>
-                    <TableHead className="w-[12%]">Tipo</TableHead>
+                    <TableHead 
+                      className="w-[50%] cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('subject')}
+                      data-testid="header-sort-subject"
+                    >
+                      Oggetto
+                      <SortIcon field="subject" />
+                    </TableHead>
+                    <TableHead 
+                      className="w-[12%] cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('type')}
+                      data-testid="header-sort-type"
+                    >
+                      Tipo
+                      <SortIcon field="type" />
+                    </TableHead>
                     <TableHead className="w-[10%]">Mittente/Dest.</TableHead>
-                    <TableHead className="w-[12%]">Commessa</TableHead>
-                    <TableHead className="w-[10%]">Data</TableHead>
+                    <TableHead 
+                      className="w-[12%] cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('projectCode')}
+                      data-testid="header-sort-project"
+                    >
+                      Commessa
+                      <SortIcon field="projectCode" />
+                    </TableHead>
+                    <TableHead 
+                      className="w-[10%] cursor-pointer select-none hover:bg-muted/50"
+                      onClick={() => handleSort('communicationDate')}
+                      data-testid="header-sort-date"
+                    >
+                      Data
+                      <SortIcon field="communicationDate" />
+                    </TableHead>
                     <TableHead className="w-[6%] text-right">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
