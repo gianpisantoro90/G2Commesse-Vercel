@@ -496,60 +496,19 @@ RISPOSTA IN JSON (esempio):
 
       const analysis = JSON.parse(jsonMatch[0]);
 
-      // Ensure projectMatches array exists (fallback for old AI responses)
+      // Ensure projectMatches array exists
       if (!analysis.projectMatches) {
         analysis.projectMatches = [];
       }
 
-      // Legacy: Find projectId from projectCode if provided
-      if (analysis.projectCode) {
-        logger.info('AI returned projectCode in legacy format, searching in database', {
-          projectCode: analysis.projectCode,
-          totalProjects: projects.length,
-          projectCodes: projects.map(p => p.code).slice(0, 10) // Show first 10 for debugging
-        });
-
-        const matchedProject = projects.find(p => p.code.toUpperCase() === analysis.projectCode.toUpperCase());
-
-        if (matchedProject) {
-          analysis.projectId = matchedProject.id;
-
-          // If projectMatches is empty but we have legacy fields, convert to new format
-          if (analysis.projectMatches.length === 0 && analysis.confidence > 0) {
-            analysis.projectMatches.push({
-              projectId: matchedProject.id,
-              projectCode: matchedProject.code,
-              confidence: analysis.confidence,
-              reasoning: `Codice progetto "${matchedProject.code}" trovato nell'oggetto dell'email`,
-              matchedFields: ['code']
-            });
-
-            logger.info('✅ Converted legacy AI response to projectMatches format', {
-              projectCode: matchedProject.code,
-              confidence: analysis.confidence
-            });
-          }
-        } else {
-          logger.warn('⚠️ Project code from AI not found in database', {
-            searchedCode: analysis.projectCode,
-            availableProjects: projects.length
-          });
-        }
-      }
-
-      // New: Set projectCode and projectId from best match in projectMatches
+      // Sort projectMatches by confidence descending
       if (analysis.projectMatches.length > 0) {
-        // Sort by confidence descending
         analysis.projectMatches.sort((a, b) => b.confidence - a.confidence);
 
         const bestMatch = analysis.projectMatches[0];
-
-        // Override legacy fields with best match
-        analysis.projectCode = bestMatch.projectCode;
-        analysis.projectId = bestMatch.projectId;
         analysis.confidence = bestMatch.confidence;
 
-        logger.info('Multiple project matches found', {
+        logger.info('Project matches found', {
           count: analysis.projectMatches.length,
           bestMatch: {
             code: bestMatch.projectCode,
@@ -557,6 +516,10 @@ RISPOSTA IN JSON (esempio):
             reasoning: bestMatch.reasoning
           }
         });
+      } else {
+        // No matches found
+        analysis.confidence = 0;
+        logger.info('No project matches found in AI analysis');
       }
 
       return analysis;
