@@ -878,13 +878,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allCommunications = await storage.getAllCommunications();
 
       // Filter communications that need manual review:
-      // - Have aiSuggestions (AI analysis completed)
+      // - Have aiSuggestions (AI analysis completed) - even if no matches found
       // - Don't have a projectId assigned yet
       // - Haven't been dismissed (no aiSuggestionsStatus.action = 'dismissed')
       const pendingReview = allCommunications.filter((comm: any) => {
-        const hasAiSuggestions = comm.aiSuggestions &&
-                                comm.aiSuggestions.projectMatches &&
-                                comm.aiSuggestions.projectMatches.length > 0;
+        const hasAiSuggestions = comm.aiSuggestions; // AI analysis completed (even with 0 matches)
         const noProjectAssigned = !comm.projectId;
         const notDismissed = !comm.aiSuggestionsStatus ||
                             comm.aiSuggestionsStatus.action !== 'dismissed';
