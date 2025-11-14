@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,8 @@ import {
   CheckCircle2,
   Sparkles,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -92,10 +94,47 @@ export function CommunicationsReview() {
     },
   });
 
+  // Mutation to dismiss a communication
+  const dismissMutation = useMutation({
+    mutationFn: async (communicationId: string) => {
+      await apiRequest("POST", `/api/communications/${communicationId}/dismiss-suggestions`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/communications/pending-review"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      toast({
+        title: "Comunicazione ignorata",
+        description: "La comunicazione è stata rimossa dalla lista di revisione",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile ignorare la comunicazione",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleProjectAssigned = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/communications/pending-review"] });
     queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
     setSelectedComm(null);
+  };
+
+  const handleDismiss = async (communicationId: string, event?: React.MouseEvent) => {
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    try {
+      await dismissMutation.mutateAsync(communicationId);
+      // Close dialog only after mutation completes successfully
+      setSelectedComm(null);
+    } catch (error) {
+      // Error toast is already shown by mutation onError
+      // Keep dialog open so user can retry
+    }
   };
 
   // Pagination logic
@@ -246,13 +285,26 @@ export function CommunicationsReview() {
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedComm(comm)}
-                    >
-                      Revisiona
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedComm(comm)}
+                        data-testid={`button-review-${comm.id}`}
+                      >
+                        Revisiona
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => handleDismiss(comm.id, e)}
+                        disabled={dismissMutation.isPending}
+                        data-testid={`button-dismiss-${comm.id}`}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -291,7 +343,15 @@ export function CommunicationsReview() {
       )}
 
       {/* Communication Detail Dialog */}
-      <Dialog open={!!selectedComm} onOpenChange={() => setSelectedComm(null)}>
+      <Dialog 
+        open={!!selectedComm} 
+        onOpenChange={(open) => {
+          // Prevent closing while dismiss mutation is pending
+          if (!open && !dismissMutation.isPending) {
+            setSelectedComm(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -372,11 +432,22 @@ export function CommunicationsReview() {
                 />
               </div>
             ) : (
-              <div className="text-center p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                <AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mx-auto mb-2" />
+              <div className="text-center p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg space-y-3">
+                <AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mx-auto" />
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
                   Nessun progetto suggerito dall'AI per questa comunicazione
                 </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => selectedComm && handleDismiss(selectedComm.id)}
+                  disabled={dismissMutation.isPending}
+                  data-testid="button-dismiss-no-match"
+                  className="mt-2"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Ignora questa comunicazione
+                </Button>
               </div>
             )}
           </div>
