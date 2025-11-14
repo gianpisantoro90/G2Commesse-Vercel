@@ -421,40 +421,84 @@ RISPOSTA IN JSON (esempio):
 CRITICAL: Respond ONLY with valid JSON. No additional text before or after the JSON object.`;
 }
 
+// Extract JSON by finding balanced braces (handles nested objects)
+function extractBalancedJson(text: string): string | null {
+  const firstBrace = text.indexOf('{');
+  if (firstBrace === -1) return null;
+  
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  
+  for (let i = firstBrace; i < text.length; i++) {
+    const char = text[i];
+    
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    
+    if (char === '\\') {
+      escape = true;
+      continue;
+    }
+    
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+    
+    if (inString) continue;
+    
+    if (char === '{') {
+      depth++;
+    } else if (char === '}') {
+      depth--;
+      if (depth === 0) {
+        return text.substring(firstBrace, i + 1);
+      }
+    }
+  }
+  
+  return null;
+}
+
 export function normalizeAnalysis(rawResponse: string, provider: Provider): AIEmailAnalysis {
   try {
-    // For reasoner models, extract the LAST complete JSON object to avoid parsing reasoning blocks
-    // Try to find all potential JSON objects and parse the last valid one
+    
+    // Find the LAST valid JSON object (for DeepSeek reasoner responses with reasoning + JSON)
     let parsed: any = null;
     let lastValidJson: string | null = null;
     
-    // Find all potential JSON blocks (greedy match from { to })
-    const allMatches = rawResponse.match(/\{[\s\S]*?\}(?=\s*(?:\{|$))/g) || [];
-    
-    // Try parsing from the last match backwards to find the first valid JSON
-    for (let i = allMatches.length - 1; i >= 0; i--) {
+    // Try to find last JSON by searching from end
+    let searchText = rawResponse;
+    while (searchText.length > 0) {
+      const json = extractBalancedJson(searchText);
+      if (!json) break;
+      
       try {
-        const candidate = allMatches[i];
-        const testParse = JSON.parse(candidate);
-        // Validate it has the expected structure (projectMatches array)
+        const testParse = JSON.parse(json);
+        // Validate it has expected structure
         if (testParse && (testParse.projectMatches || testParse.confidence !== undefined)) {
           parsed = testParse;
-          lastValidJson = candidate;
-          break;
+          lastValidJson = json;
+          // Found valid JSON, but keep searching for last one
+          const jsonEnd = searchText.indexOf(json) + json.length;
+          searchText = searchText.substring(jsonEnd);
+        } else {
+          // Skip this JSON and look for next
+          const jsonEnd = searchText.indexOf(json) + json.length;
+          searchText = searchText.substring(jsonEnd);
         }
       } catch {
-        // Try next candidate
-        continue;
+        // Invalid JSON, skip and continue
+        const jsonEnd = searchText.indexOf(json) + json.length;
+        searchText = searchText.substring(jsonEnd);
       }
     }
     
-    // Fallback to original greedy regex if no valid JSON found above
     if (!parsed) {
-      const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error(`No JSON found in ${provider} response`);
-      }
-      parsed = JSON.parse(jsonMatch[0]);
+      throw new Error(`No valid JSON found in ${provider} response`);
     }
     
     logger.debug('JSON parsing successful', {
