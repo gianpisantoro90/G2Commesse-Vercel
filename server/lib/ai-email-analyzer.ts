@@ -16,8 +16,6 @@ export interface ProjectInfo {
 }
 
 export interface AIEmailAnalysis {
-  projectCode?: string;
-  projectId?: string;
   confidence: number;
   projectMatches: Array<{
     projectId: string;
