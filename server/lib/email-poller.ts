@@ -585,6 +585,13 @@ class EmailPoller {
         return;
       }
 
+      // Validate UID before attempting to mark as read
+      if (!uid || uid <= 0) {
+        logger.warn('Invalid UID for marking as read, skipping', { uid });
+        resolve(); // Don't reject, just skip marking
+        return;
+      }
+
       const imap = new Imap({
         user: this.config.user,
         password: this.config.password,
