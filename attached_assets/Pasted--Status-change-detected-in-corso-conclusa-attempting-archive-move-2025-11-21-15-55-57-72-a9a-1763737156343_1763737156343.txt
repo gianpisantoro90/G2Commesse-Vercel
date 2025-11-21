@@ -1,0 +1,153 @@
+📁 Status change detected: in corso → conclusa, attempting archive move
+2025-11-21 15:55:57.72
+a9a4421d
+User
+path: '/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio',
+2025-11-21 15:55:57.72
+a9a4421d
+User
+name: '25MERNAP01_CILA_Mercurio'
+2025-11-21 15:55:57.72
+a9a4421d
+User
+🔍 Found OneDrive folder to move: {
+2025-11-21 15:55:57.72
+a9a4421d
+User
+}
+2025-11-21 15:55:57.75
+a9a4421d
+User
+archivePath: '/LAVORI_CONCLUSI'
+2025-11-21 15:55:57.75
+a9a4421d
+User
+}
+2025-11-21 15:55:57.75
+a9a4421d
+User
+folderPathToMove: '/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio',
+2025-11-21 15:55:57.75
+a9a4421d
+User
+📁 Archive destination path: /LAVORI_CONCLUSI
+2025-11-21 15:55:57.75
+a9a4421d
+User
+🚀 [DEBUG] About to call moveProjectToArchive with: {
+2025-11-21 15:55:57.75
+a9a4421d
+User
+- WEB_REPL_RENEWAL: ✅ present (production mode)
+2025-11-21 15:55:57.75
+a9a4421d
+User
+}
+2025-11-21 15:55:57.75
+a9a4421d
+User
+- Using WEB_REPL_RENEWAL token (fallback)
+2025-11-21 15:55:57.75
+a9a4421d
+User
+- REPLIT_DEPLOYMENT: ✅ present (1)
+2025-11-21 15:55:57.75
+a9a4421d
+User
+- Connecting to: https://connectors.replit.com/api/v2/connection
+2025-11-21 15:55:57.75
+a9a4421d
+User
+🔍 OneDrive connection diagnostics:
+2025-11-21 15:55:57.75
+a9a4421d
+User
+archiveFolderId: '01GOMDZBES67NITHOGI5CYIJ3DL3A5JAHT'
+2025-11-21 15:55:57.75
+a9a4421d
+User
+projectFolderId: undefined,
+2025-11-21 15:55:57.75
+a9a4421d
+User
+- REPLIT_CONNECTORS_HOSTNAME: ✅ present
+2025-11-21 15:55:57.75
+a9a4421d
+User
+🚀 Starting moveProjectToArchive {
+2025-11-21 15:55:57.75
+a9a4421d
+User
+archivePath: '/LAVORI_CONCLUSI',
+2025-11-21 15:55:57.75
+a9a4421d
+User
+- REPL_IDENTITY: ❌ missing
+2025-11-21 15:55:57.75
+a9a4421d
+User
+folderFullPath: '/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio',
+2025-11-21 15:55:57.81
+a9a4421d
+User
+- Response status: 200 OK
+2025-11-21 15:55:57.81
+a9a4421d
+User
+🔍 Connection settings obtained (access token redacted for security)
+2025-11-21 15:55:57.81
+a9a4421d
+User
+🔍 Connection response received (sensitive data redacted for security)
+2025-11-21 15:55:57.81
+a9a4421d
+User
+✅ OneDrive access token retrieved successfully
+2025-11-21 15:55:57.81
+a9a4421d
+User
+📍 Extracting folder ID from path: /LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio
+2025-11-21 15:55:57.81
+a9a4421d
+User
+- REPL_IDENTITY: ❌ missing
+2025-11-21 15:55:57.81
+a9a4421d
+User
+🔍 OneDrive connection diagnostics:
+2025-11-21 15:55:57.81
+a9a4421d
+User
+- WEB_REPL_RENEWAL: ✅ present (production mode)
+2025-11-21 15:55:57.81
+a9a4421d
+User
+- Connecting to: https://connectors.replit.com/api/v2/connection
+2025-11-21 15:55:57.81
+a9a4421d
+User
+- Using WEB_REPL_RENEWAL token (fallback)
+2025-11-21 15:55:57.81
+a9a4421d
+User
+- REPLIT_CONNECTORS_HOSTNAME: ✅ present
+2025-11-21 15:55:57.91
+a9a4421d
+User
+✅ OneDrive access token retrieved successfully
+2025-11-21 15:55:57.91
+a9a4421d
+User
+🔍 Connection settings obtained (access token redacted for security)
+2025-11-21 15:55:58.60
+a9a4421d
+User
+❌ Failed to move project to archive: {
+2025-11-21 15:55:58.60
+a9a4421d
+User
+folderPath: '/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio',
+2025-11-21 15:55:58.60
+a9a4421d
+User
+⚠️ Failed to move project to archive, but update succeeded
