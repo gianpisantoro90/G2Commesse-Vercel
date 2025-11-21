@@ -323,6 +323,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint to reset all projects to "in corso" status - GET (public for testing)
+  app.get("/api/admin/reset-all-projects-to-in-corso", async (req, res) => {
+    try {
+      console.log('🔄 [RESET] Starting reset of all projects to "in corso" status...');
+      const allProjects = await storage.getAllProjects();
+      console.log(`📊 [RESET] Found ${allProjects.length} total projects`);
+      
+      let updatedCount = 0;
+      let sospesaCount = 0;
+      
+      for (const project of allProjects) {
+        if (project.status === 'sospesa') {
+          sospesaCount++;
+        }
+        const updated = await storage.updateProject(project.id, { status: 'in corso' });
+        if (updated) {
+          updatedCount++;
+        }
+      }
+      
+      const message = `✅ Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
+      console.log(message);
+      res.json({ message, updatedCount, sospesaCount, totalProjects: allProjects.length });
+    } catch (error) {
+      console.error('❌ [RESET] Error resetting projects:', error);
+      res.status(500).json({ message: "Errore nel reset dei progetti", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // Admin endpoint to reset all projects to "in corso" status - POST (public for testing)
+  app.post("/api/admin/reset-all-projects-to-in-corso", async (req, res) => {
+    try {
+      console.log('🔄 [RESET] Starting reset of all projects to "in corso" status...');
+      const allProjects = await storage.getAllProjects();
+      console.log(`📊 [RESET] Found ${allProjects.length} total projects`);
+      
+      let updatedCount = 0;
+      let sospesaCount = 0;
+      
+      for (const project of allProjects) {
+        if (project.status === 'sospesa') {
+          sospesaCount++;
+        }
+        const updated = await storage.updateProject(project.id, { status: 'in corso' });
+        if (updated) {
+          updatedCount++;
+        }
+      }
+      
+      const message = `✅ Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
+      console.log(message);
+      res.json({ message, updatedCount, sospesaCount, totalProjects: allProjects.length });
+    } catch (error) {
+      console.error('❌ [RESET] Error resetting projects:', error);
+      res.status(500).json({ message: "Errore nel reset dei progetti", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Apply authentication middleware to all other API routes
   app.use("/api", requireAuth);
 
@@ -3073,64 +3131,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting archive folder config:', error);
       res.status(500).json({ message: "Errore nella rimozione della configurazione archivio" });
-    }
-  });
-
-  // Admin endpoint to reset all projects to "in corso" status - GET (for easy testing)
-  app.get("/api/admin/reset-all-projects-to-in-corso", async (req, res) => {
-    try {
-      console.log('🔄 [RESET] Starting reset of all projects to "in corso" status...');
-      const allProjects = await storage.getAllProjects();
-      console.log(`📊 [RESET] Found ${allProjects.length} total projects`);
-      
-      let updatedCount = 0;
-      let sospesaCount = 0;
-      
-      for (const project of allProjects) {
-        if (project.status === 'sospesa') {
-          sospesaCount++;
-        }
-        const updated = await storage.updateProject(project.id, { status: 'in corso' });
-        if (updated) {
-          updatedCount++;
-        }
-      }
-      
-      const message = `✅ Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
-      console.log(message);
-      res.json({ message, updatedCount, sospesaCount, totalProjects: allProjects.length });
-    } catch (error) {
-      console.error('❌ [RESET] Error resetting projects:', error);
-      res.status(500).json({ message: "Errore nel reset dei progetti", error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
-
-  // Admin endpoint to reset all projects to "in corso" status - POST (for backwards compatibility)
-  app.post("/api/admin/reset-all-projects-to-in-corso", async (req, res) => {
-    try {
-      console.log('🔄 [RESET] Starting reset of all projects to "in corso" status...');
-      const allProjects = await storage.getAllProjects();
-      console.log(`📊 [RESET] Found ${allProjects.length} total projects`);
-      
-      let updatedCount = 0;
-      let sospesaCount = 0;
-      
-      for (const project of allProjects) {
-        if (project.status === 'sospesa') {
-          sospesaCount++;
-        }
-        const updated = await storage.updateProject(project.id, { status: 'in corso' });
-        if (updated) {
-          updatedCount++;
-        }
-      }
-      
-      const message = `✅ Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
-      console.log(message);
-      res.json({ message, updatedCount, sospesaCount, totalProjects: allProjects.length });
-    } catch (error) {
-      console.error('❌ [RESET] Error resetting projects:', error);
-      res.status(500).json({ message: "Errore nel reset dei progetti", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
