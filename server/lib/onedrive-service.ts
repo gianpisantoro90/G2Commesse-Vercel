@@ -1357,17 +1357,25 @@ class ServerOneDriveService {
       }
       
       console.log(`🔍 Extracting folder ID from path: ${folderPath}`);
+      console.log(`📍 Using API URL: /me/drive/root:${sanitizedPath}`);
       
       // Get folder info using the path
       const folderInfo = await client.api(`/me/drive/root:${sanitizedPath}`).get();
       
-      console.log(`✅ Got folder ID: ${folderInfo.id} for path: ${folderPath}`);
+      console.log(`✅ Got folder ID: ${folderInfo.id} for path: ${folderPath}`, {
+        id: folderInfo.id,
+        name: folderInfo.name,
+        path: folderInfo.parentReference?.path
+      });
       return folderInfo.id;
     } catch (error: any) {
       console.error(`❌ Failed to get folder ID from path:`, {
         folderPath,
+        sanitizedPath: folderPath.replace(/\.\./g, '').replace(/\/+/g, '/'),
         statusCode: error.statusCode,
-        message: error.message
+        message: error.message,
+        code: error.code,
+        requestId: error.requestId
       });
       return null;
     }
