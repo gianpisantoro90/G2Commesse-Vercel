@@ -342,6 +342,21 @@ export class MemStorage implements IStorage {
     return mapping;
   }
 
+  async updateOneDriveMapping(projectCode: string, updates: Partial<OneDriveMapping>): Promise<OneDriveMapping | undefined> {
+    const existing = this.oneDriveMappings.get(projectCode);
+    if (!existing) {
+      return undefined;
+    }
+    
+    const updated: OneDriveMapping = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.oneDriveMappings.set(projectCode, updated);
+    return updated;
+  }
+
   async deleteOneDriveMapping(projectCode: string): Promise<boolean> {
     return this.oneDriveMappings.delete(projectCode);
   }
@@ -950,6 +965,15 @@ export class DatabaseStorage implements IStorage {
   async createOneDriveMapping(insertMapping: InsertOneDriveMapping): Promise<OneDriveMapping> {
     const [mapping] = await db.insert(oneDriveMappings).values(insertMapping).returning();
     return mapping;
+  }
+
+  async updateOneDriveMapping(projectCode: string, updates: Partial<OneDriveMapping>): Promise<OneDriveMapping | undefined> {
+    const [updated] = await db
+      .update(oneDriveMappings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(oneDriveMappings.projectCode, projectCode))
+      .returning();
+    return updated || undefined;
   }
 
   async deleteOneDriveMapping(projectCode: string): Promise<boolean> {
@@ -1643,6 +1667,10 @@ class FallbackStorage implements IStorage {
 
   async createOneDriveMapping(mapping: InsertOneDriveMapping): Promise<OneDriveMapping> {
     return this.executeWithFallback(storage => storage.createOneDriveMapping(mapping));
+  }
+
+  async updateOneDriveMapping(projectCode: string, updates: Partial<OneDriveMapping>): Promise<OneDriveMapping | undefined> {
+    return this.executeWithFallback(storage => storage.updateOneDriveMapping(projectCode, updates));
   }
 
   async deleteOneDriveMapping(projectCode: string): Promise<boolean> {

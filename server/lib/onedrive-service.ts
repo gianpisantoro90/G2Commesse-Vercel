@@ -1381,7 +1381,7 @@ class ServerOneDriveService {
     }
   }
 
-  async moveProjectToArchive(folderFullPath: string, archivePath: string, projectFolderId?: string, archiveFolderId?: string): Promise<boolean> {
+  async moveProjectToArchive(folderFullPath: string, archivePath: string, projectFolderId?: string, archiveFolderId?: string): Promise<{ success: boolean; newPath?: string }> {
     try {
       console.log(`🚀 Starting moveProjectToArchive`, { folderFullPath, archivePath, projectFolderId, archiveFolderId });
       
@@ -1450,8 +1450,10 @@ class ServerOneDriveService {
       }
       logGraphResponse('Move Folder to Archive', result);
       
-      console.log(`✅ Successfully moved project folder to archive`);
-      return true;
+      // Calculate new path: archive path + folder name
+      const newPath = `${archivePath}/${sourceItem.name}`;
+      console.log(`✅ Successfully moved project folder to archive`, { newPath });
+      return { success: true, newPath };
     } catch (error: any) {
       console.error('❌ Failed to move project to archive:', {
         errorMessage: error.message,
@@ -1462,9 +1464,9 @@ class ServerOneDriveService {
       });
       if (error.statusCode === 404) {
         console.warn(`⚠️ Folder or archive path not found (404) - skipping move`);
-        return true;
+        return { success: true };
       }
-      return false;
+      return { success: false };
     }
   }
 }
