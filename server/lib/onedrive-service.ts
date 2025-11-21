@@ -1346,16 +1346,15 @@ class ServerOneDriveService {
     }
   }
 
-  async moveProjectToArchive(projectFolderName: string, archivePath: string): Promise<boolean> {
+  async moveProjectToArchive(folderFullPath: string, archivePath: string): Promise<boolean> {
     try {
-      console.log(`🚀 Starting moveProjectToArchive`, { projectFolderName, archivePath });
+      console.log(`🚀 Starting moveProjectToArchive`, { folderFullPath, archivePath });
       
       const client = await this.getClient();
-      const rootPath = await this.getRootFolderPath() || '/G2_Progetti';
       
-      // Reconstruct the complete path using the folder name and root path
-      const sourcePath = `${rootPath}/${projectFolderName}`;
-      console.log(`📍 Source path constructed:`, { sourcePath, rootPath, projectFolderName });
+      // Use the complete path directly from the mapping (already contains the correct root path)
+      const sourcePath = folderFullPath;
+      console.log(`📍 Using source path from mapping:`, { sourcePath });
       
       // Get the item to move
       const sourceUrl = `/me/drive/root:${sourcePath}`;

@@ -1,0 +1,92 @@
+2025-11-21 15:30:36.63
+e7286ee2
+User
+❌ Failed to move project to archive: GraphError: The resource could not be found.
+2025-11-21 15:30:36.63
+e7286ee2
+User
+at /home/runner/workspace/node_modules/tslib/tslib.js:170:75
+2025-11-21 15:30:36.63
+e7286ee2
+User
+'request-id': '41c1bd0f-e871-489e-ad65-3c4e14171f4b',
+2025-11-21 15:30:36.63
+e7286ee2
+User
+at Object.next (/home/runner/workspace/node_modules/tslib/tslib.js:177:57)
+2025-11-21 15:30:36.63
+e7286ee2
+User
+at step (/home/runner/workspace/node_modules/tslib/tslib.js:196:27)
+2025-11-21 15:30:36.63
+e7286ee2
+User
+statusCode: 404,
+2025-11-21 15:30:36.63
+e7286ee2
+User
+✅ Project 23TRINAP01 (folder: 23TRINAP01_Taurino_CILA) moved to archive
+2025-11-21 15:30:36.63
+e7286ee2
+User
+at new GraphError (/home/runner/workspace/node_modules/@microsoft/microsoft-graph-client/lib/src/GraphError.js:34:28)
+2025-11-21 15:30:36.63
+e7286ee2
+User
+at GraphErrorHandler.getError (/home/runner/workspace/node_modules/@microsoft/microsoft-graph-client/lib/src/GraphErrorHandler.js:87:24)
+2025-11-21 15:30:36.63
+e7286ee2
+User
+at GraphErrorHandler.constructErrorFromResponse (/home/runner/workspace/node_modules/@microsoft/microsoft-graph-client/lib/src/GraphErrorHandler.js:63:22)
+2025-11-21 15:30:36.63
+e7286ee2
+User
+'transfer-encoding': 'chunked',
+2025-11-21 15:30:36.63
+e7286ee2
+User
+}
+2025-11-21 15:30:36.63
+e7286ee2
+User
+'content-type': 'application/json; odata.metadata=minimal; odata.streaming=true; IEEE754Compatible=false; charset=utf-8',
+2025-11-21 15:30:36.63
+e7286ee2
+User
+}
+2025-11-21 15:30:36.63
+e7286ee2
+User
+at Function. (/home/runner/workspace/node_modules/@microsoft/microsoft-graph-client/lib/src/GraphErrorHandler.js:91:48)
+2025-11-21 15:30:36.63
+e7286ee2
+User
+'cache-control': 'no-store, no-cache',
+2025-11-21 15:30:36.63
+e7286ee2
+User
+at new Promise ()
+2025-11-21 15:30:36.63
+e7286ee2
+User
+'x-ms-ags-diagnostic': '{"ServerInfo":{"DataCenter":"Central US","Slice":"E","Ring":"4","ScaleUnit":"002","RoleInstance":"DS3PEPF00015630"}}',
+2025-11-21 15:30:36.63
+e7286ee2
+User
+'client-request-id': 'da372782-4a65-cdce-c3d9-4f94abb00905',
+2025-11-21 15:30:36.63
+e7286ee2
+User
+vary: 'Accept-Encoding',
+2025-11-21 15:30:36.63
+e7286ee2
+User
+date: 2025-11-21T14:30:36.633Z,
+2025-11-21 15:30:36.63
+e7286ee2
+User
+body: '{"code":"itemNotFound","message":"The resource could not be found."}',
+2025-11-21 15:30:36.63
+e7286ee2
+User
+headers: Headers {
