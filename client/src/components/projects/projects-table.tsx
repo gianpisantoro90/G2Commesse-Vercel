@@ -61,6 +61,7 @@ export default function ProjectsTable() {
   // Sorting state
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [sortByStatus, setSortByStatus] = useState(true);
 
   // Column visibility toggles
   const [showTechInfo, setShowTechInfo] = useState(false);
@@ -166,18 +167,20 @@ export default function ProjectsTable() {
 
   // Sort filtered projects
   const sortedProjects = [...filteredProjects].sort((a, b) => {
-    // Primary sort: always prioritize status (in_corso first, then sospesa, then conclusa)
-    const statusPriority = {
-      'in_corso': 1,
-      'sospesa': 2,
-      'conclusa': 3
-    };
-    
-    const aStatusPriority = statusPriority[a.status as keyof typeof statusPriority] || 999;
-    const bStatusPriority = statusPriority[b.status as keyof typeof statusPriority] || 999;
-    
-    if (aStatusPriority !== bStatusPriority) {
-      return aStatusPriority - bStatusPriority;
+    // Primary sort: status priority (if enabled)
+    if (sortByStatus) {
+      const statusPriority = {
+        'in_corso': 1,
+        'sospesa': 2,
+        'conclusa': 3
+      };
+      
+      const aStatusPriority = statusPriority[a.status as keyof typeof statusPriority] || 999;
+      const bStatusPriority = statusPriority[b.status as keyof typeof statusPriority] || 999;
+      
+      if (aStatusPriority !== bStatusPriority) {
+        return aStatusPriority - bStatusPriority;
+      }
     }
 
     // Secondary sort: user-selected field
@@ -371,7 +374,19 @@ export default function ProjectsTable() {
 
         {/* Column Toggle Buttons */}
         <div className="flex gap-2 flex-wrap items-center mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-2">Mostra colonne:</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-2">Opzioni:</span>
+          <Button
+            size="default"
+            variant={sortByStatus ? "default" : "outline"}
+            onClick={() => setSortByStatus(!sortByStatus)}
+            className="text-xs min-h-[44px] h-auto py-2"
+            title={sortByStatus ? "Ordinamento per stato attivo (In corso → Sospesa → Conclusa)" : "Ordina per stato"}
+            data-testid="toggle-sort-by-status"
+          >
+            {sortByStatus ? "📊" : "📋"} Ordina per Stato
+          </Button>
+          
+          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-2 ml-4">Mostra colonne:</span>
           <Button
             size="default"
             variant={showTechInfo ? "default" : "outline"}
