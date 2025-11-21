@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -704,18 +705,12 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                 <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                   Progetto di Riferimento
                 </Label>
-                <Select value={selectedProject} onValueChange={setSelectedProject} data-testid="select-project">
-                  <SelectTrigger className="input-g2">
-                    <SelectValue placeholder="Seleziona progetto..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.code} - {project.object}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ProjectCombobox
+                  projects={projects}
+                  value={selectedProject}
+                  onValueChange={setSelectedProject}
+                  placeholder="Cerca progetto per codice, oggetto o cliente..."
+                />
               </div>
 
               {mode === "upload" ? (
