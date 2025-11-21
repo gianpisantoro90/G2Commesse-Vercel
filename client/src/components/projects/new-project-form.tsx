@@ -13,6 +13,7 @@ import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { TIPO_RAPPORTO_CONFIG, type TipoRapportoType } from "@/lib/prestazioni-utils";
 import { Cloud, CheckCircle, AlertCircle, Loader2, FolderOpen, ExternalLink, Settings, Save } from "lucide-react";
+import { ClientCombobox } from "@/components/ui/client-combobox";
 import { z } from "zod";
 
 const formSchema = insertProjectSchema.extend({
@@ -248,18 +249,14 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             <Label htmlFor="client" className="block text-sm font-semibold text-gray-700 mb-2">
               Cliente *
             </Label>
-            <Select value={form.watch("client")} onValueChange={(value) => form.setValue("client", value)}>
-              <SelectTrigger id="client" className="input-g2" data-testid="select-client">
-                <SelectValue placeholder="Seleziona un cliente..." />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.name}>
-                    {client.name} ({client.sigla})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ClientCombobox
+              clients={clients}
+              value={form.watch("client")}
+              onValueChange={(value) => form.setValue("client", value || "")}
+              placeholder="Digita per cercare cliente..."
+              disabled={false}
+              className="input-g2"
+            />
             {form.formState.errors.client && (
               <p className="text-sm text-red-600 mt-1" role="alert" aria-live="polite">{form.formState.errors.client.message}</p>
             )}
