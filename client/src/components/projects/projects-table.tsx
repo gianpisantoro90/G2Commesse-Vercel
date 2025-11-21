@@ -66,7 +66,7 @@ export default function ProjectsTable() {
   // Column visibility toggles
   const [showTechInfo, setShowTechInfo] = useState(false);
   const [showPrestazioni, setShowPrestazioni] = useState(false);
-  const [showFatturazione, setShowFatturazione] = useState(true);
+  const [showFatturazione, setShowFatturazione] = useState(false);
   const [showComunicazioni, setShowComunicazioni] = useState(true);
   const [showScadenze, setShowScadenze] = useState(true);
   const [showOneDrive, setShowOneDrive] = useState(false);
