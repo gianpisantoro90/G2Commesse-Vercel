@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
+import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -66,6 +67,16 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isConnected } = useOneDriveSync();
+  
+  // Load saved OneDrive root folder configuration
+  const { rootConfig } = useOneDriveRootConfig();
+
+  // Auto-load root folder path from saved config
+  useEffect(() => {
+    if (rootConfig?.folderPath && mode === "onedrive" && !scanPath) {
+      setScanPath(rootConfig.folderPath);
+    }
+  }, [rootConfig, mode]);
 
   // Helper function to get OneDrive mapping for a project
   const getOneDriveMapping = (projectCode: string) => {

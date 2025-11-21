@@ -12,6 +12,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Folder, FolderOpen, ChevronRight, ChevronDown, RefreshCw } from "lucide-react";
 import { type Project } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { oneDriveService, type OneDriveFile } from "@/lib/onedrive-service";
 
 interface BulkRenameFormProps {
@@ -33,18 +34,26 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
   const [isLoadingBrowse, setIsLoadingBrowse] = useState(false);
   const { toast } = useToast();
 
+  // Load saved OneDrive root folder configuration
+  const { rootConfig } = useOneDriveRootConfig();
+
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
-  // Check OneDrive connection on component mount
+  // Check OneDrive connection and auto-load root folder on component mount
   useEffect(() => {
     const checkConnection = async () => {
       const status = await oneDriveService.getStatus();
       setOneDriveConnected(status.connected);
+      
+      // Auto-load root folder path from saved config
+      if (rootConfig?.folderPath) {
+        setSelectedFolderPath(rootConfig.folderPath);
+      }
     };
     checkConnection();
-  }, []);
+  }, [rootConfig]);
 
   const generateNewFileName = (originalFileName: string, projectCode: string): string => {
     const lastDotIndex = originalFileName.lastIndexOf('.');
