@@ -751,6 +751,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('✅ Project updated successfully:', project.code);
+
+      // Handle OneDrive folder move if status changed to conclusa or sospesa
+      const oldStatus = originalProject.status;
+      const newStatus = project.status;
+      const statusChanged = oldStatus !== newStatus && (newStatus === 'conclusa' || newStatus === 'sospesa');
+      
+      if (statusChanged) {
+        console.log(`📁 Status change detected: ${oldStatus} → ${newStatus}, attempting archive move`);
+        try {
+          const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
+          if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
+            const archivePath = (archiveConfig.value as any).folderPath;
+            const moved = await serverOneDriveService.moveProjectToArchive(project.code, archivePath);
+            if (moved) {
+              console.log(`✅ Project ${project.code} moved to archive`);
+            } else {
+              console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
+            }
+          } else {
+            console.log(`ℹ️ No archive folder configured, skipping move`);
+          }
+        } catch (archiveError: any) {
+          console.warn(`⚠️ Archive move error (non-critical):`, archiveError.message);
+        }
+      }
+
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -2978,6 +3004,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     notificationService.checkInvoices(storage);
     notificationService.checkBudgets(storage);
   }, 10000);
+
+  // OneDrive Archive Folder Configuration
+  app.get("/api/onedrive/archive-folder", async (req, res) => {
+    try {
+      const config = await storage.getSystemConfig('onedrive_archive_folder');
+      if (!config || !config.value) {
+        return res.status(404).json({ config: null });
+      }
+      res.json({ config: config.value });
+    } catch (error) {
+      console.error('Error fetching archive folder config:', error);
+      res.status(500).json({ message: "Errore nel recupero della configurazione archivio" });
+    }
+  });
+
+  app.post("/api/onedrive/set-archive-folder", async (req, res) => {
+    try {
+      const { folderId, folderPath } = setRootFolderSchema.parse(req.body);
+      const config = await storage.setSystemConfig('onedrive_archive_folder', {
+        folderId,
+        folderPath,
+        folderName: folderPath.split('/').pop() || folderPath,
+        lastUpdated: new Date().toISOString()
+      });
+      res.json({ config: config.value });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati non validi", errors: error.errors });
+      }
+      console.error('Error setting archive folder:', error);
+      res.status(500).json({ message: "Errore nella configurazione della cartella archivio" });
+    }
+  });
+
+  app.delete("/api/onedrive/archive-folder", async (req, res) => {
+    try {
+      await storage.setSystemConfig('onedrive_archive_folder', null);
+      res.json({ message: "Configurazione archivio rimossa" });
+    } catch (error) {
+      console.error('Error deleting archive folder config:', error);
+      res.status(500).json({ message: "Errore nella rimozione della configurazione archivio" });
+    }
+  });
 
   return httpServer;
 }
