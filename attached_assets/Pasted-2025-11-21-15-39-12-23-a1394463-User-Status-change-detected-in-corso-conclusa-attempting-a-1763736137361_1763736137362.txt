@@ -1,0 +1,137 @@
+2025-11-21 15:39:12.23
+a1394463
+User
+📁 Status change detected: in corso → conclusa, attempting archive move
+
+2025-11-21 15:39:12.23
+a1394463
+User
+✅ Project updated successfully: 25MERNAP01
+2025-11-21 15:39:12.26
+a1394463
+User
+path: '/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio',
+2025-11-21 15:39:12.26
+a1394463
+User
+name: '25MERNAP01_CILA_Mercurio'
+2025-11-21 15:39:12.26
+a1394463
+User
+🔍 Found OneDrive folder to move: {
+2025-11-21 15:39:12.26
+a1394463
+User
+}
+2025-11-21 15:39:12.30
+a1394463
+User
+🚀 [DEBUG] About to call moveProjectToArchive with: {
+2025-11-21 15:39:12.30
+a1394463
+User
+archivePath: '/LAVORI_CONCLUSI'
+2025-11-21 15:39:12.30
+a1394463
+User
+📁 Archive destination path: /LAVORI_CONCLUSI
+2025-11-21 15:39:12.30
+a1394463
+User
+folderPathToMove: '/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio',
+2025-11-21 15:39:12.30
+a1394463
+User
+}
+2025-11-21 15:39:12.30
+a1394463
+User
+🚀 Starting moveProjectToArchive {
+2025-11-21 15:39:12.30
+a1394463
+User
+folderFullPath: '/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio',
+2025-11-21 15:39:12.30
+a1394463
+User
+- Using WEB_REPL_RENEWAL token (fallback)
+2025-11-21 15:39:12.30
+a1394463
+User
+- WEB_REPL_RENEWAL: ✅ present (production mode)
+2025-11-21 15:39:12.30
+a1394463
+User
+}
+2025-11-21 15:39:12.30
+a1394463
+User
+- Connecting to: https://connectors.replit.com/api/v2/connection
+2025-11-21 15:39:12.30
+a1394463
+User
+archivePath: '/LAVORI_CONCLUSI'
+2025-11-21 15:39:12.30
+a1394463
+User
+- REPLIT_DEPLOYMENT: ✅ present (1)
+2025-11-21 15:39:12.30
+a1394463
+User
+- REPL_IDENTITY: ❌ missing
+2025-11-21 15:39:12.30
+a1394463
+User
+- REPLIT_CONNECTORS_HOSTNAME: ✅ present
+2025-11-21 15:39:12.30
+a1394463
+User
+🔍 OneDrive connection diagnostics:
+2025-11-21 15:39:12.38
+a1394463
+User
+- Response status: 200 OK
+2025-11-21 15:39:12.39
+a1394463
+User
+🔍 Connection settings obtained (access token redacted for security)
+2025-11-21 15:39:12.39
+a1394463
+User
+✅ OneDrive access token retrieved successfully
+2025-11-21 15:39:12.39
+a1394463
+User
+🔍 Attempting to get source folder at: {
+2025-11-21 15:39:12.39
+a1394463
+User
+🔍 Connection response received (sensitive data redacted for security)
+2025-11-21 15:39:12.39
+a1394463
+User
+sourceUrl: '/me/drive/root:/LAVORO_CORRENTE/25MERNAP01_CILA_Mercurio',
+2025-11-21 15:39:12.39
+a1394463
+User
+🚀 Microsoft Graph API Request [Get Folder to Move]: {
+2025-11-21 15:39:12.39
+a1394463
+User
+timestamp: '2025-11-21T14:39:12.397Z'
+2025-11-21 15:39:12.39
+a1394463
+User
+hasBody: false,
+2025-11-21 15:39:12.39
+a1394463
+User
+method: 'GET',
+2025-11-21 15:39:12.39
+a1394463
+User
+headers: 'default',
+2025-11-21 15:39:12.39
+a1394463
+User
+body: undefined,
