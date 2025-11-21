@@ -3059,5 +3059,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint to reset all projects to "in corso" status
+  app.post("/api/admin/reset-all-projects-to-in-corso", requireAdmin, async (req, res) => {
+    try {
+      const allProjects = await storage.getAllProjects();
+      let updatedCount = 0;
+      
+      for (const project of allProjects) {
+        const updated = await storage.updateProject(project.id, { status: 'in corso' });
+        if (updated) {
+          updatedCount++;
+        }
+      }
+      
+      console.log(`✅ Reset ${updatedCount} projects to "in corso" status`);
+      res.json({ message: `Reset ${updatedCount} projects to "in corso" status`, updatedCount });
+    } catch (error) {
+      console.error('Error resetting projects:', error);
+      res.status(500).json({ message: "Errore nel reset dei progetti" });
+    }
+  });
+
   return httpServer;
 }
