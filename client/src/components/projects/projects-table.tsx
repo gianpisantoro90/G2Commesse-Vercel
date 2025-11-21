@@ -262,9 +262,15 @@ export default function ProjectsTable() {
   const getNextDeadline = (projectId: string): Deadline | undefined => {
     const now = new Date();
     const projectDeadlines = deadlines
-      .filter(deadline => deadline.projectId === projectId && deadline.status === 'pending')
-      .filter(deadline => new Date(deadline.dueDate) >= now)
-      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+      .filter(deadline => deadline.projectId === projectId && deadline.status !== 'completed' && deadline.status !== 'cancelled')
+      .sort((a, b) => {
+        // Sort by priority: urgent > high > medium > low
+        const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+        const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 2) - (priorityOrder[b.priority as keyof typeof priorityOrder] || 2);
+        if (priorityDiff !== 0) return priorityDiff;
+        // Then by date
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+      });
     return projectDeadlines[0];
   };
 
