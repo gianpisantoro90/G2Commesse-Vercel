@@ -31,6 +31,18 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Client, type Project } from "@shared/schema";
 
+// Schema for add form - minimal required fields
+const addClientSchema = z.object({
+  sigla: z.string().min(1, "Sigla è obbligatoria").max(10, "Sigla troppo lunga"),
+  name: z.string().min(1, "Nome è obbligatorio"),
+  formaGiuridica: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  email: z.string().email("Email non valida").optional().or(z.literal("")),
+  telefono: z.string().optional().or(z.literal("")),
+});
+
+type AddClientForm = z.infer<typeof addClientSchema>;
+
 // Schema for edit form - includes all client fields
 const editClientSchema = z.object({
   sigla: z.string().min(1, "Sigla è obbligatoria").max(10, "Sigla troppo lunga"),
@@ -72,6 +84,7 @@ export default function ClientsTable() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedClientProjects, setSelectedClientProjects] = useState<Project[] | null>(null);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
@@ -90,6 +103,19 @@ export default function ClientsTable() {
   // Fetch projects for viewing client projects
   const { data: allProjects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+  });
+
+  // Add client form
+  const addForm = useForm<AddClientForm>({
+    resolver: zodResolver(addClientSchema),
+    defaultValues: {
+      sigla: "",
+      name: "",
+      formaGiuridica: "",
+      city: "",
+      email: "",
+      telefono: "",
+    },
   });
 
   // Edit client form
@@ -114,6 +140,31 @@ export default function ClientsTable() {
       emailReferente: "",
       telefonoReferente: "",
       note: "",
+    },
+  });
+
+  // Add client mutation
+  const addClientMutation = useMutation({
+    mutationFn: async (data: AddClientForm) => {
+      const response = await apiRequest("POST", "/api/clients", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      toast({
+        title: "Cliente creato",
+        description: "Il nuovo cliente è stato aggiunto con successo",
+      });
+      setShowAddModal(false);
+      addForm.reset();
+    },
+    onError: (error: any) => {
+      console.error("Add client error:", error);
+      toast({
+        title: "Errore nella creazione",
+        description: error?.message || "Impossibile creare il cliente",
+        variant: "destructive",
+      });
     },
   });
 
@@ -272,6 +323,11 @@ export default function ClientsTable() {
     setShowEditModal(true);
   };
 
+  // Handle add form submit
+  const handleAddSubmit = (data: AddClientForm) => {
+    addClientMutation.mutate(data);
+  };
+
   // Handle edit form submit
   const handleEditSubmit = (data: EditClientForm) => {
     if (editingClient) {
@@ -361,8 +417,10 @@ export default function ClientsTable() {
           <Button
             className="button-g2-primary"
             data-testid="add-client"
+            onClick={() => setShowAddModal(true)}
+            disabled={addClientMutation.isPending}
           >
-            ➕ Nuovo Cliente
+            {addClientMutation.isPending ? '⏳' : '➕'} Nuovo Cliente
           </Button>
         </div>
       </div>
@@ -527,6 +585,138 @@ export default function ClientsTable() {
           </div>
         </>
       )}
+
+      {/* Add Client Modal */}
+      <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Aggiungi Nuovo Cliente</DialogTitle>
+          </DialogHeader>
+
+          <Form {...addForm}>
+            <form onSubmit={addForm.handleSubmit(handleAddSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={addForm.control}
+                  name="sigla"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sigla Cliente *</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="es. ABC" maxLength={10} disabled={addClientMutation.isPending} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addForm.control}
+                  name="formaGiuridica"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Forma Giuridica</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} disabled={addClientMutation.isPending}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleziona..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="SRL">SRL</SelectItem>
+                          <SelectItem value="SPA">SPA</SelectItem>
+                          <SelectItem value="DITTA_INDIVIDUALE">Ditta Individuale</SelectItem>
+                          <SelectItem value="ENTE_PUBBLICO">Ente Pubblico</SelectItem>
+                          <SelectItem value="PRIVATO">Privato</SelectItem>
+                          <SelectItem value="ALTRO">Altro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={addForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ragione Sociale *</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Nome completo del cliente" disabled={addClientMutation.isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={addForm.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Città</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Roma" disabled={addClientMutation.isPending} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="info@cliente.it" disabled={addClientMutation.isPending} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={addForm.control}
+                name="telefono"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefono</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="tel" placeholder="+39 06 12345678" disabled={addClientMutation.isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAddModal(false)}
+                  disabled={addClientMutation.isPending}
+                  data-testid="button-cancel-add-client"
+                >
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={addClientMutation.isPending}
+                  data-testid="button-save-add-client"
+                >
+                  {addClientMutation.isPending ? "Creando..." : "Crea Cliente"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
       {/* Projects Modal */}
       <Dialog open={showProjectsModal} onOpenChange={setShowProjectsModal}>
