@@ -26,7 +26,8 @@ const AI_PROVIDERS = {
   anthropic: {
     name: "Anthropic Claude",
     models: [
-      { id: 'claude-sonnet-4-20250514', name: 'Claude 4 Sonnet (Latest)', tokens: 800 },
+      { id: 'claude-4-20250514', name: 'Claude 4.5 (Latest)', tokens: 800 },
+      { id: 'claude-sonnet-4-20250514', name: 'Claude 4 Sonnet', tokens: 800 },
       { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', tokens: 800 },
       { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku (Fast)', tokens: 400 },
     ],
@@ -127,6 +128,7 @@ export default function AiConfigPanelUnified() {
     try {
       setAiConfig(data);
       const modelToProvider: Record<string, 'anthropic' | 'deepseek'> = {
+        'claude-4-20250514': 'anthropic',
         'claude-sonnet-4-20250514': 'anthropic',
         'claude-3-5-sonnet-20241022': 'anthropic',
         'claude-3-haiku-20240307': 'anthropic',
