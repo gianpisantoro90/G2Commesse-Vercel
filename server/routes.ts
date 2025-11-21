@@ -77,6 +77,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wait for storage to be fully initialized before registering routes
   await storagePromise;
 
+  // Auto-reset all projects to "in corso" on startup (for deployment sync)
+  try {
+    const allProjects = await storage.getAllProjects();
+    const sospesaCount = allProjects.filter(p => p.status === 'sospesa').length;
+    if (sospesaCount > 0) {
+      console.log(`🔄 Startup: Resetting ${sospesaCount} projects from "sospesa" to "in corso"...`);
+      for (const project of allProjects) {
+        if (project.status === 'sospesa') {
+          await storage.updateProject(project.id, { status: 'in corso' });
+        }
+      }
+      console.log(`✅ Startup reset complete: ${sospesaCount} projects updated`);
+    }
+  } catch (error) {
+    console.error('⚠️ Error during project reset on startup:', error);
+  }
+
   // Authentication routes
   // Security: Apply rate limiting to login endpoint
   app.post("/api/auth/login", loginLimiter, async (req, res) => {
