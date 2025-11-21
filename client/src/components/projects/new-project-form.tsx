@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertProjectSchema, type InsertProject } from "@shared/schema";
+import { insertProjectSchema, type InsertProject, type Client } from "@shared/schema";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { TIPO_RAPPORTO_CONFIG, type TipoRapportoType } from "@/lib/prestazioni-utils";
@@ -32,6 +32,11 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isConnected } = useOneDriveSync();
+
+  // Fetch existing clients
+  const { data: clients = [] } = useQuery<Client[]>({
+    queryKey: ["/api/clients"],
+  });
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -243,13 +248,18 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             <Label htmlFor="client" className="block text-sm font-semibold text-gray-700 mb-2">
               Cliente *
             </Label>
-            <Input
-              id="client"
-              placeholder="Es. Comune di Milano"
-              className="input-g2"
-              data-testid="input-client"
-              {...form.register("client")}
-            />
+            <Select value={form.watch("client")} onValueChange={(value) => form.setValue("client", value)}>
+              <SelectTrigger id="client" className="input-g2" data-testid="select-client">
+                <SelectValue placeholder="Seleziona un cliente..." />
+              </SelectTrigger>
+              <SelectContent>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.name}>
+                    {client.name} ({client.sigla})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {form.formState.errors.client && (
               <p className="text-sm text-red-600 mt-1" role="alert" aria-live="polite">{form.formState.errors.client.message}</p>
             )}
