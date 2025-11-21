@@ -23,7 +23,7 @@ import BulkRenameForm from "@/components/routing/bulk-rename-form";
 import BulkRenameResults from "@/components/routing/bulk-rename-results";
 import OneDriveAutoRouting from "@/components/routing/onedrive-auto-routing";
 import StoragePanel from "@/components/system/storage-panel";
-import AiConfigPanel from "@/components/system/ai-config-panel";
+import AiConfigPanelUnified from "@/components/system/ai-config-panel-unified";
 import FolderConfigPanel from "@/components/system/folder-config-panel";
 import OneDrivePanel from "@/components/system/onedrive-panel";
 import UserManagementPanel from "@/components/system/user-management-panel";
@@ -328,7 +328,7 @@ export default function Dashboard() {
                   </TabsContent>
                   
                   <TabsContent value="ai" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                    <AiConfigPanel />
+                    <AiConfigPanelUnified />
                   </TabsContent>
                   
                   
