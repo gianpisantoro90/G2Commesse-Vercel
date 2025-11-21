@@ -7,7 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
-import { FolderOpen, Check, AlertCircle, Settings, Folder, ChevronRight, RefreshCw, Home, Cloud } from "lucide-react";
+import { useOneDriveArchiveConfig } from "@/hooks/use-onedrive-archive-config";
+import { FolderOpen, Check, AlertCircle, Settings, Folder, ChevronRight, RefreshCw, Home, Cloud, Archive } from "lucide-react";
 import oneDriveService, { OneDriveFile } from "@/lib/onedrive-service";
 
 interface OneDriveRootConfig {
@@ -22,6 +23,8 @@ export default function FolderConfigPanel() {
   const [selectedFolder, setSelectedFolder] = useState<OneDriveFile | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [showBrowser, setShowBrowser] = useState(false);
+  const [showArchiveBrowser, setShowArchiveBrowser] = useState(false);
+  const [selectedArchiveFolder, setSelectedArchiveFolder] = useState<OneDriveFile | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -38,6 +41,16 @@ export default function FolderConfigPanel() {
     isResetting,
     refetch: refetchConfig,
   } = useOneDriveRootConfig();
+
+  // Use archive folder configuration hook
+  const {
+    archiveConfig,
+    isConfigured: isArchiveConfigured,
+    setArchiveFolder,
+    resetArchiveFolder,
+    isConfiguring: isConfiguringArchive,
+    isResetting: isResettingArchive,
+  } = useOneDriveArchiveConfig();
 
   // Get current folder files for browsing
   const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles } = useQuery({
@@ -112,6 +125,44 @@ export default function FolderConfigPanel() {
     }
   };
 
+  // Confirm archive folder selection
+  const handleConfirmArchiveSelection = async () => {
+    if (!selectedArchiveFolder) {
+      toast({
+        title: "Nessuna cartella selezionata",
+        description: "Seleziona una cartella dalla lista",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const folderPath = selectedArchiveFolder.parentPath === '/' 
+      ? `/${selectedArchiveFolder.name}` 
+      : `${selectedArchiveFolder.parentPath}/${selectedArchiveFolder.name}`;
+
+    try {
+      await setArchiveFolder({
+        folderId: selectedArchiveFolder.id,
+        folderPath: folderPath
+      });
+      
+      toast({
+        title: "Cartella archivio configurata",
+        description: "La cartella OneDrive è stata impostata per l'archivio automatico",
+      });
+      setShowArchiveBrowser(false);
+      setSelectedArchiveFolder(null);
+    } catch (error: any) {
+      console.error('Set archive folder error:', error);
+      const errorMessage = error?.message || 'Errore sconosciuto';
+      toast({
+        title: "Errore configurazione",
+        description: `Impossibile configurare la cartella archivio: ${errorMessage}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   // Generate breadcrumb items
   const getBreadcrumbItems = () => {
     if (currentPath === '/') return [{ name: 'OneDrive Root', path: '/' }];
@@ -143,6 +194,27 @@ export default function FolderConfigPanel() {
         toast({
           title: "Errore reset",
           description: "Impossibile resettare la configurazione",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Reset archive folder configuration
+  const handleResetArchiveConfig = async () => {
+    if (confirm("Sei sicuro di voler resettare la configurazione della cartella archivio OneDrive?")) {
+      try {
+        await resetArchiveFolder();
+        
+        toast({
+          title: "Configurazione archivio resettata",
+          description: "La configurazione della cartella archivio OneDrive è stata rimossa.",
+        });
+      } catch (error: any) {
+        console.error('Reset archive folder error:', error);
+        toast({
+          title: "Errore reset",
+          description: "Impossibile resettare la configurazione archivio",
           variant: "destructive",
         });
       }
