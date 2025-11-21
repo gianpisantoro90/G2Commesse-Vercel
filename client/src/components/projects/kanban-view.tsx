@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type ProjectStatus = "in_corso" | "sospesa" | "conclusa";
+type ProjectStatus = "in corso" | "sospesa" | "conclusa";
 
 interface KanbanColumn {
   id: ProjectStatus;
@@ -29,7 +29,7 @@ interface KanbanColumn {
 
 const KANBAN_COLUMNS: KanbanColumn[] = [
   {
-    id: "in_corso",
+    id: "in corso",
     title: "In Corso",
     icon: "⚡",
     color: "text-yellow-700",
