@@ -725,6 +725,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('📝 PATCH/PUT request for project:', req.params.id);
       console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
 
+      // Get the original project to check for status change
+      const originalProject = await storage.getProject(req.params.id);
+      if (!originalProject) {
+        return res.status(404).json({ message: "Commessa non trovata" });
+      }
+
       // Convert date strings to Date objects for validation
       const bodyWithDates = { ...req.body };
       if (bodyWithDates.dataFattura && typeof bodyWithDates.dataFattura === 'string') {
@@ -745,6 +751,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('✅ Project updated successfully:', project.code);
+
+      // Handle OneDrive folder move if status changed to conclusa or sospesa
+      const oldStatus = originalProject.status;
+      const newStatus = project.status;
+      const statusChanged = oldStatus !== newStatus && (newStatus === 'conclusa' || newStatus === 'sospesa');
+      
+      if (statusChanged) {
+        console.log(`📁 Status change detected: ${oldStatus} → ${newStatus}, attempting archive move`);
+        try {
+          const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
+          if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
+            const archivePath = (archiveConfig.value as any).folderPath;
+            const moved = await serverOneDriveService.moveProjectToArchive(project.code, archivePath);
+            if (moved) {
+              console.log(`✅ Project ${project.code} moved to archive`);
+            } else {
+              console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
+            }
+          } else {
+            console.log(`ℹ️ No archive folder configured, skipping move`);
+          }
+        } catch (archiveError: any) {
+          console.warn(`⚠️ Archive move error (non-critical):`, archiveError.message);
+        }
+      }
+
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
