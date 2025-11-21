@@ -171,8 +171,8 @@ export default function ProjectsTable() {
     if (sortByStatus) {
       const statusPriority = {
         'in corso': 1,
-        'sospesa': 2,
-        'conclusa': 3
+        'conclusa': 2,
+        'sospesa': 3
       };
       
       const aStatusPriority = statusPriority[a.status as keyof typeof statusPriority] || 999;
