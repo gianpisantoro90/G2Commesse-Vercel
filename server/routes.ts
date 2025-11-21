@@ -760,17 +760,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (statusChanged) {
         console.log(`📁 Status change detected: ${oldStatus} → ${newStatus}, attempting archive move`);
         try {
-          const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
-          if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
-            const archivePath = (archiveConfig.value as any).folderPath;
-            const moved = await serverOneDriveService.moveProjectToArchive(project.code, archivePath);
-            if (moved) {
-              console.log(`✅ Project ${project.code} moved to archive`);
-            } else {
-              console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
-            }
+          // Retrieve the OneDrive mapping to get the actual folder name
+          const mapping = await storage.getOneDriveMapping(project.code);
+          if (!mapping) {
+            console.log(`ℹ️ No OneDrive mapping found for project ${project.code}, skipping archive move`);
           } else {
-            console.log(`ℹ️ No archive folder configured, skipping move`);
+            // Use the actual folder name from the mapping
+            const folderNameToMove = mapping.oneDriveFolderName;
+            console.log(`🔍 Found OneDrive folder to move: ${folderNameToMove}`);
+            
+            const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
+            if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
+              const archivePath = (archiveConfig.value as any).folderPath;
+              console.log(`📁 Archive destination path: ${archivePath}`);
+              const moved = await serverOneDriveService.moveProjectToArchive(folderNameToMove, archivePath);
+              if (moved) {
+                console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
+              } else {
+                console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
+              }
+            } else {
+              console.log(`ℹ️ No archive folder configured, skipping move`);
+            }
           }
         } catch (archiveError: any) {
           console.warn(`⚠️ Archive move error (non-critical):`, archiveError.message);
