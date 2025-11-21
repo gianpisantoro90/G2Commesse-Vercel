@@ -12,7 +12,7 @@ export default function StatsCard() {
   });
 
   // Calcola statistiche per status (usando i valori corretti del database)
-  const projectsInCorso = projects.filter(p => p.status === "in_corso").length;
+  const projectsInCorso = projects.filter(p => p.status === "in corso").length;
   const projectsSospese = projects.filter(p => p.status === "sospesa").length;
   const projectsConcluse = projects.filter(p => p.status === "conclusa").length;
   const totalProjects = projects.length;
