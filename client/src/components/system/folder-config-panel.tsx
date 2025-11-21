@@ -66,65 +66,6 @@ export default function FolderConfigPanel() {
     enabled: isConnected && (showBrowser || showArchiveBrowser)
   });
 
-  // Handle archive folder selection
-  const handleConfirmArchiveSelection = async () => {
-    if (!selectedArchiveFolder) {
-      toast({
-        title: "Nessuna cartella selezionata",
-        description: "Seleziona una cartella dalla lista",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const folderPath = selectedArchiveFolder.parentPath === '/' 
-      ? `/${selectedArchiveFolder.name}` 
-      : `${selectedArchiveFolder.parentPath}/${selectedArchiveFolder.name}`;
-
-    try {
-      await setArchiveFolder({
-        folderId: selectedArchiveFolder.id,
-        folderPath: folderPath
-      });
-      
-      toast({
-        title: "Cartella archivio configurata",
-        description: "La cartella OneDrive è stata impostata per l'archivio automatico",
-      });
-      setShowArchiveBrowser(false);
-      setSelectedArchiveFolder(null);
-    } catch (error: any) {
-      console.error('Set archive folder error:', error);
-      const errorMessage = error?.message || 'Errore sconosciuto';
-      toast({
-        title: "Errore configurazione",
-        description: `Impossibile configurare la cartella archivio: ${errorMessage}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Handle reset archive folder
-  const handleResetArchiveConfig = async () => {
-    if (window.confirm('Sei sicuro di voler rimuovere la configurazione della cartella archivio?')) {
-      try {
-        await resetArchiveFolder();
-        toast({
-          title: "Configurazione archivio resettata",
-          description: "La configurazione della cartella archivio OneDrive è stata rimossa.",
-        });
-      } catch (error: any) {
-        console.error('Reset archive folder error:', error);
-        toast({
-          title: "Errore reset",
-          description: "Impossibile resettare la configurazione archivio",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-
   // Navigate to folder
   const navigateToFolder = (folderPath: string) => {
     setCurrentPath(folderPath);
