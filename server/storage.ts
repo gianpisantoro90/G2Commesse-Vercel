@@ -38,6 +38,7 @@ export interface IStorage {
   getOneDriveMapping(projectCode: string): Promise<OneDriveMapping | undefined>;
   getAllOneDriveMappings(): Promise<OneDriveMapping[]>;
   createOneDriveMapping(mapping: InsertOneDriveMapping): Promise<OneDriveMapping>;
+  updateOneDriveMapping(projectCode: string, updates: Partial<OneDriveMapping>): Promise<OneDriveMapping | undefined>;
   deleteOneDriveMapping(projectCode: string): Promise<boolean>;
   getOrphanedProjects(): Promise<Project[]>;
   
