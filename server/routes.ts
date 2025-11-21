@@ -840,18 +840,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (!mapping) {
             console.log(`ℹ️ No OneDrive mapping found for project ${project.code}, skipping archive move`);
           } else {
-            // Use the complete folder path from the mapping (not just the name)
-            const folderPathToMove = mapping.oneDriveFolderPath;
+            // Use the folder name from the mapping (the actual folder name on OneDrive)
             const folderNameToMove = mapping.oneDriveFolderName;
-            console.log(`🔍 Found OneDrive folder to move:`, { path: folderPathToMove, name: folderNameToMove });
+            console.log(`🔍 Found OneDrive folder to move: ${folderNameToMove}`);
             
             const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
             if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
               const archivePath = (archiveConfig.value as any).folderPath;
               console.log(`📁 Archive destination path: ${archivePath}`);
-              console.log(`🚀 [DEBUG] About to call moveProjectToArchive with:`, { folderPath: folderPathToMove, archivePath });
+              console.log(`🚀 [DEBUG] About to call moveProjectToArchive with:`, { folderNameToMove, archivePath });
               try {
-                const moved = await serverOneDriveService.moveProjectToArchive(folderPathToMove, archivePath);
+                const moved = await serverOneDriveService.moveProjectToArchive(folderNameToMove, archivePath);
                 console.log(`🔄 [DEBUG] moveProjectToArchive returned:`, { moved });
                 if (moved) {
                   console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
