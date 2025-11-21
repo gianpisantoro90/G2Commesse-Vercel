@@ -170,7 +170,7 @@ export default function ProjectsTable() {
     // Primary sort: status priority (if enabled)
     if (sortByStatus) {
       const statusPriority = {
-        'in_corso': 1,
+        'in corso': 1,
         'sospesa': 2,
         'conclusa': 3
       };
