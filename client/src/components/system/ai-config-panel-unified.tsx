@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -13,15 +12,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { testClaudeConnection } from "@/lib/ai-router";
-import { Eye, EyeOff, Check, AlertTriangle, Zap, Brain, FileText, Settings } from "lucide-react";
+import { Eye, EyeOff, Check, AlertTriangle, Zap, Brain, Settings } from "lucide-react";
 import { z } from "zod";
 
 const aiConfigSchema = z.object({
   apiKey: z.string().min(1, "API Key richiesta"),
   model: z.string().min(1, "Modello richiesto"),
-  autoRouting: z.boolean(),
-  contentAnalysis: z.boolean(),
-  learningMode: z.boolean(),
 });
 
 type AiConfigForm = z.infer<typeof aiConfigSchema>;
@@ -59,9 +55,6 @@ export default function AiConfigPanelUnified() {
   const [aiConfig, setAiConfig] = useLocalStorage("ai_config", {
     apiKey: "",
     model: "claude-sonnet-4-20250514",
-    autoRouting: true,
-    contentAnalysis: true,
-    learningMode: true,
   });
 
   const form = useForm<AiConfigForm>({
@@ -79,9 +72,6 @@ export default function AiConfigPanelUnified() {
             const mergedConfig = {
               apiKey: aiConfig.apiKey || '',
               model: value.model || aiConfig.model,
-              autoRouting: value.autoRouting ?? aiConfig.autoRouting,
-              contentAnalysis: value.contentAnalysis ?? aiConfig.contentAnalysis,
-              learningMode: value.learningMode ?? aiConfig.learningMode,
             };
             setAiConfig(mergedConfig);
             form.reset(mergedConfig);
@@ -207,18 +197,14 @@ export default function AiConfigPanelUnified() {
       </div>
 
       <Tabs defaultValue="provider" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="provider" className="flex items-center gap-2">
             <Zap className="w-4 h-4" />
             Provider AI
           </TabsTrigger>
-          <TabsTrigger value="routing" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Routing
-          </TabsTrigger>
           <TabsTrigger value="review" className="flex items-center gap-2">
             <Settings className="w-4 h-4" />
-            Revisioni
+            Revisioni Email
           </TabsTrigger>
         </TabsList>
 
@@ -316,52 +302,6 @@ export default function AiConfigPanelUnified() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Routing Settings Tab */}
-        <TabsContent value="routing">
-          <Card>
-            <CardHeader>
-              <CardTitle>Impostazioni Routing File</CardTitle>
-              <CardDescription>Configura il comportamento del routing intelligente</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Auto Routing Attivo</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Sposta automaticamente i file nelle cartelle corrette</p>
-                  </div>
-                  <Switch
-                    checked={form.watch("autoRouting")}
-                    onCheckedChange={(checked) => form.setValue("autoRouting", checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Analisi Contenuto</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Analizza il contenuto dei file per migliore matching</p>
-                  </div>
-                  <Switch
-                    checked={form.watch("contentAnalysis")}
-                    onCheckedChange={(checked) => form.setValue("contentAnalysis", checked)}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">Modalità Apprendimento</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Impara dai routing precedenti per migliorare le predizioni</p>
-                  </div>
-                  <Switch
-                    checked={form.watch("learningMode")}
-                    onCheckedChange={(checked) => form.setValue("learningMode", checked)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         {/* Review Settings Tab */}
