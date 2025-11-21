@@ -418,7 +418,18 @@ RISPOSTA IN JSON (esempio):
   ]
 }
 
-CRITICAL: Respond ONLY with valid JSON. No additional text before or after the JSON object.`;
+CRITICAL: You MUST respond ONLY with a valid JSON object. No explanation, no markdown code blocks, no text before or after. Output EXACTLY this structure:
+{
+  "projectMatches": [...],
+  "projectCode": "...",
+  "confidence": 0.0,
+  "extractedData": {...},
+  "suggestedTags": [...],
+  "isImportant": false,
+  "summary": "...",
+  "suggestedTasks": [...],
+  "suggestedDeadlines": [...]
+}`;
 }
 
 // Extract JSON by finding balanced braces (handles nested objects)
@@ -497,8 +508,30 @@ export function normalizeAnalysis(rawResponse: string, provider: Provider): AIEm
       }
     }
     
+    // If no valid JSON found, return default empty analysis
     if (!parsed) {
-      throw new Error(`No valid JSON found in ${provider} response`);
+      logger.warn('No valid JSON found in response, returning empty analysis', {
+        provider,
+        responseLength: rawResponse.length,
+        preview: rawResponse.substring(0, 200)
+      });
+      
+      // Return empty analysis for manual review
+      return {
+        confidence: 0,
+        projectMatches: [],
+        extractedData: {
+          deadlines: [],
+          amounts: [],
+          actionItems: [],
+          keyPoints: [],
+        },
+        suggestedTags: [],
+        isImportant: false,
+        summary: 'Email ricevuta per revisione manuale',
+        suggestedTasks: [],
+        suggestedDeadlines: [],
+      };
     }
     
     logger.debug('JSON parsing successful', {
