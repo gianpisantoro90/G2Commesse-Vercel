@@ -851,7 +851,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`📁 Archive destination path: ${archivePath}`);
               console.log(`🚀 [DEBUG] About to call moveProjectToArchive with:`, { folderPathToMove, archivePath });
               try {
-                const moved = await serverOneDriveService.moveProjectToArchive(folderPathToMove, archivePath);
+                const moved = await serverOneDriveService.moveProjectToArchive(
+                  folderPathToMove, 
+                  archivePath,
+                  mapping.oneDriveFolderId || undefined,
+                  (archiveConfig.value as any).folderId || undefined
+                );
                 console.log(`🔄 [DEBUG] moveProjectToArchive returned:`, { moved });
                 if (moved) {
                   console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
@@ -2027,6 +2032,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingMapping = await storage.getOneDriveMapping(validatedData.projectCode);
       if (existingMapping) {
         return res.status(400).json({ error: 'OneDrive mapping already exists for this project' });
+      }
+
+      // Automatically extract the folder ID from the path (same system used for project creation)
+      let folderId = validatedData.oneDriveFolderId;
+      if (!folderId && validatedData.oneDriveFolderPath) {
+        console.log(`🔍 Extracting folder ID from path: ${validatedData.oneDriveFolderPath}`);
+        folderId = await serverOneDriveService.getFolderIdFromPath(validatedData.oneDriveFolderPath);
+        if (folderId) {
+          console.log(`✅ Got folder ID: ${folderId}`);
+          validatedData.oneDriveFolderId = folderId;
+        } else {
+          console.warn(`⚠️ Could not extract folder ID from path`);
+        }
       }
 
       const mapping = await storage.createOneDriveMapping(validatedData);

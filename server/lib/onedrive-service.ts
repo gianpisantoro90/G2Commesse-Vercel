@@ -1346,57 +1346,81 @@ class ServerOneDriveService {
     }
   }
 
-  async moveProjectToArchive(folderFullPath: string, archivePath: string): Promise<boolean> {
+  async getFolderIdFromPath(folderPath: string): Promise<string | null> {
     try {
-      console.log(`🚀 Starting moveProjectToArchive`, { folderFullPath, archivePath });
+      const client = await this.getClient();
+      
+      // Sanitize path
+      const sanitizedPath = folderPath.replace(/\.\./g, '').replace(/\/+/g, '/');
+      if (sanitizedPath !== folderPath) {
+        throw new Error('Invalid characters in folder path');
+      }
+      
+      console.log(`🔍 Extracting folder ID from path: ${folderPath}`);
+      
+      // Get folder info using the path
+      const folderInfo = await client.api(`/me/drive/root:${sanitizedPath}`).get();
+      
+      console.log(`✅ Got folder ID: ${folderInfo.id} for path: ${folderPath}`);
+      return folderInfo.id;
+    } catch (error: any) {
+      console.error(`❌ Failed to get folder ID from path:`, {
+        folderPath,
+        statusCode: error.statusCode,
+        message: error.message
+      });
+      return null;
+    }
+  }
+
+  async moveProjectToArchive(folderFullPath: string, archivePath: string, projectFolderId?: string, archiveFolderId?: string): Promise<boolean> {
+    try {
+      console.log(`🚀 Starting moveProjectToArchive`, { folderFullPath, archivePath, projectFolderId, archiveFolderId });
       
       const client = await this.getClient();
       
-      // Use the complete path directly from the mapping (already contains the correct root path)
-      const sourcePath = folderFullPath;
-      console.log(`📍 Using source path from mapping:`, { sourcePath });
-      
-      // Get the item to move
-      const sourceUrl = `/me/drive/root:${sourcePath}`;
-      console.log(`🔍 Attempting to get source folder at:`, { sourceUrl, sourcePath });
-      logGraphRequest('Get Folder to Move', sourceUrl, 'GET');
-      
       let sourceItem;
-      try {
-        sourceItem = await client.api(sourceUrl).get();
-        console.log(`✅ Found source folder:`, { id: sourceItem.id, name: sourceItem.name });
-      } catch (getSourceError: any) {
-        console.error(`❌ Failed to get source folder:`, {
-          statusCode: getSourceError.statusCode,
-          message: getSourceError.message,
-          code: getSourceError.code,
-          sourcePath,
-          sourceUrl
-        });
-        throw getSourceError;
-      }
-      logGraphResponse('Get Folder to Move', sourceItem);
-      
-      // Get archive folder
-      const archiveUrl = `/me/drive/root:${archivePath}`;
-      console.log(`🔍 Attempting to get archive folder at:`, { archiveUrl, archivePath });
-      logGraphRequest('Get Archive Folder', archiveUrl, 'GET');
-      
       let archiveFolder;
-      try {
-        archiveFolder = await client.api(archiveUrl).get();
-        console.log(`✅ Found archive folder:`, { id: archiveFolder.id, name: archiveFolder.name });
-      } catch (getArchiveError: any) {
-        console.error(`❌ Failed to get archive folder:`, {
-          statusCode: getArchiveError.statusCode,
-          message: getArchiveError.message,
-          code: getArchiveError.code,
-          archivePath,
-          archiveUrl
-        });
-        throw getArchiveError;
+      
+      // If we have the ID, use it directly; otherwise extract it from the path
+      if (projectFolderId) {
+        try {
+          console.log(`📍 Using provided project folder ID: ${projectFolderId}`);
+          sourceItem = await client.api(`/me/drive/items/${projectFolderId}`).get();
+          console.log(`✅ Found source folder by ID:`, { id: sourceItem.id, name: sourceItem.name });
+        } catch (error: any) {
+          console.warn(`⚠️ Failed to get source by ID, falling back to path lookup`);
+          const sourceId = await this.getFolderIdFromPath(folderFullPath);
+          if (!sourceId) throw new Error(`Could not find folder: ${folderFullPath}`);
+          sourceItem = await client.api(`/me/drive/items/${sourceId}`).get();
+        }
+      } else {
+        console.log(`📍 Extracting folder ID from path: ${folderFullPath}`);
+        const sourceId = await this.getFolderIdFromPath(folderFullPath);
+        if (!sourceId) throw new Error(`Could not find folder: ${folderFullPath}`);
+        sourceItem = await client.api(`/me/drive/items/${sourceId}`).get();
+        console.log(`✅ Found source folder by path:`, { id: sourceItem.id, name: sourceItem.name });
       }
-      logGraphResponse('Get Archive Folder', archiveFolder);
+      
+      // Get archive folder - use ID if provided, otherwise extract from path
+      if (archiveFolderId) {
+        try {
+          console.log(`📁 Using provided archive folder ID: ${archiveFolderId}`);
+          archiveFolder = await client.api(`/me/drive/items/${archiveFolderId}`).get();
+          console.log(`✅ Found archive folder by ID:`, { id: archiveFolder.id, name: archiveFolder.name });
+        } catch (error: any) {
+          console.warn(`⚠️ Failed to get archive by ID, falling back to path lookup`);
+          const archiveId = await this.getFolderIdFromPath(archivePath);
+          if (!archiveId) throw new Error(`Could not find archive folder: ${archivePath}`);
+          archiveFolder = await client.api(`/me/drive/items/${archiveId}`).get();
+        }
+      } else {
+        console.log(`📁 Extracting archive folder ID from path: ${archivePath}`);
+        const archiveId = await this.getFolderIdFromPath(archivePath);
+        if (!archiveId) throw new Error(`Could not find archive folder: ${archivePath}`);
+        archiveFolder = await client.api(`/me/drive/items/${archiveId}`).get();
+        console.log(`✅ Found archive folder by path:`, { id: archiveFolder.id, name: archiveFolder.name });
+      }
       
       // Move the item
       const moveData = { parentReference: { id: archiveFolder.id } };
@@ -1418,14 +1442,14 @@ class ServerOneDriveService {
       }
       logGraphResponse('Move Folder to Archive', result);
       
-      console.log(`✅ Successfully moved project ${projectFolderName} to archive`);
+      console.log(`✅ Successfully moved project folder to archive`);
       return true;
     } catch (error: any) {
       console.error('❌ Failed to move project to archive:', {
         errorMessage: error.message,
         statusCode: error.statusCode,
         code: error.code,
-        projectFolderName,
+        folderFullPath,
         archivePath
       });
       if (error.statusCode === 404) {
