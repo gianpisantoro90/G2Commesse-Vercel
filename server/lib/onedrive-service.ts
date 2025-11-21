@@ -1348,39 +1348,90 @@ class ServerOneDriveService {
 
   async moveProjectToArchive(projectFolderName: string, archivePath: string): Promise<boolean> {
     try {
+      console.log(`🚀 Starting moveProjectToArchive`, { projectFolderName, archivePath });
+      
       const client = await this.getClient();
       const rootPath = await this.getRootFolderPath() || '/G2_Progetti';
       
+      console.log(`📍 Root path determined:`, { rootPath, usingFallback: !await this.getRootFolderPath() });
+      
       const sourcePath = `${rootPath}/${projectFolderName}`;
+      console.log(`📍 Source path constructed:`, { sourcePath, rootPath, projectFolderName });
       
       // Get the item to move
       const sourceUrl = `/me/drive/root:${sourcePath}`;
+      console.log(`🔍 Attempting to get source folder at:`, { sourceUrl, sourcePath });
       logGraphRequest('Get Folder to Move', sourceUrl, 'GET');
       
-      const sourceItem = await client.api(sourceUrl).get();
+      let sourceItem;
+      try {
+        sourceItem = await client.api(sourceUrl).get();
+        console.log(`✅ Found source folder:`, { id: sourceItem.id, name: sourceItem.name });
+      } catch (getSourceError: any) {
+        console.error(`❌ Failed to get source folder:`, {
+          statusCode: getSourceError.statusCode,
+          message: getSourceError.message,
+          code: getSourceError.code,
+          sourcePath,
+          sourceUrl
+        });
+        throw getSourceError;
+      }
       logGraphResponse('Get Folder to Move', sourceItem);
       
       // Get archive folder
       const archiveUrl = `/me/drive/root:${archivePath}`;
+      console.log(`🔍 Attempting to get archive folder at:`, { archiveUrl, archivePath });
       logGraphRequest('Get Archive Folder', archiveUrl, 'GET');
       
-      const archiveFolder = await client.api(archiveUrl).get();
+      let archiveFolder;
+      try {
+        archiveFolder = await client.api(archiveUrl).get();
+        console.log(`✅ Found archive folder:`, { id: archiveFolder.id, name: archiveFolder.name });
+      } catch (getArchiveError: any) {
+        console.error(`❌ Failed to get archive folder:`, {
+          statusCode: getArchiveError.statusCode,
+          message: getArchiveError.message,
+          code: getArchiveError.code,
+          archivePath,
+          archiveUrl
+        });
+        throw getArchiveError;
+      }
       logGraphResponse('Get Archive Folder', archiveFolder);
       
       // Move the item
       const moveData = { parentReference: { id: archiveFolder.id } };
       const moveUrl = `/me/drive/items/${sourceItem.id}`;
+      console.log(`🚚 Moving folder to archive:`, { moveUrl, sourceId: sourceItem.id, archiveId: archiveFolder.id });
       logGraphRequest('Move Folder to Archive', moveUrl, 'PATCH', moveData);
       
-      const result = await client.api(moveUrl).patch(moveData);
+      let result;
+      try {
+        result = await client.api(moveUrl).patch(moveData);
+        console.log(`✅ Move successful:`, { id: result.id, name: result.name, parentId: result.parentReference?.id });
+      } catch (moveError: any) {
+        console.error(`❌ Move operation failed:`, {
+          statusCode: moveError.statusCode,
+          message: moveError.message,
+          code: moveError.code
+        });
+        throw moveError;
+      }
       logGraphResponse('Move Folder to Archive', result);
       
       console.log(`✅ Successfully moved project ${projectFolderName} to archive`);
       return true;
     } catch (error: any) {
-      console.error('❌ Failed to move project to archive:', error);
+      console.error('❌ Failed to move project to archive:', {
+        errorMessage: error.message,
+        statusCode: error.statusCode,
+        code: error.code,
+        projectFolderName,
+        archivePath
+      });
       if (error.statusCode === 404) {
-        console.warn(`⚠️ Folder or archive path not found - skipping move`);
+        console.warn(`⚠️ Folder or archive path not found (404) - skipping move`);
         return true;
       }
       return false;
