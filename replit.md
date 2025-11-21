@@ -2,6 +2,15 @@
 
 ## Overview
 
+**AI Configuration Panel Simplification (November 21, 2025)**
+- ✅ **RESTORED PARCELLA FILES**: Recovered deleted parcella calculator files from git history to fix critical import errors
+- ✅ **SIMPLIFIED AI CONFIG PANEL**: Removed non-functional routing settings (autoRouting, contentAnalysis, learningMode)
+- ✅ **STREAMLINED UI**: AI Config now has only 2 tabs - "Provider AI" and "Revisioni Email" (removed "Routing" tab)
+- ✅ **CLEAN SCHEMA**: Reduced AI config schema to essential fields only (apiKey, model)
+- ✅ **WORKING APP**: All core functionality operational - database, email service, WebSocket notifications, and AI providers
+- **FILES MODIFIED**: `client/src/components/system/ai-config-panel-unified.tsx`
+- **FILES RESTORED**: `client/src/lib/parcella-calculator-dm2016.ts`, `client/src/lib/dm2016-tavole-ufficiali.ts`, `client/src/lib/parcella-calculator-complete.ts`, `client/src/lib/retry-utils.ts`
+
 **CRITICAL FIX - DeepSeek Reasoner AI Analysis (November 14, 2025)**
 - ✅ **FIXED DeepSeek JSON PARSING**: Resolved critical bug where DeepSeek Reasoner never suggested project matches
 - ✅ **ARRAY-BASED CONTENT HANDLING**: DeepSeek adapter now correctly filters reasoning segments and extracts final JSON
