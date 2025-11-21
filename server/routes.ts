@@ -751,32 +751,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('✅ Project updated successfully:', project.code);
-
-      // Handle OneDrive folder move if status changed to conclusa or sospesa
-      const oldStatus = originalProject.status;
-      const newStatus = project.status;
-      const statusChanged = oldStatus !== newStatus && (newStatus === 'conclusa' || newStatus === 'sospesa');
-      
-      if (statusChanged) {
-        console.log(`📁 Status change detected: ${oldStatus} → ${newStatus}, attempting archive move`);
-        try {
-          const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
-          if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
-            const archivePath = (archiveConfig.value as any).folderPath;
-            const moved = await serverOneDriveService.moveProjectToArchive(project.code, archivePath);
-            if (moved) {
-              console.log(`✅ Project ${project.code} moved to archive`);
-            } else {
-              console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
-            }
-          } else {
-            console.log(`ℹ️ No archive folder configured, skipping move`);
-          }
-        } catch (archiveError: any) {
-          console.warn(`⚠️ Archive move error (non-critical):`, archiveError.message);
-        }
-      }
-
       res.json(project);
     } catch (error) {
       if (error instanceof z.ZodError) {
