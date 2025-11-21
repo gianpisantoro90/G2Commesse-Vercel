@@ -255,7 +255,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="in_corso">🟡 In Corso</SelectItem>
+                      <SelectItem value="in corso">🟡 In Corso</SelectItem>
                       <SelectItem value="conclusa">🟢 Conclusa</SelectItem>
                       <SelectItem value="sospesa">🔴 Sospesa</SelectItem>
                     </SelectContent>

@@ -61,7 +61,7 @@ export default function KpiDashboard() {
   const kpis = {
     // Progetti
     totaleProgetti: filteredProjects.length,
-    progettiInCorso: filteredProjects.filter(p => p.status === "in_corso").length,
+    progettiInCorso: filteredProjects.filter(p => p.status === "in corso").length,
     progettiSospesi: filteredProjects.filter(p => p.status === "sospesa").length,
     progettiConclussi: filteredProjects.filter(p => p.status === "conclusa").length,
 

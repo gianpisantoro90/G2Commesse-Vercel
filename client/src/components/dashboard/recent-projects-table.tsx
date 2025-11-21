@@ -27,13 +27,13 @@ export default function RecentProjectsTable() {
     // Use the actual status from database to match the Gestione tab
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-        project.status === 'in_corso' 
+        project.status === 'in corso' 
           ? 'bg-yellow-100 text-yellow-800' 
           : project.status === 'conclusa'
           ? 'bg-green-100 text-green-800'
           : 'bg-red-100 text-red-800'
       }`}>
-        {project.status === 'in_corso' ? '🟡 In Corso' : 
+        {project.status === 'in corso' ? '🟡 In Corso' : 
          project.status === 'conclusa' ? '🟢 Conclusa' : 
          '🔴 Sospesa'}
       </span>
