@@ -848,11 +848,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
               const archivePath = (archiveConfig.value as any).folderPath;
               console.log(`📁 Archive destination path: ${archivePath}`);
-              const moved = await serverOneDriveService.moveProjectToArchive(folderNameToMove, archivePath);
-              if (moved) {
-                console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
-              } else {
-                console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
+              console.log(`🚀 [DEBUG] About to call moveProjectToArchive with:`, { folderNameToMove, archivePath });
+              try {
+                const moved = await serverOneDriveService.moveProjectToArchive(folderNameToMove, archivePath);
+                console.log(`🔄 [DEBUG] moveProjectToArchive returned:`, { moved });
+                if (moved) {
+                  console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
+                } else {
+                  console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
+                }
+              } catch (moveError) {
+                console.error(`❌ [DEBUG] Exception in moveProjectToArchive call:`, moveError);
+                throw moveError;
               }
             } else {
               console.log(`ℹ️ No archive folder configured, skipping move`);
