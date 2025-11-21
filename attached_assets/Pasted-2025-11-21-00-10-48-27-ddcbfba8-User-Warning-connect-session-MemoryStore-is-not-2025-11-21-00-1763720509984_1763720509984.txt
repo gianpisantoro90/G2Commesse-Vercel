@@ -1,0 +1,145 @@
+2025-11-21 00:10:48.27
+ddcbfba8
+User
+Warning: connect.session() MemoryStore is not
+2025-11-21 00:10:48.27
+ddcbfba8
+User
+designed for a production environment, as it will leak
+2025-11-21 00:10:48.27
+ddcbfba8
+User
+memory, and will not scale past a single process.
+2025-11-21 00:28:35.57
+ddcbfba8
+User
+Warning: connect.session() MemoryStore is not
+2025-11-21 00:28:35.57
+ddcbfba8
+User
+memory, and will not scale past a single process.
+2025-11-21 00:28:35.57
+ddcbfba8
+User
+designed for a production environment, as it will leak
+2025-11-21 00:51:46.00
+ddcbfba8
+User
+Warning: connect.session() MemoryStore is not
+2025-11-21 00:51:46.00
+ddcbfba8
+User
+memory, and will not scale past a single process.
+2025-11-21 00:51:46.00
+ddcbfba8
+User
+designed for a production environment, as it will leak
+2025-11-21 01:34:29.38
+ddcbfba8
+User
+Warning: connect.session() MemoryStore is not
+2025-11-21 01:34:29.38
+ddcbfba8
+User
+designed for a production environment, as it will leak
+2025-11-21 01:34:29.38
+ddcbfba8
+User
+memory, and will not scale past a single process.
+2025-11-21 02:16:40.18
+ddcbfba8
+User
+designed for a production environment, as it will leak
+2025-11-21 02:16:40.18
+ddcbfba8
+User
+memory, and will not scale past a single process.
+2025-11-21 02:16:40.18
+ddcbfba8
+User
+Warning: connect.session() MemoryStore is not
+2025-11-21 03:08:57.33
+ddcbfba8
+User
+memory, and will not scale past a single process.
+2025-11-21 03:08:57.33
+ddcbfba8
+User
+designed for a production environment, as it will leak
+
+2025-11-21 03:08:57.33
+ddcbfba8
+User
+Warning: connect.session() MemoryStore is not
+2025-11-21 09:23:56.71
+ddcbfba8
+User
+Warning: connect.session() MemoryStore is not
+2025-11-21 09:23:56.71
+ddcbfba8
+User
+designed for a production environment, as it will leak
+2025-11-21 09:23:56.71
+ddcbfba8
+User
+memory, and will not scale past a single process.
+2025-11-21 09:26:02.35
+ddcbfba8
+User
+[2025-11-21T08:26:02.359Z] ❌ ERROR: IMAP connection error {"error":{"source":"timeout-auth"}}
+2025-11-21 09:26:02.36
+ddcbfba8
+User
+[2025-11-21T08:26:02.360Z] ❌ ERROR: Email check failed {"error":{"source":"timeout-auth"}}
+2025-11-21 09:28:02.35
+ddcbfba8
+User
+[2025-11-21T08:28:02.359Z] ❌ ERROR: Email check failed {"error":{"source":"timeout-auth"}}
+2025-11-21 09:28:02.35
+ddcbfba8
+User
+[2025-11-21T08:28:02.358Z] ❌ ERROR: IMAP connection error {"error":{"source":"timeout-auth"}}
+2025-11-21 09:30:02.35
+ddcbfba8
+User
+[2025-11-21T08:30:02.356Z] ❌ ERROR: IMAP connection error {"error":{"source":"timeout-auth"}}
+2025-11-21 09:30:02.35
+ddcbfba8
+User
+[2025-11-21T08:30:02.356Z] ❌ ERROR: Email check failed {"error":{"source":"timeout-auth"}}
+2025-11-21 09:31:02.35
+ddcbfba8
+User
+[2025-11-21T08:31:02.358Z] ❌ ERROR: Email check failed {"error":{"source":"timeout-auth"}}
+2025-11-21 09:31:02.35
+ddcbfba8
+User
+[2025-11-21T08:31:02.358Z] ❌ ERROR: IMAP connection error {"error":{"source":"timeout-auth"}}
+2025-11-21 09:32:02.36
+ddcbfba8
+User
+[2025-11-21T08:32:02.360Z] ❌ ERROR: Email check failed {"error":{"source":"timeout-auth"}}
+2025-11-21 09:32:02.36
+ddcbfba8
+User
+[2025-11-21T08:32:02.360Z] ❌ ERROR: IMAP connection error {"error":{"source":"timeout-auth"}}
+2025-11-21 09:33:02.36
+ddcbfba8
+User
+[2025-11-21T08:33:02.359Z] ❌ ERROR: IMAP connection error {"error":{"source":"timeout-auth"}}
+2025-11-21 09:33:02.36
+ddcbfba8
+User
+[2025-11-21T08:33:02.360Z] ❌ ERROR: Email check failed {"error":{"source":"timeout-auth"}}
+2025-11-21 09:37:03.12
+ddcbfba8
+User
+[2025-11-21T08:37:03.125Z] ❌ ERROR: Failed to normalize deepseek response {"error":"No valid JSON found in deepseek response","rawResponse":"First, I am considering the email content. The email is from Buoni Acquisto Edenred and is about tax savings and employee benefits using their vouchers. It's promotional, not directly related to any s"}
+2025-11-21 09:58:57.98
+ddcbfba8
+User
+[2025-11-21T08:58:57.987Z] ❌ ERROR: IMAP connection error {"error":{"errno":-104,"code":"ECONNRESET","syscall":"read","source":"socket"}}
+2025-11-21 10:52:58.18
+ddcbfba8
+User
+[2025-11-21T09:52:58.180Z] ❌ ERROR: IMAP connection error {"error":{"errno":-104,"code":"ECONNRESET","syscall":"read","source":"socket"}}
