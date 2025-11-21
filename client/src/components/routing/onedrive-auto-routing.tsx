@@ -100,20 +100,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
     },
   });
 
-  // Get OneDrive root folder configuration
-  const { data: rootConfig } = useQuery({
-    queryKey: ['onedrive-root-folder'],
-    queryFn: async () => {
-      const response = await fetch('/api/onedrive/root-folder');
-      if (response.ok) {
-        const data = await response.json();
-        return data.config || data;
-      }
-      return null;
-    },
-    enabled: isConnected
-  });
-
   // Auto-set scan path when project is selected
   useEffect(() => {
     if (selectedProject && projects.length > 0) {
