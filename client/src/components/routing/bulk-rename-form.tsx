@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -391,18 +392,12 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           <Label htmlFor="project-select" className="text-sm font-medium">
             Commessa
           </Label>
-          <Select value={selectedProject} onValueChange={handleProjectChange}>
-            <SelectTrigger className="w-full" data-testid="project-select">
-              <SelectValue placeholder="Seleziona una commessa..." />
-            </SelectTrigger>
-            <SelectContent>
-              {projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  [{project.code}] {project.client} - {project.object}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ProjectCombobox
+            projects={projects}
+            value={selectedProject}
+            onValueChange={handleProjectChange}
+            placeholder="Cerca commessa per codice, oggetto o cliente..."
+          />
         </div>
 
         {selectedProjectData && (
