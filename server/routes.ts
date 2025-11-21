@@ -851,15 +851,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`📁 Archive destination path: ${archivePath}`);
               console.log(`🚀 [DEBUG] About to call moveProjectToArchive with:`, { folderPathToMove, archivePath });
               try {
-                const moved = await serverOneDriveService.moveProjectToArchive(
+                const moveResult = await serverOneDriveService.moveProjectToArchive(
                   folderPathToMove, 
                   archivePath,
                   mapping.oneDriveFolderId || undefined,
                   (archiveConfig.value as any).folderId || undefined
                 );
-                console.log(`🔄 [DEBUG] moveProjectToArchive returned:`, { moved });
-                if (moved) {
+                console.log(`🔄 [DEBUG] moveProjectToArchive returned:`, { moveResult });
+                if (moveResult.success) {
                   console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
+                  
+                  // Update the mapping with the new path
+                  if (moveResult.newPath) {
+                    console.log(`📝 Updating mapping path to: ${moveResult.newPath}`);
+                    await storage.updateOneDriveMapping(project.code, {
+                      oneDriveFolderPath: moveResult.newPath
+                    });
+                    console.log(`✅ OneDrive mapping path updated successfully`);
+                  }
                 } else {
                   console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
                 }
