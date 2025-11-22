@@ -29,6 +29,7 @@ import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
 import PrestazioniModal from "./prestazioni-modal";
 import FatturazioneModal from "./fatturazione-modal";
+import InvoicesModal from "./invoices-modal";
 import { 
   renderPrestazioneBadge, 
   formatImporto, 
@@ -52,6 +53,7 @@ export default function ProjectsTable() {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
   const [selectedProjectForFatturazione, setSelectedProjectForFatturazione] = useState<Project | null>(null);
+  const [selectedProjectForInvoices, setSelectedProjectForInvoices] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   // Pagination state
@@ -770,8 +772,8 @@ export default function ProjectsTable() {
                       <td className="py-4 px-4" data-testid={`project-fatturazione-${project.id}`}>
                         <div
                           className="flex flex-col gap-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-1 rounded transition-colors"
-                          onClick={() => setSelectedProjectForFatturazione(project)}
-                          title="Clicca per gestire fatturazione"
+                          onClick={() => setSelectedProjectForInvoices(project)}
+                          title="Clicca per gestire fatture"
                         >
                           {project.fatturato ? (
                             <div className="flex items-center gap-1">
@@ -1061,11 +1063,19 @@ export default function ProjectsTable() {
         />
       )}
 
-      {/* Fatturazione Modal */}
+      {/* Fatturazione Modal - Legacy (keep for backward compat) */}
       <FatturazioneModal
         project={selectedProjectForFatturazione}
-        open={!!selectedProjectForFatturazione}
+        open={!!selectedProjectForFatturazione && false}
         onClose={() => setSelectedProjectForFatturazione(null)}
+      />
+
+      {/* Invoices Modal - New multi-invoice support */}
+      <InvoicesModal
+        projectId={selectedProjectForInvoices?.id || null}
+        projectCode={selectedProjectForInvoices?.code || ""}
+        open={!!selectedProjectForInvoices}
+        onClose={() => setSelectedProjectForInvoices(null)}
       />
 
       {/* Delete Confirmation Dialog */}
