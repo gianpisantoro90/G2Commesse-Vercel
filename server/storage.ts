@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -84,6 +84,13 @@ export interface IStorage {
   updateTask(id: string, updates: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: string): Promise<boolean>;
 
+  // Project Invoices
+  getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]>;
+  getInvoice(id: string): Promise<ProjectInvoice | undefined>;
+  createInvoice(invoice: InsertProjectInvoice): Promise<ProjectInvoice>;
+  updateInvoice(id: string, updates: Partial<InsertProjectInvoice>): Promise<ProjectInvoice | undefined>;
+  deleteInvoice(id: string): Promise<boolean>;
+
   // Bulk operations
   exportAllData(): Promise<{ 
     projects: Project[], 
@@ -123,6 +130,7 @@ export class MemStorage implements IStorage {
   private deadlines: Map<string, Deadline> = new Map();
   private users: Map<string, User> = new Map();
   private tasks: Map<string, Task> = new Map();
+  private invoices: Map<string, ProjectInvoice> = new Map();
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -714,6 +722,51 @@ export class MemStorage implements IStorage {
     return this.tasks.delete(id);
   }
 
+  // Invoice methods
+  async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
+    return Array.from(this.invoices.values()).filter(i => i.projectId === projectId);
+  }
+
+  async getInvoice(id: string): Promise<ProjectInvoice | undefined> {
+    return this.invoices.get(id);
+  }
+
+  async createInvoice(insertInvoice: InsertProjectInvoice): Promise<ProjectInvoice> {
+    const id = randomUUID();
+    const invoice: ProjectInvoice = {
+      ...insertInvoice,
+      id,
+      salId: insertInvoice.salId || null,
+      importoParcella: insertInvoice.importoParcella || 0,
+      ritenuta: insertInvoice.ritenuta || 0,
+      scadenzaPagamento: insertInvoice.scadenzaPagamento || null,
+      dataPagamento: insertInvoice.dataPagamento || null,
+      note: insertInvoice.note || null,
+      attachmentPath: insertInvoice.attachmentPath || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.invoices.set(id, invoice);
+    return invoice;
+  }
+
+  async updateInvoice(id: string, updates: Partial<InsertProjectInvoice>): Promise<ProjectInvoice | undefined> {
+    const existing = this.invoices.get(id);
+    if (!existing) return undefined;
+
+    const updated: ProjectInvoice = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.invoices.set(id, updated);
+    return updated;
+  }
+
+  async deleteInvoice(id: string): Promise<boolean> {
+    return this.invoices.delete(id);
+  }
+
   async clearAllData() {
     this.projects.clear();
     this.clients.clear();
@@ -724,6 +777,7 @@ export class MemStorage implements IStorage {
     this.communications.clear();
     this.deadlines.clear();
     this.tasks.clear();
+    this.invoices.clear();
     // Don't clear users - keep them for authentication
   }
 
@@ -1277,6 +1331,56 @@ export class DatabaseStorage implements IStorage {
   async deleteTask(id: string): Promise<boolean> {
     const result = await db.delete(tasks).where(eq(tasks.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  // Invoice methods
+  async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
+    try {
+      return await db.select().from(projectInvoices).where(eq(projectInvoices.projectId, projectId));
+    } catch (error) {
+      console.error('Error getting invoices:', error);
+      return [];
+    }
+  }
+
+  async getInvoice(id: string): Promise<ProjectInvoice | undefined> {
+    try {
+      const [invoice] = await db.select().from(projectInvoices).where(eq(projectInvoices.id, id));
+      return invoice || undefined;
+    } catch (error) {
+      console.error('Error getting invoice:', error);
+      return undefined;
+    }
+  }
+
+  async createInvoice(insertInvoice: InsertProjectInvoice): Promise<ProjectInvoice> {
+    try {
+      const [invoice] = await db.insert(projectInvoices).values(insertInvoice).returning();
+      return invoice;
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      throw error;
+    }
+  }
+
+  async updateInvoice(id: string, updates: Partial<InsertProjectInvoice>): Promise<ProjectInvoice | undefined> {
+    try {
+      const [updated] = await db.update(projectInvoices).set(updates).where(eq(projectInvoices.id, id)).returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      return undefined;
+    }
+  }
+
+  async deleteInvoice(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(projectInvoices).where(eq(projectInvoices.id, id));
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      return false;
+    }
   }
 
   // Bulk operations
