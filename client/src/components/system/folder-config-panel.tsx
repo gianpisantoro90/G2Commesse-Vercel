@@ -52,6 +52,20 @@ export default function FolderConfigPanel() {
     isResetting: isResettingArchive,
   } = useOneDriveArchiveConfig();
 
+  // Auto-navigate to configured root folder when opening browser
+  useEffect(() => {
+    if (showBrowser && rootConfig && currentPath === '/') {
+      setCurrentPath(rootConfig.folderPath);
+    }
+  }, [showBrowser, rootConfig]);
+
+  // Auto-navigate to configured archive folder when opening archive browser
+  useEffect(() => {
+    if (showArchiveBrowser && archiveConfig && currentPath === '/') {
+      setCurrentPath(archiveConfig.folderPath);
+    }
+  }, [showArchiveBrowser, archiveConfig]);
+
   // Get current folder files for browsing
   const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles } = useQuery({
     queryKey: ['onedrive-browse', currentPath],
