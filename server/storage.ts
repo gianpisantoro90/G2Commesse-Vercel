@@ -1917,6 +1917,27 @@ class FallbackStorage implements IStorage {
     return this.executeWithFallback(storage => storage.deleteTask(id));
   }
 
+  // Invoice methods
+  async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
+    return this.executeWithFallback(storage => storage.getInvoicesByProject(projectId));
+  }
+
+  async getInvoice(id: string): Promise<ProjectInvoice | undefined> {
+    return this.executeWithFallback(storage => storage.getInvoice(id));
+  }
+
+  async createInvoice(invoice: InsertProjectInvoice): Promise<ProjectInvoice> {
+    return this.executeWithFallback(storage => storage.createInvoice(invoice));
+  }
+
+  async updateInvoice(id: string, updates: Partial<InsertProjectInvoice>): Promise<ProjectInvoice | undefined> {
+    return this.executeWithFallback(storage => storage.updateInvoice(id, updates));
+  }
+
+  async deleteInvoice(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteInvoice(id));
+  }
+
   async exportAllData(): Promise<{ 
     projects: Project[], 
     clients: Client[], 

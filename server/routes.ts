@@ -3171,5 +3171,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Project Invoices endpoints
+  app.get("/api/projects/:projectId/invoices", async (req, res) => {
+    try {
+      const invoices = await storage.getInvoicesByProject(req.params.projectId);
+      res.json(invoices);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      res.status(500).json({ message: "Errore nel recupero delle fatture" });
+    }
+  });
+
+  app.post("/api/projects/:projectId/invoices", async (req, res) => {
+    try {
+      const invoice = await storage.createInvoice({
+        ...req.body,
+        projectId: req.params.projectId,
+      });
+      res.status(201).json(invoice);
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      res.status(500).json({ message: "Errore nella creazione della fattura" });
+    }
+  });
+
+  app.patch("/api/projects/:projectId/invoices/:invoiceId", async (req, res) => {
+    try {
+      const updated = await storage.updateInvoice(req.params.invoiceId, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "Fattura non trovata" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      res.status(500).json({ message: "Errore nell'aggiornamento della fattura" });
+    }
+  });
+
+  app.delete("/api/projects/:projectId/invoices/:invoiceId", async (req, res) => {
+    try {
+      const deleted = await storage.deleteInvoice(req.params.invoiceId);
+      if (!deleted) {
+        return res.status(404).json({ message: "Fattura non trovata" });
+      }
+      res.json({ message: "Fattura eliminata con successo" });
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      res.status(500).json({ message: "Errore nell'eliminazione della fattura" });
+    }
+  });
+
   return httpServer;
 }
