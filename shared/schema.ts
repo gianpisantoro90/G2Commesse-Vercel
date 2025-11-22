@@ -408,6 +408,7 @@ export const projectInvoices = pgTable("project_invoices", {
   importoNetto: integer("importo_netto").notNull(), // In centesimi
   importoIVA: integer("importo_iva").notNull(),
   importoTotale: integer("importo_totale").notNull(),
+  importoParcella: integer("importo_parcella").default(0), // Importo pattuito (parcella)
   aliquotaIVA: integer("aliquota_iva").default(22), // Percentuale
   ritenuta: integer("ritenuta").default(0), // In centesimi
   stato: text("stato").notNull().default("emessa"), // 'emessa', 'pagata', 'parzialmente_pagata', 'scaduta'
