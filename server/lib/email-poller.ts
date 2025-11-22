@@ -107,12 +107,16 @@ class EmailPoller {
     this.isProcessing = true;
 
     try {
-      logger.debug('Checking for new emails...');
+      if (process.env.NODE_ENV !== 'production') {
+        logger.debug('Checking for new emails...');
+      }
 
       const emails = await this.fetchUnreadEmails();
 
       if (emails.length === 0) {
-        logger.debug('No new emails found');
+        if (process.env.NODE_ENV !== 'production') {
+          logger.debug('No new emails found');
+        }
         this.isProcessing = false;
         return;
       }
@@ -177,7 +181,9 @@ class EmailPoller {
               return;
             }
 
-            logger.debug(`Found ${results.length} unseen message(s)`);
+            if (process.env.NODE_ENV !== 'production') {
+              logger.debug(`Found ${results.length} unseen message(s)`);
+            }
 
             const fetch = imap.fetch(results, { bodies: '' });
 
@@ -209,7 +215,9 @@ class EmailPoller {
             });
 
             fetch.once('end', () => {
-              logger.debug('Done fetching emails');
+              if (process.env.NODE_ENV !== 'production') {
+                logger.debug('Done fetching emails');
+              }
               imap.end();
             });
           });
@@ -366,9 +374,11 @@ class EmailPoller {
     }
 
     try {
+      // Fetch once and reuse (avoid N+1 query)
+      const allComms = await this.storage.getAllCommunications();
+
       // Strategy 1: Check by emailMessageId (most reliable)
       if (messageId) {
-        const allComms = await this.storage.getAllCommunications();
         const existsByMessageId = allComms.some(comm => comm.emailMessageId === messageId);
 
         if (existsByMessageId) {
@@ -379,7 +389,6 @@ class EmailPoller {
 
       // Strategy 2: Check by subject + sender + similar date (within 1 hour)
       // This catches forwards/re-sends that might have different message IDs
-      const allComms = await this.storage.getAllCommunications();
       const oneHourMs = 60 * 60 * 1000;
 
       const existsBySimilarity = allComms.some(comm => {
@@ -614,7 +623,9 @@ class EmailPoller {
             if (err) {
               reject(err);
             } else {
-              logger.debug('Email marked as read', { uid });
+              if (process.env.NODE_ENV !== 'production') {
+                logger.debug('Email marked as read', { uid });
+              }
               resolve();
             }
           });
