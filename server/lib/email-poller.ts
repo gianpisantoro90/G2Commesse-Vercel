@@ -31,7 +31,7 @@ class EmailPoller {
     const port = parseInt(process.env.EMAIL_IMAP_PORT || '993');
     const user = process.env.EMAIL_IMAP_USER;
     const password = process.env.EMAIL_IMAP_PASSWORD;
-    const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || '600000'); // default 10 minutes
+    const checkInterval = parseInt(process.env.EMAIL_CHECK_INTERVAL || '3600000'); // default 1 hour
 
     if (!host || !user || !password) {
       logger.warn('Email polling not configured - missing IMAP credentials');
