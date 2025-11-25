@@ -2,12 +2,38 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema, aiConfigSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema, aiConfigSchema, insertProjectInvoiceSchema } from "@shared/schema";
 import bcrypt from "bcrypt";
 import serverOneDriveService from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
 import { emailService } from "./lib/email-service";
 import { z } from "zod";
+
+// Schema per trasformare i dati delle fatture dal frontend (decimali) al database (centesimi)
+const invoiceInputSchema = z.object({
+  numeroFattura: z.string(),
+  dataEmissione: z.union([z.date(), z.string()]).transform(val => 
+    typeof val === 'string' ? new Date(val) : val
+  ),
+  importoNetto: z.number().transform(n => Math.round(n * 100)),
+  importoIVA: z.number().transform(n => Math.round(n * 100)),
+  importoTotale: z.number().transform(n => Math.round(n * 100)),
+  importoParcella: z.number().transform(n => Math.round(n * 100)),
+  aliquotaIVA: z.number().default(22),
+  stato: z.string().default("emessa"),
+  dataPagamento: z.union([z.date(), z.string().nullable(), z.undefined()]).transform(val => {
+    if (!val || val === '') return null;
+    return typeof val === 'string' ? new Date(val) : val;
+  }).optional(),
+  note: z.string().optional(),
+  salId: z.string().optional().nullable(),
+  ritenuta: z.number().default(0).transform(n => Math.round(n * 100)),
+  scadenzaPagamento: z.union([z.date(), z.string().nullable(), z.undefined()]).transform(val => {
+    if (!val || val === '') return null;
+    return typeof val === 'string' ? new Date(val) : val;
+  }).optional(),
+  attachmentPath: z.string().optional(),
+});
 
 // Security: Rate limiter for login endpoint
 const loginLimiter = rateLimit({
@@ -3184,26 +3210,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects/:projectId/invoices", async (req, res) => {
     try {
+      const validatedData = invoiceInputSchema.parse(req.body);
       const invoice = await storage.createInvoice({
-        ...req.body,
+        ...validatedData,
         projectId: req.params.projectId,
       });
       res.status(201).json(invoice);
     } catch (error) {
       console.error('Error creating invoice:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati fattura non validi", errors: error.errors });
+      }
       res.status(500).json({ message: "Errore nella creazione della fattura" });
     }
   });
 
   app.patch("/api/projects/:projectId/invoices/:invoiceId", async (req, res) => {
     try {
-      const updated = await storage.updateInvoice(req.params.invoiceId, req.body);
+      const validatedData = invoiceInputSchema.partial().parse(req.body);
+      const updated = await storage.updateInvoice(req.params.invoiceId, validatedData);
       if (!updated) {
         return res.status(404).json({ message: "Fattura non trovata" });
       }
       res.json(updated);
     } catch (error) {
       console.error('Error updating invoice:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati fattura non validi", errors: error.errors });
+      }
       res.status(500).json({ message: "Errore nell'aggiornamento della fattura" });
     }
   });
