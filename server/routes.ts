@@ -9,24 +9,8 @@ import { notificationService } from "./lib/notification-service";
 import { emailService } from "./lib/email-service";
 import { z } from "zod";
 
-// Schema per trasformare i dati delle fatture dal frontend (decimali) al database (centesimi)
-// Calcoli automatici: Cassa = Netto * 4%, IVA = (Netto + Cassa) * 22%
-const invoiceInputSchema = z.object({
-  numeroFattura: z.string(),
-  dataEmissione: z.union([z.date(), z.string()]).transform(val => 
-    typeof val === 'string' ? new Date(val) : val
-  ),
-  importoNetto: z.number().transform(n => Math.round(n * 100)),
-  importoParcella: z.number().default(0).transform(n => Math.round(n * 100)),
-  stato: z.string().default("emessa"),
-  aliquotaIVA: z.number().default(22),
-  dataPagamento: z.any().optional().nullable(),
-  note: z.any().optional().nullable(),
-  salId: z.string().optional().nullable(),
-  ritenuta: z.number().default(0).transform(n => Math.round(n * 100)),
-  scadenzaPagamento: z.any().optional().nullable(),
-  attachmentPath: z.string().optional().nullable(),
-}).transform(data => {
+// Funzione per calcolare e trasformare i dati della fattura
+const transformInvoiceData = (data: any) => {
   // Trasforma dataPagamento a Date se è stringa
   let dataPagamento = data.dataPagamento;
   if (dataPagamento && typeof dataPagamento === 'string') {
@@ -39,30 +23,59 @@ const invoiceInputSchema = z.object({
     scadenzaPagamento = new Date(scadenzaPagamento);
   }
   
-  // Calcoli automatici
-  const nettoInCentesimi = data.importoNetto;
-  const cassa = Math.round(nettoInCentesimi * 0.04); // 4% Inarcassa
-  const iva = Math.round((nettoInCentesimi + cassa) * (data.aliquotaIVA / 100)); // IVA su netto+cassa
-  const totale = nettoInCentesimi + cassa + iva;
+  // Trasforma dataEmissione
+  let dataEmissione = data.dataEmissione;
+  if (dataEmissione && typeof dataEmissione === 'string') {
+    dataEmissione = new Date(dataEmissione);
+  }
+  
+  // Calcoli automatici se importoNetto è presente
+  let cassaPrevidenziale = 0;
+  let importoIVA = 0;
+  let importoTotale = 0;
+  
+  if (data.importoNetto !== undefined) {
+    const nettoInCentesimi = Math.round(data.importoNetto * 100);
+    cassaPrevidenziale = Math.round(nettoInCentesimi * 0.04); // 4% Inarcassa
+    const aliquota = data.aliquotaIVA || 22;
+    importoIVA = Math.round((nettoInCentesimi + cassaPrevidenziale) * (aliquota / 100)); // IVA su netto+cassa
+    importoTotale = nettoInCentesimi + cassaPrevidenziale + importoIVA;
+  }
   
   return {
-    numeroFattura: data.numeroFattura,
-    dataEmissione: data.dataEmissione,
-    importoNetto: nettoInCentesimi,
-    importoParcella: data.importoParcella,
-    stato: data.stato,
-    aliquotaIVA: data.aliquotaIVA,
+    numeroFattura: data.numeroFattura || undefined,
+    dataEmissione: dataEmissione || undefined,
+    importoNetto: data.importoNetto !== undefined ? Math.round(data.importoNetto * 100) : undefined,
+    importoParcella: data.importoParcella !== undefined ? Math.round(data.importoParcella * 100) : undefined,
+    stato: data.stato || "emessa",
+    aliquotaIVA: data.aliquotaIVA || 22,
     dataPagamento: dataPagamento || null,
     note: data.note || null,
     salId: data.salId || null,
-    ritenuta: data.ritenuta,
+    ritenuta: data.ritenuta !== undefined ? Math.round(data.ritenuta * 100) : 0,
     scadenzaPagamento: scadenzaPagamento || null,
     attachmentPath: data.attachmentPath || null,
-    cassaPrevidenziale: cassa,
-    importoIVA: iva,
-    importoTotale: totale,
+    cassaPrevidenziale: cassaPrevidenziale,
+    importoIVA: importoIVA,
+    importoTotale: importoTotale,
   };
-});
+};
+
+// Schema per trasformare i dati delle fatture dal frontend (decimali) al database (centesimi)
+const invoiceInputSchema = z.object({
+  numeroFattura: z.string().optional(),
+  dataEmissione: z.any().optional(),
+  importoNetto: z.number().optional(),
+  importoParcella: z.number().optional(),
+  stato: z.string().optional(),
+  aliquotaIVA: z.number().optional(),
+  dataPagamento: z.any().optional().nullable(),
+  note: z.any().optional().nullable(),
+  salId: z.string().optional().nullable(),
+  ritenuta: z.number().optional(),
+  scadenzaPagamento: z.any().optional().nullable(),
+  attachmentPath: z.string().optional().nullable(),
+}).transform(transformInvoiceData);
 
 // Security: Rate limiter for login endpoint
 const loginLimiter = rateLimit({
