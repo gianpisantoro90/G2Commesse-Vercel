@@ -80,11 +80,11 @@ export default function Dashboard() {
                 {/* First Row - Economic Dashboard (Admin only) */}
                 {isAdmin && <EconomicDashboardCard />}
 
-                {/* Second Row - Recent Projects */}
-                <RecentProjectsTable />
-
-                {/* Third Row - Recent Tasks (All users) */}
+                {/* Second Row - Recent Tasks (All users) */}
                 <RecentTasksTable />
+
+                {/* Third Row - Recent Projects */}
+                <RecentProjectsTable />
 
                 {/* Fourth Row - Core System Info */}
                 <div className="grid gap-6 lg:grid-cols-2">
