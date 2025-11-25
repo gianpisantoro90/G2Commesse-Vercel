@@ -144,6 +144,7 @@ export default function InvoicesModal({ projectId, projectCode, open, onClose }:
       numeroFattura: invoice.numeroFattura,
       dataEmissione: new Date(invoice.dataEmissione).toISOString().split('T')[0],
       importoNetto: invoice.importoNetto / 100,
+      cassaPrevidenziale: invoice.cassaPrevidenziale ? invoice.cassaPrevidenziale / 100 : 0,
       importoIVA: invoice.importoIVA / 100,
       importoTotale: invoice.importoTotale / 100,
       importoParcella: invoice.importoParcella / 100,
@@ -167,10 +168,8 @@ export default function InvoicesModal({ projectId, projectCode, open, onClose }:
     saveMutation.mutate({
       numeroFattura: formData.numeroFattura,
       dataEmissione: new Date(formData.dataEmissione).toISOString(),
-      importoNetto: Math.round(formData.importoNetto * 100),
-      importoIVA: Math.round(formData.importoIVA * 100),
-      importoTotale: Math.round(formData.importoTotale * 100),
-      importoParcella: Math.round(formData.importoParcella * 100),
+      importoNetto: formData.importoNetto,
+      importoParcella: formData.importoParcella,
       aliquotaIVA: formData.aliquotaIVA,
       stato: formData.stato,
       dataPagamento: formData.dataPagamento ? new Date(formData.dataPagamento).toISOString() : null,
@@ -189,8 +188,16 @@ export default function InvoicesModal({ projectId, projectCode, open, onClose }:
     setFormData(emptyInvoice);
   };
 
+  // Funzioni di calcolo automatico
+  const updateCalculatedFields = (netto: number, aliquota: number = formData.aliquotaIVA) => {
+    const cassa = netto * 0.04; // 4% Inarcassa
+    const iva = (netto + cassa) * (aliquota / 100); // IVA su netto+cassa
+    const totale = netto + cassa + iva;
+    return { cassa, iva, totale };
+  };
+
   const calculateImportoTotale = () => {
-    return formData.importoNetto + formData.importoIVA;
+    return formData.importoNetto + formData.cassaPrevidenziale + formData.importoIVA;
   };
 
   return (
@@ -309,7 +316,17 @@ export default function InvoicesModal({ projectId, projectCode, open, onClose }:
                     type="number"
                     step="0.01"
                     value={formData.importoNetto}
-                    onChange={(e) => setFormData({ ...formData, importoNetto: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      const netto = parseFloat(e.target.value) || 0;
+                      const calcs = updateCalculatedFields(netto, formData.aliquotaIVA);
+                      setFormData({ 
+                        ...formData, 
+                        importoNetto: netto,
+                        cassaPrevidenziale: calcs.cassa,
+                        importoIVA: calcs.iva,
+                        importoTotale: calcs.totale
+                      });
+                    }}
                   />
                 </div>
 
@@ -331,8 +348,31 @@ export default function InvoicesModal({ projectId, projectCode, open, onClose }:
                     id="aliquotaIVA"
                     type="number"
                     value={formData.aliquotaIVA}
-                    onChange={(e) => setFormData({ ...formData, aliquotaIVA: parseInt(e.target.value) || 22 })}
+                    onChange={(e) => {
+                      const aliquota = parseInt(e.target.value) || 22;
+                      const calcs = updateCalculatedFields(formData.importoNetto, aliquota);
+                      setFormData({ 
+                        ...formData, 
+                        aliquotaIVA: aliquota,
+                        cassaPrevidenziale: calcs.cassa,
+                        importoIVA: calcs.iva,
+                        importoTotale: calcs.totale
+                      });
+                    }}
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="cassaPrevidenziale">Cassa Previdenziale - Inarcassa 4% (€)</Label>
+                  <Input
+                    id="cassaPrevidenziale"
+                    type="number"
+                    step="0.01"
+                    value={formData.cassaPrevidenziale}
+                    disabled
+                    className="bg-gray-100 dark:bg-gray-700"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Calcolata automaticamente: Netto × 4%</p>
                 </div>
 
                 <div>
@@ -342,12 +382,15 @@ export default function InvoicesModal({ projectId, projectCode, open, onClose }:
                     type="number"
                     step="0.01"
                     value={formData.importoIVA}
-                    onChange={(e) => setFormData({ ...formData, importoIVA: parseFloat(e.target.value) || 0 })}
+                    disabled
+                    className="bg-gray-100 dark:bg-gray-700"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Calcolata automaticamente: (Netto + Cassa) × Aliquota%</p>
                 </div>
 
                 <div className="md:col-span-2">
                   <Label>Importo Totale: €{calculateImportoTotale().toFixed(2)}</Label>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Netto + Cassa + IVA</p>
                 </div>
 
                 <div>
