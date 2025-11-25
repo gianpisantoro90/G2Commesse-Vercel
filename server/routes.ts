@@ -12,27 +12,33 @@ import { z } from "zod";
 // Schema per trasformare i dati delle fatture dal frontend (decimali) al database (centesimi)
 // Calcoli automatici: Cassa = Netto * 4%, IVA = (Netto + Cassa) * 22%
 const invoiceInputSchema = z.object({
-  numeroFattura: z.string().min(1),
+  numeroFattura: z.string(),
   dataEmissione: z.union([z.date(), z.string()]).transform(val => 
     typeof val === 'string' ? new Date(val) : val
   ),
-  importoNetto: z.number().min(0).transform(n => Math.round(n * 100)),
+  importoNetto: z.number().transform(n => Math.round(n * 100)),
   importoParcella: z.number().default(0).transform(n => Math.round(n * 100)),
   stato: z.string().default("emessa"),
   aliquotaIVA: z.number().default(22),
-  dataPagamento: z.union([z.date(), z.string().nullable(), z.undefined()]).transform(val => {
-    if (!val || val === '') return null;
-    return typeof val === 'string' ? new Date(val) : val;
-  }).optional(),
-  note: z.string().optional(),
+  dataPagamento: z.any().optional().nullable(),
+  note: z.any().optional().nullable(),
   salId: z.string().optional().nullable(),
   ritenuta: z.number().default(0).transform(n => Math.round(n * 100)),
-  scadenzaPagamento: z.union([z.date(), z.string().nullable(), z.undefined()]).transform(val => {
-    if (!val || val === '') return null;
-    return typeof val === 'string' ? new Date(val) : val;
-  }).optional(),
-  attachmentPath: z.string().optional(),
+  scadenzaPagamento: z.any().optional().nullable(),
+  attachmentPath: z.string().optional().nullable(),
 }).transform(data => {
+  // Trasforma dataPagamento a Date se è stringa
+  let dataPagamento = data.dataPagamento;
+  if (dataPagamento && typeof dataPagamento === 'string') {
+    dataPagamento = new Date(dataPagamento);
+  }
+  
+  // Trasforma scadenzaPagamento a Date se è stringa
+  let scadenzaPagamento = data.scadenzaPagamento;
+  if (scadenzaPagamento && typeof scadenzaPagamento === 'string') {
+    scadenzaPagamento = new Date(scadenzaPagamento);
+  }
+  
   // Calcoli automatici
   const nettoInCentesimi = data.importoNetto;
   const cassa = Math.round(nettoInCentesimi * 0.04); // 4% Inarcassa
@@ -40,7 +46,18 @@ const invoiceInputSchema = z.object({
   const totale = nettoInCentesimi + cassa + iva;
   
   return {
-    ...data,
+    numeroFattura: data.numeroFattura,
+    dataEmissione: data.dataEmissione,
+    importoNetto: nettoInCentesimi,
+    importoParcella: data.importoParcella,
+    stato: data.stato,
+    aliquotaIVA: data.aliquotaIVA,
+    dataPagamento: dataPagamento || null,
+    note: data.note || null,
+    salId: data.salId || null,
+    ritenuta: data.ritenuta,
+    scadenzaPagamento: scadenzaPagamento || null,
+    attachmentPath: data.attachmentPath || null,
     cassaPrevidenziale: cassa,
     importoIVA: iva,
     importoTotale: totale,
