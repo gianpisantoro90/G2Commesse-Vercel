@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,8 +9,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertProjectSchema, type Project, type InsertProject } from "@shared/schema";
+import { insertProjectSchema, type Project, type InsertProject, type Client } from "@shared/schema";
 import { TIPO_RAPPORTO_CONFIG, type TipoRapportoType } from "@/lib/prestazioni-utils";
+import { ClientCombobox } from "@/components/ui/client-combobox";
 
 interface EditProjectFormProps {
   project: Project;
@@ -21,6 +22,11 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Fetch existing clients
+  const { data: clients = [] } = useQuery<Client[]>({
+    queryKey: ["/api/clients"],
+  });
 
   const form = useForm<InsertProject>({
     resolver: zodResolver(insertProjectSchema),
@@ -117,7 +123,15 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                 <FormItem>
                   <FormLabel>Cliente</FormLabel>
                   <FormControl>
-                    <Input {...field} data-testid="edit-project-client" />
+                    <ClientCombobox
+                      clients={clients}
+                      value={field.value}
+                      onValueChange={(value) => field.onChange(value || "")}
+                      placeholder="Seleziona cliente..."
+                      disabled={false}
+                      className="input-g2"
+                      data-testid="edit-project-client"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
