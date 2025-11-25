@@ -28,6 +28,7 @@ interface InvoiceForm {
   numeroFattura: string;
   dataEmissione: string;
   importoNetto: number;
+  cassaPrevidenziale: number;
   importoIVA: number;
   importoTotale: number;
   importoParcella: number;
@@ -41,6 +42,7 @@ const emptyInvoice: InvoiceForm = {
   numeroFattura: "",
   dataEmissione: new Date().toISOString().split('T')[0],
   importoNetto: 0,
+  cassaPrevidenziale: 0,
   importoIVA: 0,
   importoTotale: 0,
   importoParcella: 0,
@@ -48,6 +50,13 @@ const emptyInvoice: InvoiceForm = {
   stato: "emessa",
   dataPagamento: "",
   note: ""
+};
+
+// Funzione per calcolare automaticamente cassa e IVA
+const calculateCassaAndIVA = (netto: number, aliquota: number = 22) => {
+  const cassa = netto * 0.04; // 4% Inarcassa
+  const iva = (netto + cassa) * (aliquota / 100); // IVA su netto + cassa
+  return { cassa: Math.round(cassa * 100) / 100, iva: Math.round(iva * 100) / 100 };
 };
 
 export default function InvoicesModal({ projectId, projectCode, open, onClose }: InvoicesModalProps) {

@@ -406,6 +406,7 @@ export const projectInvoices = pgTable("project_invoices", {
   numeroFattura: text("numero_fattura").notNull(),
   dataEmissione: timestamp("data_emissione").notNull(),
   importoNetto: integer("importo_netto").notNull(), // In centesimi
+  cassaPrevidenziale: integer("cassa_previdenziale").default(0), // Inarcassa 4% calcolata su netto - in centesimi
   importoIVA: integer("importo_iva").notNull(),
   importoTotale: integer("importo_totale").notNull(),
   importoParcella: integer("importo_parcella").default(0), // Importo pattuito (parcella)

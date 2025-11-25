@@ -10,17 +10,16 @@ import { emailService } from "./lib/email-service";
 import { z } from "zod";
 
 // Schema per trasformare i dati delle fatture dal frontend (decimali) al database (centesimi)
+// Calcoli automatici: Cassa = Netto * 4%, IVA = (Netto + Cassa) * 22%
 const invoiceInputSchema = z.object({
-  numeroFattura: z.string(),
+  numeroFattura: z.string().min(1),
   dataEmissione: z.union([z.date(), z.string()]).transform(val => 
     typeof val === 'string' ? new Date(val) : val
   ),
-  importoNetto: z.number().transform(n => Math.round(n * 100)),
-  importoIVA: z.number().transform(n => Math.round(n * 100)),
-  importoTotale: z.number().transform(n => Math.round(n * 100)),
-  importoParcella: z.number().transform(n => Math.round(n * 100)),
-  aliquotaIVA: z.number().default(22),
+  importoNetto: z.number().min(0).transform(n => Math.round(n * 100)),
+  importoParcella: z.number().default(0).transform(n => Math.round(n * 100)),
   stato: z.string().default("emessa"),
+  aliquotaIVA: z.number().default(22),
   dataPagamento: z.union([z.date(), z.string().nullable(), z.undefined()]).transform(val => {
     if (!val || val === '') return null;
     return typeof val === 'string' ? new Date(val) : val;
@@ -33,6 +32,19 @@ const invoiceInputSchema = z.object({
     return typeof val === 'string' ? new Date(val) : val;
   }).optional(),
   attachmentPath: z.string().optional(),
+}).transform(data => {
+  // Calcoli automatici
+  const nettoInCentesimi = data.importoNetto;
+  const cassa = Math.round(nettoInCentesimi * 0.04); // 4% Inarcassa
+  const iva = Math.round((nettoInCentesimi + cassa) * (data.aliquotaIVA / 100)); // IVA su netto+cassa
+  const totale = nettoInCentesimi + cassa + iva;
+  
+  return {
+    ...data,
+    cassaPrevidenziale: cassa,
+    importoIVA: iva,
+    importoTotale: totale,
+  };
 });
 
 // Security: Rate limiter for login endpoint
