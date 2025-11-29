@@ -26,12 +26,12 @@ export default function RecentProjectsTable() {
   const getStatusBadge = (project: Project) => {
     // Use the actual status from database to match the Gestione tab
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
         project.status === 'in corso' 
-          ? 'bg-yellow-100 text-yellow-800' 
+          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' 
           : project.status === 'conclusa'
-          ? 'bg-green-100 text-green-800'
-          : 'bg-red-100 text-red-800'
+          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
       }`}>
         {project.status === 'in corso' ? '🟡 In Corso' : 
          project.status === 'conclusa' ? '🟢 Conclusa' : 
@@ -99,9 +99,9 @@ export default function RecentProjectsTable() {
 
   return (
     <div className="card-g2" data-testid="recent-projects-table">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Commesse Recenti</h3>
-        <Button variant="ghost" className="text-primary hover:text-teal-700 font-medium text-sm" data-testid="view-all-projects">
+        <Button variant="ghost" className="text-primary hover:text-teal-700 font-medium text-sm whitespace-nowrap" data-testid="view-all-projects">
           Vedi Tutte →
         </Button>
       </div>
@@ -113,44 +113,67 @@ export default function RecentProjectsTable() {
           <p className="text-sm">Crea la prima commessa per iniziare</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Codice</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Cliente</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Città</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Oggetto</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Status</th>
-                <th className="text-center py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">☁️</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentProjects.map((project) => (
-                <tr key={project.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <td className="py-3 px-4 font-mono text-sm font-semibold text-primary" data-testid={`project-code-${project.id}`}>
-                    {project.code}
-                  </td>
-                  <td className="py-3 px-4 text-sm dark:text-gray-300" data-testid={`project-client-${project.id}`}>
-                    {project.client}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`project-city-${project.id}`}>
-                    {project.city}
-                  </td>
-                  <td className="py-3 px-4 text-sm dark:text-gray-300" data-testid={`project-object-${project.id}`}>
-                    {project.object}
-                  </td>
-                  <td className="py-3 px-4" data-testid={`project-status-${project.id}`}>
-                    {getStatusBadge(project)}
-                  </td>
-                  <td className="py-3 px-4 text-center" data-testid={`project-onedrive-${project.id}`}>
-                    {getOneDriveSyncIndicator(project)}
-                  </td>
+        <>
+          {/* Desktop: Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Codice</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Cliente</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Città</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Oggetto</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Status</th>
+                  <th className="text-center py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">☁️</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {recentProjects.map((project) => (
+                  <tr key={project.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <td className="py-3 px-2 sm:px-4 font-mono text-xs sm:text-sm font-semibold text-primary" data-testid={`project-code-${project.id}`}>
+                      {project.code}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm dark:text-gray-300" data-testid={`project-client-${project.id}`}>
+                      <div className="truncate">{project.client}</div>
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400" data-testid={`project-city-${project.id}`}>
+                      {project.city}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm dark:text-gray-300" data-testid={`project-object-${project.id}`}>
+                      <div className="truncate">{project.object}</div>
+                    </td>
+                    <td className="py-3 px-2 sm:px-4" data-testid={`project-status-${project.id}`}>
+                      {getStatusBadge(project)}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-center" data-testid={`project-onedrive-${project.id}`}>
+                      {getOneDriveSyncIndicator(project)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: Cards */}
+          <div className="md:hidden space-y-3">
+            {recentProjects.map((project) => (
+              <div key={project.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-mono font-semibold text-primary text-sm">{project.code}</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{project.client}</div>
+                  </div>
+                  {getOneDriveSyncIndicator(project)}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{project.object}</div>
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">📍 {project.city}</div>
+                  {getStatusBadge(project)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

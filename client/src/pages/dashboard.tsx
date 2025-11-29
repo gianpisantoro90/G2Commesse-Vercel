@@ -73,11 +73,11 @@ export default function Dashboard() {
           isAdmin={isAdmin}
         />
 
-        <main className="p-6" id="main-content">
+        <main className="p-3 sm:p-4 md:p-6" id="main-content">
           <div className="animate-fade-in">
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
-              <div className="space-y-8" data-testid="dashboard-panel">
+              <div className="space-y-4 sm:space-y-6 md:space-y-8" data-testid="dashboard-panel">
                 {/* First Row - Economic Dashboard (Admin only) */}
                 {isAdmin && <EconomicDashboardCard />}
 
@@ -88,13 +88,13 @@ export default function Dashboard() {
                 <RecentProjectsTable />
 
                 {/* Fourth Row - Core System Info */}
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2">
                   {isAdmin && <StatsCard />}
                   <OneDriveStatusCard />
                 </div>
 
                 {/* Fifth Row - Email Checker (Manual) */}
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2">
                   <EmailCheckerCard />
                 </div>
               </div>
