@@ -60,20 +60,14 @@ class EmailPoller {
   }
 
   /**
-   * Start polling for new emails
+   * Start polling for new emails (DISABLED - manual checking only)
    */
   private startPolling() {
     if (!this.config) return;
 
-    // Check immediately on start
-    this.checkEmails();
-
-    // Schedule periodic checks
-    this.intervalId = setInterval(() => {
-      this.checkEmails();
-    }, this.config.checkInterval);
-
-    logger.info('Email polling started');
+    // OPTIMIZED: Email polling is now manual only - triggered via API endpoint
+    // This was changed to reduce compute unit consumption significantly
+    logger.info('Email polling disabled - use manual checking via API endpoint /api/emails/check-now');
   }
 
   /**
@@ -93,9 +87,9 @@ class EmailPoller {
   }
 
   /**
-   * Check for new emails
+   * Check for new emails (can be called manually)
    */
-  private async checkEmails() {
+  async checkEmails() {
     if (this.isProcessing) {
       logger.debug('Email check already in progress, skipping');
       return;
