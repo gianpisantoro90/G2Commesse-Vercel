@@ -20,6 +20,8 @@ class NotificationService {
   private wss: WebSocketServer | null = null;
   private clients: Map<WebSocket, string | null> = new Map(); // Map WebSocket to userId
   private notifications: Notification[] = [];
+  private clientTimeouts: Map<WebSocket, NodeJS.Timeout> = new Map(); // Track inactivity timeouts
+  private readonly INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
   initialize(server: Server) {
     this.wss = new WebSocketServer({
@@ -31,9 +33,15 @@ class NotificationService {
       logger.info('New WebSocket notification client connected');
       // Add client with null userId initially (will be set after auth message)
       this.clients.set(ws, null);
+      
+      // Set inactivity timeout - close connection after 30 minutes of inactivity
+      this.resetInactivityTimeout(ws);
 
       ws.on('message', (data: string) => {
         try {
+          // Reset inactivity timeout on every message
+          this.resetInactivityTimeout(ws);
+          
           const message = JSON.parse(data.toString());
 
           if (message.type === 'auth') {
@@ -69,15 +77,44 @@ class NotificationService {
         const userId = this.clients.get(ws);
         logger.info('WebSocket notification client disconnected', { userId });
         this.clients.delete(ws);
+        this.clearInactivityTimeout(ws);
       });
 
       ws.on('error', (error) => {
         logger.error('WebSocket error', { error });
         this.clients.delete(ws);
+        this.clearInactivityTimeout(ws);
       });
     });
 
     logger.info('Notification WebSocket server initialized');
+  }
+
+  /**
+   * Reset inactivity timeout for a WebSocket connection
+   */
+  private resetInactivityTimeout(ws: WebSocket) {
+    // Clear existing timeout
+    this.clearInactivityTimeout(ws);
+    
+    // Set new timeout - close connection after inactivity
+    const timeout = setTimeout(() => {
+      logger.info('Closing WebSocket due to inactivity (30+ minutes)');
+      ws.close(1000, 'Inactivity timeout');
+    }, this.INACTIVITY_TIMEOUT);
+    
+    this.clientTimeouts.set(ws, timeout);
+  }
+
+  /**
+   * Clear inactivity timeout for a WebSocket connection
+   */
+  private clearInactivityTimeout(ws: WebSocket) {
+    const timeout = this.clientTimeouts.get(ws);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.clientTimeouts.delete(ws);
+    }
   }
 
   /**
