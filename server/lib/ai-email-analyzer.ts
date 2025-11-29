@@ -619,6 +619,44 @@ export async function dispatchToProvider(
   }
 }
 
+/**
+ * Quick AI spam/newsletter filter - returns true if email should be skipped
+ */
+export async function isSpamOrNewsletter(
+  email: ParsedEmail,
+  config: AIConfig
+): Promise<boolean> {
+  try {
+    const spamCheckPrompt = `Analizza BREVEMENTE questa email e rispondi SOLO con "SPAM", "NEWSLETTER", o "LEGITTIMA".
+
+Soggetto: ${email.subject}
+Mittente: ${email.from.name || email.from.email}
+Corpo (primi 300 caratteri): ${email.bodyText.substring(0, 300)}
+
+Rispondi SOLO con una di queste tre parole:
+- SPAM: email pubblicitaria, phishing, o marketing non richiesto
+- NEWSLETTER: newsletter, avvisi automatici, o comunicazioni bulk
+- LEGITTIMA: email da considerare per l'importazione
+
+Risposta:`;
+
+    const response = await dispatchToProvider(spamCheckPrompt, config);
+    const classification = response.trim().toUpperCase();
+    
+    logger.info('Email spam classification', {
+      subject: email.subject.substring(0, 50),
+      classification,
+      from: email.from.email,
+    });
+
+    return classification === 'SPAM' || classification === 'NEWSLETTER';
+  } catch (error) {
+    logger.error('Error in spam classification', { error });
+    // On error, allow email through (better to review than discard)
+    return false;
+  }
+}
+
 export async function analyzeEmail(request: EmailAnalysisRequest): Promise<AIEmailAnalysis> {
   const { email, projects, config } = request;
 

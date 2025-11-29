@@ -479,13 +479,36 @@ class EmailPoller {
         throw new Error('Storage not initialized');
       }
 
-      // Get all projects for AI matching
-      const projects = await this.storage.getAllProjects();
-
       // Get AI config (includes API key from server-side storage)
       const aiConfigResult = await this.storage.getSystemConfig('ai_config');
       const storedConfig = aiConfigResult?.value;
       const finalConfig = storedConfig || process.env.ANTHROPIC_API_KEY;
+
+      // FILTER: AI spam/newsletter check - skip if advertising or bulk content
+      logger.info('Checking email for spam/newsletter content...');
+      const { isSpamOrNewsletter } = await import('./ai-email-analyzer');
+      const isSpamOrNews = await isSpamOrNewsletter(
+        {
+          subject: parsedEmail.subject,
+          from: parsedEmail.from,
+          bodyText: parsedEmail.bodyText,
+          bodyHtml: parsedEmail.bodyHtml,
+        },
+        finalConfig
+      );
+
+      if (isSpamOrNews) {
+        logger.info('Email filtered: Spam or newsletter detected', {
+          subject: parsedEmail.subject,
+          from: parsedEmail.from.email,
+        });
+        // Mark as read and skip processing
+        await this.markAsRead(emailData.uid);
+        return;
+      }
+
+      // Get all projects for AI matching
+      const projects = await this.storage.getAllProjects();
 
       // Analyze with AI
       const analysis = await emailService.analyzeEmailWithAI(
