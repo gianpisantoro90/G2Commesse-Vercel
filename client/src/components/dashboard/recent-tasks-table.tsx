@@ -79,14 +79,13 @@ export default function RecentTasksTable() {
 
   return (
     <div className="card-g2" data-testid="recent-tasks-table">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Task Recenti</h3>
         <Button
           variant="ghost"
-          className="text-primary hover:text-teal-700 font-medium text-sm"
+          className="text-primary hover:text-teal-700 font-medium text-sm whitespace-nowrap"
           data-testid="view-all-tasks"
           onClick={() => {
-            // Navigate to To Do tab
             const tabButton = document.querySelector('[data-testid="tab-todo"]') as HTMLElement;
             if (tabButton) tabButton.click();
           }}
@@ -102,46 +101,77 @@ export default function RecentTasksTable() {
           <p className="text-sm">Crea la prima task per iniziare</p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Titolo</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Commessa</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Assegnato a</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Priorità</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Status</th>
-                <th className="text-left py-3 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Scadenza</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentTasks.map((task) => (
-                <tr key={task.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                  <td className="py-3 px-4 text-sm font-medium dark:text-gray-300" data-testid={`task-title-${task.id}`}>
-                    <div className="max-w-xs truncate" title={task.title}>
-                      {task.title}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400 font-mono" data-testid={`task-project-${task.id}`}>
-                    {getProjectName(task.projectId)}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`task-assigned-${task.id}`}>
-                    {getUserName(task.assignedToId)}
-                  </td>
-                  <td className="py-3 px-4" data-testid={`task-priority-${task.id}`}>
-                    {getPriorityBadge(task.priority)}
-                  </td>
-                  <td className="py-3 px-4" data-testid={`task-status-${task.id}`}>
-                    {getStatusBadge(task.status)}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`task-due-${task.id}`}>
-                    {formatDate(task.dueDate)}
-                  </td>
+        <>
+          {/* Desktop: Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700">
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Titolo</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Commessa</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Assegnato</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Priorità</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Status</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-gray-700 dark:text-gray-300 text-xs sm:text-sm">Scadenza</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {recentTasks.map((task) => (
+                  <tr key={task.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium dark:text-gray-300" data-testid={`task-title-${task.id}`}>
+                      <div className="max-w-xs truncate" title={task.title}>
+                        {task.title}
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-mono" data-testid={`task-project-${task.id}`}>
+                      {getProjectName(task.projectId)}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400" data-testid={`task-assigned-${task.id}`}>
+                      <div className="truncate">{getUserName(task.assignedToId)}</div>
+                    </td>
+                    <td className="py-3 px-2 sm:px-4" data-testid={`task-priority-${task.id}`}>
+                      {getPriorityBadge(task.priority)}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4" data-testid={`task-status-${task.id}`}>
+                      {getStatusBadge(task.status)}
+                    </td>
+                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400" data-testid={`task-due-${task.id}`}>
+                      {formatDate(task.dueDate)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: Cards */}
+          <div className="md:hidden space-y-3">
+            {recentTasks.map((task) => (
+              <div key={task.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
+                <div className="flex flex-col gap-1">
+                  <div className="font-medium text-sm dark:text-gray-200 truncate">{task.title}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    📋 {getProjectName(task.projectId)}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {getPriorityBadge(task.priority)}
+                  {getStatusBadge(task.status)}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div>
+                    <span className="font-medium">Assegnato:</span>
+                    <div className="truncate">{getUserName(task.assignedToId)}</div>
+                  </div>
+                  <div>
+                    <span className="font-medium">Scadenza:</span>
+                    <div>{formatDate(task.dueDate)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
