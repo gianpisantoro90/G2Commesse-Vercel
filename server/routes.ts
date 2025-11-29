@@ -3297,5 +3297,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual email check endpoint (replaces automatic polling)
+  app.post("/api/emails/check-now", async (req, res) => {
+    try {
+      logger.info('Manual email check triggered by user');
+      await emailPoller.checkEmails();
+      res.json({ message: "Controllo email completato", status: "success" });
+    } catch (error) {
+      logger.error('Error during manual email check:', error);
+      res.status(500).json({ message: "Errore nel controllo delle email", status: "error" });
+    }
+  });
+
   return httpServer;
 }

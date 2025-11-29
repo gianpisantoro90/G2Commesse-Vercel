@@ -7,6 +7,7 @@ import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
+import EmailCheckerCard from "@/components/dashboard/email-checker-card";
 import NewProjectForm from "@/components/projects/new-project-form";
 import FolderStructureCard from "@/components/projects/folder-structure-card";
 import ProjectsTable from "@/components/projects/projects-table";
@@ -90,6 +91,11 @@ export default function Dashboard() {
                 <div className="grid gap-6 lg:grid-cols-2">
                   {isAdmin && <StatsCard />}
                   <OneDriveStatusCard />
+                </div>
+
+                {/* Fifth Row - Email Checker (Manual) */}
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <EmailCheckerCard />
                 </div>
               </div>
             )}
