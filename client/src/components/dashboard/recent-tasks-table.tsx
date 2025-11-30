@@ -145,27 +145,27 @@ export default function RecentTasksTable() {
           </div>
 
           {/* Mobile: Cards */}
-          <div className="md:hidden space-y-3">
+          <div className="md:hidden space-y-2">
             {recentTasks.map((task) => (
-              <div key={task.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
-                <div className="flex flex-col gap-1">
+              <div key={task.id} className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3 overflow-hidden">
+                <div className="flex flex-col gap-1 min-w-0">
                   <div className="font-medium text-sm dark:text-gray-200 truncate">{task.title}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                     📋 {getProjectName(task.projectId)}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-2">
                   {getPriorityBadge(task.priority)}
                   {getStatusBadge(task.status)}
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-700">
-                  <div>
-                    <span className="font-medium">Assegnato:</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Assegnato</div>
                     <div className="truncate">{getUserName(task.assignedToId)}</div>
                   </div>
-                  <div>
-                    <span className="font-medium">Scadenza:</span>
-                    <div>{formatDate(task.dueDate)}</div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Scadenza</div>
+                    <div className="text-red-600 dark:text-red-400 font-medium">{formatDate(task.dueDate)}</div>
                   </div>
                 </div>
               </div>
