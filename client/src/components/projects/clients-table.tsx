@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -80,6 +81,7 @@ const editClientSchema = z.object({
 type EditClientForm = z.infer<typeof editClientSchema>;
 
 export default function ClientsTable() {
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedClientProjects, setSelectedClientProjects] = useState<Project[] | null>(null);
@@ -437,6 +439,53 @@ export default function ClientsTable() {
         </div>
       ) : (
         <>
+          {/* MOBILE VIEW - Card Layout */}
+          {isMobile ? (
+            <div className="space-y-3" data-testid="clients-mobile-view">
+              {paginatedClients.map((client) => (
+                <div
+                  key={client.id}
+                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
+                  data-testid={`client-card-${client.id}`}
+                >
+                  {/* Header: Sigla + Projects Count */}
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <span className="font-mono text-sm font-bold text-primary">{client.sigla}</span>
+                      <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        (client.projectsCount || 0) > 5
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                      }`}>
+                        {client.projectsCount || 0} commesse
+                      </span>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleEditClient(client)}>✏️</Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleViewProjects(client)}>📋</Button>
+                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600" onClick={() => handleDeleteClient(client)}>🗑️</Button>
+                    </div>
+                  </div>
+
+                  {/* Name */}
+                  <div className="font-medium text-gray-900 dark:text-white mb-1">{client.name}</div>
+                  {client.formaGiuridica && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      {client.formaGiuridica.replace(/_/g, ' ')}
+                    </div>
+                  )}
+
+                  {/* Contact Info */}
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    {client.city && <span>📍 {client.city}</span>}
+                    {client.email && <span>✉️ {client.email}</span>}
+                    {client.telefono && <span>📞 {client.telefono}</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+          /* DESKTOP VIEW - Table Layout */
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700">
@@ -523,6 +572,7 @@ export default function ClientsTable() {
               </tbody>
             </table>
           </div>
+          )}
           
           {/* Pagination Controls */}
           <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm">
@@ -720,7 +770,7 @@ export default function ClientsTable() {
 
       {/* Projects Modal */}
       <Dialog open={showProjectsModal} onOpenChange={setShowProjectsModal}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Commesse Cliente: {selectedClient?.name || 'Cliente'} ({selectedClient?.sigla})
@@ -778,7 +828,7 @@ export default function ClientsTable() {
 
       {/* Edit Client Modal */}
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Modifica Cliente</DialogTitle>
           </DialogHeader>

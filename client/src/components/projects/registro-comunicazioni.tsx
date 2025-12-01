@@ -895,7 +895,7 @@ export default function RegistroComunicazioni() {
               Nuova Comunicazione
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Registra Nuova Comunicazione</DialogTitle>
               <DialogDescription>
@@ -1308,7 +1308,7 @@ export default function RegistroComunicazioni() {
 
       {/* Communication Detail Dialog */}
       <Dialog open={!!selectedComm} onOpenChange={() => setSelectedComm(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />
@@ -1469,7 +1469,7 @@ export default function RegistroComunicazioni() {
       {/* Edit Dialog */}
       {editingComm && (
         <Dialog open={!!editingComm} onOpenChange={() => setEditingComm(null)}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Modifica Comunicazione</DialogTitle>
               <DialogDescription>

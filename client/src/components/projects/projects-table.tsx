@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,6 +48,7 @@ type SortOrder = "asc" | "desc";
 export default function ProjectsTable() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const isMobile = useIsMobile();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -441,11 +443,11 @@ export default function ProjectsTable() {
           </Button>
         </div>
 
-        {/* Filters Row */}
-        <div className="flex gap-3 flex-wrap items-center">
-          <div className="relative flex-1 min-w-[250px]">
+        {/* Filters Row - MOBILE OPTIMIZED */}
+        <div className="flex gap-2 sm:gap-3 flex-wrap items-center">
+          <div className="relative w-full md:flex-1 md:min-w-[250px]">
             <Input
-              placeholder="Cerca per codice, cliente, città, oggetto..."
+              placeholder={isMobile ? "Cerca..." : "Cerca per codice, cliente, città, oggetto..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
@@ -455,8 +457,8 @@ export default function ProjectsTable() {
           </div>
 
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]" data-testid="filter-status">
-              <SelectValue placeholder="Tutti gli stati" />
+            <SelectTrigger className="w-[calc(50%-0.25rem)] sm:w-[180px]" data-testid="filter-status">
+              <SelectValue placeholder="Stato" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tutti gli stati</SelectItem>
@@ -467,8 +469,8 @@ export default function ProjectsTable() {
           </Select>
 
           <Select value={yearFilter} onValueChange={setYearFilter}>
-            <SelectTrigger className="w-[150px]" data-testid="filter-year">
-              <SelectValue placeholder="Tutti gli anni" />
+            <SelectTrigger className="w-[calc(50%-0.25rem)] sm:w-[150px]" data-testid="filter-year">
+              <SelectValue placeholder="Anno" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tutti gli anni</SelectItem>
@@ -510,6 +512,119 @@ export default function ProjectsTable() {
         </div>
       ) : (
         <>
+          {/* MOBILE VIEW - Card Layout */}
+          {isMobile ? (
+            <div className="space-y-3" data-testid="projects-mobile-view">
+              {paginatedProjects.map((project) => {
+                const lastComm = getLastCommunication(project.id);
+                const nextDeadline = getNextDeadline(project.id);
+
+                return (
+                  <div
+                    key={project.id}
+                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
+                    data-testid={`project-card-${project.id}`}
+                  >
+                    {/* Header: Code + Status */}
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <span className="font-mono text-sm font-bold text-primary">{project.code}</span>
+                        <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
+                          project.status === 'in corso'
+                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                            : project.status === 'conclusa'
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}>
+                          {project.status === 'in corso' ? '🟡' : project.status === 'conclusa' ? '🟢' : '🔴'}
+                        </span>
+                      </div>
+                      <div className="flex gap-1">
+                        <EditProjectForm project={project}>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">✏️</Button>
+                        </EditProjectForm>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleOpenPrestazioniModal(project)}
+                        >🏗️</Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-red-600"
+                          onClick={() => handleDeleteProject(project)}
+                        >🗑️</Button>
+                      </div>
+                    </div>
+
+                    {/* Client + City */}
+                    <div className="mb-2">
+                      <div className="font-medium text-gray-900 dark:text-white">{project.client}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">📍 {project.city}</div>
+                    </div>
+
+                    {/* Object */}
+                    <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 line-clamp-2">
+                      {project.object}
+                    </div>
+
+                    {/* Info Row: Communication + Deadline */}
+                    <div className="flex gap-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                      {/* Last Communication */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">💬 Comunicazione</div>
+                        {lastComm ? (
+                          <div className="text-xs">
+                            <span className="font-medium">{lastComm.direction === 'in' ? '📩' : '📤'}</span>
+                            <span className="text-gray-600 dark:text-gray-300 ml-1 truncate block">
+                              {lastComm.subject?.substring(0, 30)}{lastComm.subject && lastComm.subject.length > 30 ? '...' : ''}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Nessuna</span>
+                        )}
+                      </div>
+
+                      {/* Next Deadline */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">📅 Scadenza</div>
+                        {nextDeadline ? (
+                          <div className="text-xs">
+                            <span className={`font-medium ${
+                              new Date(nextDeadline.dueDate) < new Date() ? 'text-red-600' : 'text-gray-700 dark:text-gray-300'
+                            }`}>
+                              {new Date(nextDeadline.dueDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
+                            </span>
+                            <span className="text-gray-600 dark:text-gray-400 ml-1 truncate block">
+                              {nextDeadline.title?.substring(0, 20)}{nextDeadline.title && nextDeadline.title.length > 20 ? '...' : ''}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Nessuna</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Fatturazione for Admin */}
+                    {isAdmin && project.fatturato && (
+                      <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                        <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
+                          ✓ Fatturato
+                        </span>
+                        {project.pagato && (
+                          <span className="text-xs px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded ml-1">
+                            ✓ Pagato
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+          /* DESKTOP VIEW - Table Layout */
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px]" aria-label="Tabella delle commesse">
               <caption className="sr-only">Elenco di tutte le commesse con dettagli, stato e azioni</caption>
@@ -991,7 +1106,8 @@ export default function ProjectsTable() {
               </tbody>
             </table>
           </div>
-          
+          )}
+
           {/* Pagination Controls */}
           <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm">
             <div className="flex items-center gap-4">
