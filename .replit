@@ -11,10 +11,13 @@ deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 
-# OPTIMIZED: Only one port mapping needed (the main app port)
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 36871
+externalPort = 3000
 
 [env]
 PORT = "5000"
