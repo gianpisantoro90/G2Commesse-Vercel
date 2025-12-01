@@ -1608,8 +1608,9 @@ console.log('🔍 Storage initialization - DATABASE_URL exists:', !!process.env.
 console.log('🔍 Environment NODE_ENV:', process.env.NODE_ENV);
 
 async function initializeStorage(): Promise<IStorage> {
-  // Check if running locally - PRIORITIZE NODE_ENV=local
-  const isLocal = process.env.NODE_ENV === 'local' || (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'production');
+  // If DATABASE_URL is not set, always use FileStorage (no Neon dependency)
+  const shouldUseFileStorage = !process.env.DATABASE_URL;
+  const isLocal = process.env.NODE_ENV === 'local' || shouldUseFileStorage;
   
   if (isLocal) {
     console.log('📁 Using FileStorage for local development with persistence');
