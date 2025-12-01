@@ -220,9 +220,18 @@ class EmailPoller {
         });
       });
 
-      imap.once('error', (err) => {
-        logger.error('IMAP connection error', { error: err });
-        reject(err);
+      imap.once('error', (err: any) => {
+        const errorMessage = err?.message || String(err);
+        logger.error('IMAP connection error', { error: err, message: errorMessage });
+        
+        // Provide better error messages for common issues
+        if (errorMessage.includes('Authentication failed') || errorMessage.includes('Invalid credentials')) {
+          reject(new Error('Errore di autenticazione email: controlla le credenziali IMAP'));
+        } else if (errorMessage.includes('ECONNREFUSED') || errorMessage.includes('EHOSTUNREACH')) {
+          reject(new Error('Impossibile connettersi al server email'));
+        } else {
+          reject(err);
+        }
       });
 
       imap.once('end', () => {
