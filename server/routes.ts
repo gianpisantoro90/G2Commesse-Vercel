@@ -3304,8 +3304,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await emailPoller.checkEmails();
       res.json({ message: "Controllo email completato", status: "success" });
     } catch (error) {
-      logger.error('Error during manual email check:', error);
-      res.status(500).json({ message: "Errore nel controllo delle email", status: "error" });
+      const errorMessage = error instanceof Error ? error.message : "Errore nel controllo delle email";
+      logger.error('Error during manual email check:', { error, message: errorMessage });
+      res.status(500).json({ message: errorMessage, status: "error" });
     }
   });
 
