@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   CheckSquare,
   XCircle,
@@ -177,14 +178,14 @@ export function TasksReview() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Task Proposte dall'AI</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Task Proposte dall'AI</h2>
+          <p className="text-sm text-muted-foreground">
             {communications.length} comunicazion{communications.length === 1 ? 'e' : 'i'} con task suggeriti
           </p>
         </div>
-        <Badge variant="outline" className="h-8">
+        <Badge variant="outline" className="h-7 sm:h-8">
           <Sparkles className="h-3 w-3 mr-1" />
           AI Analysis
         </Badge>
@@ -274,16 +275,16 @@ export function TasksReview() {
 
                       <Separator />
 
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-muted-foreground" />
+                          <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <Select
                             value={selectedUsers[key] || ""}
                             onValueChange={(value) =>
                               setSelectedUsers(prev => ({ ...prev, [key]: value }))
                             }
                           >
-                            <SelectTrigger className="w-[200px]">
+                            <SelectTrigger className="w-full sm:w-[180px]">
                               <SelectValue placeholder="Assegna a..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -300,14 +301,16 @@ export function TasksReview() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="flex-1 sm:flex-initial"
                             onClick={() => dismissTask.mutate({ communicationId: comm.id, taskIndex })}
                             disabled={dismissTask.isPending}
                           >
-                            <XCircle className="h-4 w-4 mr-1" />
-                            Rifiuta
+                            <XCircle className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Rifiuta</span>
                           </Button>
                           <Button
                             size="sm"
+                            className="flex-1 sm:flex-initial"
                             onClick={() => approveTask.mutate({
                               communicationId: comm.id,
                               taskIndex,
@@ -315,8 +318,9 @@ export function TasksReview() {
                             })}
                             disabled={approveTask.isPending}
                           >
-                            <CheckSquare className="h-4 w-4 mr-1" />
-                            Approva e Crea Task
+                            <CheckSquare className="h-4 w-4 sm:mr-1" />
+                            <span className="hidden sm:inline">Approva e Crea Task</span>
+                            <span className="sm:hidden">Approva</span>
                           </Button>
                         </div>
                       </div>

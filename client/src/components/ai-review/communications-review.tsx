@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Table,
   TableBody,
@@ -80,6 +81,7 @@ interface Communication {
 export function CommunicationsReview() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -179,17 +181,17 @@ export function CommunicationsReview() {
   return (
     <div className="space-y-4">
       {/* Header with summary and controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="text-base py-1.5 px-3">
+          <Badge variant="secondary" className="text-sm sm:text-base py-1 sm:py-1.5 px-2 sm:px-3">
             {communications.length} comunicazion{communications.length === 1 ? "e" : "i"} da rivedere
           </Badge>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Mostra:</span>
+          <span className="text-xs sm:text-sm text-muted-foreground">Mostra:</span>
           <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[80px] sm:w-[100px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -201,122 +203,212 @@ export function CommunicationsReview() {
         </div>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[40%]">Oggetto</TableHead>
-                <TableHead className="w-[20%]">Mittente</TableHead>
-                <TableHead className="w-[15%]">Data</TableHead>
-                <TableHead className="w-[15%]">Progetti Suggeriti</TableHead>
-                <TableHead className="w-[10%] text-right">Azioni</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedComms.map((comm) => (
-                <TableRow
-                  key={comm.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                >
-                  <TableCell className="font-medium">
-                    <div className="flex items-start gap-2">
-                      <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="line-clamp-2">{comm.subject}</span>
-                          {comm.isImportant && (
-                            <Badge variant="destructive" className="text-xs">
-                              !
-                            </Badge>
-                          )}
-                        </div>
-                        {comm.tags && comm.tags.length > 0 && (
-                          <div className="flex items-center gap-1 flex-wrap">
-                            {comm.tags.slice(0, 3).map((tag: string, index: number) => (
-                              <Badge
-                                key={index}
-                                variant="outline"
-                                className="text-xs h-5 px-1.5"
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
-                            {comm.tags.length > 3 && (
-                              <span className="text-xs text-muted-foreground">
-                                +{comm.tags.length - 3}
-                              </span>
-                            )}
-                          </div>
+      {/* Mobile: Card view */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {paginatedComms.map((comm) => (
+            <Card key={comm.id} className="overflow-hidden">
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  {/* Subject and importance */}
+                  <div className="flex items-start gap-2">
+                    <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium line-clamp-2">{comm.subject}</span>
+                        {comm.isImportant && (
+                          <Badge variant="destructive" className="text-xs">!</Badge>
                         )}
                       </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                      <span className="text-sm truncate">{comm.sender}</span>
+                  </div>
+
+                  {/* Sender and Date */}
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      <span className="truncate max-w-[120px]">{comm.sender}</span>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                      <span className="text-muted-foreground">
-                        {format(new Date(comm.communicationDate), "dd/MM/yy HH:mm", {
-                          locale: it,
-                        })}
-                      </span>
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      <span>{format(new Date(comm.communicationDate), "dd/MM/yy HH:mm", { locale: it })}</span>
                     </div>
-                  </TableCell>
-                  <TableCell>
+                  </div>
+
+                  {/* Tags */}
+                  {comm.tags && comm.tags.length > 0 && (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      {comm.tags.slice(0, 3).map((tag: string, index: number) => (
+                        <Badge key={index} variant="outline" className="text-xs h-5 px-1.5">{tag}</Badge>
+                      ))}
+                      {comm.tags.length > 3 && (
+                        <span className="text-xs text-muted-foreground">+{comm.tags.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Project suggestions */}
+                  <div className="flex items-center gap-2">
                     {comm.aiSuggestions?.projectMatches && comm.aiSuggestions.projectMatches.length > 0 ? (
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                      <>
+                        <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
                         <Badge variant="secondary" className="text-xs">
                           {comm.aiSuggestions.projectMatches.length} progett{comm.aiSuggestions.projectMatches.length === 1 ? 'o' : 'i'}
                         </Badge>
-                      </div>
+                      </>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
-                        <span className="text-xs text-muted-foreground">Nessuno</span>
-                      </div>
+                      <>
+                        <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
+                        <span className="text-xs text-muted-foreground">Nessun progetto suggerito</span>
+                      </>
                     )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedComm(comm)}
-                        data-testid={`button-review-${comm.id}`}
-                      >
-                        Revisiona
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => handleDismiss(comm.id, e)}
-                        disabled={dismissMutation.isPending}
-                        data-testid={`button-dismiss-${comm.id}`}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 pt-2 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => setSelectedComm(comm)}
+                      data-testid={`button-review-${comm.id}`}
+                    >
+                      Revisiona
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleDismiss(comm.id, e)}
+                      disabled={dismissMutation.isPending}
+                      data-testid={`button-dismiss-${comm.id}`}
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        /* Desktop: Table view */
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[40%]">Oggetto</TableHead>
+                  <TableHead className="w-[20%]">Mittente</TableHead>
+                  <TableHead className="w-[15%]">Data</TableHead>
+                  <TableHead className="w-[15%]">Progetti Suggeriti</TableHead>
+                  <TableHead className="w-[10%] text-right">Azioni</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {paginatedComms.map((comm) => (
+                  <TableRow
+                    key={comm.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                  >
+                    <TableCell className="font-medium">
+                      <div className="flex items-start gap-2">
+                        <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="line-clamp-2">{comm.subject}</span>
+                            {comm.isImportant && (
+                              <Badge variant="destructive" className="text-xs">
+                                !
+                              </Badge>
+                            )}
+                          </div>
+                          {comm.tags && comm.tags.length > 0 && (
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {comm.tags.slice(0, 3).map((tag: string, index: number) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="text-xs h-5 px-1.5"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {comm.tags.length > 3 && (
+                                <span className="text-xs text-muted-foreground">
+                                  +{comm.tags.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm truncate">{comm.sender}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                        <span className="text-muted-foreground">
+                          {format(new Date(comm.communicationDate), "dd/MM/yy HH:mm", {
+                            locale: it,
+                          })}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {comm.aiSuggestions?.projectMatches && comm.aiSuggestions.projectMatches.length > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                          <Badge variant="secondary" className="text-xs">
+                            {comm.aiSuggestions.projectMatches.length} progett{comm.aiSuggestions.projectMatches.length === 1 ? 'o' : 'i'}
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                          <span className="text-xs text-muted-foreground">Nessuno</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedComm(comm)}
+                          data-testid={`button-review-${comm.id}`}
+                        >
+                          Revisiona
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => handleDismiss(comm.id, e)}
+                          disabled={dismissMutation.isPending}
+                          data-testid={`button-dismiss-${comm.id}`}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
             Pagina {currentPage} di {totalPages} ({startIndex + 1}-{Math.min(endIndex, communications.length)} di {communications.length})
           </div>
           <div className="flex items-center gap-2">
@@ -327,7 +419,7 @@ export function CommunicationsReview() {
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Precedente
+              <span className="hidden sm:inline ml-1">Precedente</span>
             </Button>
             <Button
               variant="outline"
@@ -335,7 +427,7 @@ export function CommunicationsReview() {
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
             >
-              Successiva
+              <span className="hidden sm:inline mr-1">Successiva</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -352,7 +444,7 @@ export function CommunicationsReview() {
           }
         }}
       >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="h-5 w-5" />

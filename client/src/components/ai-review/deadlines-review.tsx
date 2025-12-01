@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Table,
   TableBody,
@@ -78,6 +79,7 @@ interface Communication {
 export function DeadlinesReview() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [selectedComm, setSelectedComm] = useState<{ comm: Communication; deadlineIndex: number } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -240,18 +242,18 @@ export function DeadlinesReview() {
   return (
     <div className="space-y-4">
       {/* Header with summary and controls */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="text-base py-1.5 px-3">
+          <Badge variant="secondary" className="text-sm sm:text-base py-1 sm:py-1.5 px-2 sm:px-3">
             <Sparkles className="h-3 w-3 mr-1" />
-            {allDeadlines.length} scadenz{allDeadlines.length === 1 ? 'a' : 'e'} suggerite dall'AI
+            {allDeadlines.length} scadenz{allDeadlines.length === 1 ? 'a' : 'e'} suggerite
           </Badge>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Mostra:</span>
+          <span className="text-xs sm:text-sm text-muted-foreground">Mostra:</span>
           <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className="w-[80px] sm:w-[100px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -263,86 +265,145 @@ export function DeadlinesReview() {
         </div>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[30%]">Scadenza</TableHead>
-                <TableHead className="w-[15%]">Data</TableHead>
-                <TableHead className="w-[10%]">Priorità</TableHead>
-                <TableHead className="w-[15%]">Tipo</TableHead>
-                <TableHead className="w-[20%]">Comunicazione</TableHead>
-                <TableHead className="w-[10%] text-right">Azioni</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedDeadlines.map(({ comm, deadline, index }) => {
-                const typeConfig = getTypeConfig(deadline.type);
-                return (
-                  <TableRow
-                    key={`${comm.id}-${index}`}
-                    className="cursor-pointer hover:bg-muted/50"
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex items-start gap-2">
-                        <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                        <span className="line-clamp-2">{deadline.title}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                        <span className="font-medium">
-                          {format(new Date(deadline.dueDate), "dd/MM/yy", { locale: it })}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
+      {/* Mobile: Card view */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {paginatedDeadlines.map(({ comm, deadline, index }) => {
+            const typeConfig = getTypeConfig(deadline.type);
+            return (
+              <Card key={`${comm.id}-${index}`} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {/* Title */}
+                    <div className="flex items-start gap-2">
+                      <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                      <span className="font-medium line-clamp-2">{deadline.title}</span>
+                    </div>
+
+                    {/* Date and badges */}
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        {format(new Date(deadline.dueDate), "dd/MM/yy", { locale: it })}
+                      </Badge>
                       <Badge variant={getPriorityColor(deadline.priority)} className="text-xs">
                         {getPriorityLabel(deadline.priority)}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
                       <Badge variant="outline" className="text-xs">
                         {typeConfig.icon} {typeConfig.label}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-                          <span className="truncate text-xs">{comm.subject}</span>
-                        </div>
-                        {comm.aiSuggestions?.projectMatches?.[0] && (
-                          <Badge variant="outline" className="text-xs">
-                            {comm.aiSuggestions.projectMatches[0].projectCode}
-                          </Badge>
-                        )}
+                    </div>
+
+                    {/* Communication info */}
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <div className="flex items-center gap-1">
+                        <Mail className="h-3 w-3 flex-shrink-0" />
+                        <span className="truncate">{comm.subject}</span>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedComm({ comm, deadlineIndex: index })}
-                      >
-                        Revisiona
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                      {comm.aiSuggestions?.projectMatches?.[0] && (
+                        <Badge variant="outline" className="text-xs">
+                          {comm.aiSuggestions.projectMatches[0].projectCode}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Action */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => setSelectedComm({ comm, deadlineIndex: index })}
+                    >
+                      Revisiona
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
+        /* Desktop: Table view */
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[30%]">Scadenza</TableHead>
+                  <TableHead className="w-[15%]">Data</TableHead>
+                  <TableHead className="w-[10%]">Priorità</TableHead>
+                  <TableHead className="w-[15%]">Tipo</TableHead>
+                  <TableHead className="w-[20%]">Comunicazione</TableHead>
+                  <TableHead className="w-[10%] text-right">Azioni</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedDeadlines.map(({ comm, deadline, index }) => {
+                  const typeConfig = getTypeConfig(deadline.type);
+                  return (
+                    <TableRow
+                      key={`${comm.id}-${index}`}
+                      className="cursor-pointer hover:bg-muted/50"
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-start gap-2">
+                          <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                          <span className="line-clamp-2">{deadline.title}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                          <span className="font-medium">
+                            {format(new Date(deadline.dueDate), "dd/MM/yy", { locale: it })}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getPriorityColor(deadline.priority)} className="text-xs">
+                          {getPriorityLabel(deadline.priority)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-xs">
+                          {typeConfig.icon} {typeConfig.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                            <span className="truncate text-xs">{comm.subject}</span>
+                          </div>
+                          {comm.aiSuggestions?.projectMatches?.[0] && (
+                            <Badge variant="outline" className="text-xs">
+                              {comm.aiSuggestions.projectMatches[0].projectCode}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedComm({ comm, deadlineIndex: index })}
+                        >
+                          Revisiona
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
             Pagina {currentPage} di {totalPages} ({startIndex + 1}-{Math.min(endIndex, allDeadlines.length)} di {allDeadlines.length})
           </div>
           <div className="flex items-center gap-2">
@@ -353,7 +414,7 @@ export function DeadlinesReview() {
               disabled={currentPage === 1}
             >
               <ChevronLeft className="h-4 w-4" />
-              Precedente
+              <span className="hidden sm:inline ml-1">Precedente</span>
             </Button>
             <Button
               variant="outline"
@@ -361,7 +422,7 @@ export function DeadlinesReview() {
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
             >
-              Successiva
+              <span className="hidden sm:inline mr-1">Successiva</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -370,7 +431,7 @@ export function DeadlinesReview() {
 
       {/* Deadline Detail Dialog */}
       <Dialog open={!!selectedComm} onOpenChange={() => setSelectedComm(null)}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarClock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -455,9 +516,10 @@ export function DeadlinesReview() {
             );
           })()}
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button
               variant="outline"
+              className="w-full sm:w-auto"
               onClick={() => {
                 if (selectedComm) {
                   dismissDeadline.mutate({
@@ -468,10 +530,11 @@ export function DeadlinesReview() {
               }}
               disabled={dismissDeadline.isPending}
             >
-              <XCircle className="h-4 w-4 mr-1" />
-              Rifiuta
+              <XCircle className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Rifiuta</span>
             </Button>
             <Button
+              className="w-full sm:w-auto"
               onClick={() => {
                 if (selectedComm) {
                   approveDeadline.mutate({
@@ -482,8 +545,9 @@ export function DeadlinesReview() {
               }}
               disabled={approveDeadline.isPending || !selectedComm?.comm.projectId}
             >
-              <CheckSquare className="h-4 w-4 mr-1" />
-              Approva e Crea Scadenza
+              <CheckSquare className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Approva e Crea Scadenza</span>
+              <span className="sm:hidden">Approva</span>
             </Button>
           </DialogFooter>
         </DialogContent>
