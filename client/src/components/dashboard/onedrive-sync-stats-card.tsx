@@ -26,8 +26,8 @@ export default function OneDriveSyncStatsCard() {
     queryKey: ['onedrive-all-files'],
     queryFn: () => oneDriveService.getAllFiles(),
     enabled: isConnected,
-    refetchInterval: 60000, // Refresh every minute
-    staleTime: 30000 // Consider data fresh for 30 seconds
+    refetchInterval: false, // No polling - minimize compute units
+    staleTime: Infinity // Keep data indefinitely
   });
 
   // Get files index statistics
@@ -46,7 +46,7 @@ export default function OneDriveSyncStatsCard() {
       }
     },
     enabled: isConnected,
-    refetchInterval: 120000 // Refresh every 2 minutes
+    refetchInterval: false // No polling - minimize compute units
   });
 
   const syncStats = getOverallSyncStats();

@@ -24,9 +24,9 @@ export function useOneDriveSync() {
       const connected = await oneDriveService.testConnection();
       return connected;
     },
-    refetchInterval: 30000, // Check every 30 seconds
+    refetchInterval: false, // No polling - minimize compute units
     retry: false,
-    staleTime: 10000 // Consider data fresh for 10 seconds
+    staleTime: Infinity // Keep data indefinitely
   });
 
   // Get connection status from query result instead of local state

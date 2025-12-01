@@ -12,31 +12,34 @@ import { useCallback } from 'react';
 export const QUERY_DEFAULTS = {
   // Frequently changing data (projects, communications)
   dynamic: {
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
-    refetchOnWindowFocus: true,
+    staleTime: 1 * 60 * 60 * 1000, // 1 hour - minimize compute units
+    gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
+    refetchOnWindowFocus: false, // Disable to minimize compute units
+    refetchInterval: false, // No polling
     retry: 2,
   },
   // Rarely changing data (clients, system config)
   static: {
     staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnWindowFocus: false,
+    refetchInterval: false, // No polling
     retry: 3,
   },
-  // Real-time data (OneDrive sync status)
+  // Real-time data disabled to minimize compute units
   realtime: {
-    staleTime: 0, // Always refetch
-    gcTime: 1 * 60 * 1000, // 1 minute
-    refetchOnWindowFocus: true,
-    refetchInterval: 30 * 1000, // Poll every 30 seconds
+    staleTime: 1 * 60 * 60 * 1000, // 1 hour - no polling
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnWindowFocus: false,
+    refetchInterval: false, // NO polling - minimize compute units
     retry: 1,
   },
   // Heavy data (file listings, large reports)
   heavy: {
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 120 * 60 * 1000, // 2 hours
     refetchOnWindowFocus: false,
+    refetchInterval: false, // No polling
     retry: 1,
   },
 } as const;
