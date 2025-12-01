@@ -657,6 +657,7 @@ export default function RegistroComunicazioni() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
   // Sorting states
   type SortField = 'subject' | 'type' | 'projectCode' | 'communicationDate';
@@ -743,6 +744,27 @@ export default function RegistroComunicazioni() {
     },
   });
 
+  const deleteMultipleMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map(id => apiRequest("DELETE", `/api/communications/${id}`)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      toast({
+        title: "Comunicazioni eliminate",
+        description: `${selectedIds.size} comunicazioni eliminate con successo`,
+      });
+      setSelectedIds(new Set());
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Errore nell'eliminazione delle comunicazioni",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreate = (data: any) => {
     createMutation.mutate(data);
   };
@@ -755,6 +777,31 @@ export default function RegistroComunicazioni() {
 
   const handleDelete = (id: string) => {
     deleteMutation.mutate(id);
+  };
+
+  const handleSelectOne = (id: string) => {
+    const newSelectedIds = new Set(selectedIds);
+    if (newSelectedIds.has(id)) {
+      newSelectedIds.delete(id);
+    } else {
+      newSelectedIds.add(id);
+    }
+    setSelectedIds(newSelectedIds);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === paginatedComms.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedComms.map(c => c.id)));
+    }
+  };
+
+  const handleDeleteMultiple = () => {
+    if (selectedIds.size === 0) return;
+    if (confirm(`Elimina ${selectedIds.size} comunicazioni? Questa azione non può essere annullata.`)) {
+      deleteMultipleMutation.mutate(Array.from(selectedIds));
+    }
   };
 
   // Sorting handlers
@@ -992,9 +1039,26 @@ export default function RegistroComunicazioni() {
             <Badge variant="secondary" className="text-base py-1.5 px-3">
               {filteredComms.length} comunicazion{filteredComms.length === 1 ? "e" : "i"}
             </Badge>
+            {selectedIds.size > 0 && (
+              <Badge variant="destructive" className="text-base py-1.5 px-3">
+                {selectedIds.size} selezionat{selectedIds.size === 1 ? "a" : "e"}
+              </Badge>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={handleDeleteMultiple}
+                disabled={deleteMultipleMutation.isPending}
+                data-testid="button-delete-multiple"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Elimina ({selectedIds.size})
+              </Button>
+            )}
             <span className="text-sm text-muted-foreground">Mostra:</span>
             <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
               <SelectTrigger className="w-[100px]">
@@ -1022,8 +1086,16 @@ export default function RegistroComunicazioni() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-[5%]">
+                      <Checkbox
+                        checked={selectedIds.size === paginatedComms.length && paginatedComms.length > 0}
+                        indeterminate={selectedIds.size > 0 && selectedIds.size < paginatedComms.length}
+                        onCheckedChange={handleSelectAll}
+                        data-testid="checkbox-select-all"
+                      />
+                    </TableHead>
                     <TableHead 
-                      className="w-[50%] cursor-pointer select-none hover:bg-muted/50"
+                      className="w-[45%] cursor-pointer select-none hover:bg-muted/50"
                       onClick={() => handleSort('subject')}
                       data-testid="header-sort-subject"
                     >
@@ -1068,9 +1140,16 @@ export default function RegistroComunicazioni() {
                         key={comm.id}
                         className={`cursor-pointer hover:bg-muted/50 ${
                           comm.isImportant ? 'bg-yellow-50 dark:bg-yellow-950/20' : ''
-                        }`}
+                        } ${selectedIds.has(comm.id) ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`}
                         onClick={() => setSelectedComm(comm)}
                       >
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.has(comm.id)}
+                            onCheckedChange={() => handleSelectOne(comm.id)}
+                            data-testid={`checkbox-communication-${comm.id}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-start gap-2">
                             <div className="space-y-1 flex-1">
