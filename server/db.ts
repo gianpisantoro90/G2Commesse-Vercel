@@ -56,10 +56,11 @@ if (!databaseUrl) {
   console.log('🔍 REPLIT_DEPLOYMENT:', process.env.REPLIT_DEPLOYMENT || 'not set');
   
   try {
+    // OPTIMIZED: Reduced pool size for Replit (5 connections instead of 10, with longer idle timeout)
     pool = new Pool({
       connectionString: databaseUrl,
-      max: 10,
-      idleTimeoutMillis: 30000,
+      max: 5,
+      idleTimeoutMillis: 60000,
       connectionTimeoutMillis: 10000,
     });
     db = drizzle({ client: pool, schema });

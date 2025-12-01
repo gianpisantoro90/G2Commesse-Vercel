@@ -49,12 +49,12 @@ export function useNotifications() {
           ws.send(JSON.stringify({ type: 'auth', userId }));
         }
 
-        // Send ping every 30 seconds to keep connection alive
+        // OPTIMIZED: Send ping every 60 seconds to keep connection alive (was 30s, reduced for Replit compute savings)
         const pingInterval = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'ping' }));
           }
-        }, 30000);
+        }, 60000);
 
         // Store interval in ws object for cleanup
         (ws as any).pingInterval = pingInterval;
