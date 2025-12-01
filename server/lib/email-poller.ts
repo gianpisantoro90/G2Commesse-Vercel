@@ -96,7 +96,8 @@ class EmailPoller {
     }
 
     if (!this.config) {
-      return;
+      logger.error('Email poller not configured - missing IMAP credentials in environment variables');
+      throw new Error('Credenziali email non configurate. Contattare l\'amministratore.');
     }
 
     this.isProcessing = true;
