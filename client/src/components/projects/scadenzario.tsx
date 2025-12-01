@@ -473,7 +473,7 @@ export default function Scadenzario() {
               Nuova Scadenza
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Crea Nuova Scadenza</DialogTitle>
               <DialogDescription>
@@ -600,7 +600,7 @@ export default function Scadenzario() {
       {/* Edit Dialog */}
       {editingDeadline && (
         <Dialog open={!!editingDeadline} onOpenChange={() => setEditingDeadline(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Modifica Scadenza</DialogTitle>
               <DialogDescription>

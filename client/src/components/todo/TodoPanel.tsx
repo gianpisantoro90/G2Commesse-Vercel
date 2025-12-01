@@ -529,7 +529,7 @@ function CreateTaskForm({
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="projectId"
@@ -575,7 +575,7 @@ function CreateTaskForm({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="priority"
@@ -725,7 +725,7 @@ function TaskDetailForm({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Progetto</h3>
                 <p className="text-gray-900 dark:text-white">{projectName}</p>
@@ -737,7 +737,7 @@ function TaskDetailForm({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorità</h3>
                 <p className="text-gray-900 dark:text-white">{priorityInfo.label}</p>
@@ -854,7 +854,7 @@ function TaskDetailForm({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="projectId"
