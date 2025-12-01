@@ -24,7 +24,7 @@ export default function OneDriveStatusCard() {
     queryKey: ['onedrive-user'],
     queryFn: () => oneDriveService.getUserInfo(),
     enabled: isConnected,
-    refetchInterval: 60000 // Refresh every minute
+    refetchInterval: false // No polling - minimize compute units
   });
 
   // Get root folder configuration using the dedicated hook
