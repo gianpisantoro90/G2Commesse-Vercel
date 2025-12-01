@@ -7,6 +7,8 @@ import bcrypt from "bcrypt";
 import serverOneDriveService from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
 import { emailService } from "./lib/email-service";
+import { emailPoller } from "./lib/email-poller";
+import { logger } from "./lib/logger";
 import { z } from "zod";
 
 // Funzione per calcolare e trasformare i dati della fattura
