@@ -3183,13 +3183,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize WebSocket notification service
   notificationService.initialize(httpServer);
 
-  // Schedule periodic checks for notifications (every 5 minutes)
+  // OPTIMIZED: Schedule periodic checks for notifications (every 15 minutes to reduce compute units on Replit)
   setInterval(() => {
     notificationService.checkDeadlines(storage);
     notificationService.checkInvoices(storage);
     notificationService.checkBudgets(storage);
     notificationService.clearOldNotifications();
-  }, 5 * 60 * 1000); // 5 minutes
+  }, 15 * 60 * 1000); // 15 minutes (was 5 min)
 
   // Run initial check after 10 seconds
   setTimeout(() => {

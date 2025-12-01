@@ -112,7 +112,21 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    sourcemap: true,
+    // OPTIMIZED: Disable sourcemaps in production to reduce bundle size on Replit
+    sourcemap: false,
+    // Additional optimizations for Replit
+    minify: 'esbuild',
+    target: 'es2020',
+    rollupOptions: {
+      output: {
+        // Chunk splitting for better caching
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs', '@radix-ui/react-select'],
+          'query-vendor': ['@tanstack/react-query'],
+        },
+      },
+    },
   },
   server: {
     fs: {
