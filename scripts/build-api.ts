@@ -19,7 +19,7 @@ async function build() {
       outfile: 'api/index.js',
       external: [
         // Native modules - available in Vercel runtime
-        'bcrypt',
+        // Note: bcryptjs is bundled (pure JS), bcrypt is NOT used
         'better-sqlite3',
       ],
       banner: {
