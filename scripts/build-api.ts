@@ -18,9 +18,9 @@ async function build() {
       format: 'esm',
       outfile: 'api/index.js',
       external: [
-        // Native modules - available in Vercel runtime
-        // Note: bcryptjs is bundled (pure JS), bcrypt is NOT used
+        // Native modules and complex packages - loaded from node_modules at runtime
         'better-sqlite3',
+        '@libsql/client',  // Has complex internals that don't bundle well
       ],
       banner: {
         js: `
