@@ -107,7 +107,7 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   }
 
   // Allow all auth-related endpoints and admin reset endpoint
-  if (req.path.startsWith('/api/auth/') || req.path === '/api/admin/reset-all-projects-to-in-corso') {
+  if (req.path.startsWith('/api/auth/') || req.path === '/api/admin/reset-all-projects-to-in-corso' || req.path === '/api/emails/check-now') {
     return next();
   }
 
