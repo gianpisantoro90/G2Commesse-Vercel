@@ -22,5 +22,4 @@ replit.nix
 .upm/
 .cache/
 
-# Generated API bundle (created during Vercel build)
-api/index.mjs
+# Note: api/index.js is committed as placeholder, overwritten during Vercel build
