@@ -3,7 +3,7 @@
   "version": 2,
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist/public",
-  "installCommand": "npm install",
+  "installCommand": "npm install --include=dev",
   "framework": null,
   "rewrites": [
     {
