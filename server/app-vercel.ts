@@ -152,30 +152,27 @@ export function createApp() {
   // Debug endpoint (temporary - remove after fixing)
   app.get('/api/debug', async (req, res) => {
     try {
-      const { storage, storagePromise } = await import('./storage');
-      await storagePromise;
+      // Direct libsql query - bypass storage layer
+      const { createClient } = await import('@libsql/client');
 
-      const users = await storage.getAllUsers();
+      const url = process.env.TURSO_DATABASE_URL || '';
+      const authToken = process.env.TURSO_AUTH_TOKEN || '';
+
+      const client = createClient({ url, authToken });
+      const result = await client.execute('SELECT username, email, role, active FROM users');
 
       res.json({
-        turso_url_set: !!process.env.TURSO_DATABASE_URL,
-        turso_token_set: !!process.env.TURSO_AUTH_TOKEN,
-        storage_type: usesTurso ? 'turso' : 'other',
-        users_count: users.length,
-        users: users.map(u => ({
-          username: u.username,
-          email: u.email,
-          role: u.role,
-          active: u.active,
-          has_password: !!u.passwordHash,
-          hash_length: u.passwordHash?.length || 0
-        }))
+        method: 'direct_libsql',
+        turso_url: url.substring(0, 60) + '...',
+        token_length: authToken.length,
+        users_count: result.rows.length,
+        users: result.rows
       });
     } catch (error: any) {
       res.status(500).json({
         error: error.message,
-        turso_url_set: !!process.env.TURSO_DATABASE_URL,
-        turso_token_set: !!process.env.TURSO_AUTH_TOKEN,
+        turso_url: process.env.TURSO_DATABASE_URL?.substring(0, 60),
+        token_set: !!process.env.TURSO_AUTH_TOKEN,
       });
     }
   });
