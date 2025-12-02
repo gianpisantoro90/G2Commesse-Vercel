@@ -1,9 +1,9 @@
 /**
  * Build script to bundle API for Vercel deployment
- * This bundles all server code into a single file that Vercel can use
+ * Bundles all server code into a single ESM file for Vercel serverless
  *
- * Source: api/_handler.ts (prefixed with _ so Vercel ignores it)
- * Output: api/index.js (Vercel deploys this as serverless function)
+ * Source: api/_src.ts (underscore prefix = Vercel ignores)
+ * Output: api/index.mjs (Vercel deploys as serverless function)
  */
 
 import * as esbuild from 'esbuild';
@@ -11,14 +11,14 @@ import * as esbuild from 'esbuild';
 async function build() {
   try {
     const result = await esbuild.build({
-      entryPoints: ['api/_handler.ts'],
+      entryPoints: ['api/_src.ts'],
       bundle: true,
       platform: 'node',
       target: 'node18',
       format: 'esm',
-      outfile: 'api/index.js',
+      outfile: 'api/index.mjs',
       external: [
-        // Keep native modules external - they're available in Vercel's runtime
+        // Native modules - available in Vercel runtime
         'bcrypt',
         'better-sqlite3',
       ],
@@ -32,15 +32,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 `.trim(),
       },
-      minify: false, // Keep readable for debugging
-      sourcemap: true,
+      minify: false,
+      sourcemap: false,
       metafile: true,
     });
 
-    // Log bundle info
     const outputs = Object.keys(result.metafile?.outputs || {});
-    console.log('API bundle created successfully!');
-    console.log('Output files:', outputs.join(', '));
+    console.log('API bundled:', outputs.join(', '));
   } catch (error) {
     console.error('Build failed:', error);
     process.exit(1);
