@@ -1604,54 +1604,66 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Use database storage in production, file storage for local development
-console.log('🔍 Storage initialization - DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('🔍 Storage initialization');
+console.log('🔍 DATABASE_URL exists:', !!process.env.DATABASE_URL);
+console.log('🔍 TURSO_DATABASE_URL exists:', !!process.env.TURSO_DATABASE_URL);
 console.log('🔍 Environment NODE_ENV:', process.env.NODE_ENV);
 
 async function initializeStorage(): Promise<IStorage> {
-  // If DATABASE_URL is not set, always use FileStorage (no Neon dependency)
-  const shouldUseFileStorage = !process.env.DATABASE_URL;
-  const isLocal = process.env.NODE_ENV === 'local' || shouldUseFileStorage;
-  
-  if (isLocal) {
-    console.log('📁 Using FileStorage for local development with persistence');
-    console.log('📁 Data will be saved in:', process.cwd() + '/data');
-    // Import FileStorage for local development
+  // Priority: Turso > Neon/PostgreSQL > FileStorage > MemStorage
+
+  // 1. Try Turso first (zero-cost deployment)
+  if (process.env.TURSO_DATABASE_URL) {
+    console.log('🔷 Turso configuration detected, attempting connection...');
     try {
-      const { storage: fileStorage } = await import('./storage-local.js');
-      return fileStorage;
+      const { TursoStorage } = await import('./storage-turso.js');
+      const tursoStorage = new TursoStorage();
+      await tursoStorage.initialize();
+      const isConnected = await tursoStorage.testConnection();
+      if (isConnected) {
+        console.log('✅ Using TursoStorage - connection verified');
+        return tursoStorage;
+      } else {
+        console.log('⚠️ Turso connection failed, trying other options...');
+      }
     } catch (error) {
-      console.error('❌ Failed to load FileStorage, falling back to MemStorage:', error);
-      return new MemStorage();
+      console.error('❌ Failed to initialize TursoStorage:', error);
     }
-  } else {
-    // Use database storage for production
+  }
+
+  // 2. Try Neon/PostgreSQL if DATABASE_URL is set
+  if (process.env.DATABASE_URL) {
+    console.log('🔷 PostgreSQL configuration detected, attempting connection...');
     const dbStorage = new DatabaseStorage();
     try {
       const isConnected = await dbStorage.testConnection();
       if (isConnected) {
-        console.log('✅ Using DatabaseStorage - connection verified');
+        console.log('✅ Using DatabaseStorage (PostgreSQL) - connection verified');
         return dbStorage;
       } else {
-        console.log('💾 Database connection failed, using FileStorage for permanent data persistence');
-        try {
-          const { storage: fileStorage } = await import('./storage-local.js');
-          return fileStorage;
-        } catch (fileError) {
-          console.error('❌ FileStorage also failed, using MemStorage as last resort:', fileError);
-          return new MemStorage();
-        }
+        console.log('⚠️ PostgreSQL connection failed, trying other options...');
       }
     } catch (error) {
-      console.error('💾 Database connection error, using FileStorage for permanent data persistence:', error);
-      try {
-        const { storage: fileStorage } = await import('./storage-local.js');
-        return fileStorage;
-      } catch (fileError) {
-        console.error('❌ FileStorage also failed, using MemStorage as last resort:', fileError);
-        return new MemStorage();
-      }
+      console.error('❌ PostgreSQL connection error:', error);
     }
   }
+
+  // 3. For local development or if databases fail, use FileStorage
+  const isLocal = process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development';
+  if (isLocal || !process.env.DATABASE_URL && !process.env.TURSO_DATABASE_URL) {
+    console.log('📁 Using FileStorage for local development with persistence');
+    console.log('📁 Data will be saved in:', process.cwd() + '/data');
+    try {
+      const { storage: fileStorage } = await import('./storage-local.js');
+      return fileStorage;
+    } catch (error) {
+      console.error('❌ Failed to load FileStorage:', error);
+    }
+  }
+
+  // 4. Last resort: MemStorage (data not persisted!)
+  console.warn('⚠️ Using MemStorage - data will NOT be persisted!');
+  return new MemStorage();
 }
 
 // Create a fallback-aware storage wrapper
