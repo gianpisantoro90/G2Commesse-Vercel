@@ -149,6 +149,37 @@ export function createApp() {
     });
   });
 
+  // Debug endpoint (temporary - remove after fixing)
+  app.get('/api/debug', async (req, res) => {
+    try {
+      const { storage, storagePromise } = await import('./storage');
+      await storagePromise;
+
+      const users = await storage.getAllUsers();
+
+      res.json({
+        turso_url_set: !!process.env.TURSO_DATABASE_URL,
+        turso_token_set: !!process.env.TURSO_AUTH_TOKEN,
+        storage_type: usesTurso ? 'turso' : 'other',
+        users_count: users.length,
+        users: users.map(u => ({
+          username: u.username,
+          email: u.email,
+          role: u.role,
+          active: u.active,
+          has_password: !!u.passwordHash,
+          hash_length: u.passwordHash?.length || 0
+        }))
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        error: error.message,
+        turso_url_set: !!process.env.TURSO_DATABASE_URL,
+        turso_token_set: !!process.env.TURSO_AUTH_TOKEN,
+      });
+    }
+  });
+
   return app;
 }
 
