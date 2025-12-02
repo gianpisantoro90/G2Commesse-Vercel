@@ -3,7 +3,7 @@
  * Bundles all server code into a single ESM file for Vercel serverless
  *
  * Source: api/_src.ts (underscore prefix = Vercel ignores)
- * Output: api/index.mjs (Vercel deploys as serverless function)
+ * Output: api/index.js (overwrites placeholder, Vercel deploys as serverless function)
  */
 
 import * as esbuild from 'esbuild';
@@ -16,7 +16,7 @@ async function build() {
       platform: 'node',
       target: 'node18',
       format: 'esm',
-      outfile: 'api/index.mjs',
+      outfile: 'api/index.js',
       external: [
         // Native modules - available in Vercel runtime
         'bcrypt',
