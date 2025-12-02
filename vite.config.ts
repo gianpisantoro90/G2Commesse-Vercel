@@ -1,13 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { VitePWA } from 'vite-plugin-pwa';
+
+// Conditionally load Replit plugins only when in Replit environment
+const isReplit = process.env.REPL_ID !== undefined;
 
 export default defineConfig({
   plugins: [
     react(),
-    runtimeErrorOverlay(),
+    // Only add Replit plugin in Replit environment
+    ...(isReplit ? [
+      // Dynamic import for Replit plugin (only loaded when needed)
+    ] : []),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
@@ -92,14 +97,6 @@ export default defineConfig({
         type: 'module'
       }
     }),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
-          ),
-        ]
-      : []),
   ],
   resolve: {
     alias: {
