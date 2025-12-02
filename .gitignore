@@ -22,6 +22,5 @@ replit.nix
 .upm/
 .cache/
 
-# Generated API bundle (built during Vercel deployment)
-api/index.js
+# Generated API bundle sourcemap
 api/index.js.map
