@@ -13,6 +13,7 @@ export default function EmailCheckerCard() {
       const response = await fetch("/api/emails/check-now", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       if (!response.ok) {
