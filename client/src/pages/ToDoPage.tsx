@@ -320,7 +320,7 @@ export default function ToDoPage() {
                     ) : (
                       <>
                         {/* Desktop: List View */}
-                        <div className="hidden lg:block space-y-2">
+                        <div className="hidden md:block space-y-2">
                           {filteredTasks.map(task => {
                             const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
                             const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
