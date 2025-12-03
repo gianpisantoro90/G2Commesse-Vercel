@@ -247,14 +247,14 @@ export default function ToDoPage() {
             {/* Tasks List */}
             <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
               <CardHeader>
-                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                <div className="flex flex-col gap-4">
                   <div>
                     <CardTitle className="text-gray-900 dark:text-white">Task</CardTitle>
                     <CardDescription className="text-gray-600 dark:text-gray-400">
                       Visualizza e gestisci le task
                     </CardDescription>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                  <div className="hidden md:flex flex-col sm:flex-row gap-2 w-full">
                     <Select value={filterProject} onValueChange={setFilterProject}>
                       <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                         <SelectValue placeholder="Tutti i progetti" />
@@ -293,15 +293,18 @@ export default function ToDoPage() {
               </CardHeader>
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4">
-                    <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                      Tutte ({filteredTasks.length})
+                  <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 grid grid-cols-3 w-full">
+                    <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs md:text-sm px-2 md:px-4 py-2">
+                      <span className="hidden md:inline">Tutte</span>
+                      <span className="md:hidden">T.</span> ({filteredTasks.length})
                     </TabsTrigger>
-                    <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                      Le Mie Task ({tasks.filter(t => t.assignedToId === user?.id).length})
+                    <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs md:text-sm px-2 md:px-4 py-2">
+                      <span className="hidden md:inline">Le Mie</span>
+                      <span className="md:hidden">Mie</span> ({tasks.filter(t => t.assignedToId === user?.id).length})
                     </TabsTrigger>
-                    <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                      Create da Me ({tasks.filter(t => t.createdById === user?.id).length})
+                    <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs md:text-sm px-2 md:px-4 py-2">
+                      <span className="hidden md:inline">Create</span>
+                      <span className="md:hidden">Crate</span> ({tasks.filter(t => t.createdById === user?.id).length})
                     </TabsTrigger>
                   </TabsList>
 
