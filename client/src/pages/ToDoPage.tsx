@@ -446,19 +446,17 @@ export default function ToDoPage() {
                                     </Badge>
                                   )}
                                 </div>
-                                <div className="grid grid-cols-1 gap-3 text-xs text-gray-600 dark:text-gray-400 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400 pt-3 border-t border-gray-200 dark:border-gray-700">
                                   <div className="min-w-0">
                                     <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Assegnato</div>
                                     <div className="truncate">{getUserName(task.assignedToId)}</div>
                                   </div>
-                                  {task.dueDate && (
-                                    <div className="min-w-0">
-                                      <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Scadenza</div>
-                                      <div className={overdueTask ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
-                                        {format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}
-                                      </div>
+                                  <div className="min-w-0">
+                                    <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Scadenza</div>
+                                    <div className={overdueTask ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
+                                      {task.dueDate ? format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it }) : '-'}
                                     </div>
-                                  )}
+                                  </div>
                                 </div>
                               </div>
                             );
