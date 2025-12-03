@@ -315,100 +315,153 @@ export default function ToDoPage() {
                         Nessuna task trovata
                       </div>
                     ) : (
-                      <div className="space-y-2">
-                        {filteredTasks.map(task => {
-                          const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
-                          const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
-                          const StatusIcon = statusInfo.icon;
-                          const overdueTask = isOverdue(task);
+                      <>
+                        {/* Desktop: List View */}
+                        <div className="hidden md:block space-y-2">
+                          {filteredTasks.map(task => {
+                            const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
+                            const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
+                            const StatusIcon = statusInfo.icon;
+                            const overdueTask = isOverdue(task);
 
-                          const isExpanded = expandedTasks.has(task.id);
-                          const hasDescription = task.description && task.description.trim() !== '';
+                            const isExpanded = expandedTasks.has(task.id);
+                            const hasDescription = task.description && task.description.trim() !== '';
 
-                          return (
-                            <div
-                              key={task.id}
-                              className="rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                              data-testid={`task-item-${task.id}`}
-                            >
-                              {/* Main task row */}
+                            return (
                               <div
-                                onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
-                                className="flex items-center gap-4 p-4 cursor-pointer"
+                                key={task.id}
+                                className="rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                data-testid={`task-item-${task.id}`}
                               >
+                                {/* Main task row */}
                                 <div
-                                  className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-                                    updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
-                                  }}
-                                  onMouseDown={(e) => {
-                                    e.stopPropagation();
-                                  }}
-                                  title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                                  onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
+                                  className="flex items-center gap-4 p-4 cursor-pointer"
                                 >
-                                  <StatusIcon className={`w-5 h-5 pointer-events-none ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h4 className="font-semibold text-gray-900 dark:text-white truncate">{task.title}</h4>
-                                    <Badge variant="outline" className={`${priorityInfo.color} flex-shrink-0`}>
-                                      {priorityInfo.label}
-                                    </Badge>
-                                    {overdueTask && (
-                                      <Badge variant="outline" className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800 flex-shrink-0">
-                                        <AlertCircle className="w-3 h-3 mr-1" />
-                                        Scaduta
+                                  <div
+                                    className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+                                      updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
+                                    }}
+                                    onMouseDown={(e) => {
+                                      e.stopPropagation();
+                                    }}
+                                    title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                                  >
+                                    <StatusIcon className={`w-5 h-5 pointer-events-none ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h4 className="font-semibold text-gray-900 dark:text-white truncate">{task.title}</h4>
+                                      <Badge variant="outline" className={`${priorityInfo.color} flex-shrink-0`}>
+                                        {priorityInfo.label}
                                       </Badge>
-                                    )}
+                                      {overdueTask && (
+                                        <Badge variant="outline" className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800 flex-shrink-0">
+                                          <AlertCircle className="w-3 h-3 mr-1" />
+                                          Scaduta
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                      <span>{getProjectName(task.projectId)}</span>
+                                      <span>•</span>
+                                      <span>Assegnata a: {getUserName(task.assignedToId)}</span>
+                                      {task.dueDate && (
+                                        <>
+                                          <span>•</span>
+                                          <span className={overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : ''}>
+                                            Scadenza: {format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                                    <span>{getProjectName(task.projectId)}</span>
-                                    <span>•</span>
-                                    <span>Assegnata a: {getUserName(task.assignedToId)}</span>
-                                    {task.dueDate && (
-                                      <>
-                                        <span>•</span>
-                                        <span className={overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : ''}>
-                                          Scadenza: {format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}
-                                        </span>
-                                      </>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
+                                    {hasDescription && (
+                                      <button
+                                        onClick={(e) => toggleTaskExpansion(task.id, e)}
+                                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+                                        title={isExpanded ? "Nascondi descrizione" : "Mostra descrizione"}
+                                      >
+                                        {isExpanded ? (
+                                          <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                        ) : (
+                                          <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                        )}
+                                      </button>
                                     )}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
+
+                                {/* Expandable description */}
+                                {hasDescription && isExpanded && (
+                                  <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-800">
+                                    <div className="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                                      <p className="font-medium text-gray-900 dark:text-white mb-1">Descrizione:</p>
+                                      {task.description}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Mobile: Card View */}
+                        <div className="md:hidden space-y-3">
+                          {filteredTasks.map(task => {
+                            const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
+                            const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
+                            const overdueTask = isOverdue(task);
+
+                            return (
+                              <div
+                                key={task.id}
+                                className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3 overflow-hidden"
+                                data-testid={`task-item-mobile-${task.id}`}
+                              >
+                                <div className="flex flex-col gap-1 min-w-0">
+                                  <div className="font-medium text-sm dark:text-gray-200 truncate">{task.title}</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                    📋 {getProjectName(task.projectId)}
+                                  </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Badge className={`${priorityInfo.color} flex-shrink-0`}>
+                                    {priorityInfo.label}
+                                  </Badge>
                                   <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
-                                  {hasDescription && (
-                                    <button
-                                      onClick={(e) => toggleTaskExpansion(task.id, e)}
-                                      className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
-                                      title={isExpanded ? "Nascondi descrizione" : "Mostra descrizione"}
-                                    >
-                                      {isExpanded ? (
-                                        <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                      ) : (
-                                        <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                      )}
-                                    </button>
+                                  {overdueTask && (
+                                    <Badge variant="outline" className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800">
+                                      <AlertCircle className="w-3 h-3 mr-1" />
+                                      Scaduta
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="grid grid-cols-1 gap-3 text-xs text-gray-600 dark:text-gray-400 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                  <div className="min-w-0">
+                                    <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Assegnato</div>
+                                    <div className="truncate">{getUserName(task.assignedToId)}</div>
+                                  </div>
+                                  {task.dueDate && (
+                                    <div className="min-w-0">
+                                      <div className="font-medium text-gray-700 dark:text-gray-300 mb-1">Scadenza</div>
+                                      <div className={overdueTask ? 'text-red-600 dark:text-red-400 font-medium' : ''}>
+                                        {format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               </div>
-
-                              {/* Expandable description */}
-                              {hasDescription && isExpanded && (
-                                <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-800">
-                                  <div className="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded">
-                                    <p className="font-medium text-gray-900 dark:text-white mb-1">Descrizione:</p>
-                                    {task.description}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      </>
                     )}
                   </TabsContent>
                 </Tabs>
