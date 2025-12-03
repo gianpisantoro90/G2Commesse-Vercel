@@ -17,7 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTaskSchema, type Task, type Project, type User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, CheckCircle2, Circle, XCircle, Clock, Trash2, Edit, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, CheckCircle2, Circle, XCircle, Clock, Trash2, Edit, AlertCircle, ChevronDown, ChevronUp, StickyNote } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -254,7 +254,7 @@ export default function ToDoPage() {
                       Visualizza e gestisci le task
                     </CardDescription>
                   </div>
-                  <div className="hidden md:flex flex-col sm:flex-row gap-2 w-full">
+                  <div className="hidden lg:flex flex-col sm:flex-row gap-2 w-full">
                     <Select value={filterProject} onValueChange={setFilterProject}>
                       <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                         <SelectValue placeholder="Tutti i progetti" />
@@ -294,17 +294,17 @@ export default function ToDoPage() {
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 grid grid-cols-3 w-full">
-                    <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs md:text-sm px-2 md:px-4 py-2">
-                      <span className="hidden md:inline">Tutte</span>
-                      <span className="md:hidden">T.</span> ({filteredTasks.length})
+                    <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs lg:text-sm px-2 lg:px-4 py-2">
+                      <span className="hidden lg:inline">Tutte</span>
+                      <span className="lg:hidden">Tutte</span> ({filteredTasks.length})
                     </TabsTrigger>
-                    <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs md:text-sm px-2 md:px-4 py-2">
-                      <span className="hidden md:inline">Le Mie</span>
-                      <span className="md:hidden">Mie</span> ({tasks.filter(t => t.assignedToId === user?.id).length})
+                    <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs lg:text-sm px-2 lg:px-4 py-2">
+                      <span className="hidden lg:inline">Le Mie Task</span>
+                      <span className="lg:hidden">Mie</span> ({tasks.filter(t => t.assignedToId === user?.id).length})
                     </TabsTrigger>
-                    <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs md:text-sm px-2 md:px-4 py-2">
-                      <span className="hidden md:inline">Create</span>
-                      <span className="md:hidden">Crate</span> ({tasks.filter(t => t.createdById === user?.id).length})
+                    <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs lg:text-sm px-2 lg:px-4 py-2">
+                      <span className="hidden lg:inline">Create da Me</span>
+                      <span className="lg:hidden">Create</span> ({tasks.filter(t => t.createdById === user?.id).length})
                     </TabsTrigger>
                   </TabsList>
 
@@ -320,7 +320,7 @@ export default function ToDoPage() {
                     ) : (
                       <>
                         {/* Desktop: List View */}
-                        <div className="hidden md:block space-y-2">
+                        <div className="hidden lg:block space-y-2">
                           {filteredTasks.map(task => {
                             const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
                             const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
@@ -416,7 +416,7 @@ export default function ToDoPage() {
                         </div>
 
                         {/* Mobile: Card View */}
-                        <div className="md:hidden space-y-3">
+                        <div className="lg:hidden space-y-3">
                           {filteredTasks.map(task => {
                             const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
                             const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
@@ -425,8 +425,9 @@ export default function ToDoPage() {
                             return (
                               <div
                                 key={task.id}
-                                className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3 overflow-hidden"
+                                className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3 overflow-hidden cursor-pointer active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
                                 data-testid={`task-item-mobile-${task.id}`}
+                                onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
                               >
                                 <div className="flex flex-col gap-1 min-w-0">
                                   <div className="font-medium text-sm dark:text-gray-200 truncate">{task.title}</div>
@@ -438,6 +439,12 @@ export default function ToDoPage() {
                                   <Badge className={`${priorityInfo.color} flex-shrink-0`}>
                                     {priorityInfo.label}
                                   </Badge>
+                                  {task.notes && task.notes.trim() !== '' && (
+                                    <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-400 border-blue-300 dark:border-blue-800 flex-shrink-0">
+                                      <StickyNote className="w-3 h-3 mr-1" />
+                                      Note
+                                    </Badge>
+                                  )}
                                   <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
                                   {overdueTask && (
                                     <Badge variant="outline" className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800">
