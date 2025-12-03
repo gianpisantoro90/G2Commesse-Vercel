@@ -416,7 +416,7 @@ export default function ToDoPage() {
                         </div>
 
                         {/* Mobile: Card View */}
-                        <div className="lg:hidden space-y-3">
+                        <div className="md:hidden space-y-3">
                           {filteredTasks.map(task => {
                             const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
                             const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
