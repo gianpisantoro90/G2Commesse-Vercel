@@ -72,4 +72,65 @@ if (!databaseUrl) {
   }
 }
 
+// Auto-migration for project_prestazioni table
+async function runMigrations() {
+  if (!pool) return;
+
+  try {
+    const client = await pool.connect();
+
+    // Check if project_prestazioni table exists
+    const result = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables
+        WHERE table_name = 'project_prestazioni'
+      );
+    `);
+
+    if (!result.rows[0].exists) {
+      console.log('🔄 Creating project_prestazioni table...');
+
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS project_prestazioni (
+          id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+          project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+          tipo TEXT NOT NULL,
+          livello_progettazione TEXT,
+          descrizione TEXT,
+          stato TEXT NOT NULL DEFAULT 'da_iniziare',
+          data_inizio TIMESTAMP,
+          data_completamento TIMESTAMP,
+          data_fatturazione TIMESTAMP,
+          data_pagamento TIMESTAMP,
+          importo_previsto INTEGER DEFAULT 0,
+          importo_fatturato INTEGER DEFAULT 0,
+          importo_pagato INTEGER DEFAULT 0,
+          invoice_id TEXT REFERENCES project_invoices(id) ON DELETE SET NULL,
+          note TEXT,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `);
+
+      // Create indexes
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_project ON project_prestazioni(project_id)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_stato ON project_prestazioni(stato)`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_invoice ON project_prestazioni(invoice_id)`);
+
+      console.log('✅ project_prestazioni table created successfully!');
+    } else {
+      console.log('✅ project_prestazioni table already exists');
+    }
+
+    client.release();
+  } catch (error) {
+    console.error('❌ Migration error:', error);
+  }
+}
+
+// Run migrations on startup
+if (pool) {
+  runMigrations();
+}
+
 export { pool, db };
