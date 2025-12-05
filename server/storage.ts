@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni } from "@shared/schema";
 import { eq, sql } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -91,6 +91,17 @@ export interface IStorage {
   updateInvoice(id: string, updates: Partial<InsertProjectInvoice>): Promise<ProjectInvoice | undefined>;
   deleteInvoice(id: string): Promise<boolean>;
 
+  // Project Prestazioni
+  getAllPrestazioni(): Promise<ProjectPrestazione[]>;
+  getPrestazioniByProject(projectId: string): Promise<ProjectPrestazione[]>;
+  getPrestazione(id: string): Promise<ProjectPrestazione | undefined>;
+  createPrestazione(prestazione: InsertProjectPrestazione): Promise<ProjectPrestazione>;
+  updatePrestazione(id: string, updates: Partial<InsertProjectPrestazione>): Promise<ProjectPrestazione | undefined>;
+  deletePrestazione(id: string): Promise<boolean>;
+  getPrestazioniStats(): Promise<PrestazioniStats>;
+  getPrestazioniByStato(stato: string): Promise<ProjectPrestazione[]>;
+  linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined>;
+
   // Bulk operations
   exportAllData(): Promise<{ 
     projects: Project[], 
@@ -131,6 +142,7 @@ export class MemStorage implements IStorage {
   private users: Map<string, User> = new Map();
   private tasks: Map<string, Task> = new Map();
   private invoices: Map<string, ProjectInvoice> = new Map();
+  private prestazioni: Map<string, ProjectPrestazione> = new Map();
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -767,6 +779,101 @@ export class MemStorage implements IStorage {
     return this.invoices.delete(id);
   }
 
+  // Prestazioni methods
+  async getAllPrestazioni(): Promise<ProjectPrestazione[]> {
+    return Array.from(this.prestazioni.values());
+  }
+
+  async getPrestazioniByProject(projectId: string): Promise<ProjectPrestazione[]> {
+    return Array.from(this.prestazioni.values()).filter(p => p.projectId === projectId);
+  }
+
+  async getPrestazione(id: string): Promise<ProjectPrestazione | undefined> {
+    return this.prestazioni.get(id);
+  }
+
+  async createPrestazione(insertPrestazione: InsertProjectPrestazione): Promise<ProjectPrestazione> {
+    const id = randomUUID();
+    const prestazione: ProjectPrestazione = {
+      ...insertPrestazione,
+      id,
+      livelloProgettazione: insertPrestazione.livelloProgettazione || null,
+      descrizione: insertPrestazione.descrizione || null,
+      stato: insertPrestazione.stato || 'da_iniziare',
+      dataInizio: insertPrestazione.dataInizio || null,
+      dataCompletamento: insertPrestazione.dataCompletamento || null,
+      dataFatturazione: insertPrestazione.dataFatturazione || null,
+      dataPagamento: insertPrestazione.dataPagamento || null,
+      importoPrevisto: insertPrestazione.importoPrevisto || 0,
+      importoFatturato: insertPrestazione.importoFatturato || 0,
+      importoPagato: insertPrestazione.importoPagato || 0,
+      invoiceId: insertPrestazione.invoiceId || null,
+      note: insertPrestazione.note || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.prestazioni.set(id, prestazione);
+    return prestazione;
+  }
+
+  async updatePrestazione(id: string, updates: Partial<InsertProjectPrestazione>): Promise<ProjectPrestazione | undefined> {
+    const existing = this.prestazioni.get(id);
+    if (!existing) return undefined;
+
+    const updated: ProjectPrestazione = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.prestazioni.set(id, updated);
+    return updated;
+  }
+
+  async deletePrestazione(id: string): Promise<boolean> {
+    return this.prestazioni.delete(id);
+  }
+
+  async getPrestazioniStats(): Promise<PrestazioniStats> {
+    const all = Array.from(this.prestazioni.values());
+
+    const stats: PrestazioniStats = {
+      totale: all.length,
+      daIniziare: all.filter(p => p.stato === 'da_iniziare').length,
+      inCorso: all.filter(p => p.stato === 'in_corso').length,
+      completate: all.filter(p => p.stato === 'completata').length,
+      fatturate: all.filter(p => p.stato === 'fatturata').length,
+      pagate: all.filter(p => p.stato === 'pagata').length,
+      completateNonFatturate: all.filter(p => p.stato === 'completata').length,
+      fatturateNonPagate: all.filter(p => p.stato === 'fatturata').length,
+      importoTotalePrevisto: all.reduce((sum, p) => sum + (p.importoPrevisto || 0), 0),
+      importoTotaleFatturato: all.reduce((sum, p) => sum + (p.importoFatturato || 0), 0),
+      importoTotalePagato: all.reduce((sum, p) => sum + (p.importoPagato || 0), 0),
+      importoDaFatturare: all.filter(p => p.stato === 'completata').reduce((sum, p) => sum + (p.importoPrevisto || 0), 0),
+      importoDaIncassare: all.filter(p => p.stato === 'fatturata').reduce((sum, p) => sum + (p.importoFatturato || 0) - (p.importoPagato || 0), 0),
+    };
+
+    return stats;
+  }
+
+  async getPrestazioniByStato(stato: string): Promise<ProjectPrestazione[]> {
+    return Array.from(this.prestazioni.values()).filter(p => p.stato === stato);
+  }
+
+  async linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined> {
+    const existing = this.prestazioni.get(prestazioneId);
+    if (!existing) return undefined;
+
+    const updated: ProjectPrestazione = {
+      ...existing,
+      invoiceId,
+      stato: 'fatturata',
+      dataFatturazione: new Date(),
+      updatedAt: new Date(),
+    };
+    this.prestazioni.set(prestazioneId, updated);
+    return updated;
+  }
+
   async clearAllData() {
     this.projects.clear();
     this.clients.clear();
@@ -778,6 +885,7 @@ export class MemStorage implements IStorage {
     this.deadlines.clear();
     this.tasks.clear();
     this.invoices.clear();
+    this.prestazioni.clear();
     // Don't clear users - keep them for authentication
   }
 
@@ -1383,6 +1491,127 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Prestazioni methods
+  async getAllPrestazioni(): Promise<ProjectPrestazione[]> {
+    try {
+      return await db.select().from(projectPrestazioni);
+    } catch (error) {
+      console.error('Error getting all prestazioni:', error);
+      return [];
+    }
+  }
+
+  async getPrestazioniByProject(projectId: string): Promise<ProjectPrestazione[]> {
+    try {
+      return await db.select().from(projectPrestazioni).where(eq(projectPrestazioni.projectId, projectId));
+    } catch (error) {
+      console.error('Error getting prestazioni by project:', error);
+      return [];
+    }
+  }
+
+  async getPrestazione(id: string): Promise<ProjectPrestazione | undefined> {
+    try {
+      const [prestazione] = await db.select().from(projectPrestazioni).where(eq(projectPrestazioni.id, id));
+      return prestazione || undefined;
+    } catch (error) {
+      console.error('Error getting prestazione:', error);
+      return undefined;
+    }
+  }
+
+  async createPrestazione(insertPrestazione: InsertProjectPrestazione): Promise<ProjectPrestazione> {
+    try {
+      const [prestazione] = await db.insert(projectPrestazioni).values(insertPrestazione).returning();
+      return prestazione;
+    } catch (error) {
+      console.error('Error creating prestazione:', error);
+      throw error;
+    }
+  }
+
+  async updatePrestazione(id: string, updates: Partial<InsertProjectPrestazione>): Promise<ProjectPrestazione | undefined> {
+    try {
+      const [updated] = await db
+        .update(projectPrestazioni)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(projectPrestazioni.id, id))
+        .returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating prestazione:', error);
+      return undefined;
+    }
+  }
+
+  async deletePrestazione(id: string): Promise<boolean> {
+    try {
+      const result = await db.delete(projectPrestazioni).where(eq(projectPrestazioni.id, id));
+      return (result.rowCount || 0) > 0;
+    } catch (error) {
+      console.error('Error deleting prestazione:', error);
+      return false;
+    }
+  }
+
+  async getPrestazioniStats(): Promise<PrestazioniStats> {
+    try {
+      const all = await this.getAllPrestazioni();
+
+      return {
+        totale: all.length,
+        daIniziare: all.filter(p => p.stato === 'da_iniziare').length,
+        inCorso: all.filter(p => p.stato === 'in_corso').length,
+        completate: all.filter(p => p.stato === 'completata').length,
+        fatturate: all.filter(p => p.stato === 'fatturata').length,
+        pagate: all.filter(p => p.stato === 'pagata').length,
+        completateNonFatturate: all.filter(p => p.stato === 'completata').length,
+        fatturateNonPagate: all.filter(p => p.stato === 'fatturata').length,
+        importoTotalePrevisto: all.reduce((sum, p) => sum + (p.importoPrevisto || 0), 0),
+        importoTotaleFatturato: all.reduce((sum, p) => sum + (p.importoFatturato || 0), 0),
+        importoTotalePagato: all.reduce((sum, p) => sum + (p.importoPagato || 0), 0),
+        importoDaFatturare: all.filter(p => p.stato === 'completata').reduce((sum, p) => sum + (p.importoPrevisto || 0), 0),
+        importoDaIncassare: all.filter(p => p.stato === 'fatturata').reduce((sum, p) => sum + (p.importoFatturato || 0) - (p.importoPagato || 0), 0),
+      };
+    } catch (error) {
+      console.error('Error getting prestazioni stats:', error);
+      return {
+        totale: 0, daIniziare: 0, inCorso: 0, completate: 0, fatturate: 0, pagate: 0,
+        completateNonFatturate: 0, fatturateNonPagate: 0,
+        importoTotalePrevisto: 0, importoTotaleFatturato: 0, importoTotalePagato: 0,
+        importoDaFatturare: 0, importoDaIncassare: 0,
+      };
+    }
+  }
+
+  async getPrestazioniByStato(stato: string): Promise<ProjectPrestazione[]> {
+    try {
+      return await db.select().from(projectPrestazioni).where(eq(projectPrestazioni.stato, stato));
+    } catch (error) {
+      console.error('Error getting prestazioni by stato:', error);
+      return [];
+    }
+  }
+
+  async linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined> {
+    try {
+      const [updated] = await db
+        .update(projectPrestazioni)
+        .set({
+          invoiceId,
+          stato: 'fatturata',
+          dataFatturazione: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(projectPrestazioni.id, prestazioneId))
+        .returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error linking prestazione to invoice:', error);
+      return undefined;
+    }
+  }
+
   // Bulk operations
   async exportAllData() {
     const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData, usersData, tasksData, communicationsData, deadlinesData] = await Promise.all([
@@ -1951,12 +2180,49 @@ class FallbackStorage implements IStorage {
     return this.executeWithFallback(storage => storage.deleteInvoice(id));
   }
 
-  async exportAllData(): Promise<{ 
-    projects: Project[], 
-    clients: Client[], 
-    fileRoutings: FileRouting[], 
-    systemConfig: SystemConfig[], 
-    oneDriveMappings: OneDriveMapping[], 
+  // Prestazioni methods
+  async getAllPrestazioni(): Promise<ProjectPrestazione[]> {
+    return this.executeWithFallback(storage => storage.getAllPrestazioni());
+  }
+
+  async getPrestazioniByProject(projectId: string): Promise<ProjectPrestazione[]> {
+    return this.executeWithFallback(storage => storage.getPrestazioniByProject(projectId));
+  }
+
+  async getPrestazione(id: string): Promise<ProjectPrestazione | undefined> {
+    return this.executeWithFallback(storage => storage.getPrestazione(id));
+  }
+
+  async createPrestazione(prestazione: InsertProjectPrestazione): Promise<ProjectPrestazione> {
+    return this.executeWithFallback(storage => storage.createPrestazione(prestazione));
+  }
+
+  async updatePrestazione(id: string, updates: Partial<InsertProjectPrestazione>): Promise<ProjectPrestazione | undefined> {
+    return this.executeWithFallback(storage => storage.updatePrestazione(id, updates));
+  }
+
+  async deletePrestazione(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deletePrestazione(id));
+  }
+
+  async getPrestazioniStats(): Promise<PrestazioniStats> {
+    return this.executeWithFallback(storage => storage.getPrestazioniStats());
+  }
+
+  async getPrestazioniByStato(stato: string): Promise<ProjectPrestazione[]> {
+    return this.executeWithFallback(storage => storage.getPrestazioniByStato(stato));
+  }
+
+  async linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined> {
+    return this.executeWithFallback(storage => storage.linkPrestazioneToInvoice(prestazioneId, invoiceId));
+  }
+
+  async exportAllData(): Promise<{
+    projects: Project[],
+    clients: Client[],
+    fileRoutings: FileRouting[],
+    systemConfig: SystemConfig[],
+    oneDriveMappings: OneDriveMapping[],
     filesIndex: FilesIndex[],
     users: User[],
     tasks: Task[],

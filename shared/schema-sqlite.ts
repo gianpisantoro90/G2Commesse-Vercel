@@ -321,6 +321,52 @@ export const projectInvoices = sqliteTable("project_invoices", {
 });
 
 // ============================================
+// PRESTAZIONI PROFESSIONALI - TRACKING DETTAGLIATO
+// ============================================
+
+// Tipi e stati esportati da schema.ts principale
+export const PRESTAZIONE_TIPI = ['progettazione', 'dl', 'csp', 'cse', 'contabilita', 'collaudo', 'perizia', 'pratiche'] as const;
+export type PrestazioneTipo = typeof PRESTAZIONE_TIPI[number];
+
+export const PRESTAZIONE_STATI = ['da_iniziare', 'in_corso', 'completata', 'fatturata', 'pagata'] as const;
+export type PrestazioneStato = typeof PRESTAZIONE_STATI[number];
+
+export const LIVELLI_PROGETTAZIONE = ['pfte', 'definitivo', 'esecutivo', 'variante'] as const;
+export type LivelloProgettazione = typeof LIVELLI_PROGETTAZIONE[number];
+
+export const projectPrestazioni = sqliteTable("project_prestazioni", {
+  id: text("id").primaryKey().$defaultFn(() => generateId()),
+  projectId: text("project_id").notNull().references(() => projects.id),
+
+  // Tipo e dettagli prestazione
+  tipo: text("tipo").notNull(), // 'progettazione', 'dl', 'csp', 'cse', 'contabilita', 'collaudo', 'perizia', 'pratiche'
+  livelloProgettazione: text("livello_progettazione"), // Solo per 'progettazione'
+  descrizione: text("descrizione"),
+
+  // Stato e ciclo di vita
+  stato: text("stato").notNull().default("da_iniziare"), // 'da_iniziare', 'in_corso', 'completata', 'fatturata', 'pagata'
+  dataInizio: integer("data_inizio", { mode: "timestamp" }),
+  dataCompletamento: integer("data_completamento", { mode: "timestamp" }),
+  dataFatturazione: integer("data_fatturazione", { mode: "timestamp" }),
+  dataPagamento: integer("data_pagamento", { mode: "timestamp" }),
+
+  // Importi (in centesimi di euro)
+  importoPrevisto: integer("importo_previsto").default(0),
+  importoFatturato: integer("importo_fatturato").default(0),
+  importoPagato: integer("importo_pagato").default(0),
+
+  // Collegamento a fattura specifica
+  invoiceId: text("invoice_id").references(() => projectInvoices.id),
+
+  // Note
+  note: text("note"),
+
+  // Audit
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+// ============================================
 // PROJECT CHANGELOG TABLE
 // ============================================
 export const projectChangelog = sqliteTable("project_changelog", {
@@ -513,6 +559,33 @@ export const insertProjectInvoiceSchema = createInsertSchema(projectInvoices).om
   updatedAt: true,
 });
 
+// Schema inserimento prestazioni con validazione
+export const insertProjectPrestazioneSchema = createInsertSchema(projectPrestazioni).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  tipo: z.enum(PRESTAZIONE_TIPI),
+  stato: z.enum(PRESTAZIONE_STATI).optional().default('da_iniziare'),
+  livelloProgettazione: z.enum(LIVELLI_PROGETTAZIONE).optional().nullable(),
+  dataInizio: z.coerce.date().optional().nullable(),
+  dataCompletamento: z.coerce.date().optional().nullable(),
+  dataFatturazione: z.coerce.date().optional().nullable(),
+  dataPagamento: z.coerce.date().optional().nullable(),
+});
+
+// Schema per aggiornamento stato prestazione
+export const updatePrestazioneStatoSchema = z.object({
+  stato: z.enum(PRESTAZIONE_STATI),
+  dataCompletamento: z.coerce.date().optional().nullable(),
+  dataFatturazione: z.coerce.date().optional().nullable(),
+  dataPagamento: z.coerce.date().optional().nullable(),
+  importoFatturato: z.number().min(0).optional(),
+  importoPagato: z.number().min(0).optional(),
+  invoiceId: z.string().optional().nullable(),
+  note: z.string().optional(),
+});
+
 export const insertProjectChangelogSchema = createInsertSchema(projectChangelog).omit({
   id: true,
   createdAt: true,
@@ -598,6 +671,43 @@ export type ProjectSAL = typeof projectSAL.$inferSelect;
 
 export type InsertProjectInvoice = z.infer<typeof insertProjectInvoiceSchema>;
 export type ProjectInvoice = typeof projectInvoices.$inferSelect;
+
+// Prestazioni professionali types
+export type InsertProjectPrestazione = z.infer<typeof insertProjectPrestazioneSchema>;
+export type ProjectPrestazione = typeof projectPrestazioni.$inferSelect;
+export type UpdatePrestazioneStato = z.infer<typeof updatePrestazioneStatoSchema>;
+
+// Helper type per prestazione con info progetto (per dashboard)
+export interface PrestazioneWithProject extends ProjectPrestazione {
+  project?: {
+    id: string;
+    code: string;
+    client: string;
+    object: string;
+  };
+  invoice?: {
+    id: string;
+    numeroFattura: string;
+    stato: string;
+  };
+}
+
+// Statistiche prestazioni per dashboard
+export interface PrestazioniStats {
+  totale: number;
+  daIniziare: number;
+  inCorso: number;
+  completate: number;
+  fatturate: number;
+  pagate: number;
+  completateNonFatturate: number;
+  fatturateNonPagate: number;
+  importoTotalePrevisto: number;
+  importoTotaleFatturato: number;
+  importoTotalePagato: number;
+  importoDaFatturare: number;
+  importoDaIncassare: number;
+}
 
 export type InsertProjectChangelog = z.infer<typeof insertProjectChangelogSchema>;
 export type ProjectChangelog = typeof projectChangelog.$inferSelect;
