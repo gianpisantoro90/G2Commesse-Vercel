@@ -261,7 +261,7 @@ export default function FatturazionePage() {
   });
 
   const createInvoiceMutation = useMutation({
-    mutationFn: async (data: { prestazioneId: string; projectId: string; invoice: any }) => {
+    mutationFn: async (data: { prestazioneId: string; projectId: string; invoice: any; importoFatturato: number }) => {
       // Create invoice
       const invoiceRes = await fetch(`/api/projects/${data.projectId}/invoices`, {
         method: "POST",
@@ -272,7 +272,7 @@ export default function FatturazionePage() {
       if (!invoiceRes.ok) throw new Error("Errore nella creazione fattura");
       const invoice = await invoiceRes.json();
 
-      // Link prestazione to invoice and update stato
+      // Link prestazione to invoice and update importoFatturato
       const linkRes = await fetch(`/api/prestazioni/${data.prestazioneId}/link-invoice`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -281,11 +281,15 @@ export default function FatturazionePage() {
       });
       if (!linkRes.ok) throw new Error("Errore nel collegamento");
 
-      // Update stato to fatturata
-      await fetch(`/api/prestazioni/${data.prestazioneId}/stato`, {
+      // Update prestazione with importoFatturato and stato
+      await fetch(`/api/prestazioni/${data.prestazioneId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stato: 'fatturata' }),
+        body: JSON.stringify({
+          importoFatturato: data.importoFatturato,
+          dataFatturazione: new Date().toISOString(),
+          stato: 'fatturata'
+        }),
         credentials: "include",
       });
 
@@ -347,9 +351,10 @@ export default function FatturazionePage() {
     createInvoiceMutation.mutate({
       prestazioneId: selectedPrestazione.id,
       projectId: selectedPrestazione.projectId,
+      importoFatturato: Math.round(invoiceFormData.importoFatturato * 100), // in centesimi
       invoice: {
         numeroFattura: invoiceFormData.numeroFattura,
-        importo: Math.round(invoiceFormData.importoFatturato * 100),
+        importoNetto: invoiceFormData.importoFatturato, // in euro, verrà convertito dall'API
         dataEmissione: invoiceFormData.dataFattura,
         stato: 'emessa',
         note: invoiceFormData.note || null,
