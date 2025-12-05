@@ -421,6 +421,55 @@ export const projectInvoices = pgTable("project_invoices", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// ============================================
+// PRESTAZIONI PROFESSIONALI - TRACKING DETTAGLIATO
+// ============================================
+
+// Tipi di prestazione
+export const PRESTAZIONE_TIPI = ['progettazione', 'dl', 'csp', 'cse', 'contabilita', 'collaudo', 'perizia', 'pratiche'] as const;
+export type PrestazioneTipo = typeof PRESTAZIONE_TIPI[number];
+
+// Stati della prestazione nel ciclo di vita
+export const PRESTAZIONE_STATI = ['da_iniziare', 'in_corso', 'completata', 'fatturata', 'pagata'] as const;
+export type PrestazioneStato = typeof PRESTAZIONE_STATI[number];
+
+// Livelli di progettazione (usati solo se tipo = 'progettazione')
+export const LIVELLI_PROGETTAZIONE = ['pfte', 'definitivo', 'esecutivo', 'variante'] as const;
+export type LivelloProgettazione = typeof LIVELLI_PROGETTAZIONE[number];
+
+// Tabella prestazioni professionali con tracking completo
+export const projectPrestazioni = pgTable("project_prestazioni", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+
+  // Tipo e dettagli prestazione
+  tipo: text("tipo").notNull(), // 'progettazione', 'dl', 'csp', 'cse', 'contabilita', 'collaudo', 'perizia', 'pratiche'
+  livelloProgettazione: text("livello_progettazione"), // Solo per 'progettazione': 'pfte', 'definitivo', 'esecutivo', 'variante'
+  descrizione: text("descrizione"), // Descrizione aggiuntiva opzionale
+
+  // Stato e ciclo di vita
+  stato: text("stato").notNull().default("da_iniziare"), // 'da_iniziare', 'in_corso', 'completata', 'fatturata', 'pagata'
+  dataInizio: timestamp("data_inizio"),
+  dataCompletamento: timestamp("data_completamento"),
+  dataFatturazione: timestamp("data_fatturazione"),
+  dataPagamento: timestamp("data_pagamento"),
+
+  // Importi (in centesimi di euro)
+  importoPrevisto: integer("importo_previsto").default(0), // Importo stimato/preventivato
+  importoFatturato: integer("importo_fatturato").default(0), // Importo effettivamente fatturato
+  importoPagato: integer("importo_pagato").default(0), // Importo effettivamente incassato
+
+  // Collegamento a fattura specifica (opzionale)
+  invoiceId: text("invoice_id").references(() => projectInvoices.id, { onDelete: "set null" }),
+
+  // Note e metadata
+  note: text("note"),
+
+  // Audit
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Changelog - Storico modifiche progetti
 export const projectChangelog = pgTable("project_changelog", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -545,6 +594,39 @@ export const insertProjectInvoiceSchema = createInsertSchema(projectInvoices).om
   updatedAt: true,
 });
 
+// Schema inserimento prestazioni con validazione
+export const insertProjectPrestazioneSchema = createInsertSchema(projectPrestazioni).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  tipo: z.enum(PRESTAZIONE_TIPI),
+  stato: z.enum(PRESTAZIONE_STATI).optional().default('da_iniziare'),
+  livelloProgettazione: z.enum(LIVELLI_PROGETTAZIONE).optional().nullable(),
+  dataInizio: z.coerce.date().optional().nullable(),
+  dataCompletamento: z.coerce.date().optional().nullable(),
+  dataFatturazione: z.coerce.date().optional().nullable(),
+  dataPagamento: z.coerce.date().optional().nullable(),
+}).refine((data) => {
+  // Se tipo è 'progettazione', livelloProgettazione dovrebbe essere specificato
+  if (data.tipo === 'progettazione' && !data.livelloProgettazione) {
+    return true; // Non blocchiamo, ma potrebbe essere warning
+  }
+  return true;
+});
+
+// Schema per aggiornamento stato prestazione
+export const updatePrestazioneStatoSchema = z.object({
+  stato: z.enum(PRESTAZIONE_STATI),
+  dataCompletamento: z.coerce.date().optional().nullable(),
+  dataFatturazione: z.coerce.date().optional().nullable(),
+  dataPagamento: z.coerce.date().optional().nullable(),
+  importoFatturato: z.number().min(0).optional(),
+  importoPagato: z.number().min(0).optional(),
+  invoiceId: z.string().optional().nullable(),
+  note: z.string().optional(),
+});
+
 export const insertProjectChangelogSchema = createInsertSchema(projectChangelog).omit({
   id: true,
   createdAt: true,
@@ -620,3 +702,40 @@ export type SavedFilter = typeof savedFilters.$inferSelect;
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
+
+// Prestazioni professionali types
+export type InsertProjectPrestazione = z.infer<typeof insertProjectPrestazioneSchema>;
+export type ProjectPrestazione = typeof projectPrestazioni.$inferSelect;
+export type UpdatePrestazioneStato = z.infer<typeof updatePrestazioneStatoSchema>;
+
+// Helper type per prestazione con info progetto (per dashboard)
+export interface PrestazioneWithProject extends ProjectPrestazione {
+  project?: {
+    id: string;
+    code: string;
+    client: string;
+    object: string;
+  };
+  invoice?: {
+    id: string;
+    numeroFattura: string;
+    stato: string;
+  };
+}
+
+// Statistiche prestazioni per dashboard
+export interface PrestazioniStats {
+  totale: number;
+  daIniziare: number;
+  inCorso: number;
+  completate: number;
+  fatturate: number;
+  pagate: number;
+  completateNonFatturate: number; // Alert
+  fatturateNonPagate: number; // Alert
+  importoTotalePrevisto: number;
+  importoTotaleFatturato: number;
+  importoTotalePagato: number;
+  importoDaFatturare: number;
+  importoDaIncassare: number;
+}

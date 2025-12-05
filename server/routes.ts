@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
-import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema, aiConfigSchema, insertProjectInvoiceSchema } from "@shared/schema";
+import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema, aiConfigSchema, insertProjectInvoiceSchema, insertProjectPrestazioneSchema, updatePrestazioneStatoSchema, PRESTAZIONE_TIPI, PRESTAZIONE_STATI } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import serverOneDriveService from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
@@ -3297,6 +3297,179 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error deleting invoice:', error);
       res.status(500).json({ message: "Errore nell'eliminazione della fattura" });
     }
+  });
+
+  // ============================================
+  // PRESTAZIONI PROFESSIONALI API
+  // ============================================
+
+  // Get all prestazioni (with optional filters)
+  app.get("/api/prestazioni", async (req, res) => {
+    try {
+      const { stato, projectId } = req.query;
+
+      let prestazioni;
+      if (projectId && typeof projectId === 'string') {
+        prestazioni = await storage.getPrestazioniByProject(projectId);
+      } else if (stato && typeof stato === 'string') {
+        prestazioni = await storage.getPrestazioniByStato(stato);
+      } else {
+        prestazioni = await storage.getAllPrestazioni();
+      }
+
+      res.json(prestazioni);
+    } catch (error) {
+      console.error('Error fetching prestazioni:', error);
+      res.status(500).json({ message: "Errore nel caricamento delle prestazioni" });
+    }
+  });
+
+  // Get prestazioni stats for dashboard
+  app.get("/api/prestazioni/stats", async (req, res) => {
+    try {
+      const stats = await storage.getPrestazioniStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching prestazioni stats:', error);
+      res.status(500).json({ message: "Errore nel caricamento delle statistiche" });
+    }
+  });
+
+  // Get prestazioni for a specific project
+  app.get("/api/projects/:projectId/prestazioni", async (req, res) => {
+    try {
+      const prestazioni = await storage.getPrestazioniByProject(req.params.projectId);
+      res.json(prestazioni);
+    } catch (error) {
+      console.error('Error fetching project prestazioni:', error);
+      res.status(500).json({ message: "Errore nel caricamento delle prestazioni del progetto" });
+    }
+  });
+
+  // Create a new prestazione
+  app.post("/api/projects/:projectId/prestazioni", async (req, res) => {
+    try {
+      const data = insertProjectPrestazioneSchema.parse({
+        ...req.body,
+        projectId: req.params.projectId,
+      });
+      const prestazione = await storage.createPrestazione(data);
+      res.status(201).json(prestazione);
+    } catch (error) {
+      console.error('Error creating prestazione:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Dati prestazione non validi", errors: error.errors });
+      }
+      res.status(500).json({ message: "Errore nella creazione della prestazione" });
+    }
+  });
+
+  // Get a single prestazione
+  app.get("/api/prestazioni/:id", async (req, res) => {
+    try {
+      const prestazione = await storage.getPrestazione(req.params.id);
+      if (!prestazione) {
+        return res.status(404).json({ message: "Prestazione non trovata" });
+      }
+      res.json(prestazione);
+    } catch (error) {
+      console.error('Error fetching prestazione:', error);
+      res.status(500).json({ message: "Errore nel caricamento della prestazione" });
+    }
+  });
+
+  // Update a prestazione
+  app.patch("/api/prestazioni/:id", async (req, res) => {
+    try {
+      const updated = await storage.updatePrestazione(req.params.id, req.body);
+      if (!updated) {
+        return res.status(404).json({ message: "Prestazione non trovata" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating prestazione:', error);
+      res.status(500).json({ message: "Errore nell'aggiornamento della prestazione" });
+    }
+  });
+
+  // Update prestazione stato (specific endpoint for status changes with automatic date handling)
+  app.patch("/api/prestazioni/:id/stato", async (req, res) => {
+    try {
+      const { stato } = req.body;
+
+      // Validate stato
+      if (!PRESTAZIONE_STATI.includes(stato)) {
+        return res.status(400).json({ message: "Stato non valido" });
+      }
+
+      // Prepare update data with automatic date handling
+      const updateData: any = { stato };
+
+      switch (stato) {
+        case 'in_corso':
+          updateData.dataInizio = new Date();
+          break;
+        case 'completata':
+          updateData.dataCompletamento = new Date();
+          break;
+        case 'fatturata':
+          updateData.dataFatturazione = new Date();
+          break;
+        case 'pagata':
+          updateData.dataPagamento = new Date();
+          break;
+      }
+
+      const updated = await storage.updatePrestazione(req.params.id, updateData);
+      if (!updated) {
+        return res.status(404).json({ message: "Prestazione non trovata" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating prestazione stato:', error);
+      res.status(500).json({ message: "Errore nell'aggiornamento dello stato" });
+    }
+  });
+
+  // Link prestazione to invoice
+  app.patch("/api/prestazioni/:id/link-invoice", async (req, res) => {
+    try {
+      const { invoiceId } = req.body;
+      if (!invoiceId) {
+        return res.status(400).json({ message: "invoiceId richiesto" });
+      }
+
+      const updated = await storage.linkPrestazioneToInvoice(req.params.id, invoiceId);
+      if (!updated) {
+        return res.status(404).json({ message: "Prestazione non trovata" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error('Error linking prestazione to invoice:', error);
+      res.status(500).json({ message: "Errore nel collegamento alla fattura" });
+    }
+  });
+
+  // Delete a prestazione
+  app.delete("/api/prestazioni/:id", async (req, res) => {
+    try {
+      const deleted = await storage.deletePrestazione(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Prestazione non trovata" });
+      }
+      res.json({ message: "Prestazione eliminata con successo" });
+    } catch (error) {
+      console.error('Error deleting prestazione:', error);
+      res.status(500).json({ message: "Errore nell'eliminazione della prestazione" });
+    }
+  });
+
+  // Get available prestazione types and stati (useful for frontend dropdowns)
+  app.get("/api/prestazioni/config/options", async (_req, res) => {
+    res.json({
+      tipi: PRESTAZIONE_TIPI,
+      stati: PRESTAZIONE_STATI,
+    });
   });
 
   // Manual email check endpoint (replaces automatic polling)

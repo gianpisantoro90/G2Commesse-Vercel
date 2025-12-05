@@ -31,6 +31,7 @@ import EditProjectForm from "./edit-project-form";
 import PrestazioniModal from "./prestazioni-modal";
 import FatturazioneModal from "./fatturazione-modal";
 import InvoicesModal from "./invoices-modal";
+import PrestazioniTrackerModal from "./prestazioni-tracker-modal";
 import { 
   renderPrestazioneBadge, 
   formatImporto, 
@@ -56,6 +57,7 @@ export default function ProjectsTable() {
   const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
   const [selectedProjectForFatturazione, setSelectedProjectForFatturazione] = useState<Project | null>(null);
   const [selectedProjectForInvoices, setSelectedProjectForInvoices] = useState<Project | null>(null);
+  const [selectedProjectForPrestazioniTracker, setSelectedProjectForPrestazioniTracker] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   // Pagination state
@@ -1088,6 +1090,18 @@ export default function ProjectsTable() {
                         >
                           🏗️
                         </Button>
+                        {isAdmin && (
+                          <Button
+                            size="default"
+                            variant="ghost"
+                            onClick={() => setSelectedProjectForPrestazioniTracker(project)}
+                            className="min-w-[44px] min-h-[44px] p-3 text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900 rounded-lg transition-colors"
+                            title="Tracking Fatturazione/Pagamento"
+                            data-testid={`prestazioni-tracker-${project.id}`}
+                          >
+                            💰
+                          </Button>
+                        )}
                         <Button
                           size="default"
                           variant="ghost"
@@ -1192,6 +1206,13 @@ export default function ProjectsTable() {
         projectCode={selectedProjectForInvoices?.code || ""}
         open={!!selectedProjectForInvoices}
         onClose={() => setSelectedProjectForInvoices(null)}
+      />
+
+      {/* Prestazioni Tracker Modal - Tracking completo prestazioni */}
+      <PrestazioniTrackerModal
+        project={selectedProjectForPrestazioniTracker}
+        open={!!selectedProjectForPrestazioniTracker}
+        onClose={() => setSelectedProjectForPrestazioniTracker(null)}
       />
 
       {/* Delete Confirmation Dialog */}

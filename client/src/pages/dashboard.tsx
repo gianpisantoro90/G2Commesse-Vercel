@@ -31,6 +31,7 @@ import UserManagementPanel from "@/components/system/user-management-panel";
 import OneDriveFileRouter from "@/components/onedrive/onedrive-file-router";
 import OneDriveBrowser from "@/components/onedrive/onedrive-browser";
 import TodoPanel from "@/components/todo/TodoPanel";
+import PrestazioniStatsWidget from "@/components/dashboard/prestazioni-stats-widget";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Project } from "@shared/schema";
 
@@ -80,6 +81,13 @@ export default function Dashboard() {
               <div className="space-y-4 sm:space-y-6 md:space-y-8" data-testid="dashboard-panel">
                 {/* First Row - Economic Dashboard (Admin only) */}
                 {isAdmin && <EconomicDashboardCard />}
+
+                {/* Prestazioni Stats Widget (Admin only) */}
+                {isAdmin && (
+                  <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2">
+                    <PrestazioniStatsWidget />
+                  </div>
+                )}
 
                 {/* Second Row - Recent Tasks (All users) */}
                 <RecentTasksTable />
