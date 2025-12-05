@@ -29,8 +29,6 @@ import { type Project, type OneDriveMapping, type ProjectMetadata, type Communic
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
 import PrestazioniModal from "./prestazioni-modal";
-import FatturazioneModal from "./fatturazione-modal";
-import InvoicesModal from "./invoices-modal";
 import { 
   renderPrestazioneBadge, 
   formatImporto, 
@@ -54,8 +52,6 @@ export default function ProjectsTable() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
-  const [selectedProjectForFatturazione, setSelectedProjectForFatturazione] = useState<Project | null>(null);
-  const [selectedProjectForInvoices, setSelectedProjectForInvoices] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   // Pagination state
@@ -885,11 +881,7 @@ export default function ProjectsTable() {
                     </td>
                     {showFatturazione && isAdmin && (
                       <td className="py-4 px-4" data-testid={`project-fatturazione-${project.id}`}>
-                        <div
-                          className="flex flex-col gap-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 p-1 rounded transition-colors"
-                          onClick={() => setSelectedProjectForInvoices(project)}
-                          title="Clicca per gestire fatture"
-                        >
+                        <div className="flex flex-col gap-1">
                           {project.fatturato ? (
                             <div className="flex items-center gap-1">
                               <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded font-medium">
@@ -902,7 +894,7 @@ export default function ProjectsTable() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-xs text-gray-400 dark:text-gray-500 italic">Non fatturato</span>
+                            <span className="text-xs text-gray-400 dark:text-gray-500 italic">-</span>
                           )}
                           {project.pagato && (
                             <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded font-medium">
@@ -1178,21 +1170,6 @@ export default function ProjectsTable() {
           onClose={handleClosePrestazioniModal}
         />
       )}
-
-      {/* Fatturazione Modal - Legacy (keep for backward compat) */}
-      <FatturazioneModal
-        project={selectedProjectForFatturazione}
-        open={!!selectedProjectForFatturazione && false}
-        onClose={() => setSelectedProjectForFatturazione(null)}
-      />
-
-      {/* Invoices Modal - New multi-invoice support */}
-      <InvoicesModal
-        projectId={selectedProjectForInvoices?.id || null}
-        projectCode={selectedProjectForInvoices?.code || ""}
-        open={!!selectedProjectForInvoices}
-        onClose={() => setSelectedProjectForInvoices(null)}
-      />
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!projectToDelete} onOpenChange={(open) => !open && setProjectToDelete(null)}>
