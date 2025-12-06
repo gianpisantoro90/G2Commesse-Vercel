@@ -293,7 +293,7 @@ export default function ToDoPage() {
               </CardHeader>
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 grid grid-cols-3 w-full">
+                  <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 grid grid-cols-3 w-full shadow-sm">
                     <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs lg:text-sm px-2 lg:px-4 py-2">
                       <span className="hidden lg:inline">Tutte</span>
                       <span className="lg:hidden">Tutte</span> ({filteredTasks.length})

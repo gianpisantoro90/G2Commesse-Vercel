@@ -8,16 +8,20 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { type Project, type ProjectMetadata } from "@shared/schema";
+import { type Project, type ProjectMetadata, type PrestazioniStats } from "@shared/schema";
 import { formatImporto } from "@/lib/prestazioni-utils";
 import {
   TrendingUp, TrendingDown, DollarSign, Briefcase,
-  PieChart as PieChartIcon, BarChart3, Target, AlertCircle
+  PieChart as PieChartIcon, BarChart3, Target, AlertCircle, FileText, Euro
 } from "lucide-react";
 
 export default function EconomicDashboardCard() {
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
+  });
+
+  const { data: prestazioniStats } = useQuery<PrestazioniStats>({
+    queryKey: ["/api/prestazioni/stats"],
   });
 
   if (isLoading) {
@@ -38,10 +42,10 @@ export default function EconomicDashboardCard() {
     );
   }
 
-  // Calcoli economici
+  // Calcoli economici - importo opere da metadata progetto
   const projectsWithEconomicData = projects.filter(p => {
     const metadata = p.metadata as ProjectMetadata;
-    return metadata?.importoOpere || metadata?.importoServizio;
+    return metadata?.importoOpere;
   });
 
   const totalImportoOpere = projectsWithEconomicData.reduce((sum, p) => {
@@ -49,32 +53,36 @@ export default function EconomicDashboardCard() {
     return sum + (metadata?.importoOpere || 0);
   }, 0);
 
-  const totalImportoServizi = projectsWithEconomicData.reduce((sum, p) => {
-    const metadata = p.metadata as ProjectMetadata;
-    return sum + (metadata?.importoServizio || 0);
-  }, 0);
-
-  const projectsInCorso = projects.filter(p => p.status === "in_corso");
-  const importoServiziInCorso = projectsInCorso.reduce((sum, p) => {
-    const metadata = p.metadata as ProjectMetadata;
-    return sum + (metadata?.importoServizio || 0);
-  }, 0);
-
-  const projectsConcluse = projects.filter(p => p.status === "conclusa");
-  const importoServiziConclusi = projectsConcluse.reduce((sum, p) => {
-    const metadata = p.metadata as ProjectMetadata;
-    return sum + (metadata?.importoServizio || 0);
-  }, 0);
-
-  const averageImportoServizio = projectsWithEconomicData.length > 0
-    ? totalImportoServizi / projectsWithEconomicData.length
+  // Compensi professionali ora provengono dalle prestazioni
+  // Usa i dati delle prestazioni se disponibili
+  const totalImportoServizi = prestazioniStats?.importoTotaleFatturato
+    ? prestazioniStats.importoTotaleFatturato / 100 // convertito da centesimi
     : 0;
 
-  // Dati per grafico distribuzione per anno
+  const totalImportoPrevisto = prestazioniStats?.importoTotalePrevisto
+    ? prestazioniStats.importoTotalePrevisto / 100
+    : 0;
+
+  const importoServiziInCorso = prestazioniStats?.importoDaFatturare
+    ? prestazioniStats.importoDaFatturare / 100
+    : 0;
+
+  const importoServiziIncassati = prestazioniStats?.importoTotalePagato
+    ? prestazioniStats.importoTotalePagato / 100
+    : 0;
+
+  const projectsInCorso = projects.filter(p => p.status === "in_corso");
+  const projectsConcluse = projects.filter(p => p.status === "conclusa");
+
+  const averageImportoServizio = prestazioniStats && prestazioniStats.totale > 0
+    ? totalImportoPrevisto / prestazioniStats.totale
+    : 0;
+
+  // Dati per grafico distribuzione per anno (basato su progetti con importo opere)
   const yearlyData = projects.reduce((acc, project) => {
     const year = `20${project.year.toString().padStart(2, '0')}`;
     const metadata = project.metadata as ProjectMetadata;
-    const importo = metadata?.importoServizio || 0;
+    const importo = metadata?.importoOpere || 0;
 
     const existing = acc.find(item => item.year === year);
     if (existing) {
@@ -87,45 +95,36 @@ export default function EconomicDashboardCard() {
   }, [] as Array<{ year: string; importo: number; count: number }>)
   .sort((a, b) => a.year.localeCompare(b.year));
 
-  // Dati per grafico distribuzione per stato
-  const statusData = [
+  // Dati per grafico distribuzione per stato prestazioni
+  const statusData = prestazioniStats ? [
     {
-      name: 'In Corso',
-      value: importoServiziInCorso,
-      count: projectsInCorso.length,
+      name: 'Da fatturare',
+      value: prestazioniStats.importoDaFatturare / 100,
+      count: prestazioniStats.completateNonFatturate,
       color: '#F59E0B'
     },
     {
-      name: 'Concluse',
-      value: importoServiziConclusi,
-      count: projectsConcluse.length,
-      color: '#10B981'
+      name: 'Da incassare',
+      value: prestazioniStats.importoDaIncassare / 100,
+      count: prestazioniStats.fatturateNonPagate,
+      color: '#8B5CF6'
     },
     {
-      name: 'Sospese',
-      value: projects.filter(p => p.status === "sospesa").reduce((sum, p) => {
-        const metadata = p.metadata as ProjectMetadata;
-        return sum + (metadata?.importoServizio || 0);
-      }, 0),
-      count: projects.filter(p => p.status === "sospesa").length,
-      color: '#EF4444'
+      name: 'Incassate',
+      value: prestazioniStats.importoTotalePagato / 100,
+      count: prestazioniStats.pagate,
+      color: '#10B981'
     },
-  ].filter(item => item.count > 0);
+  ].filter(item => item.count > 0) : [];
 
-  // Top 5 commesse per importo
+  // Top 5 commesse per importo opere
   const topProjectsByValue = [...projectsWithEconomicData]
     .sort((a, b) => {
       const metadataA = a.metadata as ProjectMetadata;
       const metadataB = b.metadata as ProjectMetadata;
-      return (metadataB?.importoServizio || 0) - (metadataA?.importoServizio || 0);
+      return (metadataB?.importoOpere || 0) - (metadataA?.importoOpere || 0);
     })
     .slice(0, 5);
-
-  // Calcola percentuale parcella media
-  const avgPercentualeParcella = projectsWithEconomicData.reduce((sum, p) => {
-    const metadata = p.metadata as ProjectMetadata;
-    return sum + (metadata?.percentualeParcella || 0);
-  }, 0) / (projectsWithEconomicData.length || 1);
 
   return (
     <Card className="col-span-full shadow-lg border-gray-200">
@@ -148,7 +147,7 @@ export default function EconomicDashboardCard() {
 
       <CardContent>
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto bg-gray-100 dark:bg-gray-800">
+          <TabsList className="grid w-full grid-cols-3 lg:w-auto bg-gray-100 dark:bg-gray-800 shadow-sm">
             <TabsTrigger value="overview" className="flex items-center gap-2 dark:data-[state=active]:bg-gray-700">
               <Target className="h-4 w-4" />
               Panoramica
@@ -183,11 +182,11 @@ export default function EconomicDashboardCard() {
                 </CardContent>
               </Card>
 
-              {/* KPI 2: Compensi Professionali */}
+              {/* KPI 2: Compensi Fatturati */}
               <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
                 <CardHeader className="pb-2">
                   <CardDescription className="text-green-700 dark:text-green-300 font-medium">
-                    Compensi Professionali
+                    Compensi Fatturati
                   </CardDescription>
                   <CardTitle className="text-3xl font-bold text-green-900 dark:text-green-100">
                     {formatImporto(totalImportoServizi)}
@@ -195,17 +194,17 @@ export default function EconomicDashboardCard() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                    <TrendingUp className="h-3 w-3" />
-                    {projectsWithEconomicData.length} commesse
+                    <FileText className="h-3 w-3" />
+                    {prestazioniStats?.fatturate || 0} prestazioni fatturate
                   </div>
                 </CardContent>
               </Card>
 
-              {/* KPI 3: In Corso */}
+              {/* KPI 3: Da Fatturare */}
               <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border-yellow-200 dark:border-yellow-800">
                 <CardHeader className="pb-2">
                   <CardDescription className="text-yellow-700 dark:text-yellow-300 font-medium">
-                    Commesse In Corso
+                    Da Fatturare
                   </CardDescription>
                   <CardTitle className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
                     {formatImporto(importoServiziInCorso)}
@@ -213,24 +212,25 @@ export default function EconomicDashboardCard() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                    {projectsInCorso.length} progetti attivi
+                    {prestazioniStats?.completateNonFatturate || 0} prestazioni completate
                   </p>
                 </CardContent>
               </Card>
 
-              {/* KPI 4: Media Compenso */}
+              {/* KPI 4: Incassato */}
               <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
                 <CardHeader className="pb-2">
                   <CardDescription className="text-purple-700 dark:text-purple-300 font-medium">
-                    Compenso Medio
+                    Totale Incassato
                   </CardDescription>
                   <CardTitle className="text-3xl font-bold text-purple-900 dark:text-purple-100">
-                    {formatImporto(averageImportoServizio)}
+                    {formatImporto(importoServiziIncassati)}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-xs text-purple-600 dark:text-purple-400">
-                    Per commessa ({avgPercentualeParcella.toFixed(2)}% medio)
+                    <Euro className="h-3 w-3 inline mr-1" />
+                    {prestazioniStats?.pagate || 0} prestazioni pagate
                   </p>
                 </CardContent>
               </Card>
@@ -241,16 +241,16 @@ export default function EconomicDashboardCard() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Fatturato Realizzato
+                    Importo Previsto Totale
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatImporto(importoServiziConclusi)}
+                    {formatImporto(totalImportoPrevisto)}
                   </div>
-                  <Progress value={(importoServiziConclusi / totalImportoServizi) * 100} className="mt-2 h-2" />
+                  <Progress value={totalImportoPrevisto > 0 ? (importoServiziIncassati / totalImportoPrevisto) * 100 : 0} className="mt-2 h-2" />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {projectsConcluse.length} commesse concluse
+                    {prestazioniStats?.totale || 0} prestazioni totali
                   </p>
                 </CardContent>
               </Card>
@@ -258,16 +258,16 @@ export default function EconomicDashboardCard() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Pipeline Attiva
+                    Da Incassare
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatImporto(importoServiziInCorso)}
+                    {formatImporto((prestazioniStats?.importoDaIncassare || 0) / 100)}
                   </div>
-                  <Progress value={(importoServiziInCorso / totalImportoServizi) * 100} className="mt-2 h-2 [&>div]:bg-yellow-500" />
+                  <Progress value={totalImportoServizi > 0 ? ((prestazioniStats?.importoDaIncassare || 0) / 100 / totalImportoServizi) * 100 : 0} className="mt-2 h-2 [&>div]:bg-purple-500" />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    In fase di realizzazione
+                    {prestazioniStats?.fatturateNonPagate || 0} fatture in attesa
                   </p>
                 </CardContent>
               </Card>
@@ -275,16 +275,18 @@ export default function EconomicDashboardCard() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Tasso di Completamento
+                    Tasso Incasso
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {((projectsConcluse.length / projects.length) * 100).toFixed(1)}%
+                    {prestazioniStats && prestazioniStats.totale > 0
+                      ? ((prestazioniStats.pagate / prestazioniStats.totale) * 100).toFixed(1)
+                      : 0}%
                   </div>
-                  <Progress value={(projectsConcluse.length / projects.length) * 100} className="mt-2 h-2 [&>div]:bg-green-500" />
+                  <Progress value={prestazioniStats && prestazioniStats.totale > 0 ? (prestazioniStats.pagate / prestazioniStats.totale) * 100 : 0} className="mt-2 h-2 [&>div]:bg-green-500" />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {projectsConcluse.length}/{projects.length} commesse
+                    {prestazioniStats?.pagate || 0}/{prestazioniStats?.totale || 0} prestazioni
                   </p>
                 </CardContent>
               </Card>
@@ -392,10 +394,10 @@ export default function EconomicDashboardCard() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-purple-600" />
-                  Top 5 Commesse per Valore
+                  Top 5 Commesse per Importo Opere
                 </CardTitle>
                 <CardDescription>
-                  Commesse con il maggiore importo di compensi professionali
+                  Commesse con il maggiore importo lavori
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -408,8 +410,8 @@ export default function EconomicDashboardCard() {
                   ) : (
                     topProjectsByValue.map((project, index) => {
                       const metadata = project.metadata as ProjectMetadata;
-                      const importoServizio = metadata?.importoServizio || 0;
-                      const percentage = (importoServizio / totalImportoServizi) * 100;
+                      const importoOpere = metadata?.importoOpere || 0;
+                      const percentage = totalImportoOpere > 0 ? (importoOpere / totalImportoOpere) * 100 : 0;
 
                       return (
                         <div key={project.id} className="space-y-2">
@@ -434,7 +436,7 @@ export default function EconomicDashboardCard() {
                             </div>
                             <div className="text-right flex-shrink-0 ml-4">
                               <div className="font-bold text-gray-900 dark:text-white">
-                                {formatImporto(importoServizio)}
+                                {formatImporto(importoOpere)}
                               </div>
                               <div className="text-xs text-gray-500 dark:text-gray-400">
                                 {percentage.toFixed(1)}% del totale

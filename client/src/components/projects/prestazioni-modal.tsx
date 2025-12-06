@@ -31,8 +31,6 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
     livelloProgettazione: [],
     classeDM143: '',
     importoOpere: undefined,
-    importoServizio: undefined,
-    percentualeParcella: undefined,
   });
 
   // Initialize form with existing project data
@@ -44,8 +42,6 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
         livelloProgettazione: metadata?.livelloProgettazione || [],
         classeDM143: metadata?.classeDM143 || '',
         importoOpere: metadata?.importoOpere,
-        importoServizio: metadata?.importoServizio,
-        percentualeParcella: metadata?.percentualeParcella,
       });
     }
   }, [project, isOpen]);
@@ -244,7 +240,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                   Codice secondo il Decreto Ministeriale 143/2013
                 </p>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="importo-opere" className="text-sm font-medium">
                   Importo Opere (€)
@@ -263,63 +259,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                   Importo dei lavori base per calcolo parcella
                 </p>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="importo-servizio" className="text-sm font-medium">
-                  Importo Servizio Professionale (€)
-                </Label>
-                <Input
-                  id="importo-servizio"
-                  type="number"
-                  placeholder="0"
-                  min="0"
-                  step="0.01"
-                  value={formData.importoServizio || ''}
-                  onChange={(e) => handleInputChange('importoServizio', e.target.value === '' ? '' : parseFloat(e.target.value) || '')}
-                  data-testid="input-importo-servizio"
-                />
-                <p className="text-xs text-gray-500">
-                  Compenso professionale al netto di cassa e IVA
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="percentuale-parcella" className="text-sm font-medium">
-                  Percentuale Parcella (%)
-                </Label>
-                <Input
-                  id="percentuale-parcella"
-                  type="number"
-                  placeholder="0.00"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  value={formData.percentualeParcella || ''}
-                  onChange={(e) => handleInputChange('percentualeParcella', e.target.value === '' ? '' : parseFloat(e.target.value) || '')}
-                  data-testid="input-percentuale-parcella"
-                />
-                <p className="text-xs text-gray-500">
-                  Percentuale applicata sull'importo opere
-                </p>
-              </div>
             </div>
-
-            {/* Riepilogo importi */}
-            {(formData.importoOpere || formData.importoServizio) && (
-              <div className="mt-4 p-3 bg-white border border-gray-200 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-800 mb-2">Riepilogo Economico</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-600">Importo Opere:</span>
-                    <div className="font-semibold text-blue-600">{formatImporto(formData.importoOpere || 0)}</div>
-                  </div>
-                  <div>
-                    <span className="text-gray-600">Compenso Professionale:</span>
-                    <div className="font-semibold text-green-600">{formatImporto(formData.importoServizio || 0)}</div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Footer con azioni */}
