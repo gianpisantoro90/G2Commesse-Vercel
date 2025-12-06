@@ -287,7 +287,7 @@ export default function TodoPanel() {
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4">
+            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 shadow-sm">
               <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
                 Tutte ({filteredTasks.length})
               </TabsTrigger>
