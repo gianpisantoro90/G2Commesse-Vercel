@@ -3395,28 +3395,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update prestazione stato (specific endpoint for status changes with automatic date handling)
   app.patch("/api/prestazioni/:id/stato", async (req, res) => {
     try {
-      const { stato } = req.body;
+      const { stato, data } = req.body;
 
       // Validate stato
       if (!PRESTAZIONE_STATI.includes(stato)) {
         return res.status(400).json({ message: "Stato non valido" });
       }
 
-      // Prepare update data with automatic date handling
+      // Prepare update data with date handling (use provided date or current date)
       const updateData: any = { stato };
+      const dateToUse = data ? new Date(data) : new Date();
 
       switch (stato) {
         case 'in_corso':
-          updateData.dataInizio = new Date();
+          updateData.dataInizio = dateToUse;
           break;
         case 'completata':
-          updateData.dataCompletamento = new Date();
+          updateData.dataCompletamento = dateToUse;
           break;
         case 'fatturata':
-          updateData.dataFatturazione = new Date();
+          updateData.dataFatturazione = dateToUse;
           break;
         case 'pagata':
-          updateData.dataPagamento = new Date();
+          updateData.dataPagamento = dateToUse;
           break;
       }
 

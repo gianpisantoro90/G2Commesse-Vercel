@@ -29,6 +29,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -47,7 +60,10 @@ import {
   Download,
   Link as LinkIcon,
   ExternalLink,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   type Project,
   type ProjectPrestazione,
@@ -105,8 +121,17 @@ export default function FatturazionePage() {
   // Dialogs
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false);
+  const [isAdvanceDialogOpen, setIsAdvanceDialogOpen] = useState(false);
   const [selectedPrestazione, setSelectedPrestazione] = useState<PrestazioneWithProject | null>(null);
   const [selectedProjectForAdd, setSelectedProjectForAdd] = useState<string>("");
+  const [projectComboOpen, setProjectComboOpen] = useState(false);
+
+  // Advance status dialog state
+  const [advanceData, setAdvanceData] = useState({
+    prestazioneId: '',
+    newStato: '',
+    data: new Date().toISOString().split('T')[0],
+  });
 
   // Form state for new prestazione
   const [formData, setFormData] = useState({
@@ -117,13 +142,25 @@ export default function FatturazionePage() {
     note: '',
   });
 
-  // Invoice form state
+  // Invoice form state with breakdown
   const [invoiceFormData, setInvoiceFormData] = useState({
     numeroFattura: '',
-    importoFatturato: 0,
+    imponibile: 0,
+    cassaPercentuale: 4,
+    ivaPercentuale: 22,
     dataFattura: new Date().toISOString().split('T')[0],
     note: '',
   });
+
+  // Calculated invoice amounts
+  const invoiceCalcolati = useMemo(() => {
+    const imponibile = invoiceFormData.imponibile || 0;
+    const cassa = imponibile * (invoiceFormData.cassaPercentuale / 100);
+    const baseIva = imponibile + cassa;
+    const iva = baseIva * (invoiceFormData.ivaPercentuale / 100);
+    const totale = baseIva + iva;
+    return { imponibile, cassa, baseIva, iva, totale };
+  }, [invoiceFormData.imponibile, invoiceFormData.cassaPercentuale, invoiceFormData.ivaPercentuale]);
 
   // Fetch all data
   const { data: projects = [], isLoading: loadingProjects } = useQuery<Project[]>({
@@ -223,11 +260,11 @@ export default function FatturazionePage() {
   });
 
   const updateStatoMutation = useMutation({
-    mutationFn: async ({ id, stato }: { id: string; stato: string }) => {
+    mutationFn: async ({ id, stato, data }: { id: string; stato: string; data?: string }) => {
       const res = await fetch(`/api/prestazioni/${id}/stato`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stato }),
+        body: JSON.stringify({ stato, data }),
         credentials: "include",
       });
       if (!res.ok) throw new Error("Errore nell'aggiornamento");
@@ -236,6 +273,7 @@ export default function FatturazionePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
       toast({ title: "Stato aggiornato" });
+      setIsAdvanceDialogOpen(false);
     },
     onError: () => {
       toast({ title: "Errore", description: "Impossibile aggiornare lo stato", variant: "destructive" });
@@ -261,7 +299,13 @@ export default function FatturazionePage() {
   });
 
   const createInvoiceMutation = useMutation({
-    mutationFn: async (data: { prestazioneId: string; projectId: string; invoice: any; importoFatturato: number }) => {
+    mutationFn: async (data: {
+      prestazioneId: string;
+      projectId: string;
+      invoice: any;
+      importoFatturato: number;
+      dataFattura: string;
+    }) => {
       // Create invoice
       const invoiceRes = await fetch(`/api/projects/${data.projectId}/invoices`, {
         method: "POST",
@@ -287,7 +331,7 @@ export default function FatturazionePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           importoFatturato: data.importoFatturato,
-          dataFatturazione: new Date().toISOString(),
+          dataFatturazione: data.dataFattura,
           stato: 'fatturata'
         }),
         credentials: "include",
@@ -302,7 +346,9 @@ export default function FatturazionePage() {
       setSelectedPrestazione(null);
       setInvoiceFormData({
         numeroFattura: '',
-        importoFatturato: 0,
+        imponibile: 0,
+        cassaPercentuale: 4,
+        ivaPercentuale: 22,
         dataFattura: new Date().toISOString().split('T')[0],
         note: '',
       });
@@ -343,22 +389,37 @@ export default function FatturazionePage() {
   };
 
   const handleCreateInvoice = () => {
-    if (!selectedPrestazione || !invoiceFormData.numeroFattura) {
+    if (!selectedPrestazione || !invoiceFormData.numeroFattura || invoiceFormData.imponibile <= 0) {
       toast({ title: "Errore", description: "Compila tutti i campi obbligatori", variant: "destructive" });
       return;
     }
 
+    // Use the calculated totale as importo fatturato
+    const importoTotale = invoiceCalcolati.totale;
+
     createInvoiceMutation.mutate({
       prestazioneId: selectedPrestazione.id,
       projectId: selectedPrestazione.projectId,
-      importoFatturato: Math.round(invoiceFormData.importoFatturato * 100), // in centesimi
+      importoFatturato: Math.round(importoTotale * 100), // in centesimi
+      dataFattura: invoiceFormData.dataFattura,
       invoice: {
         numeroFattura: invoiceFormData.numeroFattura,
-        importoNetto: invoiceFormData.importoFatturato, // in euro, verrà convertito dall'API
+        importoNetto: invoiceFormData.imponibile, // imponibile in euro
         dataEmissione: invoiceFormData.dataFattura,
         stato: 'emessa',
-        note: invoiceFormData.note || null,
+        note: invoiceFormData.note
+          ? `${invoiceFormData.note}\n---\nCassa ${invoiceFormData.cassaPercentuale}%: €${invoiceCalcolati.cassa.toFixed(2)}, IVA ${invoiceFormData.ivaPercentuale}%: €${invoiceCalcolati.iva.toFixed(2)}`
+          : `Cassa ${invoiceFormData.cassaPercentuale}%: €${invoiceCalcolati.cassa.toFixed(2)}, IVA ${invoiceFormData.ivaPercentuale}%: €${invoiceCalcolati.iva.toFixed(2)}`,
       },
+    });
+  };
+
+  const handleAdvanceStatus = () => {
+    if (!advanceData.prestazioneId || !advanceData.newStato) return;
+    updateStatoMutation.mutate({
+      id: advanceData.prestazioneId,
+      stato: advanceData.newStato,
+      data: advanceData.data,
     });
   };
 
@@ -657,7 +718,14 @@ export default function FatturazionePage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => updateStatoMutation.mutate({ id: prestazione.id, stato: nextStato })}
+                                onClick={() => {
+                                  setAdvanceData({
+                                    prestazioneId: prestazione.id,
+                                    newStato: nextStato,
+                                    data: new Date().toISOString().split('T')[0],
+                                  });
+                                  setIsAdvanceDialogOpen(true);
+                                }}
                                 disabled={updateStatoMutation.isPending}
                                 title={`Passa a: ${STATO_CONFIG[nextStato]?.label}`}
                               >
@@ -674,7 +742,9 @@ export default function FatturazionePage() {
                                   setSelectedPrestazione(prestazione);
                                   setInvoiceFormData({
                                     numeroFattura: '',
-                                    importoFatturato: (prestazione.importoPrevisto || 0) / 100,
+                                    imponibile: (prestazione.importoPrevisto || 0) / 100,
+                                    cassaPercentuale: 4,
+                                    ivaPercentuale: 22,
                                     dataFattura: new Date().toISOString().split('T')[0],
                                     note: '',
                                   });
@@ -693,7 +763,14 @@ export default function FatturazionePage() {
                                 size="sm"
                                 variant="default"
                                 className="bg-green-600 hover:bg-green-700"
-                                onClick={() => updateStatoMutation.mutate({ id: prestazione.id, stato: 'pagata' })}
+                                onClick={() => {
+                                  setAdvanceData({
+                                    prestazioneId: prestazione.id,
+                                    newStato: 'pagata',
+                                    data: new Date().toISOString().split('T')[0],
+                                  });
+                                  setIsAdvanceDialogOpen(true);
+                                }}
                                 disabled={updateStatoMutation.isPending}
                                 title="Segna come pagata"
                               >
@@ -740,18 +817,52 @@ export default function FatturazionePage() {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label>Commessa *</Label>
-              <Select value={selectedProjectForAdd} onValueChange={setSelectedProjectForAdd}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona commessa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projects.map(project => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.code} - {project.client}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={projectComboOpen} onOpenChange={setProjectComboOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={projectComboOpen}
+                    className="w-full justify-between"
+                  >
+                    {selectedProjectForAdd
+                      ? projects.find(p => p.id === selectedProjectForAdd)?.code + " - " + projects.find(p => p.id === selectedProjectForAdd)?.client
+                      : "Cerca commessa..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Cerca per codice o cliente..." />
+                    <CommandList>
+                      <CommandEmpty>Nessuna commessa trovata.</CommandEmpty>
+                      <CommandGroup>
+                        {projects.map(project => (
+                          <CommandItem
+                            key={project.id}
+                            value={`${project.code} ${project.client} ${project.object || ''}`}
+                            onSelect={() => {
+                              setSelectedProjectForAdd(project.id);
+                              setProjectComboOpen(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedProjectForAdd === project.id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{project.code}</span>
+                              <span className="text-xs text-muted-foreground">{project.client}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="grid gap-2">
@@ -823,7 +934,7 @@ export default function FatturazionePage() {
 
       {/* Create Invoice Dialog */}
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Crea Fattura</DialogTitle>
             <DialogDescription>
@@ -835,32 +946,79 @@ export default function FatturazionePage() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Numero Fattura *</Label>
-              <Input
-                value={invoiceFormData.numeroFattura}
-                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, numeroFattura: e.target.value })}
-                placeholder="Es: FT-2024-001"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Numero Fattura *</Label>
+                <Input
+                  value={invoiceFormData.numeroFattura}
+                  onChange={(e) => setInvoiceFormData({ ...invoiceFormData, numeroFattura: e.target.value })}
+                  placeholder="Es: FT-2024-001"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Data Fattura</Label>
+                <Input
+                  type="date"
+                  value={invoiceFormData.dataFattura}
+                  onChange={(e) => setInvoiceFormData({ ...invoiceFormData, dataFattura: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="grid gap-2">
-              <Label>Importo (€)</Label>
+              <Label>Imponibile (€) *</Label>
               <Input
                 type="number"
                 step="0.01"
-                value={invoiceFormData.importoFatturato}
-                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, importoFatturato: parseFloat(e.target.value) || 0 })}
+                value={invoiceFormData.imponibile}
+                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, imponibile: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
               />
             </div>
 
-            <div className="grid gap-2">
-              <Label>Data Fattura</Label>
-              <Input
-                type="date"
-                value={invoiceFormData.dataFattura}
-                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, dataFattura: e.target.value })}
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Cassa Inarcassa (%)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={invoiceFormData.cassaPercentuale}
+                  onChange={(e) => setInvoiceFormData({ ...invoiceFormData, cassaPercentuale: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>IVA (%)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={invoiceFormData.ivaPercentuale}
+                  onChange={(e) => setInvoiceFormData({ ...invoiceFormData, ivaPercentuale: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+
+            {/* Calculated breakdown */}
+            <div className="rounded-lg bg-muted p-3 space-y-1.5 text-sm">
+              <div className="flex justify-between">
+                <span>Imponibile:</span>
+                <span>€ {invoiceCalcolati.imponibile.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Cassa ({invoiceFormData.cassaPercentuale}%):</span>
+                <span>€ {invoiceCalcolati.cassa.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Base IVA:</span>
+                <span>€ {invoiceCalcolati.baseIva.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>IVA ({invoiceFormData.ivaPercentuale}%):</span>
+                <span>€ {invoiceCalcolati.iva.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-semibold pt-1 border-t">
+                <span>Totale Fattura:</span>
+                <span>€ {invoiceCalcolati.totale.toFixed(2)}</span>
+              </div>
             </div>
 
             <div className="grid gap-2">
@@ -877,6 +1035,44 @@ export default function FatturazionePage() {
             <Button variant="outline" onClick={() => setIsInvoiceDialogOpen(false)}>Annulla</Button>
             <Button onClick={handleCreateInvoice} disabled={createInvoiceMutation.isPending}>
               {createInvoiceMutation.isPending ? "Creazione..." : "Crea Fattura"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Advance Status Dialog */}
+      <Dialog open={isAdvanceDialogOpen} onOpenChange={setIsAdvanceDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Aggiorna Stato</DialogTitle>
+            <DialogDescription>
+              Conferma il passaggio allo stato successivo
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="flex items-center justify-center gap-3">
+              {advanceData.newStato && (
+                <Badge variant="secondary" className={`${STATO_CONFIG[advanceData.newStato]?.bgColor} ${STATO_CONFIG[advanceData.newStato]?.color} text-base px-4 py-1`}>
+                  {STATO_CONFIG[advanceData.newStato]?.label}
+                </Badge>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label>Data</Label>
+              <Input
+                type="date"
+                value={advanceData.data}
+                onChange={(e) => setAdvanceData({ ...advanceData, data: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                La data in cui è avvenuto il passaggio di stato
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAdvanceDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleAdvanceStatus} disabled={updateStatoMutation.isPending}>
+              {updateStatoMutation.isPending ? "Aggiornamento..." : "Conferma"}
             </Button>
           </DialogFooter>
         </DialogContent>
