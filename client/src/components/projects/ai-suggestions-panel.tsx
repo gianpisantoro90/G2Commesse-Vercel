@@ -193,41 +193,40 @@ export function AISuggestionsPanel({
                     </p>
                   </div>
 
-                    {/* Matched Fields */}
-                    {match.matchedFields && match.matchedFields.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        <span className="text-xs text-gray-500">Campi matched:</span>
-                        {match.matchedFields.map((field) => (
-                          <Badge
-                            key={field}
-                            variant="secondary"
-                            className="text-xs bg-blue-100 text-blue-700"
-                          >
-                            {field}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    {currentProjectId !== match.projectId && (
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setSelectedMatchIndex(index);
-                            selectProjectMutation.mutate(match.projectId);
-                          }}
-                          disabled={selectProjectMutation.isPending}
-                          className="flex-1"
+                  {/* Matched Fields */}
+                  {match.matchedFields && match.matchedFields.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      <span className="text-xs text-gray-500">Campi matched:</span>
+                      {match.matchedFields.map((field) => (
+                        <Badge
+                          key={field}
+                          variant="secondary"
+                          className="text-xs bg-blue-100 text-blue-700"
                         >
-                          {selectProjectMutation.isPending && selectedMatchIndex === index
-                            ? "Collegamento..."
-                            : "✓ Usa Questa Commessa"}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+                          {field}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {currentProjectId !== match.projectId && (
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedMatchIndex(index);
+                          selectProjectMutation.mutate(match.projectId);
+                        }}
+                        disabled={selectProjectMutation.isPending}
+                        className="flex-1"
+                      >
+                        {selectProjectMutation.isPending && selectedMatchIndex === index
+                          ? "Collegamento..."
+                          : "✓ Usa Questa Commessa"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
