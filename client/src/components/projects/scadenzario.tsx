@@ -307,7 +307,6 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 
