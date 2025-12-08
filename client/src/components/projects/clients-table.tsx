@@ -393,37 +393,39 @@ export default function ClientsTable() {
 
   return (
     <div data-testid="clients-table">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Anagrafica Clienti</h3>
-        <div className="flex gap-3">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
             <Input
               placeholder="Cerca clienti..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white w-full"
               data-testid="search-clients"
             />
             <span className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 text-lg">🔍</span>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => syncCountsMutation.mutate()}
-            disabled={syncCountsMutation.isPending}
-            className="border-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900"
-            data-testid="sync-counts"
-            title="Sincronizza i conteggi delle commesse per tutti i clienti"
-          >
-            {syncCountsMutation.isPending ? '⏳' : '🔄'} Sincronizza
-          </Button>
-          <Button
-            className="button-g2-primary"
-            data-testid="add-client"
-            onClick={() => setShowAddModal(true)}
-            disabled={addClientMutation.isPending}
-          >
-            {addClientMutation.isPending ? '⏳' : '➕'} Nuovo Cliente
-          </Button>
+          <div className="flex gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => syncCountsMutation.mutate()}
+              disabled={syncCountsMutation.isPending}
+              className="flex-1 sm:flex-none border-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900 text-xs sm:text-sm"
+              data-testid="sync-counts"
+              title="Sincronizza i conteggi delle commesse per tutti i clienti"
+            >
+              {syncCountsMutation.isPending ? '⏳' : '🔄'} <span className="hidden sm:inline">Sincronizza</span><span className="sm:hidden">Sync</span>
+            </Button>
+            <Button
+              className="flex-1 sm:flex-none button-g2-primary text-xs sm:text-sm"
+              data-testid="add-client"
+              onClick={() => setShowAddModal(true)}
+              disabled={addClientMutation.isPending}
+            >
+              {addClientMutation.isPending ? '⏳' : '➕'} <span className="hidden sm:inline">Nuovo Cliente</span><span className="sm:hidden">Nuovo</span>
+            </Button>
+          </div>
         </div>
       </div>
       
