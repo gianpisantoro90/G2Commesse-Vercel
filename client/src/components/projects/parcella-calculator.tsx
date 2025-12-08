@@ -206,11 +206,11 @@ PROSPETTO FATTURA:
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Calculator className="h-6 w-6 text-blue-600" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Calculator className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             Calcolatore Parcella DM 143/2013
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Calcola automaticamente i compensi professionali secondo le tariffe DM 143/2013
           </p>
         </div>
@@ -224,9 +224,9 @@ PROSPETTO FATTURA:
 
       {/* Step Indicator */}
       <div className="flex items-center gap-4">
-        <div className={`flex items-center gap-2 ${currentStep === 'input' ? 'text-blue-600' : 'text-green-600'}`}>
+        <div className={`flex items-center gap-2 ${currentStep === 'input' ? 'text-blue-600 dark:text-blue-400' : 'text-green-600 dark:text-green-400'}`}>
           {currentStep === 'input' ? (
-            <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center font-bold">
               1
             </div>
           ) : (
@@ -234,9 +234,9 @@ PROSPETTO FATTURA:
           )}
           <span className="font-semibold">Dati Input</span>
         </div>
-        <ChevronRight className="text-gray-400" />
-        <div className={`flex items-center gap-2 ${currentStep === 'result' ? 'text-blue-600' : 'text-gray-400'}`}>
-          <div className={`w-8 h-8 rounded-full ${currentStep === 'result' ? 'bg-blue-600 text-white' : 'bg-gray-200'} flex items-center justify-center font-bold`}>
+        <ChevronRight className="text-gray-400 dark:text-gray-500" />
+        <div className={`flex items-center gap-2 ${currentStep === 'result' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`}>
+          <div className={`w-8 h-8 rounded-full ${currentStep === 'result' ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'} flex items-center justify-center font-bold`}>
             2
           </div>
           <span className="font-semibold">Risultato</span>
@@ -247,24 +247,22 @@ PROSPETTO FATTURA:
       {currentStep === 'input' && (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Left Column - Basic Data */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Dati Base Commessa</CardTitle>
-              <CardDescription>Inserisci l'importo lavori e la classificazione</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="card-g2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Dati Base Commessa</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Inserisci l'importo lavori e la classificazione</p>
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="importo-opere">Importo Opere (€) *</Label>
+                <Label htmlFor="importo-opere" className="text-gray-700 dark:text-gray-300">Importo Opere (€) *</Label>
                 <Input
                   id="importo-opere"
                   type="number"
                   value={importoOpere}
                   onChange={(e) => setImportoOpere(e.target.value)}
                   placeholder="es. 500000"
-                  className="text-lg font-semibold"
+                  className="text-lg font-semibold dark:bg-gray-800 dark:border-gray-700"
                 />
                 {importoOpere && parseFloat(importoOpere) > 0 && (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {formatEuro(parseFloat(importoOpere))}
                   </p>
                 )}
@@ -272,7 +270,7 @@ PROSPETTO FATTURA:
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="classe-dm">Classe DM 143/2013</Label>
+                  <Label htmlFor="classe-dm" className="text-gray-700 dark:text-gray-300">Classe DM 143/2013</Label>
                   <Button
                     type="button"
                     variant="ghost"
@@ -284,7 +282,7 @@ PROSPETTO FATTURA:
                   </Button>
                 </div>
                 <Select value={classeDM143} onValueChange={setClasseDM143}>
-                  <SelectTrigger>
+                  <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                     <SelectValue placeholder="Seleziona classe..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -298,9 +296,9 @@ PROSPETTO FATTURA:
               </div>
 
               <div className="space-y-2">
-                <Label>Complessità Opera *</Label>
+                <Label className="text-gray-700 dark:text-gray-300">Complessità Opera *</Label>
                 <Select value={complessita} onValueChange={(value: any) => setComplessita(value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -309,20 +307,18 @@ PROSPETTO FATTURA:
                     <SelectItem value="alta">🔴 Alta - Opera complessa</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   La complessità influenza le percentuali applicate
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Right Column - Prestazioni */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Prestazioni Professionali *</CardTitle>
-              <CardDescription>Seleziona i servizi da includere nel calcolo</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="card-g2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Prestazioni Professionali *</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Seleziona i servizi da includere nel calcolo</p>
+            <div className="space-y-4">
               <div className="space-y-3">
                 {Object.entries(PRESTAZIONI_CONFIG).map(([id, config]) => (
                   <div key={id} className="space-y-2">
@@ -334,7 +330,7 @@ PROSPETTO FATTURA:
                       />
                       <label
                         htmlFor={id}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 text-gray-700 dark:text-gray-300"
                       >
                         <span>{config.icon}</span>
                         <span>{config.label}</span>
@@ -343,8 +339,8 @@ PROSPETTO FATTURA:
 
                     {/* Livelli Progettazione (solo se progettazione selezionata) */}
                     {id === 'progettazione' && prestazioni.includes('progettazione') && (
-                      <div className="ml-6 pl-4 border-l-2 border-blue-200 space-y-2">
-                        <p className="text-xs text-gray-600 font-medium">Livelli di Progettazione:</p>
+                      <div className="ml-6 pl-4 border-l-2 border-blue-200 dark:border-blue-800 space-y-2">
+                        <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Livelli di Progettazione:</p>
                         {Object.entries(LIVELLO_PROGETTAZIONE_CONFIG).map(([livelloId, livelloConfig]) => (
                           <div key={livelloId} className="flex items-center space-x-2">
                             <Checkbox
@@ -354,7 +350,7 @@ PROSPETTO FATTURA:
                             />
                             <label
                               htmlFor={livelloId}
-                              className="text-xs leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              className="text-xs leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600 dark:text-gray-400"
                             >
                               {livelloConfig.icon} {livelloConfig.label}
                             </label>
@@ -366,7 +362,7 @@ PROSPETTO FATTURA:
                 ))}
               </div>
 
-              <Separator />
+              <Separator className="dark:bg-gray-700" />
 
               <Button
                 onClick={handleCalculate}
@@ -377,8 +373,8 @@ PROSPETTO FATTURA:
                 <Calculator className="h-5 w-5 mr-2" />
                 Calcola Compenso
               </Button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
@@ -386,62 +382,58 @@ PROSPETTO FATTURA:
       {currentStep === 'result' && calculationResult && fatturaResult && (
         <div className="space-y-6">
           {/* Summary Card */}
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="pt-6">
-              <div className="grid gap-6 md:grid-cols-3">
-                <div>
-                  <p className="text-sm text-blue-700 font-medium mb-1">Importo Opere</p>
-                  <p className="text-2xl font-bold text-blue-900">
-                    {formatEuro(calculationResult.importoBase)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-blue-700 font-medium mb-1">Percentuale Applicata</p>
-                  <p className="text-2xl font-bold text-blue-900">
-                    {calculationResult.percentualeApplicata.toFixed(2)}%
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-blue-700 font-medium mb-1">Compenso Totale</p>
-                  <p className="text-3xl font-bold text-blue-900">
-                    {formatEuro(calculationResult.compensoTotale)}
-                  </p>
-                </div>
+          <div className="card-g2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 border-blue-200 dark:border-blue-800">
+            <div className="grid gap-6 md:grid-cols-3">
+              <div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">Importo Opere</p>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                  {formatEuro(calculationResult.importoBase)}
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">Percentuale Applicata</p>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                  {calculationResult.percentualeApplicata.toFixed(2)}%
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">Compenso Totale</p>
+                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+                  {formatEuro(calculationResult.compensoTotale)}
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* Dettaglio Compensi */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                  Dettaglio Compensi per Prestazione
-                </CardTitle>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={handleCopyToClipboard}>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copia
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleExportPDF}>
-                    <Download className="h-4 w-4 mr-2" />
-                    PDF
-                  </Button>
-                </div>
+          <div className="card-g2">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                Dettaglio Compensi per Prestazione
+              </h3>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleCopyToClipboard}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copia
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleExportPDF}>
+                  <Download className="h-4 w-4 mr-2" />
+                  PDF
+                </Button>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            </div>
+            <div className="space-y-4">
               {calculationResult.dettagli.map((dettaglio, index) => (
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-gray-900">{dettaglio.prestazione}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="font-semibold text-gray-900 dark:text-white">{dettaglio.prestazione}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {dettaglio.percentuale.toFixed(2)}% su {formatEuro(calculationResult.importoBase)}
                       </p>
                     </div>
-                    <p className="text-lg font-bold text-green-700">
+                    <p className="text-lg font-bold text-green-700 dark:text-green-400">
                       {formatEuro(dettaglio.importo)}
                     </p>
                   </div>
@@ -452,106 +444,106 @@ PROSPETTO FATTURA:
                 </div>
               ))}
 
-              <Separator />
+              <Separator className="dark:bg-gray-700" />
 
               <div className="flex items-center justify-between pt-2">
-                <p className="text-lg font-bold text-gray-900">TOTALE COMPENSO PROFESSIONALE</p>
-                <p className="text-2xl font-bold text-green-700">
+                <p className="text-lg font-bold text-gray-900 dark:text-white">TOTALE COMPENSO PROFESSIONALE</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">
                   {formatEuro(calculationResult.compensoTotale)}
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Prospetto Fattura */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-green-600" />
+          <div className="card-g2">
+            <div className="mb-4">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+                <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
                 Prospetto Fattura
-              </CardTitle>
-              <CardDescription>
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Calcolo con CPA, IVA e ritenuta d'acconto
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              </p>
+            </div>
+            <div className="space-y-4">
               {/* Aliquote personalizzabili */}
-              <div className="grid gap-4 md:grid-cols-3 p-4 bg-gray-50 rounded-lg">
+              <div className="grid gap-4 md:grid-cols-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="space-y-1">
-                  <Label htmlFor="cpa" className="text-xs">CPA (%)</Label>
+                  <Label htmlFor="cpa" className="text-xs text-gray-700 dark:text-gray-300">CPA (%)</Label>
                   <Input
                     id="cpa"
                     type="number"
                     value={aliquotaCPA}
                     onChange={(e) => setAliquotaCPA(parseFloat(e.target.value) || 0)}
-                    className="h-8"
+                    className="h-8 dark:bg-gray-700 dark:border-gray-600"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="iva" className="text-xs">IVA (%)</Label>
+                  <Label htmlFor="iva" className="text-xs text-gray-700 dark:text-gray-300">IVA (%)</Label>
                   <Input
                     id="iva"
                     type="number"
                     value={aliquotaIVA}
                     onChange={(e) => setAliquotaIVA(parseFloat(e.target.value) || 0)}
-                    className="h-8"
+                    className="h-8 dark:bg-gray-700 dark:border-gray-600"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="ritenuta" className="text-xs">Ritenuta (%)</Label>
+                  <Label htmlFor="ritenuta" className="text-xs text-gray-700 dark:text-gray-300">Ritenuta (%)</Label>
                   <Input
                     id="ritenuta"
                     type="number"
                     value={aliquotaRitenuta}
                     onChange={(e) => setAliquotaRitenuta(parseFloat(e.target.value) || 0)}
-                    className="h-8"
+                    className="h-8 dark:bg-gray-700 dark:border-gray-600"
                   />
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-700">Compenso netto</span>
-                  <span className="font-semibold">{formatEuro(fatturaResult.compensoNetto)}</span>
+                  <span className="text-gray-700 dark:text-gray-300">Compenso netto</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{formatEuro(fatturaResult.compensoNetto)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">+ CPA {aliquotaCPA}%</span>
-                  <span className="text-gray-700">{formatEuro(fatturaResult.cpa)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">+ CPA {aliquotaCPA}%</span>
+                  <span className="text-gray-700 dark:text-gray-300">{formatEuro(fatturaResult.cpa)}</span>
                 </div>
-                <Separator />
+                <Separator className="dark:bg-gray-700" />
                 <div className="flex justify-between items-center font-medium">
-                  <span className="text-gray-700">Imponibile</span>
-                  <span>{formatEuro(fatturaResult.imponibile)}</span>
+                  <span className="text-gray-700 dark:text-gray-300">Imponibile</span>
+                  <span className="text-gray-900 dark:text-white">{formatEuro(fatturaResult.imponibile)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">+ IVA {aliquotaIVA}%</span>
-                  <span className="text-gray-700">{formatEuro(fatturaResult.iva)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">+ IVA {aliquotaIVA}%</span>
+                  <span className="text-gray-700 dark:text-gray-300">{formatEuro(fatturaResult.iva)}</span>
                 </div>
-                <Separator />
+                <Separator className="dark:bg-gray-700" />
                 <div className="flex justify-between items-center font-semibold text-lg">
-                  <span className="text-gray-900">Totale con IVA</span>
-                  <span className="text-blue-700">{formatEuro(fatturaResult.totaleConIVA)}</span>
+                  <span className="text-gray-900 dark:text-white">Totale con IVA</span>
+                  <span className="text-blue-700 dark:text-blue-400">{formatEuro(fatturaResult.totaleConIVA)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">- Ritenuta d'acconto {aliquotaRitenuta}%</span>
-                  <span className="text-red-600">-{formatEuro(fatturaResult.ritenutaAcconto)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">- Ritenuta d'acconto {aliquotaRitenuta}%</span>
+                  <span className="text-red-600 dark:text-red-400">-{formatEuro(fatturaResult.ritenutaAcconto)}</span>
                 </div>
-                <Separator className="border-2" />
-                <div className="flex justify-between items-center bg-green-50 p-4 rounded-lg">
-                  <span className="text-xl font-bold text-green-900">NETTO A PAGARE</span>
-                  <span className="text-2xl font-bold text-green-700">
+                <Separator className="border-2 dark:bg-gray-600" />
+                <div className="flex justify-between items-center bg-green-50 dark:bg-green-950/30 p-4 rounded-lg">
+                  <span className="text-xl font-bold text-green-900 dark:text-green-100">NETTO A PAGARE</span>
+                  <span className="text-2xl font-bold text-green-700 dark:text-green-400">
                     {formatEuro(fatturaResult.nettoAPagare)}
                   </span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
           {/* Note */}
           {calculationResult.note.length > 0 && (
-            <Alert>
+            <Alert className="dark:bg-gray-800 dark:border-gray-700">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
+              <AlertDescription className="text-gray-700 dark:text-gray-300">
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {calculationResult.note.map((nota, index) => (
                     <li key={index}>{nota}</li>
@@ -564,22 +556,20 @@ PROSPETTO FATTURA:
       )}
 
       {/* Info Box */}
-      <Card className="bg-amber-50 border-amber-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm text-amber-800">
-              <p className="font-semibold mb-1">Nota Legale</p>
-              <p>
-                Le percentuali utilizzate sono indicative e basate sul DM 143/2013.
-                Per calcoli ufficiali consultare sempre la normativa vigente e verificare
-                le tariffe professionali del proprio ordine. Il calcolatore non sostituisce
-                la consulenza di un commercialista.
-              </p>
-            </div>
+      <div className="card-g2 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+        <div className="flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-amber-800 dark:text-amber-200">
+            <p className="font-semibold mb-1">Nota Legale</p>
+            <p>
+              Le percentuali utilizzate sono indicative e basate sul DM 143/2013.
+              Per calcoli ufficiali consultare sempre la normativa vigente e verificare
+              le tariffe professionali del proprio ordine. Il calcolatore non sostituisce
+              la consulenza di un commercialista.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

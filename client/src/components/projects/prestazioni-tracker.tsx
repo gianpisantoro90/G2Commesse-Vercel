@@ -219,11 +219,11 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+    <div className="card-g2">
+      <div className="flex flex-row items-center justify-between space-y-0 pb-4">
         <div>
-          <CardTitle className="text-lg">Prestazioni Professionali</CardTitle>
-          <CardDescription>Gestisci lo stato di fatturazione e pagamento per ogni prestazione</CardDescription>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Prestazioni Professionali</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Gestisci lo stato di fatturazione e pagamento per ogni prestazione</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -318,11 +318,11 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </CardHeader>
+      </div>
 
-      <CardContent>
+      <div>
         {prestazioni.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>Nessuna prestazione registrata</p>
             <p className="text-sm">Clicca "Aggiungi" per inserire la prima prestazione</p>
@@ -338,7 +338,7 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
               return (
                 <div
                   key={prestazione.id}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  className="flex items-center justify-between p-3 rounded-lg border dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     {/* Tipo Badge */}
@@ -360,7 +360,7 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
 
                     {/* Importo */}
                     {prestazione.importoPrevisto && prestazione.importoPrevisto > 0 && (
-                      <span className="text-sm text-muted-foreground">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {formatCurrency(prestazione.importoPrevisto)}
                       </span>
                     )}
@@ -429,8 +429,8 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
         <Dialog open={linkInvoiceDialogOpen} onOpenChange={setLinkInvoiceDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Collega a Fattura</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-gray-900 dark:text-white">Collega a Fattura</DialogTitle>
+              <DialogDescription className="text-gray-600 dark:text-gray-400">
                 Seleziona la fattura a cui collegare questa prestazione
               </DialogDescription>
             </DialogHeader>
@@ -439,7 +439,7 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
                 <Button
                   key={invoice.id}
                   variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-start dark:border-gray-700 dark:hover:bg-gray-800"
                   onClick={() => {
                     if (selectedPrestazioneForLink) {
                       linkInvoiceMutation.mutate({
@@ -464,7 +464,7 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

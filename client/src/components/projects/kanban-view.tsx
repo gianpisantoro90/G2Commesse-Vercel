@@ -32,22 +32,22 @@ const KANBAN_COLUMNS: KanbanColumn[] = [
     id: "in corso",
     title: "In Corso",
     icon: "⚡",
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-50 border-yellow-200"
+    color: "text-yellow-700 dark:text-yellow-300",
+    bgColor: "bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800"
   },
   {
     id: "sospesa",
     title: "Sospesa",
     icon: "⏸️",
-    color: "text-red-700",
-    bgColor: "bg-red-50 border-red-200"
+    color: "text-red-700 dark:text-red-300",
+    bgColor: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800"
   },
   {
     id: "conclusa",
     title: "Conclusa",
     icon: "✅",
-    color: "text-green-700",
-    bgColor: "bg-green-50 border-green-200"
+    color: "text-green-700 dark:text-green-300",
+    bgColor: "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800"
   }
 ];
 
@@ -74,21 +74,21 @@ function ProjectCard({ project, onStatusChange }: ProjectCardProps) {
   const availableStatuses = KANBAN_COLUMNS.filter(col => col.id !== project.status);
 
   return (
-    <Card
+    <div
       draggable
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      className={`cursor-move transition-all duration-200 hover:shadow-lg ${
+      className={`card-g2 cursor-move transition-all duration-200 hover:shadow-lg ${
         isDragging ? "opacity-50 scale-95" : "opacity-100"
       }`}
     >
-      <CardHeader className="pb-3">
+      <div className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm font-bold text-primary truncate" title={project.code}>
+            <h4 className="text-sm font-bold text-primary truncate" title={project.code}>
               {project.code}
-            </CardTitle>
-            <p className="text-xs text-gray-600 mt-1 line-clamp-2" title={project.object}>
+            </h4>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2" title={project.object}>
               {project.object}
             </p>
           </div>
@@ -119,12 +119,12 @@ function ProjectCard({ project, onStatusChange }: ProjectCardProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
+      </div>
+      <div className="space-y-3">
         {/* Cliente e Città */}
         <div>
-          <p className="text-sm font-medium text-gray-900">{project.client}</p>
-          <p className="text-xs text-gray-500">{project.city}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white">{project.client}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">{project.city}</p>
         </div>
 
         {/* Tipo Rapporto */}
@@ -153,7 +153,7 @@ function ProjectCard({ project, onStatusChange }: ProjectCardProps) {
               );
             })}
             {metadata.prestazioni.length > 3 && (
-              <span className="text-xs text-gray-500 px-2 py-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1">
                 +{metadata.prestazioni.length - 3}
               </span>
             )}
@@ -162,16 +162,16 @@ function ProjectCard({ project, onStatusChange }: ProjectCardProps) {
 
         {/* Importo Servizio */}
         {metadata?.importoServizio && metadata.importoServizio > 0 && (
-          <div className="flex items-center justify-between pt-2 border-t">
-            <span className="text-xs text-gray-500">Compenso:</span>
-            <span className="text-sm font-bold text-green-700">
+          <div className="flex items-center justify-between pt-2 border-t dark:border-gray-700">
+            <span className="text-xs text-gray-500 dark:text-gray-400">Compenso:</span>
+            <span className="text-sm font-bold text-green-700 dark:text-green-400">
               {formatImporto(metadata.importoServizio)}
             </span>
           </div>
         )}
 
         {/* Anno */}
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
           <Calendar className="h-3 w-3" />
           <span>20{project.year.toString().padStart(2, '0')}</span>
           {project.template && (
@@ -180,8 +180,8 @@ function ProjectCard({ project, onStatusChange }: ProjectCardProps) {
             </Badge>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -237,7 +237,7 @@ function KanbanColumnComponent({ column, projects, onDrop, onStatusChange }: Kan
           </Badge>
         </div>
         {totalImportoServizi > 0 && (
-          <p className="text-xs text-gray-600 mt-2">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
             Totale: <span className="font-semibold">{formatImporto(totalImportoServizi)}</span>
           </p>
         )}
@@ -245,7 +245,7 @@ function KanbanColumnComponent({ column, projects, onDrop, onStatusChange }: Kan
 
       <ScrollArea
         className={`flex-1 rounded-lg border-2 p-3 transition-colors ${
-          isDragOver ? "border-primary bg-primary/5" : "border-dashed border-gray-300"
+          isDragOver ? "border-primary bg-primary/5 dark:bg-primary/10" : "border-dashed border-gray-300 dark:border-gray-600"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -253,7 +253,7 @@ function KanbanColumnComponent({ column, projects, onDrop, onStatusChange }: Kan
       >
         <div className="space-y-3 pb-4">
           {projects.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
+            <div className="text-center py-12 text-gray-400 dark:text-gray-500">
               <p className="text-sm">Nessuna commessa {column.title.toLowerCase()}</p>
               <p className="text-xs mt-1">Trascina qui una card per spostare</p>
             </div>
@@ -345,15 +345,15 @@ export default function KanbanView() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Vista Kanban</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Vista Kanban</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Trascina le card per cambiare lo stato delle commesse
           </p>
         </div>
-        <div className="flex items-center gap-4 text-sm text-gray-600">
+        <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-yellow-400 rounded-full" />
-            <span>In Corso: {projectsByStatus.in_corso.length}</span>
+            <span>In Corso: {projectsByStatus["in corso"].length}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-red-400 rounded-full" />

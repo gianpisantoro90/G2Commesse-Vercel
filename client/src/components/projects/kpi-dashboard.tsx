@@ -161,12 +161,12 @@ export default function KpiDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">KPI Dashboard</h2>
-          <p className="text-gray-600 mt-1">Indicatori chiave di performance</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">KPI Dashboard</h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Indicatori chiave di performance</p>
         </div>
         <div className="flex gap-2">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-40 dark:bg-gray-800 dark:border-gray-700">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -178,7 +178,7 @@ export default function KpiDashboard() {
           </Select>
           {selectedPeriod === "year" && (
             <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-28">
+              <SelectTrigger className="w-28 dark:bg-gray-800 dark:border-gray-700">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -194,263 +194,229 @@ export default function KpiDashboard() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Progetti */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Commesse Totali</CardDescription>
-            <CardTitle className="text-3xl">{kpis.totaleProgetti}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div className="flex justify-between">
-                <span>In Corso:</span>
-                <span className="font-medium text-blue-600">{kpis.progettiInCorso}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Sospese:</span>
-                <span className="font-medium text-orange-600">{kpis.progettiSospesi}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Concluse:</span>
-                <span className="font-medium text-green-600">{kpis.progettiConclussi}</span>
-              </div>
+        <div className="card-g2">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Commesse Totali</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{kpis.totaleProgetti}</p>
+          <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+            <div className="flex justify-between">
+              <span>In Corso:</span>
+              <span className="font-medium text-blue-600 dark:text-blue-400">{kpis.progettiInCorso}</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between">
+              <span>Sospese:</span>
+              <span className="font-medium text-orange-600 dark:text-orange-400">{kpis.progettiSospesi}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Concluse:</span>
+              <span className="font-medium text-green-600 dark:text-green-400">{kpis.progettiConclussi}</span>
+            </div>
+          </div>
+        </div>
 
         {/* Valore Commesse */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Valore Commesse</CardDescription>
-            <CardTitle className="text-3xl">
-              €{(kpis.valoreCommesse / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div className="flex justify-between">
-                <span>Compenso Previsto:</span>
-                <span className="font-medium">
-                  €{(kpis.compensoPrevisto / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span>Costi Risorse:</span>
-                <span className="font-medium text-red-600">
-                  €{(kpis.costiRisorse / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Margine:</span>
-                <span className={`font-bold flex items-center gap-1 ${parseFloat(marginePercentuale) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {parseFloat(marginePercentuale) >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                  {marginePercentuale}%
-                </span>
-              </div>
+        <div className="card-g2">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Valore Commesse</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+            €{(kpis.valoreCommesse / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
+          </p>
+          <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+            <div className="flex justify-between">
+              <span>Compenso Previsto:</span>
+              <span className="font-medium text-gray-900 dark:text-white">
+                €{(kpis.compensoPrevisto / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
+              </span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between">
+              <span>Costi Risorse:</span>
+              <span className="font-medium text-red-600 dark:text-red-400">
+                €{(kpis.costiRisorse / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>Margine:</span>
+              <span className={`font-bold flex items-center gap-1 ${parseFloat(marginePercentuale) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                {parseFloat(marginePercentuale) >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                {marginePercentuale}%
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* Ore */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Gestione Ore</CardDescription>
-            <CardTitle className="text-3xl">{kpis.oreLavorate}h</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xs text-gray-600 space-y-1">
-              <div className="flex justify-between">
-                <span>Ore Assegnate:</span>
-                <span className="font-medium">{kpis.oreAssegnate}h</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Ore Lavorate:</span>
-                <span className="font-medium text-blue-600">{kpis.oreLavorate}h</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>Efficienza:</span>
-                <span className={`font-bold ${parseFloat(efficienzaOre) <= 100 ? 'text-green-600' : 'text-orange-600'}`}>
-                  {efficienzaOre}%
-                </span>
-              </div>
+        <div className="card-g2">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Gestione Ore</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{kpis.oreLavorate}h</p>
+          <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+            <div className="flex justify-between">
+              <span>Ore Assegnate:</span>
+              <span className="font-medium text-gray-900 dark:text-white">{kpis.oreAssegnate}h</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between">
+              <span>Ore Lavorate:</span>
+              <span className="font-medium text-blue-600 dark:text-blue-400">{kpis.oreLavorate}h</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>Efficienza:</span>
+              <span className={`font-bold ${parseFloat(efficienzaOre) <= 100 ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                {efficienzaOre}%
+              </span>
+            </div>
+          </div>
+        </div>
 
         {/* Clienti */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Clienti Attivi</CardDescription>
-            <CardTitle className="text-3xl">{kpis.totaleClienti}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xs text-gray-600">
-              <div className="flex justify-between">
-                <span>Avg. Commesse/Cliente:</span>
-                <span className="font-medium">
-                  {kpis.totaleClienti > 0
-                    ? (kpis.totaleProgetti / kpis.totaleClienti).toFixed(1)
-                    : '0'}
-                </span>
-              </div>
+        <div className="card-g2">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Clienti Attivi</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{kpis.totaleClienti}</p>
+          <div className="text-xs text-gray-600 dark:text-gray-400">
+            <div className="flex justify-between">
+              <span>Avg. Commesse/Cliente:</span>
+              <span className="font-medium text-gray-900 dark:text-white">
+                {kpis.totaleClienti > 0
+                  ? (kpis.totaleProgetti / kpis.totaleClienti).toFixed(1)
+                  : '0'}
+              </span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Charts */}
       <Tabs defaultValue="trend" className="w-full">
-        <TabsList>
-          <TabsTrigger value="trend">Trend Progetti</TabsTrigger>
-          <TabsTrigger value="status">Distribuzione Status</TabsTrigger>
-          <TabsTrigger value="top">Top Commesse</TabsTrigger>
-          <TabsTrigger value="risorse">Distribuzione Risorse</TabsTrigger>
+        <TabsList className="bg-gray-100 dark:bg-gray-800">
+          <TabsTrigger value="trend" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Trend Progetti</TabsTrigger>
+          <TabsTrigger value="status" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Distribuzione Status</TabsTrigger>
+          <TabsTrigger value="top" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Top Commesse</TabsTrigger>
+          <TabsTrigger value="risorse" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Distribuzione Risorse</TabsTrigger>
         </TabsList>
 
         {/* Trend Mensile */}
         <TabsContent value="trend">
-          <Card>
-            <CardHeader>
-              <CardTitle>Trend Mensile Nuove Commesse - {selectedYear}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="progetti" fill={COLORS[0]} name="Nuove Commesse" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+          <div className="card-g2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Trend Mensile Nuove Commesse - {selectedYear}</h3>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart data={monthlyData}>
+                <CartesianGrid strokeDasharray="3 3" className="dark:opacity-30" />
+                <XAxis dataKey="month" className="dark:fill-gray-400" />
+                <YAxis className="dark:fill-gray-400" />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="progetti" fill={COLORS[0]} name="Nuove Commesse" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </TabsContent>
 
         {/* Distribuzione Status */}
         <TabsContent value="status">
-          <Card>
-            <CardHeader>
-              <CardTitle>Distribuzione Commesse per Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {statusData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie
-                      data={statusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={120}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {statusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-center text-gray-500 py-8">Nessun dato disponibile</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="card-g2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Distribuzione Commesse per Status</h3>
+            {statusData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value, percent }) => `${name}: ${value} (${(percent * 100).toFixed(0)}%)`}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessun dato disponibile</p>
+            )}
+          </div>
         </TabsContent>
 
         {/* Top Commesse */}
         <TabsContent value="top">
-          <Card>
-            <CardHeader>
-              <CardTitle>Top 5 Commesse per Valore</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {top5Progetti.map((project, index) => (
-                  <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-4">
-                      <div className={`text-2xl font-bold ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-600' : 'text-gray-600'}`}>
-                        #{index + 1}
-                      </div>
-                      <div>
-                        <div className="font-semibold">{project.code}</div>
-                        <div className="text-sm text-gray-600 truncate max-w-md">{project.object}</div>
-                      </div>
+          <div className="card-g2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top 5 Commesse per Valore</h3>
+            <div className="space-y-4">
+              {top5Progetti.map((project, index) => (
+                <div key={project.id} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <div className="flex items-center gap-4">
+                    <div className={`text-2xl font-bold ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                      #{index + 1}
                     </div>
-                    <div className="text-right">
-                      <div className="font-bold text-lg">
-                        €{(project.valore / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
-                      </div>
-                      <div className={`text-xs ${
-                        project.status === 'in_corso' ? 'text-blue-600' :
-                        project.status === 'conclusa' ? 'text-green-600' :
-                        'text-orange-600'
-                      }`}>
-                        {project.status === 'in_corso' ? 'In Corso' :
-                         project.status === 'conclusa' ? 'Conclusa' : 'Sospesa'}
-                      </div>
+                    <div>
+                      <div className="font-semibold text-gray-900 dark:text-white">{project.code}</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 truncate max-w-md">{project.object}</div>
                     </div>
                   </div>
-                ))}
-                {top5Progetti.length === 0 && (
-                  <p className="text-center text-gray-500 py-8">Nessuna commessa disponibile</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  <div className="text-right">
+                    <div className="font-bold text-lg text-gray-900 dark:text-white">
+                      €{(project.valore / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
+                    </div>
+                    <div className={`text-xs ${
+                      project.status === 'in_corso' ? 'text-blue-600 dark:text-blue-400' :
+                      project.status === 'conclusa' ? 'text-green-600 dark:text-green-400' :
+                      'text-orange-600 dark:text-orange-400'
+                    }`}>
+                      {project.status === 'in_corso' ? 'In Corso' :
+                       project.status === 'conclusa' ? 'Conclusa' : 'Sospesa'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {top5Progetti.length === 0 && (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna commessa disponibile</p>
+              )}
+            </div>
+          </div>
         </TabsContent>
 
         {/* Distribuzione Risorse */}
         <TabsContent value="risorse">
-          <Card>
-            <CardHeader>
-              <CardTitle>Distribuzione Ore per Ruolo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {roleData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={roleData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" />
-                    <YAxis dataKey="role" type="category" width={150} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="ore" fill={COLORS[4]} name="Ore Lavorate" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-center text-gray-500 py-8">Nessuna risorsa assegnata</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="card-g2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Distribuzione Ore per Ruolo</h3>
+            {roleData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={roleData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" className="dark:opacity-30" />
+                  <XAxis type="number" className="dark:fill-gray-400" />
+                  <YAxis dataKey="role" type="category" width={150} className="dark:fill-gray-400" />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="ore" fill={COLORS[4]} name="Ore Lavorate" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna risorsa assegnata</p>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 
       {/* Alerts */}
       {(parseFloat(marginePercentuale) < 20 || parseFloat(efficienzaOre) > 100) && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-700">
-              <AlertTriangle className="w-5 h-5" />
-              Attenzione
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <div className="card-g2 bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800">
+          <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300 font-semibold mb-3">
+            <AlertTriangle className="w-5 h-5" />
+            Attenzione
+          </div>
+          <div className="space-y-2">
             {parseFloat(marginePercentuale) < 20 && (
-              <p className="text-sm text-orange-700">
+              <p className="text-sm text-orange-700 dark:text-orange-300">
                 ⚠️ Marginalità bassa ({marginePercentuale}%). Considerare ottimizzazione costi o revisione compensi.
               </p>
             )}
             {parseFloat(efficienzaOre) > 100 && (
-              <p className="text-sm text-orange-700">
+              <p className="text-sm text-orange-700 dark:text-orange-300">
                 ⚠️ Ore lavorate superiori alle ore assegnate ({efficienzaOre}%). Verific budget ore progetti.
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );
