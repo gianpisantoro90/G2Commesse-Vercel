@@ -967,7 +967,7 @@ export default function RegistroComunicazioni() {
             </div>
 
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[180px] dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger className="w-full sm:w-[180px] dark:bg-gray-800 dark:border-gray-700">
                 <SelectValue placeholder="Tipo..." />
               </SelectTrigger>
               <SelectContent>
@@ -981,7 +981,7 @@ export default function RegistroComunicazioni() {
             </Select>
 
             <Select value={filterDirection} onValueChange={setFilterDirection}>
-              <SelectTrigger className="w-[150px] dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger className="w-full sm:w-[150px] dark:bg-gray-800 dark:border-gray-700">
                 <SelectValue placeholder="Direzione..." />
               </SelectTrigger>
               <SelectContent>
@@ -993,7 +993,7 @@ export default function RegistroComunicazioni() {
             </Select>
 
             <Select value={filterProject} onValueChange={setFilterProject}>
-              <SelectTrigger className="w-[200px] dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger className="w-full sm:w-[200px] dark:bg-gray-800 dark:border-gray-700">
                 <SelectValue placeholder="Commessa..." />
               </SelectTrigger>
               <SelectContent>

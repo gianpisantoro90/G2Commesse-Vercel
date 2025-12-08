@@ -408,69 +408,69 @@ export default function ProjectsTable() {
         </div>
 
         {/* Column Toggle Buttons */}
-        <div className="flex gap-2 flex-wrap items-center mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-2">Opzioni:</span>
+        <div className="flex gap-1.5 sm:gap-2 flex-wrap items-center mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+          <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-400 font-medium mr-1 sm:mr-2">Opzioni:</span>
           <Button
             size="default"
             variant={sortByStatus ? "default" : "outline"}
             onClick={() => setSortByStatus(!sortByStatus)}
-            className="text-xs min-h-[44px] h-auto py-2"
+            className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
             title={sortByStatus ? "Ordinamento per stato attivo (In corso → Sospesa → Conclusa)" : "Ordina per stato"}
             data-testid="toggle-sort-by-status"
           >
-            {sortByStatus ? "📊" : "📋"} Ordina per Stato
+            {sortByStatus ? "📊" : "📋"} <span className="hidden sm:inline">Ordina per</span> Stato
           </Button>
-          
-          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-2 ml-4">Mostra colonne:</span>
+
+          <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-400 font-medium mr-1 sm:mr-2 ml-2 sm:ml-4">Mostra:</span>
           <Button
             size="default"
             variant={showTechInfo ? "default" : "outline"}
             onClick={() => setShowTechInfo(!showTechInfo)}
-            className="text-xs min-h-[44px] h-auto py-2"
+            className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
           >
-            ⚙️ Info Tecniche
+            ⚙️ <span className="hidden sm:inline">Info</span> Tech
           </Button>
           <Button
             size="default"
             variant={showPrestazioni ? "default" : "outline"}
             onClick={() => setShowPrestazioni(!showPrestazioni)}
-            className="text-xs min-h-[44px] h-auto py-2"
+            className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
           >
-            📋 Prestazioni/DM143
+            📋 <span className="hidden sm:inline">Prestazioni/</span>DM143
           </Button>
           {isAdmin && (
             <Button
               size="default"
               variant={showFatturazione ? "default" : "outline"}
               onClick={() => setShowFatturazione(!showFatturazione)}
-              className="text-xs min-h-[44px] h-auto py-2"
+              className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
             >
-              💰 Fatturazione
+              💰 Fatt.
             </Button>
           )}
           <Button
             size="default"
             variant={showComunicazioni ? "default" : "outline"}
             onClick={() => setShowComunicazioni(!showComunicazioni)}
-            className="text-xs min-h-[44px] h-auto py-2"
+            className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
           >
-            💬 Comunicazioni
+            💬 <span className="hidden sm:inline">Comunicazioni</span><span className="sm:hidden">Msg</span>
           </Button>
           <Button
             size="default"
             variant={showScadenze ? "default" : "outline"}
             onClick={() => setShowScadenze(!showScadenze)}
-            className="text-xs min-h-[44px] h-auto py-2"
+            className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
           >
-            📅 Scadenze
+            📅 <span className="hidden sm:inline">Scadenze</span><span className="sm:hidden">Scad.</span>
           </Button>
           <Button
             size="default"
             variant={showOneDrive ? "default" : "outline"}
             onClick={() => setShowOneDrive(!showOneDrive)}
-            className="text-xs min-h-[44px] h-auto py-2"
+            className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
           >
-            ☁️ OneDrive
+            ☁️ <span className="hidden sm:inline">OneDrive</span><span className="sm:hidden">Cloud</span>
           </Button>
         </div>
 
