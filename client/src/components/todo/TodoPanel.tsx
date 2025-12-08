@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +10,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
+import { TaskStatusBadge, PriorityBadge } from "@/components/ui/status-badge";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTaskSchema, type Task, type Project, type User } from "@shared/schema";
@@ -21,17 +21,33 @@ import { it } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
-const statusConfig = {
-  pending: { label: "Da Fare", icon: Circle, color: "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300" },
-  in_progress: { label: "In Corso", icon: Clock, color: "bg-blue-200 dark:bg-blue-900 text-blue-700 dark:text-blue-300" },
-  completed: { label: "Completata", icon: CheckCircle2, color: "bg-green-200 dark:bg-green-900 text-green-700 dark:text-green-300" },
-  cancelled: { label: "Annullata", icon: XCircle, color: "bg-red-200 dark:bg-red-900 text-red-700 dark:text-red-300" },
+// Icon mapping for status (used for clickable toggle)
+const statusIcons = {
+  pending: Circle,
+  in_progress: Clock,
+  completed: CheckCircle2,
+  cancelled: XCircle,
 };
 
-const priorityConfig = {
-  low: { label: "Bassa", color: "bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-400 border-green-300 dark:border-green-800" },
-  medium: { label: "Media", color: "bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800" },
-  high: { label: "Alta", color: "bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800" },
+const statusIconColors = {
+  pending: "text-gray-500 dark:text-gray-400",
+  in_progress: "text-blue-600 dark:text-blue-400",
+  completed: "text-green-600 dark:text-green-400",
+  cancelled: "text-red-600 dark:text-red-400",
+};
+
+// Labels for selects
+const statusLabels = {
+  pending: "Da Fare",
+  in_progress: "In Corso",
+  completed: "Completata",
+  cancelled: "Annullata",
+};
+
+const priorityLabels = {
+  low: "Bassa",
+  medium: "Media",
+  high: "Alta",
 };
 
 export default function TodoPanel() {
@@ -211,81 +227,74 @@ export default function TodoPanel() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3 mb-6">
-        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Le Mie Task</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{counts.myTasks}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Scadute</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{counts.overdue}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">Alta Priorità</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{counts.highPriority}</div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 grid-cols-3 mb-6">
+        <div className="card-g2 p-4">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Le Mie Task</p>
+          <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{counts.myTasks}</p>
+        </div>
+        <div className="card-g2 p-4">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Scadute</p>
+          <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{counts.overdue}</p>
+        </div>
+        <div className="card-g2 p-4">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Alta Priorità</p>
+          <p className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">{counts.highPriority}</p>
+        </div>
       </div>
 
       {/* Tasks List */}
-      <Card className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+      <div className="card-g2">
+        {/* Header with filters */}
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <CardTitle className="text-gray-900 dark:text-white">Task</CardTitle>
-              <CardDescription className="text-gray-600 dark:text-gray-400">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Task</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Visualizza e gestisci le task
-              </CardDescription>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-              <Select value={filterProject || "all"} onValueChange={setFilterProject}>
-                <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                  <SelectValue placeholder="Tutti i progetti" />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
-                  {projects.map(p => p.id && p.id.trim() !== '' ? (
-                    <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
-                  ) : null)}
-                </SelectContent>
-              </Select>
-              <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                  <SelectValue placeholder="Tutti gli stati" />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti gli stati</SelectItem>
-                  {Object.entries(statusConfig).map(([key, config]) => key && key.trim() !== '' ? (
-                    <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
-                  ) : null)}
-                </SelectContent>
-              </Select>
-              <Select value={filterPriority || "all"} onValueChange={setFilterPriority}>
-                <SelectTrigger className="w-full sm:w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                  <SelectValue placeholder="Tutte le priorità" />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <SelectItem value="all" className="text-gray-900 dark:text-white">Tutte le priorità</SelectItem>
-                  {Object.entries(priorityConfig).map(([key, config]) => key && key.trim() !== '' ? (
-                    <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
-                  ) : null)}
-                </SelectContent>
-              </Select>
+              </p>
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+
+          {/* Filters - responsive grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <Select value={filterProject || "all"} onValueChange={setFilterProject}>
+              <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
+                <SelectValue placeholder="Tutti i progetti" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
+                {projects.map(p => p.id && p.id.trim() !== '' ? (
+                  <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">{p.code}</SelectItem>
+                ) : null)}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
+                <SelectValue placeholder="Tutti gli stati" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti gli stati</SelectItem>
+                {Object.entries(statusLabels).map(([key, label]) => key && key.trim() !== '' ? (
+                  <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
+                ) : null)}
+              </SelectContent>
+            </Select>
+            <Select value={filterPriority || "all"} onValueChange={setFilterPriority}>
+              <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
+                <SelectValue placeholder="Tutte le priorità" />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectItem value="all" className="text-gray-900 dark:text-white">Tutte le priorità</SelectItem>
+                {Object.entries(priorityLabels).map(([key, label]) => key && key.trim() !== '' ? (
+                  <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
+                ) : null)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Task content */}
+        <div>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 shadow-sm">
               <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
@@ -305,121 +314,185 @@ export default function TodoPanel() {
                   Caricamento task...
                 </div>
               ) : filteredTasks.length === 0 ? (
-                <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-                  Nessuna task trovata
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div className="text-4xl mb-2">✅</div>
+                  <p>Nessuna task trovata</p>
+                  <p className="text-sm">Crea una nuova task per iniziare</p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  {filteredTasks.map(task => {
-                    const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
-                    const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
-                    const StatusIcon = statusInfo.icon;
-                    const overdueTask = isOverdue(task);
+                <>
+                  {/* Desktop View - visible on md+ */}
+                  <div className="hidden md:block space-y-2">
+                    {filteredTasks.map(task => {
+                      const StatusIcon = statusIcons[task.status as keyof typeof statusIcons];
+                      const statusColor = statusIconColors[task.status as keyof typeof statusIconColors];
+                      const overdueTask = isOverdue(task);
+                      const isExpanded = expandedTasks.has(task.id);
+                      const hasDescription = task.description && task.description.trim() !== '';
+                      const isCompleted = task.status === 'completed';
 
-                    const isExpanded = expandedTasks.has(task.id);
-                    const hasDescription = task.description && task.description.trim() !== '';
-
-                    const isCompleted = task.status === 'completed';
-
-                    return (
-                      <div
-                        key={task.id}
-                        className={`rounded-lg border border-gray-200 dark:border-gray-700 transition-colors ${
-                          isCompleted 
-                            ? 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30' 
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-                        }`}
-                        data-testid={`task-item-${task.id}`}
-                      >
-                        {/* Main task row */}
+                      return (
                         <div
-                          onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
-                          className="flex items-center gap-4 p-4 cursor-pointer"
+                          key={task.id}
+                          className={`rounded-lg border border-gray-200 dark:border-gray-700 transition-colors ${
+                            isCompleted
+                              ? 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30'
+                              : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                          }`}
+                          data-testid={`task-item-${task.id}`}
                         >
                           <div
-                            className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              e.preventDefault();
-                              const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-                              updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
-                            }}
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                            }}
-                            title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                            onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
+                            className="flex items-center gap-4 p-4 cursor-pointer"
                           >
-                            <StatusIcon className={`w-5 h-5 pointer-events-none ${statusInfo.color.includes('text-') ? statusInfo.color.split(' ').find(c => c.startsWith('text-')) : 'text-gray-600 dark:text-gray-400'}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-gray-900 dark:text-white truncate">{task.title}</h4>
-                              <Badge variant="outline" className={`${priorityInfo.color} flex-shrink-0`}>
-                                {priorityInfo.label}
-                              </Badge>
-                              {task.notes && task.notes.trim() !== '' && (
-                                <Badge variant="outline" className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-400 border-blue-300 dark:border-blue-800 flex-shrink-0">
-                                  <StickyNote className="w-3 h-3 mr-1" />
-                                  Note
-                                </Badge>
-                              )}
-                              {overdueTask && (
-                                <Badge variant="outline" className="bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-400 border-red-300 dark:border-red-800 flex-shrink-0">
-                                  <AlertCircle className="w-3 h-3 mr-1" />
-                                  Scaduta
-                                </Badge>
-                              )}
+                            {/* Status toggle icon */}
+                            <div
+                              className="flex-shrink-0 cursor-pointer hover:scale-110 transition-transform"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+                                updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
+                              }}
+                              title={task.status === 'completed' ? 'Segna come da fare' : 'Segna come completata'}
+                            >
+                              <StatusIcon className={`w-5 h-5 ${statusColor}`} />
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                              <span>{getProjectName(task.projectId)}</span>
-                              <span>•</span>
-                              <span>Assegnata a: {getUserName(task.assignedToId)}</span>
-                              {task.dueDate && (
-                                <>
-                                  <span>•</span>
-                                  <span className={overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : ''}>
-                                    Scadenza: {format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <Badge className={statusInfo.color}>{statusInfo.label}</Badge>
-                            {hasDescription && (
-                              <button
-                                onClick={(e) => toggleTaskExpansion(task.id, e)}
-                                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
-                                title={isExpanded ? "Nascondi descrizione" : "Mostra descrizione"}
-                              >
-                                {isExpanded ? (
-                                  <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                ) : (
-                                  <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+
+                            {/* Task info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <h4 className="font-semibold text-gray-900 dark:text-white truncate max-w-md">{task.title}</h4>
+                                <PriorityBadge priority={task.priority as "high" | "medium" | "low"} />
+                                {task.notes && task.notes.trim() !== '' && (
+                                  <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800">
+                                    <StickyNote className="w-3 h-3 mr-1" />
+                                    Note
+                                  </Badge>
                                 )}
-                              </button>
+                                {overdueTask && (
+                                  <Badge variant="outline" className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800">
+                                    <AlertCircle className="w-3 h-3 mr-1" />
+                                    Scaduta
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
+                                <span className="font-mono text-xs">{getProjectName(task.projectId)}</span>
+                                <span>•</span>
+                                <span>{getUserName(task.assignedToId)}</span>
+                                {task.dueDate && (
+                                  <>
+                                    <span>•</span>
+                                    <span className={overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : ''}>
+                                      {format(new Date(task.dueDate), 'dd/MM/yyyy', { locale: it })}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Status badge and expand */}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <TaskStatusBadge status={task.status as "completed" | "in_progress" | "cancelled" | "pending"} />
+                              {hasDescription && (
+                                <button
+                                  onClick={(e) => toggleTaskExpansion(task.id, e)}
+                                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+                                >
+                                  {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Expandable description */}
+                          {hasDescription && isExpanded && (
+                            <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800">
+                              <div className="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                                <p className="font-medium text-gray-900 dark:text-white mb-1">Descrizione:</p>
+                                {task.description}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Mobile View - visible on small screens */}
+                  <div className="md:hidden space-y-3">
+                    {filteredTasks.map(task => {
+                      const StatusIcon = statusIcons[task.status as keyof typeof statusIcons];
+                      const statusColor = statusIconColors[task.status as keyof typeof statusIconColors];
+                      const overdueTask = isOverdue(task);
+                      const isCompleted = task.status === 'completed';
+
+                      return (
+                        <div
+                          key={task.id}
+                          onClick={() => { setSelectedTask(task); setIsDetailOpen(true); }}
+                          className={`rounded-lg p-4 cursor-pointer transition-colors ${
+                            isCompleted
+                              ? 'bg-green-50 dark:bg-green-900/20'
+                              : 'bg-gray-50 dark:bg-gray-800'
+                          }`}
+                          data-testid={`task-item-mobile-${task.id}`}
+                        >
+                          {/* Header: Title + Status toggle */}
+                          <div className="flex items-start gap-3 mb-3">
+                            <div
+                              className="flex-shrink-0 mt-0.5 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+                                updateTaskMutation.mutate({ id: task.id, data: { status: newStatus } });
+                              }}
+                            >
+                              <StatusIcon className={`w-5 h-5 ${statusColor}`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-sm text-gray-900 dark:text-white line-clamp-2">{task.title}</h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
+                                {getProjectName(task.projectId)}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Badges row */}
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            <PriorityBadge priority={task.priority as "high" | "medium" | "low"} />
+                            <TaskStatusBadge status={task.status as "completed" | "in_progress" | "cancelled" | "pending"} />
+                            {overdueTask && (
+                              <Badge variant="outline" className="bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800 text-xs">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                Scaduta
+                              </Badge>
                             )}
                           </div>
-                        </div>
 
-                        {/* Expandable description */}
-                        {hasDescription && isExpanded && (
-                          <div className="px-4 pb-4 pt-0 border-t border-gray-100 dark:border-gray-800">
-                            <div className="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded">
-                              <p className="font-medium text-gray-900 dark:text-white mb-1">Descrizione:</p>
-                              {task.description}
+                          {/* Info grid */}
+                          <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div>
+                              <p className="font-medium text-gray-700 dark:text-gray-300 mb-0.5">Assegnato</p>
+                              <p className="text-gray-600 dark:text-gray-400 truncate">{getUserName(task.assignedToId)}</p>
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-700 dark:text-gray-300 mb-0.5">Scadenza</p>
+                              <p className={`${overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-600 dark:text-gray-400'}`}>
+                                {task.dueDate ? format(new Date(task.dueDate), 'dd/MM/yyyy', { locale: it }) : '-'}
+                              </p>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Task Detail Dialog */}
       {selectedTask && (
@@ -589,8 +662,8 @@ function CreateTaskForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    {Object.entries(priorityConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
+                    {Object.entries(priorityLabels).map(([key, label]) => (
+                      <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -681,10 +754,6 @@ function TaskDetailForm({
     }
   };
 
-  const statusInfo = statusConfig[task.status as keyof typeof statusConfig];
-  const priorityInfo = priorityConfig[task.priority as keyof typeof priorityConfig];
-  const StatusIcon = statusInfo.icon;
-
   // Check if task is assigned to current user
   const isAssignedToCurrentUser = task.assignedToId === currentUserId;
 
@@ -700,14 +769,9 @@ function TaskDetailForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         {/* Status and Priority Badges */}
-        <div className="flex gap-2 mb-4">
-          <Badge className={statusInfo.color}>
-            <StatusIcon className="w-4 h-4 mr-1" />
-            {statusInfo.label}
-          </Badge>
-          <Badge variant="outline" className={priorityInfo.color}>
-            {priorityInfo.label}
-          </Badge>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <TaskStatusBadge status={task.status as "completed" | "in_progress" | "cancelled" | "pending"} />
+          <PriorityBadge priority={task.priority as "high" | "medium" | "low"} />
         </div>
 
         {/* Non-admin view: Show read-only fields for non-editable data */}
@@ -740,7 +804,7 @@ function TaskDetailForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorità</h3>
-                <p className="text-gray-900 dark:text-white">{priorityInfo.label}</p>
+                <p className="text-gray-900 dark:text-white">{priorityLabels[task.priority as keyof typeof priorityLabels]}</p>
               </div>
 
               {task.dueDate && (
@@ -800,8 +864,8 @@ function TaskDetailForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  {Object.entries(statusConfig).map(([key, config]) => (
-                    <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
+                  {Object.entries(statusLabels).map(([key, label]) => (
+                    <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -844,8 +908,8 @@ function TaskDetailForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                      {Object.entries(priorityConfig).map(([key, config]) => (
-                        <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{config.label}</SelectItem>
+                      {Object.entries(priorityLabels).map(([key, label]) => (
+                        <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
