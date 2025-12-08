@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +12,6 @@ import {
   Play
 } from "lucide-react";
 import { type PrestazioniStats } from "@shared/schema";
-import { Link } from "wouter";
 
 export default function PrestazioniStatsWidget() {
   const { data: stats, isLoading, error } = useQuery<PrestazioniStats>({
@@ -26,51 +24,41 @@ export default function PrestazioniStatsWidget() {
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64 mt-2" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Skeleton className="h-20 w-full" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="card-g2" data-testid="prestazioni-stats-loading">
+        <Skeleton className="h-6 w-48 mb-2" />
+        <Skeleton className="h-4 w-64 mb-6" />
+        <div className="space-y-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      </div>
     );
   }
 
   if (error || !stats) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Stato Prestazioni</CardTitle>
-          <CardDescription>Impossibile caricare le statistiche</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="card-g2" data-testid="prestazioni-stats-error">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Stato Prestazioni</h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Impossibile caricare le statistiche</p>
+      </div>
     );
   }
 
   // Se non ci sono prestazioni, mostra un messaggio
   if (stats.totale === 0) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Stato Prestazioni
-          </CardTitle>
-          <CardDescription>Riepilogo fatturazione e pagamento prestazioni</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6 text-muted-foreground">
-            <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>Nessuna prestazione registrata</p>
-            <p className="text-sm">Inizia aggiungendo prestazioni ai tuoi progetti</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="card-g2" data-testid="prestazioni-stats-empty">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" />
+          Stato Prestazioni
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Riepilogo fatturazione e pagamento prestazioni</p>
+        <div className="text-center py-6 text-gray-500 dark:text-gray-400 mt-4">
+          <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p>Nessuna prestazione registrata</p>
+          <p className="text-sm">Inizia aggiungendo prestazioni ai tuoi progetti</p>
+        </div>
+      </div>
     );
   }
 
@@ -78,22 +66,24 @@ export default function PrestazioniStatsWidget() {
   const completionPercent = stats.totale > 0 ? Math.round((stats.pagate / stats.totale) * 100) : 0;
 
   return (
-    <Card className={hasAlerts ? "border-amber-500/50" : ""}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <TrendingUp className="h-5 w-5" />
+    <div className={`card-g2 ${hasAlerts ? "border-amber-500/50" : ""}`} data-testid="prestazioni-stats-widget">
+      {/* Header */}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" />
           Stato Prestazioni
           {hasAlerts && (
-            <Badge variant="outline" className="ml-2 bg-amber-100 text-amber-700 border-amber-300">
+            <Badge variant="outline" className="ml-2 bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700">
               <AlertTriangle className="h-3 w-3 mr-1" />
               Attenzione
             </Badge>
           )}
-        </CardTitle>
-        <CardDescription>Riepilogo fatturazione e pagamento prestazioni</CardDescription>
-      </CardHeader>
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Riepilogo fatturazione e pagamento prestazioni</p>
+      </div>
 
-      <CardContent className="space-y-4">
+      {/* Content */}
+      <div className="space-y-4">
         {/* Alert Section */}
         {hasAlerts && (
           <div className="space-y-2">
@@ -219,7 +209,7 @@ export default function PrestazioniStatsWidget() {
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

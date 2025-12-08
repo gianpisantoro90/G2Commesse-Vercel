@@ -79,31 +79,27 @@ export default function Dashboard() {
           <div className="animate-fade-in">
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
-              <div className="space-y-4 sm:space-y-6 md:space-y-8" data-testid="dashboard-panel">
-                {/* First Row - Economic Dashboard (Admin only) */}
+              <div className="space-y-6" data-testid="dashboard-panel">
+                {/* Row 1 - Economic Dashboard (Admin only - Full width) */}
                 {isAdmin && <EconomicDashboardCard />}
 
-                {/* Prestazioni Stats Widget (Admin only) */}
+                {/* Row 2 - Stats Cards (Admin only) */}
                 {isAdmin && (
-                  <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2">
+                  <div className="grid gap-6 lg:grid-cols-2">
                     <PrestazioniStatsWidget />
+                    <StatsCard />
                   </div>
                 )}
 
-                {/* Second Row - Recent Tasks (All users) */}
+                {/* Row 3 - Recent Tasks (All users - Full width) */}
                 <RecentTasksTable />
 
-                {/* Third Row - Recent Projects */}
+                {/* Row 4 - Recent Projects (Full width) */}
                 <RecentProjectsTable />
 
-                {/* Fourth Row - Core System Info */}
-                <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2">
-                  {isAdmin && <StatsCard />}
+                {/* Row 5 - System Status */}
+                <div className="grid gap-6 lg:grid-cols-2">
                   <OneDriveStatusCard />
-                </div>
-
-                {/* Fifth Row - Email Checker (Manual) */}
-                <div className="grid gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2">
                   <EmailCheckerCard />
                 </div>
               </div>

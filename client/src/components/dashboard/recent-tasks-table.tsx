@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { type Task, type Project, type User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+import { TaskStatusBadge, PriorityBadge } from "@/components/ui/status-badge";
 
 export default function RecentTasksTable() {
   const { user } = useAuth();
@@ -34,41 +34,6 @@ export default function RecentTasksTable() {
     if (!userId) return "-";
     const foundUser = users.find(u => u.id === userId);
     return foundUser ? foundUser.fullName : "-";
-  };
-
-  const getPriorityBadge = (priority: string) => {
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-        priority === 'high'
-          ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-          : priority === 'medium'
-          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
-          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-      }`}>
-        {priority === 'high' ? '🔴 Alta' :
-         priority === 'medium' ? '🟡 Media' :
-         '🔵 Bassa'}
-      </span>
-    );
-  };
-
-  const getStatusBadge = (status: string) => {
-    return (
-      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-        status === 'completed'
-          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-          : status === 'in_progress'
-          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
-          : status === 'cancelled'
-          ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100'
-          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-      }`}>
-        {status === 'completed' ? '✅ Completata' :
-         status === 'in_progress' ? '⏳ In Corso' :
-         status === 'cancelled' ? '❌ Annullata' :
-         '📋 Da Fare'}
-      </span>
-    );
   };
 
   const formatDate = (date: Date | string | null) => {
@@ -130,10 +95,10 @@ export default function RecentTasksTable() {
                       <div className="truncate">{getUserName(task.assignedToId)}</div>
                     </td>
                     <td className="py-3 px-2 sm:px-4" data-testid={`task-priority-${task.id}`}>
-                      {getPriorityBadge(task.priority)}
+                      <PriorityBadge priority={task.priority as "high" | "medium" | "low"} />
                     </td>
                     <td className="py-3 px-2 sm:px-4" data-testid={`task-status-${task.id}`}>
-                      {getStatusBadge(task.status)}
+                      <TaskStatusBadge status={task.status as "completed" | "in_progress" | "cancelled" | "pending"} />
                     </td>
                     <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400" data-testid={`task-due-${task.id}`}>
                       {formatDate(task.dueDate)}
@@ -155,8 +120,8 @@ export default function RecentTasksTable() {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {getPriorityBadge(task.priority)}
-                  {getStatusBadge(task.status)}
+                  <PriorityBadge priority={task.priority as "high" | "medium" | "low"} />
+                  <TaskStatusBadge status={task.status as "completed" | "in_progress" | "cancelled" | "pending"} />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-600 dark:text-gray-400 pt-3 border-t border-gray-200 dark:border-gray-700">
                   <div className="min-w-0">
