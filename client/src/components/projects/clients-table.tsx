@@ -93,7 +93,7 @@ export default function ClientsTable() {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState<25 | 50 | 75>(25);
+  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -588,10 +588,10 @@ export default function ClientsTable() {
                 <label htmlFor="clients-items-per-page" className="text-gray-600 dark:text-gray-400">
                   Elementi per pagina:
                 </label>
-                <Select 
-                  value={itemsPerPage.toString()} 
+                <Select
+                  value={itemsPerPage.toString()}
                   onValueChange={(value) => {
-                    setItemsPerPage(parseInt(value) as 25 | 50 | 75);
+                    setItemsPerPage(parseInt(value) as 10 | 25 | 50);
                     setCurrentPage(1);
                   }}
                 >
@@ -599,9 +599,9 @@ export default function ClientsTable() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
                     <SelectItem value="25">25</SelectItem>
                     <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="75">75</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

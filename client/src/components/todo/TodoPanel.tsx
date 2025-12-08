@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertTaskSchema, type Task, type Project, type User } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, CheckCircle2, Circle, XCircle, Clock, Trash2, AlertCircle, StickyNote, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, CheckCircle2, Circle, XCircle, Clock, Trash2, AlertCircle, StickyNote, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +60,8 @@ export default function TodoPanel() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
+  const [itemsPerPage, setItemsPerPage] = useState<number>(25);
+  const [currentPage, setCurrentPage] = useState<number>(1);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -98,6 +100,24 @@ export default function TodoPanel() {
       if (a.status !== 'completed' && b.status === 'completed') return -1;
       return 0;
     });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTasks = filteredTasks.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change or items per page changes
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1);
+  };
+
+  // Reset page when filters change
+  const handleFilterChange = (setter: (value: string) => void) => (value: string) => {
+    setter(value);
+    setCurrentPage(1);
+  };
 
   // Create task mutation
   const createTaskMutation = useMutation({
@@ -256,8 +276,8 @@ export default function TodoPanel() {
           </div>
 
           {/* Filters - responsive grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <Select value={filterProject || "all"} onValueChange={setFilterProject}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <Select value={filterProject || "all"} onValueChange={handleFilterChange(setFilterProject)}>
               <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
                 <SelectValue placeholder="Tutti i progetti" />
               </SelectTrigger>
@@ -268,7 +288,7 @@ export default function TodoPanel() {
                 ) : null)}
               </SelectContent>
             </Select>
-            <Select value={filterStatus || "all"} onValueChange={setFilterStatus}>
+            <Select value={filterStatus || "all"} onValueChange={handleFilterChange(setFilterStatus)}>
               <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
                 <SelectValue placeholder="Tutti gli stati" />
               </SelectTrigger>
@@ -279,7 +299,7 @@ export default function TodoPanel() {
                 ) : null)}
               </SelectContent>
             </Select>
-            <Select value={filterPriority || "all"} onValueChange={setFilterPriority}>
+            <Select value={filterPriority || "all"} onValueChange={handleFilterChange(setFilterPriority)}>
               <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
                 <SelectValue placeholder="Tutte le priorità" />
               </SelectTrigger>
@@ -290,21 +310,36 @@ export default function TodoPanel() {
                 ) : null)}
               </SelectContent>
             </Select>
+            <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectItem value="10" className="text-gray-900 dark:text-white">10 per pagina</SelectItem>
+                <SelectItem value="25" className="text-gray-900 dark:text-white">25 per pagina</SelectItem>
+                <SelectItem value="50" className="text-gray-900 dark:text-white">50 per pagina</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Task content */}
-        <div>
+        <div className="overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 shadow-sm">
-              <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                Tutte ({filteredTasks.length})
+            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 shadow-sm w-full flex-wrap h-auto gap-1 p-1">
+              <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+                <span className="truncate">Tutte</span>
+                <span className="ml-1 tabular-nums">({filteredTasks.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                Le Mie Task ({tasks.filter(t => t.assignedToId === user?.id).length})
+              <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+                <span className="hidden sm:inline">Le Mie Task</span>
+                <span className="sm:hidden">Mie</span>
+                <span className="ml-1 tabular-nums">({tasks.filter(t => t.assignedToId === user?.id).length})</span>
               </TabsTrigger>
-              <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                Create da Me ({tasks.filter(t => t.createdById === user?.id).length})
+              <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+                <span className="hidden sm:inline">Create da Me</span>
+                <span className="sm:hidden">Create</span>
+                <span className="ml-1 tabular-nums">({tasks.filter(t => t.createdById === user?.id).length})</span>
               </TabsTrigger>
             </TabsList>
 
@@ -323,7 +358,7 @@ export default function TodoPanel() {
                 <>
                   {/* Desktop View - visible on md+ */}
                   <div className="hidden md:block space-y-2">
-                    {filteredTasks.map(task => {
+                    {paginatedTasks.map(task => {
                       const StatusIcon = statusIcons[task.status as keyof typeof statusIcons];
                       const statusColor = statusIconColors[task.status as keyof typeof statusIconColors];
                       const overdueTask = isOverdue(task);
@@ -421,7 +456,7 @@ export default function TodoPanel() {
 
                   {/* Mobile View - visible on small screens */}
                   <div className="md:hidden space-y-3">
-                    {filteredTasks.map(task => {
+                    {paginatedTasks.map(task => {
                       const StatusIcon = statusIcons[task.status as keyof typeof statusIcons];
                       const statusColor = statusIconColors[task.status as keyof typeof statusIconColors];
                       const overdueTask = isOverdue(task);
@@ -487,6 +522,45 @@ export default function TodoPanel() {
                       );
                     })}
                   </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Mostrando {startIndex + 1}-{Math.min(endIndex, filteredTasks.length)} di {filteredTasks.length} task
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="hidden sm:inline ml-1">Precedente</span>
+                        </Button>
+                        <div className="flex items-center gap-1 px-2">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                            {currentPage}
+                          </span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            / {totalPages}
+                          </span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                        >
+                          <span className="hidden sm:inline mr-1">Successivo</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </TabsContent>
