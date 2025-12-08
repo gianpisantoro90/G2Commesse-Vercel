@@ -122,12 +122,12 @@ interface Communication {
 }
 
 const TYPE_CONFIG = {
-  email: { label: 'Email', icon: <Mail className="h-4 w-4" />, color: 'bg-blue-100 text-blue-700' },
-  pec: { label: 'PEC', icon: <Mail className="h-4 w-4" />, color: 'bg-purple-100 text-purple-700' },
-  raccomandata: { label: 'Raccomandata', icon: <FileText className="h-4 w-4" />, color: 'bg-red-100 text-red-700' },
-  telefono: { label: 'Telefonata', icon: <Phone className="h-4 w-4" />, color: 'bg-green-100 text-green-700' },
-  meeting: { label: 'Riunione', icon: <Users className="h-4 w-4" />, color: 'bg-orange-100 text-orange-700' },
-  nota_interna: { label: 'Nota Interna', icon: <MessageSquare className="h-4 w-4" />, color: 'bg-gray-100 text-gray-700' }
+  email: { label: 'Email', icon: <Mail className="h-4 w-4" />, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+  pec: { label: 'PEC', icon: <Mail className="h-4 w-4" />, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' },
+  raccomandata: { label: 'Raccomandata', icon: <FileText className="h-4 w-4" />, color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
+  telefono: { label: 'Telefonata', icon: <Phone className="h-4 w-4" />, color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' },
+  meeting: { label: 'Riunione', icon: <Users className="h-4 w-4" />, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
+  nota_interna: { label: 'Nota Interna', icon: <MessageSquare className="h-4 w-4" />, color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' }
 };
 
 const DIRECTION_CONFIG = {

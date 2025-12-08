@@ -40,11 +40,11 @@ const PRESTAZIONE_CONFIG: Record<string, { label: string; color: string; icon: s
 
 // Configurazione display per stati
 const STATO_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  'da_iniziare': { label: 'Da iniziare', color: 'bg-gray-100 text-gray-600', icon: <Clock className="w-3 h-3" /> },
-  'in_corso': { label: 'In corso', color: 'bg-blue-100 text-blue-700', icon: <Play className="w-3 h-3" /> },
-  'completata': { label: 'Completata', color: 'bg-amber-100 text-amber-700', icon: <CheckCircle className="w-3 h-3" /> },
-  'fatturata': { label: 'Fatturata', color: 'bg-purple-100 text-purple-700', icon: <FileText className="w-3 h-3" /> },
-  'pagata': { label: 'Pagata', color: 'bg-green-100 text-green-700', icon: <Euro className="w-3 h-3" /> },
+  'da_iniziare': { label: 'Da iniziare', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300', icon: <Clock className="w-3 h-3" /> },
+  'in_corso': { label: 'In corso', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', icon: <Play className="w-3 h-3" /> },
+  'completata': { label: 'Completata', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300', icon: <CheckCircle className="w-3 h-3" /> },
+  'fatturata': { label: 'Fatturata', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300', icon: <FileText className="w-3 h-3" /> },
+  'pagata': { label: 'Pagata', color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300', icon: <Euro className="w-3 h-3" /> },
 };
 
 // Livelli progettazione config

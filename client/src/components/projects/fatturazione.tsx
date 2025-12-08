@@ -33,10 +33,10 @@ interface ProjectInvoice {
 }
 
 const STATI_FATTURA = [
-  { value: 'emessa', label: 'Emessa', icon: <FileText className="w-4 h-4" />, color: 'bg-blue-100 text-blue-700' },
-  { value: 'pagata', label: 'Pagata', icon: <CheckCircle className="w-4 h-4" />, color: 'bg-green-100 text-green-700' },
-  { value: 'parzialmente_pagata', label: 'Parzialmente Pagata', icon: <Clock className="w-4 h-4" />, color: 'bg-orange-100 text-orange-700' },
-  { value: 'scaduta', label: 'Scaduta', icon: <AlertCircle className="w-4 h-4" />, color: 'bg-red-100 text-red-700' }
+  { value: 'emessa', label: 'Emessa', icon: <FileText className="w-4 h-4" />, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+  { value: 'pagata', label: 'Pagata', icon: <CheckCircle className="w-4 h-4" />, color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' },
+  { value: 'parzialmente_pagata', label: 'Parzialmente Pagata', icon: <Clock className="w-4 h-4" />, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
+  { value: 'scaduta', label: 'Scaduta', icon: <AlertCircle className="w-4 h-4" />, color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' }
 ];
 
 export default function Fatturazione() {
