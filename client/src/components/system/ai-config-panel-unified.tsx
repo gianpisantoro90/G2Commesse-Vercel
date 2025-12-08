@@ -198,14 +198,16 @@ export default function AiConfigPanelUnified() {
       </div>
 
       <Tabs defaultValue="provider" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-800">
-          <TabsTrigger value="provider" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="provider" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
             <Zap className="w-4 h-4" />
-            Provider AI
+            <span className="hidden sm:inline">Provider AI</span>
+            <span className="sm:hidden">Provider</span>
           </TabsTrigger>
-          <TabsTrigger value="review" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+          <TabsTrigger value="review" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
             <Settings className="w-4 h-4" />
-            Revisioni Email
+            <span className="hidden sm:inline">Revisioni Email</span>
+            <span className="sm:hidden">Revisioni</span>
           </TabsTrigger>
         </TabsList>
 

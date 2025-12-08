@@ -841,11 +841,11 @@ export default function ClientsTable() {
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-6">
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-800">
-                  <TabsTrigger value="general" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Generali</TabsTrigger>
-                  <TabsTrigger value="address" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Indirizzo</TabsTrigger>
-                  <TabsTrigger value="contacts" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Contatti</TabsTrigger>
-                  <TabsTrigger value="referente" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Referente</TabsTrigger>
+                <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+                  <TabsTrigger value="general" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Generali</TabsTrigger>
+                  <TabsTrigger value="address" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Indirizzo</TabsTrigger>
+                  <TabsTrigger value="contacts" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Contatti</TabsTrigger>
+                  <TabsTrigger value="referente" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Referente</TabsTrigger>
                 </TabsList>
 
                 {/* Tab Generali */}

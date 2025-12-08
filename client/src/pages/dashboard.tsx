@@ -254,10 +254,19 @@ export default function Dashboard() {
             {activeTab === "revisione-ai" && isAdmin && (
               <div className="space-y-6" data-testid="revisione-ai-panel">
                 <Tabs defaultValue="communications" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="communications">Comunicazioni da Rivedere</TabsTrigger>
-                    <TabsTrigger value="tasks">Task Proposte</TabsTrigger>
-                    <TabsTrigger value="deadlines">Scadenze Proposte</TabsTrigger>
+                  <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+                    <TabsTrigger value="communications" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+                      <span className="hidden sm:inline">Comunicazioni da Rivedere</span>
+                      <span className="sm:hidden">Comunicazioni</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="tasks" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+                      <span className="hidden sm:inline">Task Proposte</span>
+                      <span className="sm:hidden">Task</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="deadlines" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+                      <span className="hidden sm:inline">Scadenze Proposte</span>
+                      <span className="sm:hidden">Scadenze</span>
+                    </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="communications">

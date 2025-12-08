@@ -293,18 +293,18 @@ export default function ToDoPage() {
               </CardHeader>
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 grid grid-cols-3 w-full shadow-sm">
-                    <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs lg:text-sm px-2 lg:px-4 py-2">
-                      <span className="hidden lg:inline">Tutte</span>
-                      <span className="lg:hidden">Tutte</span> ({filteredTasks.length})
+                  <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1 mb-4">
+                    <TabsTrigger value="all" className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+                      <span className="hidden sm:inline">Tutte</span>
+                      <span className="sm:hidden">Tutte</span> ({filteredTasks.length})
                     </TabsTrigger>
-                    <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs lg:text-sm px-2 lg:px-4 py-2">
-                      <span className="hidden lg:inline">Le Mie Task</span>
-                      <span className="lg:hidden">Mie</span> ({tasks.filter(t => t.assignedToId === user?.id).length})
+                    <TabsTrigger value="my" className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+                      <span className="hidden sm:inline">Le Mie Task</span>
+                      <span className="sm:hidden">Mie</span> ({tasks.filter(t => t.assignedToId === user?.id).length})
                     </TabsTrigger>
-                    <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs lg:text-sm px-2 lg:px-4 py-2">
-                      <span className="hidden lg:inline">Create da Me</span>
-                      <span className="lg:hidden">Create</span> ({tasks.filter(t => t.createdById === user?.id).length})
+                    <TabsTrigger value="created" className="flex-1 min-w-[80px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+                      <span className="hidden sm:inline">Create da Me</span>
+                      <span className="sm:hidden">Create</span> ({tasks.filter(t => t.createdById === user?.id).length})
                     </TabsTrigger>
                   </TabsList>
 
