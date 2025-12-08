@@ -324,17 +324,22 @@ export default function TodoPanel() {
         </div>
 
         {/* Task content */}
-        <div>
+        <div className="overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 shadow-sm">
-              <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                Tutte ({filteredTasks.length})
+            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 shadow-sm w-full flex-wrap h-auto gap-1 p-1">
+              <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+                <span className="truncate">Tutte</span>
+                <span className="ml-1 tabular-nums">({filteredTasks.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                Le Mie Task ({tasks.filter(t => t.assignedToId === user?.id).length})
+              <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+                <span className="hidden sm:inline">Le Mie Task</span>
+                <span className="sm:hidden">Mie</span>
+                <span className="ml-1 tabular-nums">({tasks.filter(t => t.assignedToId === user?.id).length})</span>
               </TabsTrigger>
-              <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
-                Create da Me ({tasks.filter(t => t.createdById === user?.id).length})
+              <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+                <span className="hidden sm:inline">Create da Me</span>
+                <span className="sm:hidden">Create</span>
+                <span className="ml-1 tabular-nums">({tasks.filter(t => t.createdById === user?.id).length})</span>
               </TabsTrigger>
             </TabsList>
 
