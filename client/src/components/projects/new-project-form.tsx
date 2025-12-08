@@ -241,12 +241,12 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
   return (
     <div className="card-g2" data-testid="new-project-form">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Crea Nuova Commessa</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Crea Nuova Commessa</h2>
       
       <form className="space-y-6">
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <Label htmlFor="client" className="block text-sm font-semibold text-gray-700 mb-2">
+            <Label htmlFor="client" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Cliente *
             </Label>
             <ClientCombobox
@@ -262,7 +262,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             )}
           </div>
           <div>
-            <Label htmlFor="city" className="block text-sm font-semibold text-gray-700 mb-2">
+            <Label htmlFor="city" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Città *
             </Label>
             <Input
@@ -281,9 +281,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         {/* Nuova sezione: Tipo Rapporto Committenza */}
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <Label className="block text-sm font-semibold text-gray-700 mb-2">
+            <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Tipo Rapporto *
-              <span className="ml-1 text-xs text-gray-500 font-normal">Chi commissiona a G2?</span>
+              <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 font-normal">Chi commissiona a G2?</span>
             </Label>
             <Select
               onValueChange={(value) => form.setValue("tipoRapporto", value as TipoRapportoType)}
@@ -310,9 +310,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         {/* Campo Committente Finale - visibile solo se tipo != diretto */}
         {form.watch("tipoRapporto") && form.watch("tipoRapporto") !== "diretto" && (
           <div>
-            <Label htmlFor="committente-finale" className="block text-sm font-semibold text-gray-700 mb-2">
+            <Label htmlFor="committente-finale" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Committente Finale
-              <span className="ml-1 text-xs text-gray-500 font-normal">Proprietario/Ente finale dell'opera</span>
+              <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 font-normal">Proprietario/Ente finale dell'opera</span>
             </Label>
             <Input
               id="committente-finale"
@@ -328,7 +328,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         )}
         
         <div>
-          <Label htmlFor="object" className="block text-sm font-semibold text-gray-700 mb-2">
+          <Label htmlFor="object" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Oggetto Commessa *
           </Label>
           <Input
@@ -345,7 +345,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         
         <div className="grid gap-6 md:grid-cols-2">
           <div>
-            <Label htmlFor="year" className="block text-sm font-semibold text-gray-700 mb-2">
+            <Label htmlFor="year" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Anno (AA) *
             </Label>
             <Input
@@ -363,7 +363,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             )}
           </div>
           <div>
-            <Label className="block text-sm font-semibold text-gray-700 mb-2">
+            <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Template Progetto *
             </Label>
             <Select
@@ -381,7 +381,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             </Select>
           </div>
           <div>
-            <Label className="block text-sm font-semibold text-gray-700 mb-2">
+            <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Stato Commessa *
             </Label>
             <Select
@@ -402,7 +402,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         </div>
         
         <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-2">
+          <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Codice Commessa
           </Label>
           <div className="flex gap-3">
@@ -426,14 +426,14 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         </div>
         
         {/* OneDrive Configuration Status */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
             <Cloud className="w-5 h-5" />
             Stato OneDrive
           </h4>
           <div className="space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-blue-700">Connessione OneDrive:</span>
+              <span className="text-blue-700 dark:text-blue-300">Connessione OneDrive:</span>
               <div className="flex items-center gap-2">
                 {isLoadingConfig ? (
                   <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -451,7 +451,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-blue-700">Cartella radice configurata:</span>
+              <span className="text-blue-700 dark:text-blue-300">Cartella radice configurata:</span>
               <div className="flex items-center gap-2">
                 {isLoadingConfig ? (
                   <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -471,15 +471,15 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               </div>
             </div>
             {!isConnected || !isRootConfigured ? (
-              <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-                <p className="text-yellow-800 text-sm mb-2">
+              <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded">
+                <p className="text-yellow-800 dark:text-yellow-200 text-sm mb-2">
                   ⚠️ {!isConnected ? 'OneDrive deve essere connesso' : 'La cartella radice deve essere configurata'} prima di creare una commessa.
                 </p>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={handleNavigateToOneDriveSettings}
-                  className="text-yellow-800 border-yellow-300"
+                  className="text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700"
                   data-testid="button-configure-onedrive"
                 >
                   <Settings className="w-4 h-4 mr-2" />
@@ -487,8 +487,8 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                 </Button>
               </div>
             ) : (
-              <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded">
-                <p className="text-green-800 text-sm flex items-center gap-2">
+              <div className="mt-3 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded">
+                <p className="text-green-800 dark:text-green-200 text-sm flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   OneDrive configurato correttamente. La commessa sarà creata in: <span className="font-mono text-xs">{rootConfig?.folderPath}</span>
                 </p>
@@ -499,27 +499,27 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
         {/* Creation Progress */}
         {creationStep && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <div className="flex items-center gap-3">
               <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-              <span className="font-medium text-blue-900" data-testid="creation-progress">{creationStep}</span>
+              <span className="font-medium text-blue-900 dark:text-blue-100" data-testid="creation-progress">{creationStep}</span>
             </div>
           </div>
         )}
 
         {/* Success State */}
         {createdFolderPath && !createProjectMutation.isPending && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
             <div className="flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+              <CheckCircle className="w-5 h-5 text-green-500" />
               <div>
-                <h4 className="font-semibold text-green-900 mb-2">Commessa creata con successo!</h4>
-                <p className="text-sm text-green-700 mb-3">
+                <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Commessa creata con successo!</h4>
+                <p className="text-sm text-green-700 dark:text-green-300 mb-3">
                   La cartella è stata creata su OneDrive con la struttura template.
                 </p>
                 <div className="flex items-center gap-2">
-                  <FolderOpen className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-mono text-green-800" data-testid="created-folder-path">{createdFolderPath}</span>
+                  <FolderOpen className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <span className="text-sm font-mono text-green-800 dark:text-green-200" data-testid="created-folder-path">{createdFolderPath}</span>
                 </div>
               </div>
             </div>
@@ -581,20 +581,20 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                 setCreationStep("");
                 setCreatedFolderPath("");
               }}
-              className="px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-8 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
               data-testid="button-reset-form"
             >
               Cancella
             </Button>
           </div>
-          
+
           {/* Help Text */}
-          <div className="mt-4 text-sm text-gray-600">
+          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
             <p className="mb-2">
-              <strong>Crea Commessa OneDrive:</strong> Crea la commessa con cartella OneDrive automatica (richiede OneDrive configurato)
+              <strong className="text-gray-900 dark:text-white">Crea Commessa OneDrive:</strong> Crea la commessa con cartella OneDrive automatica (richiede OneDrive configurato)
             </p>
             <p>
-              <strong>Crea Commessa:</strong> Crea solo la commessa nel database, potrai associare OneDrive successivamente
+              <strong className="text-gray-900 dark:text-white">Crea Commessa:</strong> Crea solo la commessa nel database, potrai associare OneDrive successivamente
             </p>
           </div>
         </div>

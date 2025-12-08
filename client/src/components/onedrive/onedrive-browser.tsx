@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useToast } from "@/hooks/use-toast";
@@ -507,40 +506,34 @@ export default function OneDriveBrowser() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Tree navigation sidebar */}
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <FolderOpen className="w-4 h-4" />
-                Cartelle
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="max-h-96 overflow-y-auto" data-testid="tree-navigation">
-                {treeData.map(node => renderTreeNode(node, '/'))}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="card-g2">
+            <h4 className="text-sm font-medium flex items-center gap-2 text-gray-900 dark:text-white pb-3">
+              <FolderOpen className="w-4 h-4" />
+              Cartelle
+            </h4>
+            <div className="max-h-96 overflow-y-auto" data-testid="tree-navigation">
+              {treeData.map(node => renderTreeNode(node, '/'))}
+            </div>
+          </div>
         </div>
 
         {/* Main content area */}
         <div className="lg:col-span-3">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                {searchQuery ? (
-                  <>
-                    <Search className="w-4 h-4" />
-                    Risultati ricerca: "{searchQuery}"
-                  </>
-                ) : (
-                  <>
-                    <Folder className="w-4 h-4" />
-                    {currentPath === '/' ? 'Root' : currentPath.split('/').pop()}
-                  </>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
+          <div className="card-g2">
+            <h4 className="text-sm font-medium flex items-center gap-2 text-gray-900 dark:text-white pb-3">
+              {searchQuery ? (
+                <>
+                  <Search className="w-4 h-4" />
+                  Risultati ricerca: "{searchQuery}"
+                </>
+              ) : (
+                <>
+                  <Folder className="w-4 h-4" />
+                  {currentPath === '/' ? 'Root' : currentPath.split('/').pop()}
+                </>
+              )}
+            </h4>
+            <div>
               {isLoadingFiles || isSearching ? (
                 <div className="flex items-center justify-center py-8">
                   <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mr-2" />
@@ -711,8 +704,8 @@ export default function OneDriveBrowser() {
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>
