@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { type Project, type OneDriveMapping, type ProjectMetadata, type Communication, type Deadline } from "@shared/schema";
+import { type Project, type OneDriveMapping, type ProjectMetadata, type Communication, type Deadline, type ProjectPrestazione } from "@shared/schema";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
 import PrestazioniModal from "./prestazioni-modal";
@@ -87,6 +87,41 @@ export default function ProjectsTable() {
   const { data: deadlines = [] } = useQuery<Deadline[]>({
     queryKey: ["/api/deadlines"],
   });
+
+  // Load prestazioni for fatturazione column
+  const { data: allPrestazioni = [] } = useQuery<ProjectPrestazione[]>({
+    queryKey: ["/api/prestazioni"],
+    enabled: showFatturazione && isAdmin,
+  });
+
+  // Aggregate prestazioni stats by project
+  const prestazioniByProject = allPrestazioni.reduce((acc, p) => {
+    if (!acc[p.projectId]) {
+      acc[p.projectId] = {
+        totale: 0,
+        completate: 0,
+        fatturate: 0,
+        pagate: 0,
+        importoPrevisto: 0,
+        importoFatturato: 0,
+        importoPagato: 0,
+      };
+    }
+    acc[p.projectId].totale++;
+    if (p.stato === 'completata' || p.stato === 'fatturata' || p.stato === 'pagata') {
+      acc[p.projectId].completate++;
+    }
+    if (p.stato === 'fatturata' || p.stato === 'pagata') {
+      acc[p.projectId].fatturate++;
+      acc[p.projectId].importoFatturato += p.importoFatturato || 0;
+    }
+    if (p.stato === 'pagata') {
+      acc[p.projectId].pagate++;
+      acc[p.projectId].importoPagato += p.importoPagato || 0;
+    }
+    acc[p.projectId].importoPrevisto += p.importoPrevisto || 0;
+    return acc;
+  }, {} as Record<string, { totale: number; completate: number; fatturate: number; pagate: number; importoPrevisto: number; importoFatturato: number; importoPagato: number }>);
 
   // OneDrive integration
   const { data: oneDriveMappings = [] } = useQuery<OneDriveMapping[]>({
@@ -881,30 +916,58 @@ export default function ProjectsTable() {
                     </td>
                     {showFatturazione && isAdmin && (
                       <td className="py-4 px-4" data-testid={`project-fatturazione-${project.id}`}>
-                        <div className="flex flex-col gap-1">
-                          {project.fatturato ? (
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded font-medium">
-                                ✓ Fatturato
-                              </span>
-                              {project.importoFatturato && project.importoFatturato > 0 && (
-                                <span className="text-xs text-gray-600 dark:text-gray-400">
-                                  €{(project.importoFatturato / 100).toFixed(2)}
+                        {(() => {
+                          const stats = prestazioniByProject[project.id];
+                          if (!stats || stats.totale === 0) {
+                            return <span className="text-xs text-gray-400 dark:text-gray-500 italic">-</span>;
+                          }
+                          return (
+                            <div className="flex flex-col gap-1">
+                              {/* Stato prestazioni */}
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
+                                {stats.totale} prest.
+                              </div>
+                              {/* Fatturate */}
+                              {stats.fatturate > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs px-1.5 py-0.5 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded font-medium">
+                                    {stats.fatturate} fatt.
+                                  </span>
+                                  {stats.importoFatturato > 0 && (
+                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                      €{(stats.importoFatturato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {/* Pagate */}
+                              {stats.pagate > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded font-medium">
+                                    {stats.pagate} pag.
+                                  </span>
+                                  {stats.importoPagato > 0 && (
+                                    <span className="text-xs text-green-600 dark:text-green-400">
+                                      €{(stats.importoPagato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {/* Da fatturare */}
+                              {stats.completate > stats.fatturate && (
+                                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                  ⏳ {stats.completate - stats.fatturate} da fatt.
+                                </span>
+                              )}
+                              {/* Da incassare */}
+                              {stats.fatturate > stats.pagate && (
+                                <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                                  💰 {stats.fatturate - stats.pagate} da incass.
                                 </span>
                               )}
                             </div>
-                          ) : (
-                            <span className="text-xs text-gray-400 dark:text-gray-500 italic">-</span>
-                          )}
-                          {project.pagato && (
-                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded font-medium">
-                              ✓ Pagato
-                            </span>
-                          )}
-                          {project.fatturato && !project.pagato && (
-                            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">⏳ Da incassare</span>
-                          )}
-                        </div>
+                          );
+                        })()}
                       </td>
                     )}
                     {showComunicazioni && (
