@@ -84,7 +84,7 @@ export function CommunicationsReview() {
   const isMobile = useIsMobile();
   const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
 
   // Fetch communications that need review
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
@@ -195,9 +195,9 @@ export function CommunicationsReview() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="10">10</SelectItem>
               <SelectItem value="25">25</SelectItem>
               <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
             </SelectContent>
           </Select>
         </div>
