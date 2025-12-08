@@ -112,7 +112,7 @@ export default function QuickActionsCard({ onNewProject }: QuickActionsCardProps
 
   return (
     <div className="card-g2" data-testid="quick-actions-card">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">Azioni Rapide</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Azioni Rapide</h3>
       <div className="space-y-3">
         <Button 
           className="button-g2-primary w-full"
@@ -129,9 +129,9 @@ export default function QuickActionsCard({ onNewProject }: QuickActionsCardProps
         >
           Esporta Dati (.json)
         </Button>
-        <Button 
+        <Button
           variant="outline"
-          className="w-full border-2 border-gray-300 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:border-gray-400 hover:bg-gray-50 transition-colors duration-200"
+          className="w-full border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-3 px-4 rounded-xl font-semibold hover:border-gray-400 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
           onClick={handleImportData}
           data-testid="button-import-data"
         >
@@ -139,14 +139,14 @@ export default function QuickActionsCard({ onNewProject }: QuickActionsCardProps
         </Button>
         
         {/* OneDrive Actions */}
-        <div className="border-t pt-3 mt-3">
-          <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+        <div className="border-t dark:border-gray-700 pt-3 mt-3">
+          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
             🌟 OneDrive
           </div>
           {isConnected ? (
             <Button
               variant="outline"
-              className="w-full border-2 border-blue-300 text-blue-700 py-3 px-4 rounded-xl font-semibold hover:border-blue-400 hover:bg-blue-50 transition-colors duration-200"
+              className="w-full border-2 border-blue-300 dark:border-blue-600 text-blue-700 dark:text-blue-400 py-3 px-4 rounded-xl font-semibold hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors duration-200"
               onClick={handleOneDriveSync}
               disabled={isSyncingAll}
               data-testid="button-onedrive-sync"
@@ -166,7 +166,7 @@ export default function QuickActionsCard({ onNewProject }: QuickActionsCardProps
           ) : (
             <Button
               variant="outline"
-              className="w-full border-2 border-orange-300 text-orange-700 py-3 px-4 rounded-xl font-semibold hover:border-orange-400 hover:bg-orange-50 transition-colors duration-200"
+              className="w-full border-2 border-orange-300 dark:border-orange-600 text-orange-700 dark:text-orange-400 py-3 px-4 rounded-xl font-semibold hover:border-orange-400 dark:hover:border-orange-500 hover:bg-orange-50 dark:hover:bg-orange-950/30 transition-colors duration-200"
               onClick={navigateToOneDriveSettings}
               data-testid="button-setup-onedrive"
             >
@@ -176,7 +176,7 @@ export default function QuickActionsCard({ onNewProject }: QuickActionsCardProps
           )}
           <Button
             variant="ghost"
-            className="w-full text-sm text-gray-600 hover:text-gray-800 py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 mt-1"
+            className="w-full text-sm text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white py-2 px-4 rounded-lg font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200 mt-1"
             onClick={navigateToOneDriveSettings}
             data-testid="button-onedrive-settings"
           >
