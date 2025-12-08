@@ -320,6 +320,10 @@ export default function Scadenzario() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterPriority, setFilterPriority] = useState<string>('all');
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
+
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
@@ -446,6 +450,19 @@ export default function Scadenzario() {
     return true;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredDeadlines.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedDeadlines = filteredDeadlines.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  const handleFilterChange = (type: 'status' | 'priority', value: string) => {
+    if (type === 'status') setFilterStatus(value);
+    else setFilterPriority(value);
+    setCurrentPage(1);
+  };
+
   // Conta scadenze per categoria
   const overdueCount = enrichedDeadlines.filter(d => isPast(new Date(d.dueDate)) && d.status === 'pending').length;
   const upcomingCount = enrichedDeadlines.filter(d => {
@@ -487,113 +504,159 @@ export default function Scadenzario() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className="bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-red-700 dark:text-red-300 font-medium">Scadute</p>
-                <p className="text-3xl font-bold text-red-900 dark:text-red-100">{overdueCount}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+        <div className="card-g2 bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-red-700 dark:text-red-300 font-medium">Scadute</p>
+              <p className="text-3xl font-bold text-red-900 dark:text-red-100">{overdueCount}</p>
             </div>
-          </CardContent>
-        </Card>
+            <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+          </div>
+        </div>
 
-        <Card className="bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">In Scadenza (7gg)</p>
-                <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">{upcomingCount}</p>
-              </div>
-              <Bell className="h-8 w-8 text-orange-600" />
+        <div className="card-g2 bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">In Scadenza (7gg)</p>
+              <p className="text-3xl font-bold text-orange-900 dark:text-orange-100">{upcomingCount}</p>
             </div>
-          </CardContent>
-        </Card>
+            <Bell className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+          </div>
+        </div>
 
-        <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">In Programma</p>
-                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-                  {enrichedDeadlines.filter(d => d.status === 'pending').length - overdueCount - upcomingCount}
-                </p>
-              </div>
-              <CalendarIcon className="h-8 w-8 text-blue-600" />
+        <div className="card-g2 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">In Programma</p>
+              <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+                {enrichedDeadlines.filter(d => d.status === 'pending').length - overdueCount - upcomingCount}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <CalendarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          </div>
+        </div>
 
-        <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-green-700 dark:text-green-300 font-medium">Completate</p>
-                <p className="text-3xl font-bold text-green-900 dark:text-green-100">{completedCount}</p>
-              </div>
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
+        <div className="card-g2 bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-green-700 dark:text-green-300 font-medium">Completate</p>
+              <p className="text-3xl font-bold text-green-900 dark:text-green-100">{completedCount}</p>
             </div>
-          </CardContent>
-        </Card>
+            <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+          </div>
+        </div>
       </div>
 
       {/* Filtri */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex gap-4 flex-wrap">
-            <div className="flex-1 min-w-[200px]">
-              <Label className="text-sm mb-2 block">Stato</Label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutte le scadenze</SelectItem>
-                  <SelectItem value="pending">In Sospeso</SelectItem>
-                  <SelectItem value="completed">Completate</SelectItem>
-                  <SelectItem value="overdue">Scadute</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex-1 min-w-[200px]">
-              <Label className="text-sm mb-2 block">Priorità</Label>
-              <Select value={filterPriority} onValueChange={setFilterPriority}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutte le priorità</SelectItem>
-                  <SelectItem value="urgent">🔴 Urgente</SelectItem>
-                  <SelectItem value="high">🟠 Alta</SelectItem>
-                  <SelectItem value="medium">🟡 Media</SelectItem>
-                  <SelectItem value="low">🟢 Bassa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+      <div className="card-g2">
+        <div className="flex flex-col sm:flex-row gap-4 flex-wrap items-end">
+          <div className="flex-1 min-w-[200px]">
+            <Label className="text-sm mb-2 block text-gray-700 dark:text-gray-300">Stato</Label>
+            <Select value={filterStatus} onValueChange={(v) => handleFilterChange('status', v)}>
+              <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutte le scadenze</SelectItem>
+                <SelectItem value="pending">In Sospeso</SelectItem>
+                <SelectItem value="completed">Completate</SelectItem>
+                <SelectItem value="overdue">Scadute</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="flex-1 min-w-[200px]">
+            <Label className="text-sm mb-2 block text-gray-700 dark:text-gray-300">Priorità</Label>
+            <Select value={filterPriority} onValueChange={(v) => handleFilterChange('priority', v)}>
+              <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutte le priorità</SelectItem>
+                <SelectItem value="urgent">🔴 Urgente</SelectItem>
+                <SelectItem value="high">🟠 Alta</SelectItem>
+                <SelectItem value="medium">🟡 Media</SelectItem>
+                <SelectItem value="low">🟢 Bassa</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-gray-600 dark:text-gray-400">Mostra:</Label>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(v) => {
+                setItemsPerPage(parseInt(v) as 10 | 25 | 50);
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-20 dark:bg-gray-800 dark:border-gray-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
 
       {/* Lista Scadenze */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredDeadlines.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <CalendarClock className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">Nessuna scadenza trovata</p>
-            <p className="text-sm text-gray-400 mt-1">Crea la prima scadenza per iniziare</p>
+      <div className="space-y-4">
+        {/* Counter */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, filteredDeadlines.length)}</strong> di <strong>{filteredDeadlines.length}</strong> scadenze
+          </span>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {paginatedDeadlines.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <CalendarClock className="h-16 w-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">Nessuna scadenza trovata</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Crea la prima scadenza per iniziare</p>
+            </div>
+          ) : (
+            paginatedDeadlines.map((deadline) => (
+              <DeadlineCard
+                key={deadline.id}
+                deadline={deadline}
+                onComplete={() => handleComplete(deadline.id)}
+                onDelete={() => setDeadlineToDelete(deadline.id)}
+                onEdit={() => setEditingDeadline(deadline)}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              Pagina <strong>{currentPage}</strong> di <strong>{totalPages}</strong>
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                ← Precedente
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Successiva →
+              </Button>
+            </div>
           </div>
-        ) : (
-          filteredDeadlines.map((deadline) => (
-            <DeadlineCard
-              key={deadline.id}
-              deadline={deadline}
-              onComplete={() => handleComplete(deadline.id)}
-              onDelete={() => setDeadlineToDelete(deadline.id)}
-              onEdit={() => setEditingDeadline(deadline)}
-            />
-          ))
         )}
       </div>
 

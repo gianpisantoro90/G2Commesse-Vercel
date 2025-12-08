@@ -46,6 +46,10 @@ export default function Fatturazione() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
+
   const [formData, setFormData] = useState({
     numeroFattura: "",
     dataEmissione: new Date().toISOString().split('T')[0],
@@ -245,13 +249,19 @@ export default function Fatturazione() {
     };
   }).filter(group => group.invoices.length > 0) || [];
 
+  // Pagination logic for "all invoices" tab
+  const totalPages = Math.ceil((invoices?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInvoices = invoices?.slice(startIndex, endIndex) || [];
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestione Fatture</h2>
-          <p className="text-gray-600 mt-1">Emissione e tracciamento fatture per commessa</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gestione Fatture</h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Emissione e tracciamento fatture per commessa</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -411,111 +421,117 @@ export default function Fatturazione() {
 
       {/* Statistiche */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Fatture Totali</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{stats.totale}</div>
-              <FileText className="w-8 h-8 text-blue-500" />
-            </div>
-            <div className="text-xs text-gray-600 mt-2">
-              <div>Emesse: {stats.emesse} | Pagate: {stats.pagate}</div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="card-g2">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Fatture Totali</p>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totale}</div>
+            <FileText className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+          </div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+            <div>Emesse: {stats.emesse} | Pagate: {stats.pagate}</div>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Importo Totale</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">
-                €{(stats.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
-              </div>
-              <Euro className="w-8 h-8 text-purple-500" />
+        <div className="card-g2">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Importo Totale</p>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              €{(stats.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
             </div>
-          </CardContent>
-        </Card>
+            <Euro className="w-8 h-8 text-purple-500 dark:text-purple-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Incassato</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold text-green-600">
-                €{(stats.importoPagato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-500" />
+        <div className="card-g2">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Incassato</p>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              €{(stats.importoPagato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
             </div>
-          </CardContent>
-        </Card>
+            <CheckCircle className="w-8 h-8 text-green-500 dark:text-green-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Da Incassare</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold text-orange-600">
-                €{(stats.importoDaPagare / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
-              </div>
-              <Clock className="w-8 h-8 text-orange-500" />
+        <div className="card-g2">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Da Incassare</p>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+              €{(stats.importoDaPagare / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
             </div>
-          </CardContent>
-        </Card>
+            <Clock className="w-8 h-8 text-orange-500 dark:text-orange-400" />
+          </div>
+        </div>
       </div>
 
       {/* Tabelle Fatture */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">Tutte le Fatture</TabsTrigger>
-          <TabsTrigger value="by-project">Per Commessa</TabsTrigger>
-          <TabsTrigger value="unpaid">Da Incassare</TabsTrigger>
+        <TabsList className="bg-gray-100 dark:bg-gray-800">
+          <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Tutte le Fatture</TabsTrigger>
+          <TabsTrigger value="by-project" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Per Commessa</TabsTrigger>
+          <TabsTrigger value="unpaid" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Da Incassare</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          <Card>
-            <CardContent className="p-6">
-              {isLoading ? (
-                <p className="text-center text-gray-500 py-8">Caricamento...</p>
-              ) : invoices?.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">Nessuna fattura emessa</p>
-              ) : (
+          <div className="card-g2">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tutte le Fatture</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Mostra:</span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(v) => {
+                    setItemsPerPage(parseInt(v) as 10 | 25 | 50);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-20 dark:bg-gray-800 dark:border-gray-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {isLoading ? (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Caricamento...</p>
+            ) : invoices?.length === 0 ? (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura emessa</p>
+            ) : (
+              <>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4">N. Fattura</th>
-                        <th className="text-left py-3 px-4">Commessa</th>
-                        <th className="text-left py-3 px-4">Data Emissione</th>
-                        <th className="text-right py-3 px-4">Importo</th>
-                        <th className="text-center py-3 px-4">Stato</th>
-                        <th className="text-center py-3 px-4">Scadenza</th>
-                        <th className="text-center py-3 px-4">Azioni</th>
+                      <tr className="border-b dark:border-gray-700">
+                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">N. Fattura</th>
+                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Commessa</th>
+                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Data Emissione</th>
+                        <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300">Importo</th>
+                        <th className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">Stato</th>
+                        <th className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">Scadenza</th>
+                        <th className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">Azioni</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {invoices?.map(invoice => {
+                      {paginatedInvoices.map(invoice => {
                         const project = projects?.find(p => p.id === invoice.projectId);
                         const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
 
                         return (
-                          <tr key={invoice.id} className="border-b hover:bg-gray-50">
-                            <td className="py-3 px-4 font-medium">{invoice.numeroFattura}</td>
+                          <tr key={invoice.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{invoice.numeroFattura}</td>
                             <td className="py-3 px-4">
                               <div className="text-sm">
-                                <div className="font-medium">{project?.code}</div>
-                                <div className="text-gray-500 truncate max-w-xs">{project?.object}</div>
+                                <div className="font-medium text-gray-900 dark:text-white">{project?.code}</div>
+                                <div className="text-gray-500 dark:text-gray-400 truncate max-w-xs">{project?.object}</div>
                               </div>
                             </td>
-                            <td className="py-3 px-4 text-sm">
+                            <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
                               {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
                             </td>
-                            <td className="py-3 px-4 text-right font-semibold">
+                            <td className="py-3 px-4 text-right font-semibold text-gray-900 dark:text-white">
                               €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                             </td>
                             <td className="py-3 px-4 text-center">
@@ -524,7 +540,7 @@ export default function Fatturazione() {
                                 <span className="ml-1">{statoConfig?.label}</span>
                               </Badge>
                             </td>
-                            <td className="py-3 px-4 text-center text-sm">
+                            <td className="py-3 px-4 text-center text-sm text-gray-900 dark:text-white">
                               {invoice.scadenzaPagamento
                                 ? format(new Date(invoice.scadenzaPagamento), 'dd/MM/yyyy', { locale: it })
                                 : '-'}
@@ -567,146 +583,165 @@ export default function Fatturazione() {
                     </tbody>
                   </table>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-gray-700">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, invoices?.length || 0)}</strong> di <strong>{invoices?.length || 0}</strong> fatture
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        ← Precedente
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Successiva →
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="by-project" className="space-y-4">
           {groupedInvoices.map(group => (
-            <Card key={group.project.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle>{group.project.code}</CardTitle>
-                    <CardDescription className="mt-1">{group.project.object}</CardDescription>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-600">Fatturato Totale</div>
-                    <div className="text-xl font-bold">
-                      €{(group.totaleFatturato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
-                    </div>
+            <div key={group.project.id} className="card-g2">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{group.project.code}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{group.project.object}</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">Fatturato Totale</div>
+                  <div className="text-xl font-bold text-gray-900 dark:text-white">
+                    €{(group.totaleFatturato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {group.invoices.map(invoice => {
-                    const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
-                    return (
-                      <div key={invoice.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                        <div>
-                          <div className="font-semibold">{invoice.numeroFattura}</div>
-                          <div className="text-sm text-gray-600">
-                            {format(new Date(invoice.dataEmissione), 'dd MMMM yyyy', { locale: it })}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Badge className={statoConfig?.color}>
-                            {statoConfig?.label}
-                          </Badge>
-                          <div className="text-right">
-                            <div className="font-bold">
-                              €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            {invoice.stato !== 'pagata' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleMarkAsPaid(invoice)}
-                              >
-                                <CheckCircle className="w-4 h-4 text-green-600" />
-                              </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(invoice)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                if (confirm("Sei sicuro di voler eliminare questa fattura?")) {
-                                  deleteInvoiceMutation.mutate(invoice.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
+              </div>
+              <div className="space-y-2">
+                {group.invoices.map(invoice => {
+                  const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
+                  return (
+                    <div key={invoice.id} className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <div>
+                        <div className="font-semibold text-gray-900 dark:text-white">{invoice.numeroFattura}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          {format(new Date(invoice.dataEmissione), 'dd MMMM yyyy', { locale: it })}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                      <div className="flex items-center gap-4">
+                        <Badge className={statoConfig?.color}>
+                          {statoConfig?.label}
+                        </Badge>
+                        <div className="text-right">
+                          <div className="font-bold text-gray-900 dark:text-white">
+                            €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          {invoice.stato !== 'pagata' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMarkAsPaid(invoice)}
+                            >
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(invoice)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (confirm("Sei sicuro di voler eliminare questa fattura?")) {
+                                deleteInvoiceMutation.mutate(invoice.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           ))}
           {groupedInvoices.length === 0 && (
-            <Card>
-              <CardContent className="p-8">
-                <p className="text-center text-gray-500">Nessuna fattura emessa</p>
-              </CardContent>
-            </Card>
+            <div className="card-g2 p-8">
+              <p className="text-center text-gray-500 dark:text-gray-400">Nessuna fattura emessa</p>
+            </div>
           )}
         </TabsContent>
 
         <TabsContent value="unpaid" className="space-y-4">
-          <Card>
-            <CardContent className="p-6">
-              {invoices?.filter(i => i.stato !== 'pagata').length === 0 ? (
-                <p className="text-center text-gray-500 py-8">Nessuna fattura da incassare</p>
-              ) : (
-                <div className="space-y-3">
-                  {invoices?.filter(i => i.stato !== 'pagata').map(invoice => {
-                    const project = projects?.find(p => p.id === invoice.projectId);
-                    const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
+          <div className="card-g2">
+            {invoices?.filter(i => i.stato !== 'pagata').length === 0 ? (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura da incassare</p>
+            ) : (
+              <div className="space-y-3">
+                {invoices?.filter(i => i.stato !== 'pagata').map(invoice => {
+                  const project = projects?.find(p => p.id === invoice.projectId);
+                  const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
 
-                    return (
-                      <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3">
-                            <div className="font-semibold">{invoice.numeroFattura}</div>
-                            <Badge className={statoConfig?.color}>
-                              {statoConfig?.label}
-                            </Badge>
-                          </div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            {project?.code} - {project?.object}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">
-                            Emessa: {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
-                            {invoice.scadenzaPagamento && (
-                              <> | Scadenza: {format(new Date(invoice.scadenzaPagamento), 'dd/MM/yyyy', { locale: it })}</>
-                            )}
-                          </div>
+                  return (
+                    <div key={invoice.id} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="font-semibold text-gray-900 dark:text-white">{invoice.numeroFattura}</div>
+                          <Badge className={statoConfig?.color}>
+                            {statoConfig?.label}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="text-xl font-bold">
-                              €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
-                            </div>
-                          </div>
-                          <Button
-                            size="sm"
-                            onClick={() => handleMarkAsPaid(invoice)}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Segna Pagata
-                          </Button>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {project?.code} - {project?.object}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Emessa: {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
+                          {invoice.scadenzaPagamento && (
+                            <> | Scadenza: {format(new Date(invoice.scadenzaPagamento), 'dd/MM/yyyy', { locale: it })}</>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <div className="text-xl font-bold text-gray-900 dark:text-white">
+                            €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkAsPaid(invoice)}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Segna Pagata
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -655,7 +655,7 @@ export default function RegistroComunicazioni() {
   const [filterProject, setFilterProject] = useState<string>('all');
   const [showImportantOnly, setShowImportantOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   
@@ -909,127 +909,117 @@ export default function RegistroComunicazioni() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Totali</p>
-                <p className="text-2xl font-bold">{totalComms}</p>
-              </div>
-              <MessageSquare className="h-8 w-8 text-blue-600" />
+        <div className="card-g2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Totali</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalComms}</p>
             </div>
-          </CardContent>
-        </Card>
+            <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Importanti</p>
-                <p className="text-2xl font-bold text-yellow-600">{importantComms}</p>
-              </div>
-              <Star className="h-8 w-8 text-yellow-500 fill-yellow-500" />
+        <div className="card-g2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Importanti</p>
+              <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{importantComms}</p>
             </div>
-          </CardContent>
-        </Card>
+            <Star className="h-8 w-8 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Inviate</p>
-                <p className="text-2xl font-bold text-blue-600">{outgoingComms}</p>
-              </div>
-              <ArrowUp className="h-8 w-8 text-blue-600" />
+        <div className="card-g2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Inviate</p>
+              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{outgoingComms}</p>
             </div>
-          </CardContent>
-        </Card>
+            <ArrowUp className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Ricevute</p>
-                <p className="text-2xl font-bold text-green-600">{incomingComms}</p>
-              </div>
-              <ArrowDown className="h-8 w-8 text-green-600" />
+        <div className="card-g2">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Ricevute</p>
+              <p className="text-2xl font-bold text-green-600 dark:text-green-400">{incomingComms}</p>
             </div>
-          </CardContent>
-        </Card>
+            <ArrowDown className="h-8 w-8 text-green-600 dark:text-green-400" />
+          </div>
+        </div>
       </div>
 
       {/* Filtri */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-4">
-            <div className="flex gap-4 flex-wrap">
-              <div className="flex-1 min-w-[250px]">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Cerca per oggetto o contenuto..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+      <div className="card-g2">
+        <div className="space-y-4">
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex-1 min-w-[250px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                <Input
+                  placeholder="Cerca per oggetto o contenuto..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 dark:bg-gray-800 dark:border-gray-700"
+                />
               </div>
-
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Tipo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutti i tipi</SelectItem>
-                  {Object.entries(TYPE_CONFIG).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>
-                      {config.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={filterDirection} onValueChange={setFilterDirection}>
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder="Direzione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutte</SelectItem>
-                  <SelectItem value="outgoing">Inviate</SelectItem>
-                  <SelectItem value="incoming">Ricevute</SelectItem>
-                  <SelectItem value="internal">Interne</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={filterProject} onValueChange={setFilterProject}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Commessa..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutte le commesse</SelectItem>
-                  {(projects || []).map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="important-only"
-                checked={showImportantOnly}
-                onCheckedChange={(checked) => setShowImportantOnly(!!checked)}
-              />
-              <label htmlFor="important-only" className="text-sm font-medium flex items-center gap-1">
-                <Star className="h-4 w-4 text-yellow-500" />
-                Solo importanti
-              </label>
-            </div>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-[180px] dark:bg-gray-800 dark:border-gray-700">
+                <SelectValue placeholder="Tipo..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutti i tipi</SelectItem>
+                {Object.entries(TYPE_CONFIG).map(([key, config]) => (
+                  <SelectItem key={key} value={key}>
+                    {config.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterDirection} onValueChange={setFilterDirection}>
+              <SelectTrigger className="w-[150px] dark:bg-gray-800 dark:border-gray-700">
+                <SelectValue placeholder="Direzione..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutte</SelectItem>
+                <SelectItem value="outgoing">Inviate</SelectItem>
+                <SelectItem value="incoming">Ricevute</SelectItem>
+                <SelectItem value="internal">Interne</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterProject} onValueChange={setFilterProject}>
+              <SelectTrigger className="w-[200px] dark:bg-gray-800 dark:border-gray-700">
+                <SelectValue placeholder="Commessa..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutte le commesse</SelectItem>
+                {(projects || []).map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="important-only"
+              checked={showImportantOnly}
+              onCheckedChange={(checked) => setShowImportantOnly(!!checked)}
+            />
+            <label htmlFor="important-only" className="text-sm font-medium flex items-center gap-1 text-gray-700 dark:text-gray-300">
+              <Star className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
+              Solo importanti
+            </label>
+          </div>
+        </div>
+      </div>
 
       {/* Lista Comunicazioni */}
       <div className="space-y-4">

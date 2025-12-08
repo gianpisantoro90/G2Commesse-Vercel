@@ -46,6 +46,10 @@ export default function GestioneRisorse() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
+
   const [formData, setFormData] = useState({
     userName: "",
     userEmail: "",
@@ -203,13 +207,19 @@ export default function GestioneRisorse() {
     totalCosti: resources?.reduce((sum, r) => sum + (r.oreLavorate * r.costoOrario), 0) || 0
   };
 
+  // Pagination logic for "all resources" tab
+  const totalPages = Math.ceil((resources?.length || 0) / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedResources = resources?.slice(startIndex, endIndex) || [];
+
   return (
     <div className="space-y-6">
       {/* Header con statistiche */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Gestione Risorse</h2>
-          <p className="text-gray-600 mt-1">Assegnazione e monitoraggio risorse per commessa</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gestione Risorse</h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Assegnazione e monitoraggio risorse per commessa</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -370,101 +380,104 @@ export default function GestioneRisorse() {
 
       {/* Statistiche Globali */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Risorse Totali</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{overallStats.totalRisorse}</div>
-              <Users className="w-8 h-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="card-g2">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Risorse Totali</p>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{overallStats.totalRisorse}</div>
+            <Users className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Ore Assegnate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{overallStats.totalOreAssegnate}h</div>
-              <Clock className="w-8 h-8 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="card-g2">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Ore Assegnate</p>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{overallStats.totalOreAssegnate}h</div>
+            <Clock className="w-8 h-8 text-orange-500 dark:text-orange-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Ore Lavorate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{overallStats.totalOreLavorate}h</div>
-              <TrendingUp className="w-8 h-8 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
+        <div className="card-g2">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Ore Lavorate</p>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{overallStats.totalOreLavorate}h</div>
+            <TrendingUp className="w-8 h-8 text-green-500 dark:text-green-400" />
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Costi Totali</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">
-                €{(overallStats.totalCosti / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
-              </div>
-              <span className="text-2xl">💰</span>
+        <div className="card-g2">
+          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Costi Totali</p>
+          <div className="flex items-center justify-between">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              €{(overallStats.totalCosti / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
             </div>
-          </CardContent>
-        </Card>
+            <span className="text-2xl">💰</span>
+          </div>
+        </div>
       </div>
 
       {/* Tabelle Risorse per Commessa */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList>
-          <TabsTrigger value="all">Tutte le Risorse</TabsTrigger>
-          <TabsTrigger value="by-project">Per Commessa</TabsTrigger>
+        <TabsList className="bg-gray-100 dark:bg-gray-800">
+          <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Tutte le Risorse</TabsTrigger>
+          <TabsTrigger value="by-project" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Per Commessa</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tutte le Risorse</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <p className="text-center text-gray-500 py-8">Caricamento...</p>
-              ) : resources?.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">Nessuna risorsa assegnata</p>
-              ) : (
+          <div className="card-g2">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tutte le Risorse</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Mostra:</span>
+                <Select
+                  value={itemsPerPage.toString()}
+                  onValueChange={(v) => {
+                    setItemsPerPage(parseInt(v) as 10 | 25 | 50);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-20 dark:bg-gray-800 dark:border-gray-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {isLoading ? (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Caricamento...</p>
+            ) : resources?.length === 0 ? (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna risorsa assegnata</p>
+            ) : (
+              <>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4">Risorsa</th>
-                        <th className="text-left py-3 px-4">Commessa</th>
-                        <th className="text-left py-3 px-4">Ruolo</th>
-                        <th className="text-right py-3 px-4">Ore Ass./Lav.</th>
-                        <th className="text-right py-3 px-4">Costo Orario</th>
-                        <th className="text-right py-3 px-4">Costo Totale</th>
-                        <th className="text-center py-3 px-4">Azioni</th>
+                      <tr className="border-b dark:border-gray-700">
+                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Risorsa</th>
+                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Commessa</th>
+                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Ruolo</th>
+                        <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300">Ore Ass./Lav.</th>
+                        <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300">Costo Orario</th>
+                        <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300">Costo Totale</th>
+                        <th className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">Azioni</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {resources?.map(resource => {
+                      {paginatedResources.map(resource => {
                         const project = projects?.find(p => p.id === resource.projectId);
                         const roleInfo = ROLES.find(r => r.value === resource.role);
                         const costoTotale = resource.oreLavorate * resource.costoOrario;
 
                         return (
-                          <tr key={resource.id} className="border-b hover:bg-gray-50">
+                          <tr key={resource.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                             <td className="py-3 px-4">
                               <div>
-                                <div className="font-medium">{resource.userName}</div>
+                                <div className="font-medium text-gray-900 dark:text-white">{resource.userName}</div>
                                 {resource.userEmail && (
-                                  <div className="text-sm text-gray-500">{resource.userEmail}</div>
+                                  <div className="text-sm text-gray-500 dark:text-gray-400">{resource.userEmail}</div>
                                 )}
                                 {resource.isResponsabile && (
                                   <Badge variant="secondary" className="mt-1">Responsabile</Badge>
@@ -473,8 +486,8 @@ export default function GestioneRisorse() {
                             </td>
                             <td className="py-3 px-4">
                               <div className="text-sm">
-                                <div className="font-medium">{project?.code}</div>
-                                <div className="text-gray-500 truncate max-w-xs">{project?.object}</div>
+                                <div className="font-medium text-gray-900 dark:text-white">{project?.code}</div>
+                                <div className="text-gray-500 dark:text-gray-400 truncate max-w-xs">{project?.object}</div>
                               </div>
                             </td>
                             <td className="py-3 px-4">
@@ -483,19 +496,19 @@ export default function GestioneRisorse() {
                               </Badge>
                             </td>
                             <td className="py-3 px-4 text-right">
-                              <div className="text-sm">
+                              <div className="text-sm text-gray-900 dark:text-white">
                                 <div>{resource.oreLavorate}h / {resource.oreAssegnate}h</div>
-                                <div className="text-gray-500">
+                                <div className="text-gray-500 dark:text-gray-400">
                                   {resource.oreAssegnate > 0
                                     ? Math.round((resource.oreLavorate / resource.oreAssegnate) * 100)
                                     : 0}%
                                 </div>
                               </div>
                             </td>
-                            <td className="py-3 px-4 text-right">
+                            <td className="py-3 px-4 text-right text-gray-900 dark:text-white">
                               €{(resource.costoOrario / 100).toFixed(2)}
                             </td>
-                            <td className="py-3 px-4 text-right font-medium">
+                            <td className="py-3 px-4 text-right font-medium text-gray-900 dark:text-white">
                               €{(costoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                             </td>
                             <td className="py-3 px-4">
@@ -526,103 +539,126 @@ export default function GestioneRisorse() {
                     </tbody>
                   </table>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-gray-700">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, resources?.length || 0)}</strong> di <strong>{resources?.length || 0}</strong> risorse
+                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        ← Precedente
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Successiva →
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="by-project" className="space-y-4">
           {projectResourceStats.map(stat => (
-            <Card key={stat.project.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle>{stat.project.code}</CardTitle>
-                    <CardDescription className="mt-1">{stat.project.object}</CardDescription>
-                  </div>
-                  <div className="text-right">
-                    {stat.responsabile && (
-                      <div className="text-sm">
-                        <div className="font-medium">Responsabile:</div>
-                        <div className="text-gray-600">{stat.responsabile.userName}</div>
-                      </div>
-                    )}
-                  </div>
+            <div key={stat.project.id} className="card-g2">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{stat.project.code}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{stat.project.object}</p>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {stat.resources.length === 0 ? (
-                  <p className="text-center text-gray-500 py-4">Nessuna risorsa assegnata</p>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-4 gap-4 mb-4">
-                      <div className="text-center p-3 bg-blue-50 rounded-lg">
-                        <div className="text-sm text-gray-600">Risorse</div>
-                        <div className="text-xl font-bold">{stat.resources.length}</div>
-                      </div>
-                      <div className="text-center p-3 bg-orange-50 rounded-lg">
-                        <div className="text-sm text-gray-600">Ore Assegnate</div>
-                        <div className="text-xl font-bold">{stat.totalOreAssegnate}h</div>
-                      </div>
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <div className="text-sm text-gray-600">Ore Lavorate</div>
-                        <div className="text-xl font-bold">{stat.totalOreLavorate}h</div>
-                      </div>
-                      <div className="text-center p-3 bg-purple-50 rounded-lg">
-                        <div className="text-sm text-gray-600">Costo Totale</div>
-                        <div className="text-xl font-bold">
-                          €{(stat.totalCosti / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
-                        </div>
+                <div className="text-right">
+                  {stat.responsabile && (
+                    <div className="text-sm">
+                      <div className="font-medium text-gray-900 dark:text-white">Responsabile:</div>
+                      <div className="text-gray-600 dark:text-gray-400">{stat.responsabile.userName}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {stat.resources.length === 0 ? (
+                <p className="text-center text-gray-500 dark:text-gray-400 py-4">Nessuna risorsa assegnata</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Risorse</div>
+                      <div className="text-xl font-bold text-gray-900 dark:text-white">{stat.resources.length}</div>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Ore Assegnate</div>
+                      <div className="text-xl font-bold text-gray-900 dark:text-white">{stat.totalOreAssegnate}h</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Ore Lavorate</div>
+                      <div className="text-xl font-bold text-gray-900 dark:text-white">{stat.totalOreLavorate}h</div>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/30 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Costo Totale</div>
+                      <div className="text-xl font-bold text-gray-900 dark:text-white">
+                        €{(stat.totalCosti / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
                       </div>
                     </div>
+                  </div>
 
-                    <div className="space-y-2">
-                      {stat.resources.map(resource => {
-                        const roleInfo = ROLES.find(r => r.value === resource.role);
-                        return (
-                          <div key={resource.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
-                            <div className="flex items-center gap-3">
-                              <div>
-                                <div className="font-medium">{resource.userName}</div>
-                                <div className="text-sm text-gray-500">{roleInfo?.icon} {roleInfo?.label}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right text-sm">
-                                <div className="text-gray-600">Ore: {resource.oreLavorate}/{resource.oreAssegnate}</div>
-                                <div className="font-medium">
-                                  €{((resource.oreLavorate * resource.costoOrario) / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
-                                </div>
-                              </div>
-                              <div className="flex gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEdit(resource)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (confirm("Sei sicuro di voler eliminare questa risorsa?")) {
-                                      deleteResourceMutation.mutate(resource.id);
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4 text-red-500" />
-                                </Button>
-                              </div>
+                  <div className="space-y-2">
+                    {stat.resources.map(resource => {
+                      const roleInfo = ROLES.find(r => r.value === resource.role);
+                      return (
+                        <div key={resource.id} className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">{resource.userName}</div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">{roleInfo?.icon} {roleInfo?.label}</div>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right text-sm">
+                              <div className="text-gray-600 dark:text-gray-400">Ore: {resource.oreLavorate}/{resource.oreAssegnate}</div>
+                              <div className="font-medium text-gray-900 dark:text-white">
+                                €{((resource.oreLavorate * resource.costoOrario) / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(resource)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm("Sei sicuro di voler eliminare questa risorsa?")) {
+                                    deleteResourceMutation.mutate(resource.id);
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
           ))}
         </TabsContent>
       </Tabs>
