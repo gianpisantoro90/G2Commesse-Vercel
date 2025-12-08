@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +46,9 @@ import {
   Trash2,
   Edit,
   Bell,
-  Calendar as CalendarClock
+  Calendar as CalendarClock,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { format, formatDistanceToNow, isPast, isFuture, isToday, addDays } from "date-fns";
 import { it } from "date-fns/locale";
@@ -221,14 +222,13 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
   const typeConfig = TYPE_CONFIG[deadline.type];
 
   return (
-    <Card className={`${
+    <div className={`card-g2 ${
       isOverdue && deadline.status === 'pending' ? 'border-red-300 bg-red-50 dark:border-red-600 dark:bg-red-950/20' :
       isUpcoming && deadline.status === 'pending' ? 'border-orange-300 bg-orange-50 dark:border-orange-600 dark:bg-orange-950/20' :
       deadline.status === 'completed' ? 'border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-950/20' :
-      'border-gray-200 dark:border-gray-700'
+      ''
     }`}>
-      <CardContent className="pt-4">
-        <div className="space-y-3">
+      <div className="space-y-3">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -271,7 +271,7 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-2 border-t">
+          <div className="flex items-center gap-2 pt-2 border-t dark:border-gray-700">
             {deadline.status === 'pending' && (
               <Button
                 size="sm"
@@ -280,13 +280,13 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
                 className="flex-1"
               >
                 <CheckCircle2 className="h-4 w-4 mr-1" />
-                Completa
+                <span className="hidden sm:inline">Completa</span>
               </Button>
             )}
             {deadline.status === 'completed' && (
               <Badge className="bg-green-500 text-white">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Completata
+                <span className="hidden sm:inline">Completata</span>
               </Badge>
             )}
             <Button
@@ -300,14 +300,14 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
               size="sm"
               variant="ghost"
               onClick={onDelete}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
             >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -635,18 +635,19 @@ export default function Scadenzario() {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-4">
-            <span className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               Pagina <strong>{currentPage}</strong> di <strong>{totalPages}</strong>
-            </span>
-            <div className="flex gap-2">
+            </div>
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
               >
-                ← Precedente
+                <ChevronLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Precedente</span>
               </Button>
               <Button
                 variant="outline"
@@ -654,7 +655,8 @@ export default function Scadenzario() {
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
               >
-                Successiva →
+                <span className="hidden sm:inline">Successiva</span>
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>

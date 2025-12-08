@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { UserPlus, Users, Clock, TrendingUp, Trash2, Edit } from "lucide-react";
+import { UserPlus, Users, Clock, TrendingUp, Trash2, Edit, ChevronLeft, ChevronRight } from "lucide-react";
 import { type Project } from "@shared/schema";
 
 interface ProjectResource {
@@ -417,9 +417,15 @@ export default function GestioneRisorse() {
 
       {/* Tabelle Risorse per Commessa */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="bg-gray-100 dark:bg-gray-800">
-          <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Tutte le Risorse</TabsTrigger>
-          <TabsTrigger value="by-project" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Per Commessa</TabsTrigger>
+        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="all" className="flex-1 min-w-[120px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Tutte le Risorse</span>
+            <span className="sm:hidden">Tutte</span>
+          </TabsTrigger>
+          <TabsTrigger value="by-project" className="flex-1 min-w-[120px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Per Commessa</span>
+            <span className="sm:hidden">Per Comm.</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
@@ -542,18 +548,19 @@ export default function GestioneRisorse() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-gray-700">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, resources?.length || 0)}</strong> di <strong>{resources?.length || 0}</strong> risorse
-                    </span>
-                    <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 mt-4 border-t dark:border-gray-700">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Pagina <strong>{currentPage}</strong> di <strong>{totalPages}</strong> ({startIndex + 1}-{Math.min(endIndex, resources?.length || 0)} di {resources?.length || 0})
+                    </div>
+                    <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         disabled={currentPage === 1}
                       >
-                        ← Precedente
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">Precedente</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -561,7 +568,8 @@ export default function GestioneRisorse() {
                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                         disabled={currentPage === totalPages}
                       >
-                        Successiva →
+                        <span className="hidden sm:inline">Successiva</span>
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
