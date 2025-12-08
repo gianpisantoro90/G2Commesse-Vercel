@@ -5,7 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -1208,7 +1208,8 @@ export default function ProjectsTable() {
                   disabled={currentPage === 1}
                   data-testid="prev-page"
                 >
-                  ← Prec
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Precedente</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -1217,7 +1218,8 @@ export default function ProjectsTable() {
                   disabled={currentPage === totalPages || totalPages === 0}
                   data-testid="next-page"
                 >
-                  Succ →
+                  <span className="hidden sm:inline">Successiva</span>
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>

@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Plus, Edit, Trash2, Euro, Calendar, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Euro, Calendar, CheckCircle, Clock, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { type Project } from "@shared/schema";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -606,7 +606,8 @@ export default function Fatturazione() {
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         disabled={currentPage === 1}
                       >
-                        ← Precedente
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">Precedente</span>
                       </Button>
                       <Button
                         variant="outline"
@@ -614,7 +615,8 @@ export default function Fatturazione() {
                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                         disabled={currentPage === totalPages}
                       >
-                        Successiva →
+                        <span className="hidden sm:inline">Successiva</span>
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
