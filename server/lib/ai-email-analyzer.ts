@@ -32,6 +32,7 @@ export interface AIEmailAnalysis {
   };
   suggestedTags: string[];
   isImportant: boolean;
+  isSpam?: boolean;
   summary?: string;
   suggestedTasks?: Array<{
     title: string;
@@ -169,7 +170,7 @@ const deepseekAdapter: ProviderAdapter = {
     return retryWithBackoff(async () => {
       const systemMessage = "You are an expert Italian structural engineer analyzing emails for G2 Ingegneria. Always respond with valid JSON only.";
       
-      const isThinkingModel = config.model.includes('reasoner') || config.model.includes('v3.2');
+      const isThinkingModel = config.model.includes('reasoner') || config.model.includes('v3.2') || config.model.includes('r1');
       const timeout = isThinkingModel ? REASONER_TIMEOUT_MS : ANALYSIS_TIMEOUT_MS;
       
       const requestBody: any = {
@@ -288,7 +289,7 @@ export function buildPrompt(email: ParsedEmail, projects: ProjectInfo[]): string
   const subject = email.subject || '(Nessun oggetto)';
   const bodyText = email.bodyText || '(Nessun contenuto)';
   
-  return `Analizza questa email e trova i progetti più pertinenti confrontando TUTTI i dati disponibili.
+  return `Analizza questa email e trova i progetti più pertinenti confrontando TUTTI i dati disponibili. FILTRO SPAM/NEWSLETTER CRITICO: identifica e scarta pubblicità, newsletter, email automatiche.
 
 EMAIL RICEVUTA:
 Da: ${fromEmail}${fromName}
@@ -298,7 +299,24 @@ Contenuto: ${bodyText.substring(0, 2000)}
 PROGETTI DISPONIBILI:
 ${projects.map(p => `ID: ${p.id} | Codice: ${p.code} | Cliente: ${p.client} | Oggetto: ${p.object}`).join('\n')}
 
-ISTRUZIONI MATCHING INTELLIGENTE:
+FILTRO SPAM/NEWSLETTER (PRIORITARIO):
+SCARTA IMMEDIATAMENTE email se:
+1. Contiene "unsubscribe", "newsletter", "marketing", "promotional" (caso insensitive)
+2. Email da domain marketing (mailchimp.com, sendgrid.com, brevo.com, campaign-archive, etc.)
+3. Subject contiene: "newsletter", "weekly digest", "promotional", "special offer", "discount", "promo"
+4. Corpo contiene link di unsubscribe o "This is an automated message"
+5. From name contiene: "Newsletter", "Alerts", "Notifications", "Marketing", "Promotions", "Ads"
+6. Email da sistemi automatici: Amazon, eBay, Aliexpress, Facebook, Google Ads, Spotify, PayPal promotionals, Booking, Agoda
+7. Tono e contenuto: pubblicità pura senza relazione tecnica al progetto
+
+SE EMAIL È SPAM/NEWSLETTER:
+- projectMatches: []
+- confidence: 0
+- summary: "Email non rilevante - publicità/newsletter"
+- isSpam: true
+- SMETTI DI ELABORARE, RISPONDI SOLO IL JSON
+
+ISTRUZIONI MATCHING INTELLIGENTE (solo se NON spam):
 1. NON limitarti a cercare il codice progetto nell'email
 2. Analizza il CONTENUTO dell'email e confrontalo con:
    - Nome del cliente/committente
@@ -428,7 +446,8 @@ CRITICAL: You MUST respond ONLY with a valid JSON object. No explanation, no mar
   "isImportant": false,
   "summary": "...",
   "suggestedTasks": [...],
-  "suggestedDeadlines": [...]
+  "suggestedDeadlines": [...],
+  "isSpam": false
 }`;
 }
 
@@ -520,6 +539,7 @@ export function normalizeAnalysis(rawResponse: string, provider: Provider): AIEm
       return {
         confidence: 0,
         projectMatches: [],
+        isSpam: false,
         extractedData: {
           deadlines: [],
           amounts: [],
@@ -561,6 +581,7 @@ export function normalizeAnalysis(rawResponse: string, provider: Provider): AIEm
       },
       suggestedTags: parsed.suggestedTags || [],
       isImportant: parsed.isImportant || false,
+      isSpam: parsed.isSpam || false,
       summary: parsed.summary || '',
       suggestedTasks: (parsed.suggestedTasks || []).map((task: any) => ({
         title: task.title || '',
@@ -588,6 +609,7 @@ export function normalizeAnalysis(rawResponse: string, provider: Provider): AIEm
     return {
       confidence: 0,
       projectMatches: [],
+      isSpam: false,
       extractedData: {},
       suggestedTags: [],
       isImportant: false,

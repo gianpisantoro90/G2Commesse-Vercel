@@ -1665,7 +1665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'claude-sonnet-4-20250514': 'anthropic',
             'claude-3-5-sonnet-20241022': 'anthropic',
             'claude-3-haiku-20240307': 'anthropic',
-            'deepseek-reasoner': 'deepseek',
+            'deepseek-r1': 'deepseek',
             'deepseek-chat': 'deepseek',
           };
           
@@ -1785,7 +1785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: model || 'deepseek-reasoner',
+            model: model || 'deepseek-r1',
             messages: [{ role: 'user', content: 'test' }],
             max_tokens: 10,
           }),
@@ -1854,7 +1854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: model || 'deepseek-reasoner',
+            model: model || 'deepseek-r1',
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 800,
           }),
