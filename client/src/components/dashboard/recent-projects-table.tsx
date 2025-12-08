@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { type Project } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
-import { Cloud, CloudOff, RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
+import { Cloud, RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
+import { ProjectStatusBadge } from "@/components/ui/status-badge";
 
 export default function RecentProjectsTable() {
   const { data: projects = [] } = useQuery<Project[]>({
@@ -22,23 +22,6 @@ export default function RecentProjectsTable() {
   const recentProjects = projects
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .slice(0, 3);
-
-  const getStatusBadge = (project: Project) => {
-    // Use the actual status from database to match the Gestione tab
-    return (
-      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-        project.status === 'in corso' 
-          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' 
-          : project.status === 'conclusa'
-          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-      }`}>
-        {project.status === 'in corso' ? '🟡 In Corso' : 
-         project.status === 'conclusa' ? '🟢 Conclusa' : 
-         '🔴 Sospesa'}
-      </span>
-    );
-  };
 
   const getOneDriveSyncIndicator = (project: Project) => {
     if (!isConnected) {
@@ -143,7 +126,7 @@ export default function RecentProjectsTable() {
                       <div className="truncate">{project.object}</div>
                     </td>
                     <td className="py-3 px-2 sm:px-4" data-testid={`project-status-${project.id}`}>
-                      {getStatusBadge(project)}
+                      <ProjectStatusBadge status={project.status as "in corso" | "conclusa" | "sospesa"} />
                     </td>
                     <td className="py-3 px-2 sm:px-4 text-center" data-testid={`project-onedrive-${project.id}`}>
                       {getOneDriveSyncIndicator(project)}
@@ -168,7 +151,7 @@ export default function RecentProjectsTable() {
                 <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{project.object}</div>
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                   <div className="text-xs text-gray-600 dark:text-gray-400">📍 {project.city}</div>
-                  {getStatusBadge(project)}
+                  <ProjectStatusBadge status={project.status as "in corso" | "conclusa" | "sospesa"} />
                 </div>
               </div>
             ))}

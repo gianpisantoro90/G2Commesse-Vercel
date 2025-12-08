@@ -1,17 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell
 } from 'recharts';
 import { type Project, type ProjectMetadata, type PrestazioniStats } from "@shared/schema";
 import { formatImporto } from "@/lib/prestazioni-utils";
 import {
-  TrendingUp, TrendingDown, DollarSign, Briefcase,
+  DollarSign, Briefcase,
   PieChart as PieChartIcon, BarChart3, Target, AlertCircle, FileText, Euro
 } from "lucide-react";
 
@@ -26,19 +25,15 @@ export default function EconomicDashboardCard() {
 
   if (isLoading) {
     return (
-      <Card className="col-span-full">
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64 mt-2" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="card-g2" data-testid="economic-dashboard-loading">
+        <Skeleton className="h-6 w-48 mb-2" />
+        <Skeleton className="h-4 w-64 mb-6" />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -127,25 +122,25 @@ export default function EconomicDashboardCard() {
     .slice(0, 5);
 
   return (
-    <Card className="col-span-full shadow-lg border-gray-200">
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-              <DollarSign className="h-6 w-6 text-green-600" />
-              Dashboard Economica
-            </CardTitle>
-            <CardDescription className="mt-1">
-              Panoramica economica delle commesse attive e concluse
-            </CardDescription>
-          </div>
-          <Badge variant="outline" className="text-sm px-3 py-1">
-            {projectsWithEconomicData.length} commesse valorizzate
-          </Badge>
+    <div className="card-g2" data-testid="economic-dashboard-card">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
+            Dashboard Economica
+          </h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            Panoramica economica delle commesse attive e concluse
+          </p>
         </div>
-      </CardHeader>
+        <Badge variant="outline" className="text-xs px-3 py-1 border-gray-300 dark:border-gray-600">
+          {projectsWithEconomicData.length} commesse valorizzate
+        </Badge>
+      </div>
 
-      <CardContent>
+      {/* Content */}
+      <div>
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-auto bg-gray-100 dark:bg-gray-800 shadow-sm">
             <TabsTrigger value="overview" className="flex items-center gap-2 dark:data-[state=active]:bg-gray-700">
@@ -166,130 +161,102 @@ export default function EconomicDashboardCard() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* KPI 1: Importo Totale Opere */}
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 border-blue-200 dark:border-blue-800">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-blue-700 dark:text-blue-300 font-medium">
-                    Importo Totale Opere
-                  </CardDescription>
-                  <CardTitle className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-                    {formatImporto(totalImportoOpere)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
-                    Base di calcolo compensi professionali
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border border-blue-200 dark:border-blue-800">
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
+                  Importo Totale Opere
+                </p>
+                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                  {formatImporto(totalImportoOpere)}
+                </p>
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                  Base di calcolo compensi professionali
+                </p>
+              </div>
 
               {/* KPI 2: Compensi Fatturati */}
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 border-green-200 dark:border-green-800">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-green-700 dark:text-green-300 font-medium">
-                    Compensi Fatturati
-                  </CardDescription>
-                  <CardTitle className="text-3xl font-bold text-green-900 dark:text-green-100">
-                    {formatImporto(totalImportoServizi)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                    <FileText className="h-3 w-3" />
-                    {prestazioniStats?.fatturate || 0} prestazioni fatturate
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border border-green-200 dark:border-green-800">
+                <p className="text-sm font-medium text-green-700 dark:text-green-300 mb-1">
+                  Compensi Fatturati
+                </p>
+                <p className="text-2xl font-bold text-green-900 dark:text-green-100">
+                  {formatImporto(totalImportoServizi)}
+                </p>
+                <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 mt-2">
+                  <FileText className="h-3 w-3" />
+                  {prestazioniStats?.fatturate || 0} prestazioni fatturate
+                </div>
+              </div>
 
               {/* KPI 3: Da Fatturare */}
-              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900 border-yellow-200 dark:border-yellow-800">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-yellow-700 dark:text-yellow-300 font-medium">
-                    Da Fatturare
-                  </CardDescription>
-                  <CardTitle className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
-                    {formatImporto(importoServiziInCorso)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                    {prestazioniStats?.completateNonFatturate || 0} prestazioni completate
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/50 dark:to-yellow-900/50 border border-yellow-200 dark:border-yellow-800">
+                <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1">
+                  Da Fatturare
+                </p>
+                <p className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+                  {formatImporto(importoServiziInCorso)}
+                </p>
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                  {prestazioniStats?.completateNonFatturate || 0} prestazioni completate
+                </p>
+              </div>
 
               {/* KPI 4: Incassato */}
-              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 border-purple-200 dark:border-purple-800">
-                <CardHeader className="pb-2">
-                  <CardDescription className="text-purple-700 dark:text-purple-300 font-medium">
-                    Totale Incassato
-                  </CardDescription>
-                  <CardTitle className="text-3xl font-bold text-purple-900 dark:text-purple-100">
-                    {formatImporto(importoServiziIncassati)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-purple-600 dark:text-purple-400">
-                    <Euro className="h-3 w-3 inline mr-1" />
-                    {prestazioniStats?.pagate || 0} prestazioni pagate
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border border-purple-200 dark:border-purple-800">
+                <p className="text-sm font-medium text-purple-700 dark:text-purple-300 mb-1">
+                  Totale Incassato
+                </p>
+                <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                  {formatImporto(importoServiziIncassati)}
+                </p>
+                <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
+                  <Euro className="h-3 w-3 inline mr-1" />
+                  {prestazioniStats?.pagate || 0} prestazioni pagate
+                </p>
+              </div>
             </div>
 
             {/* Metriche Secondarie */}
             <div className="grid gap-4 md:grid-cols-3">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Importo Previsto Totale
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatImporto(totalImportoPrevisto)}
-                  </div>
-                  <Progress value={totalImportoPrevisto > 0 ? (importoServiziIncassati / totalImportoPrevisto) * 100 : 0} className="mt-2 h-2" />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {prestazioniStats?.totale || 0} prestazioni totali
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                  Importo Previsto Totale
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatImporto(totalImportoPrevisto)}
+                </p>
+                <Progress value={totalImportoPrevisto > 0 ? (importoServiziIncassati / totalImportoPrevisto) * 100 : 0} className="mt-3 h-2" />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  {prestazioniStats?.totale || 0} prestazioni totali
+                </p>
+              </div>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Da Incassare
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatImporto((prestazioniStats?.importoDaIncassare || 0) / 100)}
-                  </div>
-                  <Progress value={totalImportoServizi > 0 ? ((prestazioniStats?.importoDaIncassare || 0) / 100 / totalImportoServizi) * 100 : 0} className="mt-2 h-2 [&>div]:bg-purple-500" />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {prestazioniStats?.fatturateNonPagate || 0} fatture in attesa
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                  Da Incassare
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatImporto((prestazioniStats?.importoDaIncassare || 0) / 100)}
+                </p>
+                <Progress value={totalImportoServizi > 0 ? ((prestazioniStats?.importoDaIncassare || 0) / 100 / totalImportoServizi) * 100 : 0} className="mt-3 h-2 [&>div]:bg-purple-500" />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  {prestazioniStats?.fatturateNonPagate || 0} fatture in attesa
+                </p>
+              </div>
 
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    Tasso Incasso
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {prestazioniStats && prestazioniStats.totale > 0
-                      ? ((prestazioniStats.pagate / prestazioniStats.totale) * 100).toFixed(1)
-                      : 0}%
-                  </div>
-                  <Progress value={prestazioniStats && prestazioniStats.totale > 0 ? (prestazioniStats.pagate / prestazioniStats.totale) * 100 : 0} className="mt-2 h-2 [&>div]:bg-green-500" />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                    {prestazioniStats?.pagate || 0}/{prestazioniStats?.totale || 0} prestazioni
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+                  Tasso Incasso
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {prestazioniStats && prestazioniStats.totale > 0
+                    ? ((prestazioniStats.pagate / prestazioniStats.totale) * 100).toFixed(1)
+                    : 0}%
+                </p>
+                <Progress value={prestazioniStats && prestazioniStats.totale > 0 ? (prestazioniStats.pagate / prestazioniStats.totale) * 100 : 0} className="mt-3 h-2 [&>div]:bg-green-500" />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  {prestazioniStats?.pagate || 0}/{prestazioniStats?.totale || 0} prestazioni
+                </p>
+              </div>
             </div>
           </TabsContent>
 
@@ -297,17 +264,17 @@ export default function EconomicDashboardCard() {
           <TabsContent value="charts" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               {/* Grafico Distribuzione per Anno */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-blue-600" />
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <div className="mb-4">
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     Distribuzione Annuale Compensi
-                  </CardTitle>
-                  <CardDescription>
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Andamento compensi professionali per anno
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                  </p>
+                </div>
+                <div>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={yearlyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -333,21 +300,21 @@ export default function EconomicDashboardCard() {
                       />
                     </BarChart>
                   </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
 
               {/* Grafico Distribuzione per Stato */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <PieChartIcon className="h-5 w-5 text-green-600" />
+              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                <div className="mb-4">
+                  <h4 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <PieChartIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
                     Distribuzione per Stato
-                  </CardTitle>
-                  <CardDescription>
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     Ripartizione compensi per stato commessa
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+                  </p>
+                </div>
+                <div>
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -370,37 +337,37 @@ export default function EconomicDashboardCard() {
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="mt-4 space-y-2">
-                    {statusData.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                          <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
-                        </div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {formatImporto(item.value)} ({item.count})
-                        </div>
+                </div>
+                <div className="mt-4 space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  {statusData.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                        <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {formatImporto(item.value)} ({item.count})
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </TabsContent>
 
           {/* Top Commesse */}
           <TabsContent value="top-projects" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-purple-600" />
+            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+              <div className="mb-4">
+                <h4 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   Top 5 Commesse per Importo Opere
-                </CardTitle>
-                <CardDescription>
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Commesse con il maggiore importo lavori
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
+                </p>
+              </div>
+              <div>
                 <div className="space-y-4">
                   {topProjectsByValue.length === 0 ? (
                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -449,11 +416,11 @@ export default function EconomicDashboardCard() {
                     })
                   )}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
