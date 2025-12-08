@@ -133,6 +133,15 @@ export default function FatturazionePage() {
     data: new Date().toISOString().split('T')[0],
   });
 
+  // Edit date dialog state
+  const [isEditDateDialogOpen, setIsEditDateDialogOpen] = useState(false);
+  const [editDateData, setEditDateData] = useState({
+    prestazioneId: '',
+    dateField: '' as 'dataInizio' | 'dataCompletamento' | 'dataFatturazione' | 'dataPagamento',
+    dateValue: '',
+    dateLabel: '',
+  });
+
   // Form state for new prestazione
   const [formData, setFormData] = useState({
     tipo: '' as typeof PRESTAZIONE_TIPI[number] | '',
@@ -280,6 +289,27 @@ export default function FatturazionePage() {
     },
   });
 
+  const updateDateMutation = useMutation({
+    mutationFn: async ({ id, field, value }: { id: string; field: string; value: string }) => {
+      const res = await fetch(`/api/prestazioni/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Errore nell'aggiornamento");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({ title: "Data aggiornata" });
+      setIsEditDateDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile aggiornare la data", variant: "destructive" });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/prestazioni/${id}`, {
@@ -421,6 +451,33 @@ export default function FatturazionePage() {
       stato: advanceData.newStato,
       data: advanceData.data,
     });
+  };
+
+  const handleEditDate = () => {
+    if (!editDateData.prestazioneId || !editDateData.dateField || !editDateData.dateValue) return;
+    updateDateMutation.mutate({
+      id: editDateData.prestazioneId,
+      field: editDateData.dateField,
+      value: editDateData.dateValue,
+    });
+  };
+
+  const openEditDateDialog = (
+    prestazioneId: string,
+    field: 'dataInizio' | 'dataCompletamento' | 'dataFatturazione' | 'dataPagamento',
+    currentValue: string | Date | null,
+    label: string
+  ) => {
+    const dateStr = currentValue
+      ? new Date(currentValue).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
+    setEditDateData({
+      prestazioneId,
+      dateField: field,
+      dateValue: dateStr,
+      dateLabel: label,
+    });
+    setIsEditDateDialogOpen(true);
   };
 
   const getNextStato = (currentStato: string): string | null => {
@@ -672,28 +729,64 @@ export default function FatturazionePage() {
                         <TableCell>
                           <div className="text-xs space-y-0.5">
                             {prestazione.dataInizio && (
-                              <div className="flex items-center gap-1">
+                              <button
+                                className="flex items-center gap-1 hover:bg-muted px-1 py-0.5 rounded cursor-pointer transition-colors"
+                                onClick={() => openEditDateDialog(
+                                  prestazione.id,
+                                  'dataInizio',
+                                  prestazione.dataInizio,
+                                  'Data Inizio'
+                                )}
+                                title="Clicca per modificare"
+                              >
                                 <Play className="h-3 w-3" />
                                 <span>{formatDate(prestazione.dataInizio)}</span>
-                              </div>
+                              </button>
                             )}
                             {prestazione.dataCompletamento && (
-                              <div className="flex items-center gap-1">
+                              <button
+                                className="flex items-center gap-1 hover:bg-muted px-1 py-0.5 rounded cursor-pointer transition-colors"
+                                onClick={() => openEditDateDialog(
+                                  prestazione.id,
+                                  'dataCompletamento',
+                                  prestazione.dataCompletamento,
+                                  'Data Completamento'
+                                )}
+                                title="Clicca per modificare"
+                              >
                                 <CheckCircle className="h-3 w-3 text-amber-600" />
                                 <span>{formatDate(prestazione.dataCompletamento)}</span>
-                              </div>
+                              </button>
                             )}
                             {prestazione.dataFatturazione && (
-                              <div className="flex items-center gap-1">
+                              <button
+                                className="flex items-center gap-1 hover:bg-muted px-1 py-0.5 rounded cursor-pointer transition-colors"
+                                onClick={() => openEditDateDialog(
+                                  prestazione.id,
+                                  'dataFatturazione',
+                                  prestazione.dataFatturazione,
+                                  'Data Fatturazione'
+                                )}
+                                title="Clicca per modificare"
+                              >
                                 <FileText className="h-3 w-3 text-purple-600" />
                                 <span>{formatDate(prestazione.dataFatturazione)}</span>
-                              </div>
+                              </button>
                             )}
                             {prestazione.dataPagamento && (
-                              <div className="flex items-center gap-1">
+                              <button
+                                className="flex items-center gap-1 hover:bg-muted px-1 py-0.5 rounded cursor-pointer transition-colors"
+                                onClick={() => openEditDateDialog(
+                                  prestazione.id,
+                                  'dataPagamento',
+                                  prestazione.dataPagamento,
+                                  'Data Pagamento'
+                                )}
+                                title="Clicca per modificare"
+                              >
                                 <Euro className="h-3 w-3 text-green-600" />
                                 <span>{formatDate(prestazione.dataPagamento)}</span>
-                              </div>
+                              </button>
                             )}
                             {!prestazione.dataInizio && !prestazione.dataCompletamento &&
                              !prestazione.dataFatturazione && !prestazione.dataPagamento && (
@@ -1073,6 +1166,34 @@ export default function FatturazionePage() {
             <Button variant="outline" onClick={() => setIsAdvanceDialogOpen(false)}>Annulla</Button>
             <Button onClick={handleAdvanceStatus} disabled={updateStatoMutation.isPending}>
               {updateStatoMutation.isPending ? "Aggiornamento..." : "Conferma"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Date Dialog */}
+      <Dialog open={isEditDateDialogOpen} onOpenChange={setIsEditDateDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Modifica Data</DialogTitle>
+            <DialogDescription>
+              {editDateData.dateLabel}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Data</Label>
+              <Input
+                type="date"
+                value={editDateData.dateValue}
+                onChange={(e) => setEditDateData({ ...editDateData, dateValue: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDateDialogOpen(false)}>Annulla</Button>
+            <Button onClick={handleEditDate} disabled={updateDateMutation.isPending}>
+              {updateDateMutation.isPending ? "Salvataggio..." : "Salva"}
             </Button>
           </DialogFooter>
         </DialogContent>
