@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, XCircle, Sparkles, TrendingUp, Info } from "lucide-react";
@@ -113,87 +112,86 @@ export function AISuggestionsPanel({
   };
 
   return (
-    <Card className="border-2 border-purple-200 bg-purple-50/30">
-      <CardHeader className="pb-3">
+    <div className="card-g2 border-2 border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20">
+      <div className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-purple-600" />
-            <CardTitle className="text-lg">Suggerimenti AI</CardTitle>
+            <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Suggerimenti AI</h3>
           </div>
           {hasMatches && (
-            <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+            <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
               {matches.length} {matches.length === 1 ? 'match trovato' : 'match trovati'}
             </Badge>
           )}
         </div>
-        <CardDescription>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
           {hasMatches
             ? "L'AI ha identificato possibili commesse correlate a questa email"
             : "Nessuna commessa correlata trovata automaticamente"}
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
 
-      <CardContent className="space-y-4">
+      <div className="space-y-4">
         {/* Summary */}
         {aiSuggestions.summary && (
-          <div className="bg-white rounded-lg p-3 border border-purple-200">
-            <p className="text-sm text-gray-700 italic">"{aiSuggestions.summary}"</p>
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
+            <p className="text-sm text-gray-700 dark:text-gray-300 italic">"{aiSuggestions.summary}"</p>
           </div>
         )}
 
         {/* Project Matches */}
         {hasMatches && (
           <div className="space-y-3">
-            <h4 className="font-medium text-sm text-gray-700 flex items-center gap-2">
+            <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
               <Info className="h-4 w-4" />
               Commesse Suggerite (ordinate per rilevanza)
             </h4>
 
             {matches.map((match, index) => (
-              <Card
+              <div
                 key={match.projectId}
-                className={`transition-all ${
+                className={`rounded-lg border p-4 transition-all ${
                   selectedMatchIndex === index
-                    ? 'ring-2 ring-purple-500 bg-purple-50'
-                    : 'hover:shadow-md'
+                    ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950/30'
+                    : 'hover:shadow-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                 } ${
                   currentProjectId === match.projectId
-                    ? 'border-green-500 bg-green-50'
+                    ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
                     : ''
                 }`}
               >
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    {/* Header */}
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          {getConfidenceIcon(match.confidence)}
-                          <h5 className="font-semibold text-gray-900">
-                            {match.projectCode}
-                          </h5>
-                          <Badge
-                            variant="outline"
-                            className={getConfidenceColor(match.confidence)}
-                          >
-                            {(match.confidence * 100).toFixed(0)}% affidabilità
-                          </Badge>
-                        </div>
-                        {currentProjectId === match.projectId && (
-                          <Badge variant="default" className="mt-1 bg-green-600">
-                            ✓ Commessa Attuale
-                          </Badge>
-                        )}
+                <div className="space-y-3">
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        {getConfidenceIcon(match.confidence)}
+                        <h5 className="font-semibold text-gray-900 dark:text-white">
+                          {match.projectCode}
+                        </h5>
+                        <Badge
+                          variant="outline"
+                          className={getConfidenceColor(match.confidence)}
+                        >
+                          {(match.confidence * 100).toFixed(0)}% affidabilità
+                        </Badge>
                       </div>
+                      {currentProjectId === match.projectId && (
+                        <Badge variant="default" className="mt-1 bg-green-600">
+                          ✓ Commessa Attuale
+                        </Badge>
+                      )}
                     </div>
+                  </div>
 
-                    {/* Reasoning */}
-                    <div className="bg-gray-50 rounded p-3">
-                      <p className="text-sm text-gray-700">
-                        <strong className="text-gray-900">Perché questo match:</strong>{" "}
-                        {match.reasoning}
-                      </p>
-                    </div>
+                  {/* Reasoning */}
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded p-3">
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <strong className="text-gray-900 dark:text-white">Perché questo match:</strong>{" "}
+                      {match.reasoning}
+                    </p>
+                  </div>
 
                     {/* Matched Fields */}
                     {match.matchedFields && match.matchedFields.length > 0 && (
@@ -230,8 +228,8 @@ export function AISuggestionsPanel({
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
 
             {/* Dismiss All Button */}
@@ -254,29 +252,29 @@ export function AISuggestionsPanel({
         {(aiSuggestions.extractedData?.deadlines?.length ||
           aiSuggestions.extractedData?.amounts?.length ||
           aiSuggestions.extractedData?.actionItems?.length) && (
-          <div className="space-y-2 pt-2 border-t border-purple-200">
-            <h4 className="font-medium text-sm text-gray-700">Informazioni Estratte</h4>
+          <div className="space-y-2 pt-2 border-t border-purple-200 dark:border-purple-800">
+            <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Informazioni Estratte</h4>
 
             {aiSuggestions.extractedData.deadlines && aiSuggestions.extractedData.deadlines.length > 0 && (
-              <div className="bg-white rounded p-2 text-sm">
-                <strong className="text-gray-900">📅 Scadenze:</strong>{" "}
-                {aiSuggestions.extractedData.deadlines.join(", ")}
+              <div className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
+                <strong className="text-gray-900 dark:text-white">📅 Scadenze:</strong>{" "}
+                <span className="text-gray-700 dark:text-gray-300">{aiSuggestions.extractedData.deadlines.join(", ")}</span>
               </div>
             )}
 
             {aiSuggestions.extractedData.amounts && aiSuggestions.extractedData.amounts.length > 0 && (
-              <div className="bg-white rounded p-2 text-sm">
-                <strong className="text-gray-900">💰 Importi:</strong>{" "}
-                {aiSuggestions.extractedData.amounts.join(", ")}
+              <div className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
+                <strong className="text-gray-900 dark:text-white">💰 Importi:</strong>{" "}
+                <span className="text-gray-700 dark:text-gray-300">{aiSuggestions.extractedData.amounts.join(", ")}</span>
               </div>
             )}
 
             {aiSuggestions.extractedData.actionItems && aiSuggestions.extractedData.actionItems.length > 0 && (
-              <div className="bg-white rounded p-2 text-sm">
-                <strong className="text-gray-900">✓ Azioni da fare:</strong>
+              <div className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
+                <strong className="text-gray-900 dark:text-white">✓ Azioni da fare:</strong>
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   {aiSuggestions.extractedData.actionItems.map((item, i) => (
-                    <li key={i} className="text-gray-700">{item}</li>
+                    <li key={i} className="text-gray-700 dark:text-gray-300">{item}</li>
                   ))}
                 </ul>
               </div>
@@ -287,7 +285,7 @@ export function AISuggestionsPanel({
         {/* Tags */}
         {aiSuggestions.suggestedTags && aiSuggestions.suggestedTags.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-2">
-            <span className="text-xs text-gray-500">Tag suggeriti:</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">Tag suggeriti:</span>
             {aiSuggestions.suggestedTags.map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
                 {tag}
@@ -295,7 +293,7 @@ export function AISuggestionsPanel({
             ))}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

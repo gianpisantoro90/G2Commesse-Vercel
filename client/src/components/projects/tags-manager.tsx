@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { DEFAULT_TAGS, DEFAULT_CATEGORIES, COLOR_PALETTE, EMOJI_ICONS } from "@/lib/tags-utils";
@@ -120,8 +119,8 @@ function TagForm({ onSubmit, initialData }: {
         />
       </div>
 
-      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-        <span className="text-sm text-gray-600">Anteprima:</span>
+      <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <span className="text-sm text-gray-600 dark:text-gray-400">Anteprima:</span>
         <Badge
           className="text-sm"
           style={{
@@ -221,8 +220,8 @@ function CategoryForm({ onSubmit, initialData }: {
         />
       </div>
 
-      <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-        <span className="text-sm text-gray-600">Anteprima:</span>
+      <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <span className="text-sm text-gray-600 dark:text-gray-400">Anteprima:</span>
         <Badge
           className="text-sm"
           style={{
@@ -270,25 +269,25 @@ export default function TagsManager() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Tags e Categorie</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Tags e Categorie</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Organizza le tue commesse con tags personalizzabili e categorie tematiche
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Tags Section */}
-        <Card>
-          <CardHeader>
+        <div className="card-g2">
+          <div className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Tag className="h-5 w-5" />
                   Tags
-                </CardTitle>
-                <CardDescription className="mt-1">
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Etichette multiple per ogni commessa
-                </CardDescription>
+                </p>
               </div>
               <Dialog open={isTagDialogOpen} onOpenChange={setIsTagDialogOpen}>
                 <DialogTrigger asChild>
@@ -308,10 +307,10 @@ export default function TagsManager() {
                 </DialogContent>
               </Dialog>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div>
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Tags Predefiniti</h4>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags Predefiniti</h4>
               <div className="flex flex-wrap gap-2">
                 {DEFAULT_TAGS.map((tag) => (
                   <Badge
@@ -329,21 +328,21 @@ export default function TagsManager() {
                 ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Categories Section */}
-        <Card>
-          <CardHeader>
+        <div className="card-g2">
+          <div className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Folder className="h-5 w-5" />
                   Categorie
-                </CardTitle>
-                <CardDescription className="mt-1">
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Una categoria per commessa
-                </CardDescription>
+                </p>
               </div>
               <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
                 <DialogTrigger asChild>
@@ -363,10 +362,10 @@ export default function TagsManager() {
                 </DialogContent>
               </Dialog>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div>
             <div className="space-y-2">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Categorie Predefinite</h4>
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Categorie Predefinite</h4>
               <div className="flex flex-wrap gap-2">
                 {DEFAULT_CATEGORIES.map((category) => (
                   <Badge
@@ -384,28 +383,26 @@ export default function TagsManager() {
                 ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Info Card */}
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-xl">💡</span>
-            </div>
-            <div className="flex-1">
-              <h4 className="font-semibold text-blue-900 mb-1">Come funzionano Tags e Categorie?</h4>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li><strong>Tags:</strong> Puoi assegnare più tags ad ogni commessa (es. "Urgente", "VIP", "In Attesa")</li>
-                <li><strong>Categorie:</strong> Ogni commessa può avere una sola categoria tematica (es. "Edilizia", "Infrastrutture")</li>
-                <li>Usa tags e categorie per filtrare e organizzare rapidamente le tue commesse</li>
-              </ul>
-            </div>
+      <div className="card-g2 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+            <span className="text-xl">💡</span>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex-1">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-1">Come funzionano Tags e Categorie?</h4>
+            <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+              <li><strong>Tags:</strong> Puoi assegnare più tags ad ogni commessa (es. "Urgente", "VIP", "In Attesa")</li>
+              <li><strong>Categorie:</strong> Ogni commessa può avere una sola categoria tematica (es. "Edilizia", "Infrastrutture")</li>
+              <li>Usa tags e categorie per filtrare e organizzare rapidamente le tue commesse</li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
