@@ -878,7 +878,7 @@ export default function RegistroComunicazioni() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-blue-600" />
@@ -890,9 +890,10 @@ export default function RegistroComunicazioni() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2 w-full sm:w-auto">
               <Plus className="h-4 w-4" />
-              Nuova Comunicazione
+              <span className="hidden sm:inline">Nuova Comunicazione</span>
+              <span className="sm:hidden">Nuova</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="w-full max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">

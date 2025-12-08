@@ -283,11 +283,23 @@ export default function KpiDashboard() {
 
       {/* Charts */}
       <Tabs defaultValue="trend" className="w-full">
-        <TabsList className="bg-gray-100 dark:bg-gray-800">
-          <TabsTrigger value="trend" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Trend Progetti</TabsTrigger>
-          <TabsTrigger value="status" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Distribuzione Status</TabsTrigger>
-          <TabsTrigger value="top" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Top Commesse</TabsTrigger>
-          <TabsTrigger value="risorse" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Distribuzione Risorse</TabsTrigger>
+        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="trend" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Trend Progetti</span>
+            <span className="sm:hidden">Trend</span>
+          </TabsTrigger>
+          <TabsTrigger value="status" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Distribuzione Status</span>
+            <span className="sm:hidden">Status</span>
+          </TabsTrigger>
+          <TabsTrigger value="top" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Top Commesse</span>
+            <span className="sm:hidden">Top</span>
+          </TabsTrigger>
+          <TabsTrigger value="risorse" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Distribuzione Risorse</span>
+            <span className="sm:hidden">Risorse</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Trend Mensile */}
