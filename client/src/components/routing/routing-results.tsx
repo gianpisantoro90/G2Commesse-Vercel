@@ -19,11 +19,11 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
   const getConfidenceBadge = (confidence: number) => {
     const percentage = Math.round(confidence * 100);
     if (percentage >= 80) {
-      return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Alta ({percentage}%)</span>;
+      return <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 rounded-full text-xs font-medium">Alta ({percentage}%)</span>;
     } else if (percentage >= 60) {
-      return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Media ({percentage}%)</span>;
+      return <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300 rounded-full text-xs font-medium">Media ({percentage}%)</span>;
     } else {
-      return <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Bassa ({percentage}%)</span>;
+      return <span className="px-2 py-1 bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300 rounded-full text-xs font-medium">Bassa ({percentage}%)</span>;
     }
   };
 
@@ -37,9 +37,9 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
 
   const getMethodBadge = (method: string) => {
     const badges = {
-      'ai': <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">🤖 AI</span>,
-      'rules': <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">📋 Regole</span>,
-      'learned': <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium">🧠 Appreso</span>
+      'ai': <span className="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 rounded-full text-xs font-medium">🤖 AI</span>,
+      'rules': <span className="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 rounded-full text-xs font-medium">📋 Regole</span>,
+      'learned': <span className="px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300 rounded-full text-xs font-medium">🧠 Appreso</span>
     };
     return badges[method as keyof typeof badges] || badges.rules;
   };
@@ -210,61 +210,61 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
   return (
     <div className="card-g2" data-testid="routing-results">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">📊 Risultati Analisi</h3>
-        <div className="text-sm text-gray-600">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">📊 Risultati Analisi</h3>
+        <div className="text-sm text-gray-600 dark:text-gray-400">
           {results.length} file analizzati
         </div>
       </div>
-      
+
       <div className="space-y-6">
         {results.map(({ result, file }, fileIndex) => {
           const suggestedFileName = project?.code ? generateNewFileName(file, project.code) : file.name;
           const selectedPath = selectedPaths[fileIndex];
-          
+
           return (
-            <div key={fileIndex} className="border rounded-xl p-4 bg-white">
+            <div key={fileIndex} className="border dark:border-gray-700 rounded-xl p-4 bg-white dark:bg-gray-800">
               {/* File Info */}
-              <div className="bg-gray-50 rounded-xl p-4 mb-4">
-                <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 mb-4">
+                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                   <span className="text-lg">📄</span>
                   File {fileIndex + 1} di {results.length}
                 </h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="col-span-2">
-                    <span className="text-gray-600">Nome originale:</span>{" "}
-                    <span className="font-mono" data-testid={`file-name-${fileIndex}`}>
+                    <span className="text-gray-600 dark:text-gray-400">Nome originale:</span>{" "}
+                    <span className="font-mono text-gray-900 dark:text-white" data-testid={`file-name-${fileIndex}`}>
                       {file.name}
                     </span>
                   </div>
                   {project?.code && suggestedFileName !== file.name && (
                     <div className="col-span-2">
-                      <span className="text-gray-600">Nome suggerito:</span>{" "}
+                      <span className="text-gray-600 dark:text-gray-400">Nome suggerito:</span>{" "}
                       <span className="font-mono font-semibold text-primary" data-testid={`suggested-file-name-${fileIndex}`}>
                         {suggestedFileName}
                       </span>
                     </div>
                   )}
                   <div>
-                    <span className="text-gray-600">Dimensione:</span>{" "}
-                    <span data-testid={`file-size-${fileIndex}`}>{getFileSize(file.size)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Dimensione:</span>{" "}
+                    <span className="text-gray-900 dark:text-white" data-testid={`file-size-${fileIndex}`}>{getFileSize(file.size)}</span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Tipo:</span>{" "}
-                    <span data-testid={`file-type-${fileIndex}`}>{file.type || 'File generico'}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Tipo:</span>{" "}
+                    <span className="text-gray-900 dark:text-white" data-testid={`file-type-${fileIndex}`}>{file.type || 'File generico'}</span>
                   </div>
                 </div>
               </div>
               
               {/* Analysis Result */}
               <div>
-                <h4 className="font-semibold text-gray-700 mb-3">💡 Risultato Analisi</h4>
+                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-3">💡 Risultato Analisi</h4>
                 <div className="space-y-3">
                   {/* Main suggestion */}
                   <div
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedPath === result.suggestedPath 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-gray-200 hover:bg-gray-50'
+                      selectedPath === result.suggestedPath
+                        ? 'border-primary bg-primary/5'
+                        : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                     onClick={() => handleSelectPath(fileIndex, result.suggestedPath)}
                     data-testid={`main-suggestion-${fileIndex}`}
@@ -275,7 +275,7 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
                           📁 {result.suggestedPath}
                         </div>
                         {project?.code && suggestedFileName !== file.name && (
-                          <div className="font-mono text-xs text-gray-600">
+                          <div className="font-mono text-xs text-gray-600 dark:text-gray-400">
                             📄 {suggestedFileName}
                           </div>
                         )}
@@ -285,28 +285,28 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
                         {getConfidenceBadge(result.confidence)}
                       </div>
                     </div>
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
                       {result.reasoning}
                     </div>
                   </div>
-                  
+
                   {/* Alternative suggestions */}
                   {result.alternatives && result.alternatives.length > 0 && (
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-2">Percorsi alternativi:</h5>
+                      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Percorsi alternativi:</h5>
                       <div className="space-y-2">
                         {result.alternatives.map((altPath, altIndex) => (
                           <div
                             key={altIndex}
                             className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                              selectedPath === altPath 
-                                ? 'border-primary bg-primary/5' 
-                                : 'border-gray-200 hover:bg-gray-50'
+                              selectedPath === altPath
+                                ? 'border-primary bg-primary/5'
+                                : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                             }`}
                             onClick={() => handleSelectPath(fileIndex, altPath)}
                             data-testid={`alternative-path-${fileIndex}-${altIndex}`}
                           >
-                            <div className="font-mono text-sm text-gray-700">
+                            <div className="font-mono text-sm text-gray-700 dark:text-gray-300">
                               {altPath}
                             </div>
                           </div>
@@ -317,7 +317,7 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
                 </div>
               </div>
               
-              <div className="flex gap-2 pt-4 border-t mt-4">
+              <div className="flex gap-2 pt-4 border-t dark:border-gray-700 mt-4">
                 <Button
                   onClick={() => handleAcceptSuggestion(fileIndex)}
                   className="px-4 py-2 bg-g2-success text-white rounded-lg font-semibold hover:bg-green-700 transition-colors text-sm"
@@ -328,7 +328,7 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
                 <Button
                   variant="outline"
                   onClick={() => handleManualPath(fileIndex)}
-                  className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm"
+                  className="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
                   data-testid={`manual-path-${fileIndex}`}
                 >
                   ✏️ Manuale
@@ -337,8 +337,8 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
             </div>
           );
         })}
-        
-        <div className="flex gap-3 pt-4 border-t bg-gray-50 rounded-xl p-4">
+
+        <div className="flex gap-3 pt-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
           <Button
             onClick={handleAcceptAllSuggestions}
             className="px-6 py-2 bg-g2-success text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
@@ -349,7 +349,7 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
           <Button
             variant="ghost"
             onClick={handleAnalyzeAnother}
-            className="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-6 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
             data-testid="analyze-another"
           >
             🔄 Analizza Altri File

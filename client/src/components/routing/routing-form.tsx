@@ -90,20 +90,20 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">🤖</span>
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900">Auto-Routing AI-Only</h2>
-          <p className="text-gray-600">Sistema intelligente Claude AI per classificazione automatica file</p>
-          
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Auto-Routing AI-Only</h2>
+          <p className="text-gray-600 dark:text-gray-400">Sistema intelligente Claude AI per classificazione automatica file</p>
+
           {/* OneDrive Status */}
           <div className="mt-2 flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-green-600" />
-            <span className="text-sm text-green-700 font-medium">Sistema OneDrive integrato</span>
+            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+            <span className="text-sm text-green-700 dark:text-green-400 font-medium">Sistema OneDrive integrato</span>
           </div>
         </div>
       </div>
-      
+
       <form className="space-y-6">
         <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-2">
+          <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Commessa di Riferimento
           </Label>
           <Select value={selectedProject} onValueChange={setSelectedProject} data-testid="select-project">
@@ -121,7 +121,7 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
         </div>
         
         <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-2">
+          <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Template Progetto
           </Label>
           <Select value={selectedTemplate} onValueChange={setSelectedTemplate} data-testid="select-routing-template">
@@ -134,12 +134,12 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
             </SelectContent>
           </Select>
         </div>
-        
+
         <div>
-          <Label className="block text-sm font-semibold text-gray-700 mb-2">
+          <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
             Carica File da Classificare
           </Label>
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary transition-colors">
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-primary transition-colors">
             <input
               type="file"
               multiple
@@ -149,7 +149,7 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
               data-testid="file-upload"
             />
             <div className="text-4xl mb-4">{selectedFiles.length > 1 ? '📁' : '📄'}</div>
-            <p className="text-gray-600 mb-2">
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
               {selectedFiles.length > 0 ? (
                 selectedFiles.length === 1 ? (
                   selectedFiles[0].name
@@ -161,7 +161,7 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
               )}
             </p>
             {selectedFiles.length > 1 && (
-              <div className="text-xs text-gray-500 mb-2">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                 {selectedFiles.map((file, index) => (
                   <div key={index} className="truncate">
                     • {file.name}
