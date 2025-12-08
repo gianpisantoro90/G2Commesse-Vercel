@@ -69,10 +69,10 @@ interface Deadline {
 }
 
 const PRIORITY_CONFIG = {
-  low: { label: 'Bassa', color: 'bg-gray-100 text-gray-700', icon: '🟢' },
-  medium: { label: 'Media', color: 'bg-blue-100 text-blue-700', icon: '🟡' },
-  high: { label: 'Alta', color: 'bg-orange-100 text-orange-700', icon: '🟠' },
-  urgent: { label: 'Urgente', color: 'bg-red-100 text-red-700', icon: '🔴' }
+  low: { label: 'Bassa', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300', icon: '🟢' },
+  medium: { label: 'Media', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', icon: '🟡' },
+  high: { label: 'Alta', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300', icon: '🟠' },
+  urgent: { label: 'Urgente', color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', icon: '🔴' }
 };
 
 const TYPE_CONFIG = {

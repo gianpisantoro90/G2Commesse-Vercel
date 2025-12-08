@@ -154,16 +154,16 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
           {/* Sezione Tipologia Prestazioni */}
           <div className="space-y-4">
             <div>
-              <Label className="text-lg font-semibold text-gray-900">
+              <Label className="text-lg font-semibold text-gray-900 dark:text-white">
                 Tipologia Prestazioni <span className="text-red-500">*</span>
               </Label>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Seleziona tutte le prestazioni professionali relative a questa commessa
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4" data-testid="prestazioni-checkboxes">
               {prestazioniList.map(({ id, config }) => (
-                <div key={id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div key={id} className="flex items-center space-x-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                   <Checkbox
                     id={`prestazione-${id}`}
                     checked={formData.prestazioni?.includes(id) || false}
@@ -173,8 +173,8 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                   <Label htmlFor={`prestazione-${id}`} className="flex items-center gap-2 cursor-pointer flex-1">
                     <span className="text-lg">{config.icon}</span>
                     <div>
-                      <div className="font-medium">{config.label}</div>
-                      <div className="text-xs text-gray-500">{config.description}</div>
+                      <div className="font-medium text-gray-900 dark:text-white">{config.label}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{config.description}</div>
                     </div>
                   </Label>
                 </div>
@@ -184,18 +184,18 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
 
           {/* Sezione Livello Progettazione (condizionale) */}
           {showLivelloProgettazione && (
-            <div className="space-y-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="space-y-4 bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
               <div>
-                <Label className="text-lg font-semibold text-gray-900">
+                <Label className="text-lg font-semibold text-gray-900 dark:text-white">
                   Livello Progettazione <span className="text-red-500">*</span>
                 </Label>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Specifica il livello di progettazione secondo la normativa vigente
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4" data-testid="livello-progettazione-checkboxes">
                 {livelliProgettazioneList.map(({ id, config }) => (
-                  <div key={id} className="flex items-center space-x-3 p-3 bg-white border border-blue-200 rounded-lg">
+                  <div key={id} className="flex items-center space-x-3 p-3 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg">
                     <Checkbox
                       id={`livello-${id}`}
                       checked={formData.livelloProgettazione?.includes(id) || false}
@@ -203,8 +203,8 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                       data-testid={`checkbox-livello-${id}`}
                     />
                     <Label htmlFor={`livello-${id}`} className="cursor-pointer flex-1">
-                      <div className="font-medium">{config.label}</div>
-                      <div className="text-xs text-gray-500">{config.description}</div>
+                      <div className="font-medium text-gray-900 dark:text-white">{config.label}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{config.description}</div>
                     </Label>
                   </div>
                 ))}
@@ -213,16 +213,16 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
           )}
 
           {/* Sezione Classificazione DM 143/2013 */}
-          <div className="space-y-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <div className="space-y-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <div>
-              <Label className="text-lg font-semibold text-gray-900">
+              <Label className="text-lg font-semibold text-gray-900 dark:text-white">
                 Classificazione DM 143/2013
               </Label>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Parametri per la determinazione del compenso professionale
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="classe-dm" className="text-sm font-medium">
@@ -236,7 +236,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                   className="font-mono"
                   data-testid="input-classe-dm"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Codice secondo il Decreto Ministeriale 143/2013
                 </p>
               </div>
@@ -255,7 +255,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                   onChange={(e) => handleInputChange('importoOpere', e.target.value === '' ? '' : parseFloat(e.target.value) || '')}
                   data-testid="input-importo-opere"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
                   Importo dei lavori base per calcolo parcella
                 </p>
               </div>
@@ -263,7 +263,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
           </div>
 
           {/* Footer con azioni */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <Button
               type="button"
               variant="outline"
