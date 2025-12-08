@@ -31,6 +31,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Client, type Project } from "@shared/schema";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Schema for add form - minimal required fields
 const addClientSchema = z.object({
@@ -610,7 +611,7 @@ export default function ClientsTable() {
             </div>
             
             <div className="flex items-center gap-3">
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-gray-600 dark:text-gray-400 text-sm">
                 Pagina <strong>{currentPage}</strong> di <strong>{totalPages || 1}</strong>
               </span>
               <div className="flex gap-2">
@@ -621,7 +622,8 @@ export default function ClientsTable() {
                   disabled={currentPage === 1}
                   data-testid="clients-prev-page"
                 >
-                  ← Prec
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Precedente</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -630,7 +632,8 @@ export default function ClientsTable() {
                   disabled={currentPage === totalPages || totalPages === 0}
                   data-testid="clients-next-page"
                 >
-                  Succ →
+                  <span className="hidden sm:inline">Successiva</span>
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -838,11 +841,11 @@ export default function ClientsTable() {
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-6">
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-800">
-                  <TabsTrigger value="general" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Generali</TabsTrigger>
-                  <TabsTrigger value="address" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Indirizzo</TabsTrigger>
-                  <TabsTrigger value="contacts" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Contatti</TabsTrigger>
-                  <TabsTrigger value="referente" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Referente</TabsTrigger>
+                <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+                  <TabsTrigger value="general" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Generali</TabsTrigger>
+                  <TabsTrigger value="address" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Indirizzo</TabsTrigger>
+                  <TabsTrigger value="contacts" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Contatti</TabsTrigger>
+                  <TabsTrigger value="referente" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Referente</TabsTrigger>
                 </TabsList>
 
                 {/* Tab Generali */}

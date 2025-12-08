@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1065,13 +1064,13 @@ export default function RegistroComunicazioni() {
         </div>
 
         {/* Table */}
-        <Card>
-          <CardContent className="p-0">
+        <div className="card-g2 p-0 overflow-hidden">
+          <div>
             {filteredComms.length === 0 ? (
               <div className="text-center py-12">
-                <MessageSquare className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">Nessuna comunicazione trovata</p>
-                <p className="text-sm text-gray-400 mt-1">Registra la prima comunicazione per iniziare</p>
+                <MessageSquare className="h-16 w-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+                <p className="text-gray-500 dark:text-gray-400">Nessuna comunicazione trovata</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Registra la prima comunicazione per iniziare</p>
               </div>
             ) : (
               <Table>
@@ -1264,14 +1263,14 @@ export default function RegistroComunicazioni() {
                 </TableBody>
               </Table>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Pagina {currentPage} di {totalPages} ({startIndex + 1}-{Math.min(endIndex, filteredComms.length)} di {filteredComms.length})
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              Pagina <strong>{currentPage}</strong> di <strong>{totalPages}</strong> ({startIndex + 1}-{Math.min(endIndex, filteredComms.length)} di {filteredComms.length})
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -1281,7 +1280,7 @@ export default function RegistroComunicazioni() {
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
-                Precedente
+                <span className="hidden sm:inline">Precedente</span>
               </Button>
               <Button
                 variant="outline"
@@ -1289,7 +1288,7 @@ export default function RegistroComunicazioni() {
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
               >
-                Successiva
+                <span className="hidden sm:inline">Successiva</span>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>

@@ -679,18 +679,21 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-800">
-          <TabsTrigger value="scan" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-scan">
+        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="scan" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-scan">
             <FolderSearch className="w-4 h-4" />
-            1. {mode === "onedrive" ? "Scansiona Cartella" : "Carica File"}
+            <span className="hidden sm:inline">1. {mode === "onedrive" ? "Scansiona Cartella" : "Carica File"}</span>
+            <span className="sm:hidden">1. {mode === "onedrive" ? "Scansiona" : "Carica"}</span>
           </TabsTrigger>
-          <TabsTrigger value="select" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-select">
+          <TabsTrigger value="select" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-select">
             <CheckCircle className="w-4 h-4" />
-            2. Seleziona File
+            <span className="hidden sm:inline">2. Seleziona File</span>
+            <span className="sm:hidden">2. Seleziona</span>
           </TabsTrigger>
-          <TabsTrigger value="results" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-results">
+          <TabsTrigger value="results" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-results">
             <Brain className="w-4 h-4" />
-            3. Routing AI
+            <span className="hidden sm:inline">3. Routing AI</span>
+            <span className="sm:hidden">3. AI</span>
           </TabsTrigger>
         </TabsList>
 

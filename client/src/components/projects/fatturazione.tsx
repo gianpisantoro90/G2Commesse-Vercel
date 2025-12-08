@@ -465,10 +465,19 @@ export default function Fatturazione() {
 
       {/* Tabelle Fatture */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="bg-gray-100 dark:bg-gray-800">
-          <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Tutte le Fatture</TabsTrigger>
-          <TabsTrigger value="by-project" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Per Commessa</TabsTrigger>
-          <TabsTrigger value="unpaid" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Da Incassare</TabsTrigger>
+        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="all" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Tutte le Fatture</span>
+            <span className="sm:hidden">Tutte</span>
+          </TabsTrigger>
+          <TabsTrigger value="by-project" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Per Commessa</span>
+            <span className="sm:hidden">Per Comm.</span>
+          </TabsTrigger>
+          <TabsTrigger value="unpaid" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <span className="hidden sm:inline">Da Incassare</span>
+            <span className="sm:hidden">Da Inc.</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
