@@ -836,11 +836,11 @@ export default function ClientsTable() {
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-6">
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="general">Generali</TabsTrigger>
-                  <TabsTrigger value="address">Indirizzo</TabsTrigger>
-                  <TabsTrigger value="contacts">Contatti</TabsTrigger>
-                  <TabsTrigger value="referente">Referente</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-800">
+                  <TabsTrigger value="general" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Generali</TabsTrigger>
+                  <TabsTrigger value="address" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Indirizzo</TabsTrigger>
+                  <TabsTrigger value="contacts" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Contatti</TabsTrigger>
+                  <TabsTrigger value="referente" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm">Referente</TabsTrigger>
                 </TabsList>
 
                 {/* Tab Generali */}

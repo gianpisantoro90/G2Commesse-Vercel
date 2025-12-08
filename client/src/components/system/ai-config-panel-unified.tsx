@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -199,12 +198,12 @@ export default function AiConfigPanelUnified() {
       </div>
 
       <Tabs defaultValue="provider" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="provider" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-800">
+          <TabsTrigger value="provider" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
             <Zap className="w-4 h-4" />
             Provider AI
           </TabsTrigger>
-          <TabsTrigger value="review" className="flex items-center gap-2">
+          <TabsTrigger value="review" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
             <Settings className="w-4 h-4" />
             Revisioni Email
           </TabsTrigger>
@@ -214,19 +213,19 @@ export default function AiConfigPanelUnified() {
         <TabsContent value="provider" className="space-y-4">
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Provider Selection */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+            <div className="card-g2">
+              <div className="pb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <Brain className="w-5 h-5" />
                   Seleziona Provider
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </h3>
+              </div>
+              <div className="space-y-4">
                 {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
                   <div key={key} className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    selectedProvider === key 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                    selectedProvider === key
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
                   }`} onClick={() => setSelectedProvider(key as any)}>
                     <p className="font-semibold text-gray-900 dark:text-white">{provider.name}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
@@ -236,46 +235,46 @@ export default function AiConfigPanelUnified() {
                     </div>
                   </div>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* API Configuration Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurazione</CardTitle>
-                <CardDescription>Inserisci le credenziali API</CardDescription>
-              </CardHeader>
-              <CardContent>
+            <div className="card-g2">
+              <div className="pb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Configurazione</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Inserisci le credenziali API</p>
+              </div>
+              <div>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   {/* API Key Input */}
                   <div className="space-y-2">
-                    <Label>API Key</Label>
+                    <Label className="text-gray-900 dark:text-white">API Key</Label>
                     <div className="relative">
                       <Input
                         type={showApiKey ? "text" : "password"}
                         placeholder="sk-... o your-api-key"
                         {...form.register("apiKey")}
-                        className="pr-10"
+                        className="pr-10 dark:bg-gray-800 dark:border-gray-700"
                       />
                       <button
                         type="button"
                         onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+                        className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                       >
                         {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500">🔒 Salvato localmente e crittografato</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">🔒 Salvato localmente e crittografato</p>
                   </div>
 
                   {/* Model Selection */}
                   <div className="space-y-2">
-                    <Label>Modello AI</Label>
+                    <Label className="text-gray-900 dark:text-white">Modello AI</Label>
                     <Select
                       value={form.watch("model")}
                       onValueChange={(value) => form.setValue("model", value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -291,7 +290,7 @@ export default function AiConfigPanelUnified() {
                   {/* Features Info */}
                   {providerInfo && (
                     <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-                      <AlertDescription className="text-sm">
+                      <AlertDescription className="text-sm text-blue-900 dark:text-blue-100">
                         <strong>Funzionalità:</strong> {providerInfo.features.join(" • ")}
                       </AlertDescription>
                     </Alert>
@@ -301,21 +300,21 @@ export default function AiConfigPanelUnified() {
                     Salva Configurazione
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
         </TabsContent>
 
         {/* Review Settings Tab */}
         <TabsContent value="review">
-          <Card>
-            <CardHeader>
-              <CardTitle>Revisioni Comunicazioni</CardTitle>
-              <CardDescription>Configurazione analisi email e comunicazioni</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div className="card-g2">
+            <div className="pb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Revisioni Comunicazioni</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Configurazione analisi email e comunicazioni</p>
+            </div>
+            <div className="space-y-4">
               <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-                <AlertDescription>
+                <AlertDescription className="text-blue-900 dark:text-blue-100">
                   <strong>ℹ️ Revisioni Automatiche:</strong> L'AI analizza tutte le email ricevute e suggerisce automaticamente:
                   <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
                     <li>Progetti pertinenti basati sul contenuto</li>
@@ -334,8 +333,8 @@ export default function AiConfigPanelUnified() {
                   </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

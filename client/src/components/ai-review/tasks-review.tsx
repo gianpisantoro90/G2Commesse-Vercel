@@ -1,5 +1,4 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -200,15 +199,15 @@ export function TasksReview() {
           if (pendingTasks.length === 0) return null;
 
           return (
-            <Card key={comm.id}>
-              <CardHeader>
+            <div key={comm.id} className="card-g2">
+              <div className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       {comm.subject}
-                    </CardTitle>
-                    <CardDescription className="mt-2 space-y-1">
+                    </h3>
+                    <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
                       <div className="flex items-center gap-2">
                         <User className="h-3 w-3" />
                         Da: {comm.sender}
@@ -224,12 +223,12 @@ export function TasksReview() {
                           </Badge>
                         </div>
                       )}
-                    </CardDescription>
+                    </div>
                   </div>
                 </div>
-              </CardHeader>
+              </div>
 
-              <CardContent className="space-y-4">
+              <div className="space-y-4">
                 {suggestedTasks.map((task, taskIndex) => {
                   const taskStatus = tasksStatus[taskIndex];
 
@@ -263,9 +262,9 @@ export function TasksReview() {
                             </div>
                           )}
 
-                          <Alert className="bg-blue-50 border-blue-200">
-                            <Sparkles className="h-4 w-4 text-blue-600" />
-                            <AlertDescription className="text-sm">
+                          <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                            <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                            <AlertDescription className="text-sm text-blue-900 dark:text-blue-100">
                               <strong>Perché l'AI suggerisce questo task:</strong><br />
                               {task.reasoning}
                             </AlertDescription>
@@ -327,8 +326,8 @@ export function TasksReview() {
                     </div>
                   );
                 })}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
       </div>

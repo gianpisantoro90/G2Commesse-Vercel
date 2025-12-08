@@ -679,16 +679,16 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="scan" className="flex items-center gap-2" data-testid="tab-scan">
+        <TabsList className="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-800">
+          <TabsTrigger value="scan" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-scan">
             <FolderSearch className="w-4 h-4" />
             1. {mode === "onedrive" ? "Scansiona Cartella" : "Carica File"}
           </TabsTrigger>
-          <TabsTrigger value="select" className="flex items-center gap-2" data-testid="tab-select">
+          <TabsTrigger value="select" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-select">
             <CheckCircle className="w-4 h-4" />
             2. Seleziona File
           </TabsTrigger>
-          <TabsTrigger value="results" className="flex items-center gap-2" data-testid="tab-results">
+          <TabsTrigger value="results" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-results">
             <Brain className="w-4 h-4" />
             3. Routing AI
           </TabsTrigger>

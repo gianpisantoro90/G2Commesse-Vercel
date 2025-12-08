@@ -143,15 +143,15 @@ export default function EconomicDashboardCard() {
       <div>
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-auto bg-gray-100 dark:bg-gray-800 shadow-sm">
-            <TabsTrigger value="overview" className="flex items-center gap-2 dark:data-[state=active]:bg-gray-700">
+            <TabsTrigger value="overview" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
               <Target className="h-4 w-4" />
               Panoramica
             </TabsTrigger>
-            <TabsTrigger value="charts" className="flex items-center gap-2 dark:data-[state=active]:bg-gray-700">
+            <TabsTrigger value="charts" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
               <BarChart3 className="h-4 w-4" />
               Grafici
             </TabsTrigger>
-            <TabsTrigger value="top-projects" className="flex items-center gap-2 dark:data-[state=active]:bg-gray-700">
+            <TabsTrigger value="top-projects" className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
               <Briefcase className="h-4 w-4" />
               Top Commesse
             </TabsTrigger>

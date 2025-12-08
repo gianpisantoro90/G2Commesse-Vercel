@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -384,18 +383,18 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
   const selectedProjectData = projects.find(p => p.id === selectedProject);
 
   return (
-    <Card className="border-2 border-blue-200 bg-blue-50/50" data-testid="bulk-rename-form">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-blue-900 flex items-center gap-2">
+    <div className="card-g2 border-2 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20" data-testid="bulk-rename-form">
+      <div className="pb-4">
+        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
           <span className="text-xl">📁</span>
           Rinomina File Esistenti
-        </CardTitle>
-        <p className="text-sm text-blue-700">
+        </h3>
+        <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
           Seleziona una cartella OneDrive per rinominare automaticamente tutti i file contenuti aggiungendo il prefisso della commessa
         </p>
-      </CardHeader>
-      
-      <CardContent className="space-y-6">
+      </div>
+
+      <div className="space-y-6">
         {/* Project Selection */}
         <div className="space-y-2">
           <Label htmlFor="project-select" className="text-sm font-medium">
@@ -410,8 +409,8 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         </div>
 
         {selectedProjectData && (
-          <Alert className="border-blue-200 bg-blue-50">
-            <AlertDescription className="text-blue-800">
+          <Alert className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30">
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
               <strong>Codice commessa:</strong> {selectedProjectData.code}<br/>
               <strong>Prefisso file:</strong> {selectedProjectData.code}_
             </AlertDescription>
@@ -420,8 +419,8 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
 
         {/* OneDrive Connection Status */}
         {!oneDriveConnected && (
-          <Alert className="border-red-200 bg-red-50">
-            <AlertDescription className="text-red-800">
+          <Alert className="border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30">
+            <AlertDescription className="text-red-800 dark:text-red-200">
               <strong>⚠️ OneDrive non connesso:</strong> Configura OneDrive nelle impostazioni di sistema per utilizzare questa funzionalità.
             </AlertDescription>
           </Alert>
@@ -661,22 +660,22 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
 
         {renamePreview.length > 0 && (
           <>
-            <Alert className="border-green-200 bg-green-50">
-              <AlertDescription className="text-green-800">
+            <Alert className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30">
+              <AlertDescription className="text-green-800 dark:text-green-200">
                 <strong>✅ Rinominazione OneDrive:</strong> I file verranno rinominati direttamente su OneDrive in modo sicuro e sincronizzato.
               </AlertDescription>
             </Alert>
-            
+
             {renamePreview.some(r => r.original !== r.renamed && /^[A-Z0-9]+_/.test(r.original)) && (
-              <Alert className="border-yellow-200 bg-yellow-50">
-                <AlertDescription className="text-yellow-800">
+              <Alert className="border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/30">
+                <AlertDescription className="text-yellow-800 dark:text-yellow-200">
                   <strong>⚠️ Attenzione:</strong> Alcuni file hanno già prefissi di altre commesse che verranno sostituiti con il codice della commessa selezionata.
                 </AlertDescription>
               </Alert>
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

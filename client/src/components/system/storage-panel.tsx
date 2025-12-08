@@ -98,7 +98,7 @@ export default function StoragePanel() {
           <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">📤</div>
             <div className="font-semibold text-gray-900 dark:text-white mb-1">Export Completo</div>
-            <div className="text-sm text-gray-600 mb-3">Esporta tutti i dati in formato JSON</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">Esporta tutti i dati in formato JSON</div>
             <Button
               onClick={handleExportAllData}
               className="w-full button-g2-primary"
@@ -110,10 +110,10 @@ export default function StoragePanel() {
           <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">📥</div>
             <div className="font-semibold text-gray-900 dark:text-white mb-1">Import Dati</div>
-            <div className="text-sm text-gray-600 mb-3">
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
               Importa dati da file JSON
               <br />
-              <span className="text-xs text-blue-600 font-medium">Opzioni: Unisci o Sovrascrivi</span>
+              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Opzioni: Unisci o Sovrascrivi</span>
             </div>
             <Button
               onClick={handleImportData}
@@ -127,10 +127,10 @@ export default function StoragePanel() {
           <div className="bg-white dark:bg-gray-900 rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">🔄</div>
             <div className="font-semibold text-gray-900 dark:text-white mb-1">Backup Auto</div>
-            <div className="text-sm text-gray-600 mb-3">Configura backup automatico</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">Configura backup automatico</div>
             <Button
               disabled
-              className="w-full px-3 py-2 border-2 border-gray-300 text-gray-700 rounded-lg font-medium cursor-not-allowed opacity-50"
+              className="w-full px-3 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-medium cursor-not-allowed opacity-50"
               data-testid="configure-backup"
             >
               Configura
