@@ -20,7 +20,7 @@ import type { Project } from "@shared/schema";
 interface ProjectComboboxProps {
   projects: Project[];
   value: string | null | undefined;
-  onValueChange: (value: string | null) => void;
+  onValueChange: (value: string | null | undefined) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;

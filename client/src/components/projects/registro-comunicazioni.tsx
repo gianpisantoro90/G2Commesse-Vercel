@@ -992,19 +992,13 @@ export default function RegistroComunicazioni() {
               </SelectContent>
             </Select>
 
-            <Select value={filterProject} onValueChange={setFilterProject}>
-              <SelectTrigger className="w-full sm:w-[200px] dark:bg-gray-800 dark:border-gray-700">
-                <SelectValue placeholder="Commessa..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutte le commesse</SelectItem>
-                {(projects || []).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.object ? `${p.code} - ${p.object}` : p.code}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ProjectCombobox
+              projects={projects || []}
+              value={filterProject === "all" ? null : filterProject}
+              onValueChange={(val) => setFilterProject(val || "all")}
+              placeholder="Commessa..."
+              className="w-full sm:w-[200px]"
+            />
           </div>
 
           <div className="flex items-center space-x-2">

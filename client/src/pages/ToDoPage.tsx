@@ -255,19 +255,13 @@ export default function ToDoPage() {
                     </CardDescription>
                   </div>
                   <div className="hidden lg:flex flex-col sm:flex-row gap-2 w-full">
-                    <Select value={filterProject} onValueChange={setFilterProject}>
-                      <SelectTrigger className="w-full sm:w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
-                        <SelectValue placeholder="Tutti i progetti" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                        <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
-                        {projects.map(p => (
-                          <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">
-                            {p.object ? `${p.code} - ${p.object}` : p.code}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <ProjectCombobox
+                      projects={projects}
+                      value={filterProject === "all" ? null : filterProject}
+                      onValueChange={(val) => setFilterProject(val || "all")}
+                      placeholder="Tutti i progetti"
+                      className="w-full sm:w-48"
+                    />
                     <Select value={filterStatus} onValueChange={setFilterStatus}>
                       <SelectTrigger className="w-full sm:w-40 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white">
                         <SelectValue placeholder="Tutti gli stati" />

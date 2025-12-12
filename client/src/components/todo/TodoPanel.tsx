@@ -277,19 +277,13 @@ export default function TodoPanel() {
 
           {/* Filters - responsive grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-            <Select value={filterProject || "all"} onValueChange={handleFilterChange(setFilterProject)}>
-              <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
-                <SelectValue placeholder="Tutti i progetti" />
-              </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
-                {projects.map(p => p.id && p.id.trim() !== '' ? (
-                  <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">
-                    {p.object ? `${p.code} - ${p.object}` : p.code}
-                  </SelectItem>
-                ) : null)}
-              </SelectContent>
-            </Select>
+            <ProjectCombobox
+              projects={projects}
+              value={filterProject === "all" ? null : filterProject}
+              onValueChange={(val) => handleFilterChange(setFilterProject)(val || "all")}
+              placeholder="Tutti i progetti"
+              className="text-sm"
+            />
             <Select value={filterStatus || "all"} onValueChange={handleFilterChange(setFilterStatus)}>
               <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
                 <SelectValue placeholder="Tutti gli stati" />
