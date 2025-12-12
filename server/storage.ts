@@ -849,7 +849,7 @@ export class MemStorage implements IStorage {
       importoTotaleFatturato: all.reduce((sum, p) => sum + (p.importoFatturato || 0), 0),
       importoTotalePagato: all.reduce((sum, p) => sum + (p.importoPagato || 0), 0),
       importoDaFatturare: all.filter(p => p.stato === 'completata').reduce((sum, p) => sum + (p.importoPrevisto || 0), 0),
-      importoDaIncassare: all.filter(p => p.stato === 'fatturata').reduce((sum, p) => sum + (p.importoFatturato || 0) - (p.importoPagato || 0), 0),
+      importoDaIncassare: all.filter(p => p.stato === 'fatturata').reduce((sum, p) => sum + (p.importoFatturato || 0), 0),
     };
 
     return stats;
@@ -1571,7 +1571,7 @@ export class DatabaseStorage implements IStorage {
         importoTotaleFatturato: all.reduce((sum, p) => sum + (p.importoFatturato || 0), 0),
         importoTotalePagato: all.reduce((sum, p) => sum + (p.importoPagato || 0), 0),
         importoDaFatturare: all.filter(p => p.stato === 'completata').reduce((sum, p) => sum + (p.importoPrevisto || 0), 0),
-        importoDaIncassare: all.filter(p => p.stato === 'fatturata').reduce((sum, p) => sum + (p.importoFatturato || 0) - (p.importoPagato || 0), 0),
+        importoDaIncassare: all.filter(p => p.stato === 'fatturata').reduce((sum, p) => sum + (p.importoFatturato || 0), 0),
       };
     } catch (error) {
       console.error('Error getting prestazioni stats:', error);
