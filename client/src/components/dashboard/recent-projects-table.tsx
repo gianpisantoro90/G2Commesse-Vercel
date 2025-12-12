@@ -145,10 +145,10 @@ export default function RecentProjectsTable() {
                   <div className="flex-1 min-w-0">
                     <div className="font-mono font-semibold text-primary text-sm">{project.code}</div>
                     <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{project.client}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-500 truncate">{project.object}</div>
                   </div>
                   {getOneDriveSyncIndicator(project)}
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">{project.object}</div>
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                   <div className="text-xs text-gray-600 dark:text-gray-400">📍 {project.city}</div>
                   <ProjectStatusBadge status={project.status as "in corso" | "conclusa" | "sospesa"} />
