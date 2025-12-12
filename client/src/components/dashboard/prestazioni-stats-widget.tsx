@@ -99,7 +99,7 @@ export default function PrestazioniStatsWidget() {
                   <Badge variant="secondary" className="bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100 font-semibold">
                     {stats.completateNonFatturate}
                   </Badge>
-                  <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                  <span className="text-sm font-semibold text-amber-900 dark:text-amber-100">
                     {formatCurrency(stats.importoDaFatturare)}
                   </span>
                 </div>
@@ -118,7 +118,7 @@ export default function PrestazioniStatsWidget() {
                   <Badge variant="secondary" className="bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-100 font-semibold">
                     {stats.fatturateNonPagate}
                   </Badge>
-                  <span className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                  <span className="text-sm font-semibold text-orange-900 dark:text-orange-100">
                     {formatCurrency(stats.importoDaIncassare)}
                   </span>
                 </div>
@@ -197,15 +197,15 @@ export default function PrestazioniStatsWidget() {
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-xs text-muted-foreground">Previsto</p>
-              <p className="font-medium text-sm">{formatCurrency(stats.importoTotalePrevisto)}</p>
+              <p className="font-medium text-sm text-gray-900 dark:text-white">{formatCurrency(stats.importoTotalePrevisto)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Fatturato</p>
-              <p className="font-medium text-sm">{formatCurrency(stats.importoTotaleFatturato)}</p>
+              <p className="font-medium text-sm text-gray-900 dark:text-white">{formatCurrency(stats.importoTotaleFatturato)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Incassato</p>
-              <p className="font-medium text-sm text-green-600">{formatCurrency(stats.importoTotalePagato)}</p>
+              <p className="font-medium text-sm text-green-700 dark:text-green-400">{formatCurrency(stats.importoTotalePagato)}</p>
             </div>
           </div>
         </div>
