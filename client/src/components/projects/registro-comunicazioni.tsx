@@ -1000,7 +1000,12 @@ export default function RegistroComunicazioni() {
                 <SelectItem value="all">Tutte le commesse</SelectItem>
                 {(projects || []).map((p) => (
                   <SelectItem key={p.id} value={p.id}>
-                    {p.code}
+                    <div className="flex flex-col">
+                      <span className="font-medium">{p.code}</span>
+                      {p.object && (
+                        <span className="text-xs text-gray-600 dark:text-gray-400">{p.object}</span>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
