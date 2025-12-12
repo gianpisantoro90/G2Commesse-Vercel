@@ -3402,6 +3402,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Stato non valido" });
       }
 
+      // Get current prestazione to preserve data
+      const currentPrestazione = await storage.getPrestazione(req.params.id);
+      if (!currentPrestazione) {
+        return res.status(404).json({ message: "Prestazione non trovata" });
+      }
+
       // Prepare update data with date handling (use provided date or current date)
       const updateData: any = { stato };
       const dateToUse = data ? new Date(data) : new Date();
@@ -3415,9 +3421,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
         case 'fatturata':
           updateData.dataFatturazione = dateToUse;
+          // Copy importoPrevisto to importoFatturato if not already set
+          if (!updateData.importoFatturato && currentPrestazione.importoPrevisto) {
+            updateData.importoFatturato = currentPrestazione.importoPrevisto;
+          }
           break;
         case 'pagata':
           updateData.dataPagamento = dateToUse;
+          // Copy importoFatturato to importoPagato if not already set
+          if (!updateData.importoPagato && currentPrestazione.importoFatturato) {
+            updateData.importoPagato = currentPrestazione.importoFatturato;
+          }
           break;
       }
 
