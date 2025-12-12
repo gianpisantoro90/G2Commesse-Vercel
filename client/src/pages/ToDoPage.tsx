@@ -263,12 +263,7 @@ export default function ToDoPage() {
                         <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti i progetti</SelectItem>
                         {projects.map(p => (
                           <SelectItem key={p.id} value={p.id} className="text-gray-900 dark:text-white">
-                            <div className="flex flex-col">
-                              <span className="font-medium">{p.code}</span>
-                              {p.object && (
-                                <span className="text-xs text-gray-600 dark:text-gray-400">{p.object}</span>
-                              )}
-                            </div>
+                            {p.object ? `${p.code} - ${p.object}` : p.code}
                           </SelectItem>
                         ))}
                       </SelectContent>
