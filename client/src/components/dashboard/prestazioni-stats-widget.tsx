@@ -96,10 +96,10 @@ export default function PrestazioniStatsWidget() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-800">
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100 font-semibold">
                     {stats.completateNonFatturate}
                   </Badge>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">
                     {formatCurrency(stats.importoDaFatturare)}
                   </span>
                 </div>
@@ -115,10 +115,10 @@ export default function PrestazioniStatsWidget() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                  <Badge variant="secondary" className="bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-100 font-semibold">
                     {stats.fatturateNonPagate}
                   </Badge>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm font-semibold text-orange-800 dark:text-orange-200">
                     {formatCurrency(stats.importoDaIncassare)}
                   </span>
                 </div>
