@@ -825,6 +825,15 @@ export class MemStorage implements IStorage {
       ...updates,
       updatedAt: new Date(),
     };
+
+    // Auto-copy logic for stato transitions
+    if (updates.stato === 'fatturata' && !updates.importoFatturato) {
+      updated.importoFatturato = existing.importoPrevisto || 0;
+    }
+    if (updates.stato === 'pagata' && !updates.importoPagato) {
+      updated.importoPagato = existing.importoFatturato || existing.importoPrevisto || 0;
+    }
+
     this.prestazioni.set(id, updated);
     return updated;
   }
@@ -868,6 +877,7 @@ export class MemStorage implements IStorage {
       invoiceId,
       stato: 'fatturata',
       dataFatturazione: new Date(),
+      importoFatturato: existing.importoPrevisto || 0,
       updatedAt: new Date(),
     };
     this.prestazioni.set(prestazioneId, updated);
