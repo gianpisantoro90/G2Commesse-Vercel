@@ -110,7 +110,7 @@ export type LivelloProgettazioneType = keyof typeof LIVELLO_PROGETTAZIONE_CONFIG
 
 // Funzione per formattare importi in euro
 export function formatImporto(amount?: number | null): string {
-  if (!amount || amount === 0) return 'Forfait';
+  if (amount === null || amount === undefined) return 'Forfait';
   
   return new Intl.NumberFormat('it-IT', {
     style: 'currency',
