@@ -1542,9 +1542,22 @@ export class DatabaseStorage implements IStorage {
 
   async updatePrestazione(id: string, updates: Partial<InsertProjectPrestazione>): Promise<ProjectPrestazione | undefined> {
     try {
+      // Get existing prestazione for auto-copy logic
+      const existing = await this.getPrestazione(id);
+      if (!existing) return undefined;
+
+      // Auto-copy logic for stato transitions
+      const finalUpdates = { ...updates };
+      if (updates.stato === 'fatturata' && !updates.importoFatturato) {
+        finalUpdates.importoFatturato = existing.importoPrevisto || 0;
+      }
+      if (updates.stato === 'pagata' && !updates.importoPagato) {
+        finalUpdates.importoPagato = existing.importoFatturato || existing.importoPrevisto || 0;
+      }
+
       const [updated] = await db
         .update(projectPrestazioni)
-        .set({ ...updates, updatedAt: new Date() })
+        .set({ ...finalUpdates, updatedAt: new Date() })
         .where(eq(projectPrestazioni.id, id))
         .returning();
       return updated || undefined;
