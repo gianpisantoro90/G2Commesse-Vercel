@@ -3487,6 +3487,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Fix prestazioni amounts - repairs data where importoFatturato or importoPagato are missing
+  app.post("/api/prestazioni/fix-amounts", async (_req, res) => {
+    try {
+      const result = await storage.fixPrestazioniAmounts();
+      res.json({
+        message: `Corretti ${result.fixed} record, ${result.errors} errori`,
+        fixed: result.fixed,
+        errors: result.errors,
+        status: "success"
+      });
+    } catch (error) {
+      console.error('Error fixing prestazioni amounts:', error);
+      res.status(500).json({
+        message: "Errore nella correzione degli importi",
+        status: "error"
+      });
+    }
+  });
+
   // Manual email check endpoint (replaces automatic polling)
   app.post("/api/emails/check-now", async (req, res) => {
     try {

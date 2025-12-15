@@ -1511,6 +1511,54 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }> {
+    try {
+      const all = await this.getAllPrestazioni();
+      let fixed = 0;
+      let errors = 0;
+
+      for (const prestazione of all) {
+        try {
+          // Fix fatturate senza importoFatturato
+          if (prestazione.stato === 'fatturata' && (!prestazione.importoFatturato || prestazione.importoFatturato === 0)) {
+            if (prestazione.importoPrevisto && prestazione.importoPrevisto > 0) {
+              await db.update(projectPrestazioni)
+                .set({
+                  importoFatturato: prestazione.importoPrevisto,
+                  updatedAt: new Date()
+                })
+                .where(eq(projectPrestazioni.id, prestazione.id));
+              fixed++;
+            }
+          }
+
+          // Fix pagate senza importoPagato
+          if (prestazione.stato === 'pagata' && (!prestazione.importoPagato || prestazione.importoPagato === 0)) {
+            const importo = prestazione.importoFatturato || prestazione.importoPrevisto || 0;
+            if (importo > 0) {
+              await db.update(projectPrestazioni)
+                .set({
+                  importoPagato: importo,
+                  importoFatturato: prestazione.importoFatturato || prestazione.importoPrevisto || 0,
+                  updatedAt: new Date()
+                })
+                .where(eq(projectPrestazioni.id, prestazione.id));
+              fixed++;
+            }
+          }
+        } catch (err) {
+          console.error(`Error fixing prestazione ${prestazione.id}:`, err);
+          errors++;
+        }
+      }
+
+      return { fixed, errors };
+    } catch (error) {
+      console.error('Error fixing prestazioni amounts:', error);
+      return { fixed: 0, errors: 1 };
+    }
+  }
+
   async getPrestazioniByProject(projectId: string): Promise<ProjectPrestazione[]> {
     try {
       return await db.select().from(projectPrestazioni).where(eq(projectPrestazioni.projectId, projectId));
@@ -1618,12 +1666,17 @@ export class DatabaseStorage implements IStorage {
 
   async linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined> {
     try {
+      // Get existing prestazione to copy importoPrevisto to importoFatturato
+      const existing = await this.getPrestazione(prestazioneId);
+      if (!existing) return undefined;
+
       const [updated] = await db
         .update(projectPrestazioni)
         .set({
           invoiceId,
           stato: 'fatturata',
           dataFatturazione: new Date(),
+          importoFatturato: existing.importoFatturato || existing.importoPrevisto || 0,
           updatedAt: new Date(),
         })
         .where(eq(projectPrestazioni.id, prestazioneId))
