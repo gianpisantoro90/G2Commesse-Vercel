@@ -260,6 +260,7 @@ export default function FatturazionePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
       toast({ title: "Prestazione aggiunta", description: "La prestazione è stata creata con successo" });
       resetForm();
     },
@@ -281,6 +282,7 @@ export default function FatturazionePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
       toast({ title: "Stato aggiornato" });
       setIsAdvanceDialogOpen(false);
     },
@@ -302,6 +304,7 @@ export default function FatturazionePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
       toast({ title: "Data aggiornata" });
       setIsEditDateDialogOpen(false);
     },
@@ -321,6 +324,7 @@ export default function FatturazionePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
       toast({ title: "Prestazione eliminata" });
     },
     onError: () => {
@@ -371,6 +375,7 @@ export default function FatturazionePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
       toast({ title: "Fattura creata", description: "Fattura creata e collegata alla prestazione" });
       setIsInvoiceDialogOpen(false);
       setSelectedPrestazione(null);
