@@ -155,6 +155,16 @@ app.use((req, res, next) => {
   // Wait for storage to be ready
   await storagePromise;
 
+  // Auto-fix prestazioni amounts on startup (repairs data where importoFatturato is missing)
+  try {
+    const fixResult = await storage.fixPrestazioniAmounts();
+    if (fixResult.fixed > 0) {
+      logger.info(`Auto-fixed ${fixResult.fixed} prestazioni with missing importoFatturato/importoPagato`);
+    }
+  } catch (err) {
+    logger.warn('Failed to auto-fix prestazioni amounts', { error: err });
+  }
+
   // Initialize email service for AI-powered email processing
   emailService.initialize();
 
