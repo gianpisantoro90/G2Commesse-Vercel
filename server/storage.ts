@@ -101,6 +101,7 @@ export interface IStorage {
   getPrestazioniStats(): Promise<PrestazioniStats>;
   getPrestazioniByStato(stato: string): Promise<ProjectPrestazione[]>;
   linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined>;
+  fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }>;
 
   // Bulk operations
   exportAllData(): Promise<{ 
