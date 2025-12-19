@@ -924,7 +924,10 @@ export default function FatturazionePage() {
                     className="w-full justify-between"
                   >
                     {selectedProjectForAdd
-                      ? projects.find(p => p.id === selectedProjectForAdd)?.code + " - " + projects.find(p => p.id === selectedProjectForAdd)?.client
+                      ? (() => {
+                          const p = projects.find(p => p.id === selectedProjectForAdd);
+                          return p ? `${p.code} - ${p.object || p.client}` : "Cerca commessa...";
+                        })()
                       : "Cerca commessa..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
@@ -952,7 +955,16 @@ export default function FatturazionePage() {
                             />
                             <div className="flex flex-col">
                               <span className="font-medium">{project.code}</span>
-                              <span className="text-xs text-muted-foreground">{project.client}</span>
+                              {project.object && (
+                                <span className="text-xs text-muted-foreground truncate">
+                                  {project.object}
+                                </span>
+                              )}
+                              {project.client && (
+                                <span className="text-xs text-muted-foreground/70">
+                                  Cliente: {project.client}
+                                </span>
+                              )}
                             </div>
                           </CommandItem>
                         ))}
