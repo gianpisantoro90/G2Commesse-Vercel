@@ -932,9 +932,9 @@ export default function FatturazionePage() {
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
+                <PopoverContent className="w-[400px] p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Cerca per codice o cliente..." />
+                    <CommandInput placeholder="Cerca per codice o oggetto..." />
                     <CommandList>
                       <CommandEmpty>Nessuna commessa trovata.</CommandEmpty>
                       <CommandGroup>
@@ -953,7 +953,7 @@ export default function FatturazionePage() {
                                 selectedProjectForAdd === project.id ? "opacity-100" : "opacity-0"
                               )}
                             />
-                            <div className="flex flex-col">
+                            <div className="flex flex-col overflow-hidden">
                               <span className="font-medium">{project.code}</span>
                               {project.object && (
                                 <span className="text-xs text-muted-foreground truncate">
@@ -961,7 +961,7 @@ export default function FatturazionePage() {
                                 </span>
                               )}
                               {project.client && (
-                                <span className="text-xs text-muted-foreground/70">
+                                <span className="text-xs text-muted-foreground/70 truncate">
                                   Cliente: {project.client}
                                 </span>
                               )}
