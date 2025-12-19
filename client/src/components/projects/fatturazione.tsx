@@ -14,6 +14,7 @@ import { FileText, Plus, Edit, Trash2, Euro, Calendar, CheckCircle, Clock, Alert
 import { type Project } from "@shared/schema";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 
 interface ProjectInvoice {
   id: string;
@@ -281,22 +282,12 @@ export default function Fatturazione() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="project">Commessa *</Label>
-                <Select
+                <ProjectCombobox
+                  projects={projects || []}
                   value={selectedProject}
                   onValueChange={setSelectedProject}
                   disabled={!!editingInvoice}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona commessa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects?.map(project => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.code} - {project.object}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
