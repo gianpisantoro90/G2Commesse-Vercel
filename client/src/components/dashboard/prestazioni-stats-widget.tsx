@@ -96,7 +96,7 @@ export default function PrestazioniStatsWidget() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100 font-semibold">
+                  <Badge variant="secondary" className="bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100 font-semibold !text-amber-900 dark:!text-amber-100">
                     {stats.completateNonFatturate}
                   </Badge>
                   <span className="text-sm font-semibold text-amber-900 dark:text-amber-100">
@@ -115,7 +115,7 @@ export default function PrestazioniStatsWidget() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-100 font-semibold">
+                  <Badge variant="secondary" className="bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-100 font-semibold !text-orange-900 dark:!text-orange-100">
                     {stats.fatturateNonPagate}
                   </Badge>
                   <span className="text-sm font-semibold text-orange-900 dark:text-orange-100">

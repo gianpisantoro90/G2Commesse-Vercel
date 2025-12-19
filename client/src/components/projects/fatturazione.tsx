@@ -43,7 +43,7 @@ const STATI_FATTURA = [
 export default function Fatturazione() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<ProjectInvoice | null>(null);
-  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [selectedProject, setSelectedProject] = useState<string | null>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
