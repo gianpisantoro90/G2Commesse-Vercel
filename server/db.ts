@@ -105,7 +105,6 @@ async function runMigrations() {
           importo_previsto INTEGER DEFAULT 0,
           importo_fatturato INTEGER DEFAULT 0,
           importo_pagato INTEGER DEFAULT 0,
-          invoice_id TEXT REFERENCES project_invoices(id) ON DELETE SET NULL,
           note TEXT,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
@@ -115,11 +114,40 @@ async function runMigrations() {
       // Create indexes
       await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_project ON project_prestazioni(project_id)`);
       await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_stato ON project_prestazioni(stato)`);
-      await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_invoice ON project_prestazioni(invoice_id)`);
 
       console.log('✅ project_prestazioni table created successfully!');
     } else {
       console.log('✅ project_prestazioni table already exists');
+
+      // Migration: Remove invoice_id column if it exists (no longer used)
+      const invoiceIdExists = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_name = 'project_prestazioni' AND column_name = 'invoice_id'
+        );
+      `);
+      if (invoiceIdExists.rows[0].exists) {
+        console.log('🔄 Removing deprecated invoice_id column from project_prestazioni...');
+        await client.query(`ALTER TABLE project_prestazioni DROP COLUMN IF EXISTS invoice_id`);
+        await client.query(`DROP INDEX IF EXISTS idx_prestazioni_invoice`);
+        console.log('✅ invoice_id column removed');
+      }
+    }
+
+    // Migration: Add prestazione_id and tipo_fattura to project_invoices
+    const prestazioneIdExists = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns
+        WHERE table_name = 'project_invoices' AND column_name = 'prestazione_id'
+      );
+    `);
+
+    if (!prestazioneIdExists.rows[0].exists) {
+      console.log('🔄 Adding prestazione_id and tipo_fattura to project_invoices...');
+      await client.query(`ALTER TABLE project_invoices ADD COLUMN IF NOT EXISTS prestazione_id TEXT`);
+      await client.query(`ALTER TABLE project_invoices ADD COLUMN IF NOT EXISTS tipo_fattura TEXT DEFAULT 'unica'`);
+      await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_prestazione ON project_invoices(prestazione_id)`);
+      console.log('✅ prestazione_id and tipo_fattura columns added to project_invoices');
     }
 
     client.release();

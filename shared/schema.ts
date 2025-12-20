@@ -398,11 +398,17 @@ export const projectSAL = pgTable("project_sal", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Tipi di fattura per prestazione
+export const TIPO_FATTURA = ['acconto', 'sal', 'saldo', 'unica'] as const;
+export type TipoFattura = typeof TIPO_FATTURA[number];
+
 // Fatturazione
 export const projectInvoices = pgTable("project_invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   salId: text("sal_id").references(() => projectSAL.id), // Opzionale: collegamento a SAL
+  prestazioneId: text("prestazione_id"), // Collegamento a prestazione (1:N - una prestazione può avere più fatture)
+  tipoFattura: text("tipo_fattura").default("unica"), // 'acconto', 'sal', 'saldo', 'unica'
   numeroFattura: text("numero_fattura").notNull(),
   dataEmissione: timestamp("data_emissione").notNull(),
   importoNetto: integer("importo_netto").notNull(), // In centesimi
@@ -456,11 +462,8 @@ export const projectPrestazioni = pgTable("project_prestazioni", {
 
   // Importi (in centesimi di euro)
   importoPrevisto: integer("importo_previsto").default(0), // Importo stimato/preventivato
-  importoFatturato: integer("importo_fatturato").default(0), // Importo effettivamente fatturato
+  importoFatturato: integer("importo_fatturato").default(0), // Importo effettivamente fatturato (calcolato come somma fatture collegate)
   importoPagato: integer("importo_pagato").default(0), // Importo effettivamente incassato
-
-  // Collegamento a fattura specifica (opzionale)
-  invoiceId: text("invoice_id").references(() => projectInvoices.id, { onDelete: "set null" }),
 
   // Note e metadata
   note: text("note"),
@@ -623,7 +626,6 @@ export const updatePrestazioneStatoSchema = z.object({
   dataPagamento: z.coerce.date().optional().nullable(),
   importoFatturato: z.number().min(0).optional(),
   importoPagato: z.number().min(0).optional(),
-  invoiceId: z.string().optional().nullable(),
   note: z.string().optional(),
 });
 
@@ -716,11 +718,15 @@ export interface PrestazioneWithProject extends ProjectPrestazione {
     client: string;
     object: string;
   };
-  invoice?: {
+  // Array di fatture collegate alla prestazione (1:N)
+  invoices?: Array<{
     id: string;
     numeroFattura: string;
+    tipoFattura: string;
+    importoNetto: number;
     stato: string;
-  };
+    dataEmissione: Date | null;
+  }>;
 }
 
 // Statistiche prestazioni per dashboard

@@ -158,6 +158,7 @@ export default function FatturazionePage() {
     cassaPercentuale: 4,
     ivaPercentuale: 22,
     dataFattura: new Date().toISOString().split('T')[0],
+    tipoFattura: 'unica' as 'acconto' | 'sal' | 'saldo' | 'unica',
     note: '',
   });
 
@@ -337,41 +338,21 @@ export default function FatturazionePage() {
       prestazioneId: string;
       projectId: string;
       invoice: any;
-      importoFatturato: number;
-      dataFattura: string;
+      tipoFattura: 'acconto' | 'sal' | 'saldo' | 'unica';
     }) => {
-      // Create invoice
+      // Create invoice with prestazioneId - server will auto-recalculate prestazione amounts
       const invoiceRes = await fetch(`/api/projects/${data.projectId}/invoices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data.invoice),
-        credentials: "include",
-      });
-      if (!invoiceRes.ok) throw new Error("Errore nella creazione fattura");
-      const invoice = await invoiceRes.json();
-
-      // Link prestazione to invoice and update importoFatturato
-      const linkRes = await fetch(`/api/prestazioni/${data.prestazioneId}/link-invoice`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invoiceId: invoice.id }),
-        credentials: "include",
-      });
-      if (!linkRes.ok) throw new Error("Errore nel collegamento");
-
-      // Update prestazione with importoFatturato and stato
-      await fetch(`/api/prestazioni/${data.prestazioneId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          importoFatturato: data.importoFatturato,
-          dataFatturazione: data.dataFattura,
-          stato: 'fatturata'
+          ...data.invoice,
+          prestazioneId: data.prestazioneId,
+          tipoFattura: data.tipoFattura,
         }),
         credentials: "include",
       });
-
-      return invoice;
+      if (!invoiceRes.ok) throw new Error("Errore nella creazione fattura");
+      return await invoiceRes.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
@@ -385,6 +366,7 @@ export default function FatturazionePage() {
         cassaPercentuale: 4,
         ivaPercentuale: 22,
         dataFattura: new Date().toISOString().split('T')[0],
+        tipoFattura: 'unica',
         note: '',
       });
     },
@@ -429,18 +411,15 @@ export default function FatturazionePage() {
       return;
     }
 
-    // Use the calculated totale as importo fatturato
-    const importoTotale = invoiceCalcolati.totale;
-
     createInvoiceMutation.mutate({
       prestazioneId: selectedPrestazione.id,
       projectId: selectedPrestazione.projectId,
-      importoFatturato: Math.round(importoTotale * 100), // in centesimi
-      dataFattura: invoiceFormData.dataFattura,
+      tipoFattura: invoiceFormData.tipoFattura,
       invoice: {
         numeroFattura: invoiceFormData.numeroFattura,
         importoNetto: invoiceFormData.imponibile, // imponibile in euro
         dataEmissione: invoiceFormData.dataFattura,
+        aliquotaIVA: invoiceFormData.ivaPercentuale,
         stato: 'emessa',
         note: invoiceFormData.note
           ? `${invoiceFormData.note}\n---\nCassa ${invoiceFormData.cassaPercentuale}%: €${invoiceCalcolati.cassa.toFixed(2)}, IVA ${invoiceFormData.ivaPercentuale}%: €${invoiceCalcolati.iva.toFixed(2)}`
@@ -831,27 +810,30 @@ export default function FatturazionePage() {
                               </Button>
                             )}
 
-                            {/* Create Invoice (when completata) */}
-                            {prestazione.stato === 'completata' && (
+                            {/* Create Invoice (when completata or fatturata - for multiple invoices) */}
+                            {(prestazione.stato === 'completata' || prestazione.stato === 'fatturata') && (
                               <Button
                                 size="sm"
-                                variant="default"
+                                variant={prestazione.stato === 'completata' ? "default" : "outline"}
                                 onClick={() => {
+                                  const residuo = ((prestazione.importoPrevisto || 0) - (prestazione.importoFatturato || 0)) / 100;
+                                  const hasExistingInvoices = (prestazione.importoFatturato || 0) > 0;
                                   setSelectedPrestazione(prestazione);
                                   setInvoiceFormData({
                                     numeroFattura: '',
-                                    imponibile: (prestazione.importoPrevisto || 0) / 100,
+                                    imponibile: Math.max(0, residuo),
                                     cassaPercentuale: 4,
                                     ivaPercentuale: 22,
                                     dataFattura: new Date().toISOString().split('T')[0],
+                                    tipoFattura: hasExistingInvoices ? 'saldo' : 'unica',
                                     note: '',
                                   });
                                   setIsInvoiceDialogOpen(true);
                                 }}
-                                title="Crea fattura"
+                                title={prestazione.stato === 'fatturata' ? "Aggiungi altra fattura (SAL/Saldo)" : "Crea fattura"}
                               >
                                 <FileText className="h-4 w-4 mr-1" />
-                                Fattura
+                                {prestazione.stato === 'fatturata' ? '+Fattura' : 'Fattura'}
                               </Button>
                             )}
 
@@ -1049,9 +1031,27 @@ export default function FatturazionePage() {
             <DialogTitle>Crea Fattura</DialogTitle>
             <DialogDescription>
               {selectedPrestazione && (
-                <span>
-                  Crea fattura per: {PRESTAZIONE_CONFIG[selectedPrestazione.tipo]?.label} - {selectedPrestazione.project?.code}
-                </span>
+                <div className="space-y-1">
+                  <span>
+                    Crea fattura per: {PRESTAZIONE_CONFIG[selectedPrestazione.tipo]?.label} - {selectedPrestazione.project?.code}
+                  </span>
+                  <div className="text-xs mt-2 p-2 rounded bg-muted">
+                    <div className="flex justify-between">
+                      <span>Importo previsto:</span>
+                      <span className="font-medium">{formatCurrency(selectedPrestazione.importoPrevisto)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Già fatturato:</span>
+                      <span className="font-medium text-purple-600">{formatCurrency(selectedPrestazione.importoFatturato)}</span>
+                    </div>
+                    <div className="flex justify-between border-t mt-1 pt-1">
+                      <span>Residuo da fatturare:</span>
+                      <span className="font-medium text-amber-600">
+                        {formatCurrency((selectedPrestazione.importoPrevisto || 0) - (selectedPrestazione.importoFatturato || 0))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               )}
             </DialogDescription>
           </DialogHeader>
@@ -1073,6 +1073,27 @@ export default function FatturazionePage() {
                   onChange={(e) => setInvoiceFormData({ ...invoiceFormData, dataFattura: e.target.value })}
                 />
               </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Tipo Fattura</Label>
+              <Select
+                value={invoiceFormData.tipoFattura}
+                onValueChange={(value) => setInvoiceFormData({ ...invoiceFormData, tipoFattura: value as 'acconto' | 'sal' | 'saldo' | 'unica' })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unica">Fattura Unica</SelectItem>
+                  <SelectItem value="acconto">Acconto</SelectItem>
+                  <SelectItem value="sal">SAL (Stato Avanzamento)</SelectItem>
+                  <SelectItem value="saldo">Saldo</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Puoi emettere più fatture per la stessa prestazione (acconti, SAL, saldo)
+              </p>
             </div>
 
             <div className="grid gap-2">
