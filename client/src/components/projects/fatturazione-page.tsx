@@ -1026,146 +1026,128 @@ export default function FatturazionePage() {
 
       {/* Create Invoice Dialog */}
       <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Crea Fattura</DialogTitle>
             <DialogDescription>
               {selectedPrestazione && (
-                <div className="space-y-1">
-                  <span>
-                    Crea fattura per: {PRESTAZIONE_CONFIG[selectedPrestazione.tipo]?.label} - {selectedPrestazione.project?.code}
+                <div className="flex items-center justify-between text-xs mt-1">
+                  <span>{PRESTAZIONE_CONFIG[selectedPrestazione.tipo]?.label} - {selectedPrestazione.project?.code}</span>
+                  <span className="text-amber-600 font-medium">
+                    Residuo: {formatCurrency((selectedPrestazione.importoPrevisto || 0) - (selectedPrestazione.importoFatturato || 0))}
                   </span>
-                  <div className="text-xs mt-2 p-2 rounded bg-muted">
-                    <div className="flex justify-between">
-                      <span>Importo previsto:</span>
-                      <span className="font-medium">{formatCurrency(selectedPrestazione.importoPrevisto)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Già fatturato:</span>
-                      <span className="font-medium text-purple-600">{formatCurrency(selectedPrestazione.importoFatturato)}</span>
-                    </div>
-                    <div className="flex justify-between border-t mt-1 pt-1">
-                      <span>Residuo da fatturare:</span>
-                      <span className="font-medium text-amber-600">
-                        {formatCurrency((selectedPrestazione.importoPrevisto || 0) - (selectedPrestazione.importoFatturato || 0))}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Numero Fattura *</Label>
+          <div className="grid gap-3 py-2">
+            <div className="grid grid-cols-3 gap-2">
+              <div className="grid gap-1 col-span-1">
+                <Label className="text-xs">N. Fattura *</Label>
                 <Input
                   value={invoiceFormData.numeroFattura}
                   onChange={(e) => setInvoiceFormData({ ...invoiceFormData, numeroFattura: e.target.value })}
-                  placeholder="Es: FT-2024-001"
+                  placeholder="FT-001"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="grid gap-2">
-                <Label>Data Fattura</Label>
+              <div className="grid gap-1 col-span-1">
+                <Label className="text-xs">Data</Label>
                 <Input
                   type="date"
                   value={invoiceFormData.dataFattura}
                   onChange={(e) => setInvoiceFormData({ ...invoiceFormData, dataFattura: e.target.value })}
+                  className="h-8 text-sm"
                 />
+              </div>
+              <div className="grid gap-1 col-span-1">
+                <Label className="text-xs">Tipo</Label>
+                <Select
+                  value={invoiceFormData.tipoFattura}
+                  onValueChange={(value) => setInvoiceFormData({ ...invoiceFormData, tipoFattura: value as 'acconto' | 'sal' | 'saldo' | 'unica' })}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unica">Unica</SelectItem>
+                    <SelectItem value="acconto">Acconto</SelectItem>
+                    <SelectItem value="sal">SAL</SelectItem>
+                    <SelectItem value="saldo">Saldo</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label>Tipo Fattura</Label>
-              <Select
-                value={invoiceFormData.tipoFattura}
-                onValueChange={(value) => setInvoiceFormData({ ...invoiceFormData, tipoFattura: value as 'acconto' | 'sal' | 'saldo' | 'unica' })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unica">Fattura Unica</SelectItem>
-                  <SelectItem value="acconto">Acconto</SelectItem>
-                  <SelectItem value="sal">SAL (Stato Avanzamento)</SelectItem>
-                  <SelectItem value="saldo">Saldo</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Puoi emettere più fatture per la stessa prestazione (acconti, SAL, saldo)
-              </p>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Imponibile (€) *</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={invoiceFormData.imponibile}
-                onChange={(e) => setInvoiceFormData({ ...invoiceFormData, imponibile: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Cassa Inarcassa (%)</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="grid gap-1">
+                <Label className="text-xs">Imponibile (€) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={invoiceFormData.imponibile}
+                  onChange={(e) => setInvoiceFormData({ ...invoiceFormData, imponibile: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.00"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div className="grid gap-1">
+                <Label className="text-xs">Cassa %</Label>
                 <Input
                   type="number"
                   step="0.1"
                   value={invoiceFormData.cassaPercentuale}
                   onChange={(e) => setInvoiceFormData({ ...invoiceFormData, cassaPercentuale: parseFloat(e.target.value) || 0 })}
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="grid gap-2">
-                <Label>IVA (%)</Label>
+              <div className="grid gap-1">
+                <Label className="text-xs">IVA %</Label>
                 <Input
                   type="number"
                   step="0.1"
                   value={invoiceFormData.ivaPercentuale}
                   onChange={(e) => setInvoiceFormData({ ...invoiceFormData, ivaPercentuale: parseFloat(e.target.value) || 0 })}
+                  className="h-8 text-sm"
                 />
               </div>
             </div>
 
-            {/* Calculated breakdown */}
-            <div className="rounded-lg bg-muted p-3 space-y-1.5 text-sm">
+            {/* Calculated breakdown - compact */}
+            <div className="rounded-lg bg-muted p-2 text-xs grid grid-cols-2 gap-x-4 gap-y-1">
               <div className="flex justify-between">
                 <span>Imponibile:</span>
                 <span>€ {invoiceCalcolati.imponibile.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Cassa ({invoiceFormData.cassaPercentuale}%):</span>
+              <div className="flex justify-between">
+                <span>Cassa {invoiceFormData.cassaPercentuale}%:</span>
                 <span>€ {invoiceCalcolati.cassa.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>Base IVA:</span>
-                <span>€ {invoiceCalcolati.baseIva.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-muted-foreground">
-                <span>IVA ({invoiceFormData.ivaPercentuale}%):</span>
+              <div className="flex justify-between">
+                <span>IVA {invoiceFormData.ivaPercentuale}%:</span>
                 <span>€ {invoiceCalcolati.iva.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between font-semibold pt-1 border-t">
-                <span>Totale Fattura:</span>
+              <div className="flex justify-between font-semibold">
+                <span>Totale:</span>
                 <span>€ {invoiceCalcolati.totale.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label>Note</Label>
+            <div className="grid gap-1">
+              <Label className="text-xs">Note (opzionale)</Label>
               <Textarea
                 value={invoiceFormData.note}
                 onChange={(e) => setInvoiceFormData({ ...invoiceFormData, note: e.target.value })}
-                placeholder="Note sulla fattura"
-                rows={2}
+                placeholder="Note"
+                rows={1}
+                className="text-sm min-h-[32px]"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsInvoiceDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleCreateInvoice} disabled={createInvoiceMutation.isPending}>
-              {createInvoiceMutation.isPending ? "Creazione..." : "Crea Fattura"}
+            <Button variant="outline" size="sm" onClick={() => setIsInvoiceDialogOpen(false)}>Annulla</Button>
+            <Button size="sm" onClick={handleCreateInvoice} disabled={createInvoiceMutation.isPending}>
+              {createInvoiceMutation.isPending ? "..." : "Crea Fattura"}
             </Button>
           </DialogFooter>
         </DialogContent>
