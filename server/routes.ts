@@ -74,6 +74,8 @@ const invoiceInputSchema = z.object({
   dataPagamento: z.any().optional().nullable(),
   note: z.any().optional().nullable(),
   salId: z.string().optional().nullable(),
+  prestazioneId: z.string().optional().nullable(), // Collegamento a prestazione (1:N)
+  tipoFattura: z.enum(['acconto', 'sal', 'saldo', 'unica']).optional().default('unica'),
   ritenuta: z.number().optional(),
   scadenzaPagamento: z.any().optional().nullable(),
   attachmentPath: z.string().optional().nullable(),
@@ -3259,6 +3261,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...validatedData,
         projectId: req.params.projectId,
       });
+
+      // Se la fattura è collegata a una prestazione, ricalcola gli importi
+      if (validatedData.prestazioneId) {
+        await storage.recalculatePrestazioneImporti(validatedData.prestazioneId);
+      }
+
       res.status(201).json(invoice);
     } catch (error) {
       console.error('Error creating invoice:', error);
@@ -3271,11 +3279,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch("/api/projects/:projectId/invoices/:invoiceId", async (req, res) => {
     try {
+      // Get existing invoice to check prestazioneId
+      const existingInvoice = await storage.getInvoice(req.params.invoiceId);
+
       const validatedData = invoiceInputSchema.partial().parse(req.body);
       const updated = await storage.updateInvoice(req.params.invoiceId, validatedData);
       if (!updated) {
         return res.status(404).json({ message: "Fattura non trovata" });
       }
+
+      // Ricalcola importi per la prestazione (sia vecchia che nuova se cambiata)
+      const prestazioneIds = new Set<string>();
+      if (existingInvoice?.prestazioneId) prestazioneIds.add(existingInvoice.prestazioneId);
+      if (updated.prestazioneId) prestazioneIds.add(updated.prestazioneId);
+
+      for (const prestazioneId of prestazioneIds) {
+        await storage.recalculatePrestazioneImporti(prestazioneId);
+      }
+
       res.json(updated);
     } catch (error) {
       console.error('Error updating invoice:', error);
@@ -3288,10 +3309,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/projects/:projectId/invoices/:invoiceId", async (req, res) => {
     try {
+      // Get invoice before deletion to know which prestazione to recalculate
+      const invoice = await storage.getInvoice(req.params.invoiceId);
+      const prestazioneId = invoice?.prestazioneId;
+
       const deleted = await storage.deleteInvoice(req.params.invoiceId);
       if (!deleted) {
         return res.status(404).json({ message: "Fattura non trovata" });
       }
+
+      // Ricalcola importi per la prestazione se era collegata
+      if (prestazioneId) {
+        await storage.recalculatePrestazioneImporti(prestazioneId);
+      }
+
       res.json({ message: "Fattura eliminata con successo" });
     } catch (error) {
       console.error('Error deleting invoice:', error);
@@ -3446,22 +3477,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Link prestazione to invoice
-  app.patch("/api/prestazioni/:id/link-invoice", async (req, res) => {
+  // Get invoices linked to a prestazione
+  app.get("/api/prestazioni/:id/invoices", async (req, res) => {
     try {
-      const { invoiceId } = req.body;
-      if (!invoiceId) {
-        return res.status(400).json({ message: "invoiceId richiesto" });
-      }
+      const invoices = await storage.getInvoicesByPrestazione(req.params.id);
+      res.json(invoices);
+    } catch (error) {
+      console.error('Error getting invoices for prestazione:', error);
+      res.status(500).json({ message: "Errore nel recupero delle fatture" });
+    }
+  });
 
-      const updated = await storage.linkPrestazioneToInvoice(req.params.id, invoiceId);
+  // Recalculate prestazione amounts from linked invoices
+  app.post("/api/prestazioni/:id/recalculate", async (req, res) => {
+    try {
+      const updated = await storage.recalculatePrestazioneImporti(req.params.id);
       if (!updated) {
         return res.status(404).json({ message: "Prestazione non trovata" });
       }
       res.json(updated);
     } catch (error) {
-      console.error('Error linking prestazione to invoice:', error);
-      res.status(500).json({ message: "Errore nel collegamento alla fattura" });
+      console.error('Error recalculating prestazione:', error);
+      res.status(500).json({ message: "Errore nel ricalcolo degli importi" });
     }
   });
 

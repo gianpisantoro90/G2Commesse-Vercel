@@ -62,8 +62,7 @@ interface PrestazioniTrackerProps {
 export default function PrestazioniTracker({ project }: PrestazioniTrackerProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingPrestazione, setEditingPrestazione] = useState<ProjectPrestazione | null>(null);
-  const [linkInvoiceDialogOpen, setLinkInvoiceDialogOpen] = useState(false);
-  const [selectedPrestazioneForLink, setSelectedPrestazioneForLink] = useState<string | null>(null);
+  // Note: Link invoice dialog removed - invoices are now created with prestazioneId directly
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -130,29 +129,9 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
     }
   });
 
-  // Link to invoice
-  const linkInvoiceMutation = useMutation({
-    mutationFn: async ({ prestazioneId, invoiceId }: { prestazioneId: string; invoiceId: string }) => {
-      const res = await fetch(`/api/prestazioni/${prestazioneId}/link-invoice`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invoiceId }),
-        credentials: "include"
-      });
-      if (!res.ok) throw new Error("Errore nel collegamento");
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${project.id}/prestazioni`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
-      toast({ title: "Collegamento creato", description: "La prestazione è stata collegata alla fattura" });
-      setLinkInvoiceDialogOpen(false);
-      setSelectedPrestazioneForLink(null);
-    },
-    onError: () => {
-      toast({ title: "Errore", description: "Impossibile collegare alla fattura", variant: "destructive" });
-    }
-  });
+  // Note: Link to invoice functionality has been removed.
+  // Invoices are now created with prestazioneId directly from the billing page.
+  // Multiple invoices per prestazione are supported (acconto, sal, saldo, unica).
 
   // Delete prestazione
   const deleteMutation = useMutation({
@@ -333,7 +312,8 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
               const config = PRESTAZIONE_CONFIG[prestazione.tipo] || { label: prestazione.tipo, color: 'bg-gray-100', icon: '📋' };
               const statoConfig = STATO_CONFIG[prestazione.stato] || STATO_CONFIG['da_iniziare'];
               const nextStato = getNextStato(prestazione.stato);
-              const linkedInvoice = invoices.find(i => i.id === prestazione.invoiceId);
+              // Find invoices linked to this prestazione (new 1:N relationship)
+              const linkedInvoices = invoices.filter(i => i.prestazioneId === prestazione.id);
 
               return (
                 <div
@@ -365,11 +345,13 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
                       </span>
                     )}
 
-                    {/* Linked Invoice */}
-                    {linkedInvoice && (
+                    {/* Linked Invoices (multiple invoices per prestazione) */}
+                    {linkedInvoices.length > 0 && (
                       <Badge variant="outline" className="text-xs">
                         <LinkIcon className="w-3 h-3 mr-1" />
-                        {linkedInvoice.numeroFattura}
+                        {linkedInvoices.length === 1
+                          ? linkedInvoices[0].numeroFattura
+                          : `${linkedInvoices.length} fatture`}
                       </Badge>
                     )}
                   </div>
@@ -389,20 +371,7 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
                       </Button>
                     )}
 
-                    {/* Link to Invoice Button (only if completata and not linked) */}
-                    {prestazione.stato === 'completata' && !prestazione.invoiceId && invoices.length > 0 && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedPrestazioneForLink(prestazione.id);
-                          setLinkInvoiceDialogOpen(true);
-                        }}
-                        title="Collega a fattura"
-                      >
-                        <LinkIcon className="w-4 h-4" />
-                      </Button>
-                    )}
+                    {/* Note: Link to Invoice button removed - invoices are now created with prestazioneId directly */}
 
                     {/* Delete Button */}
                     <Button
@@ -425,45 +394,7 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
           </div>
         )}
 
-        {/* Link Invoice Dialog */}
-        <Dialog open={linkInvoiceDialogOpen} onOpenChange={setLinkInvoiceDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="text-gray-900 dark:text-white">Collega a Fattura</DialogTitle>
-              <DialogDescription className="text-gray-600 dark:text-gray-400">
-                Seleziona la fattura a cui collegare questa prestazione
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2 py-4">
-              {invoices.filter(i => i.stato !== 'pagata').map(invoice => (
-                <Button
-                  key={invoice.id}
-                  variant="outline"
-                  className="w-full justify-start dark:border-gray-700 dark:hover:bg-gray-800"
-                  onClick={() => {
-                    if (selectedPrestazioneForLink) {
-                      linkInvoiceMutation.mutate({
-                        prestazioneId: selectedPrestazioneForLink,
-                        invoiceId: invoice.id
-                      });
-                    }
-                  }}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  {invoice.numeroFattura} - {formatCurrency(invoice.importoTotale)}
-                  <Badge variant="secondary" className="ml-auto">
-                    {invoice.stato}
-                  </Badge>
-                </Button>
-              ))}
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setLinkInvoiceDialogOpen(false)}>
-                Annulla
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Link Invoice Dialog removed - invoices are now created with prestazioneId directly from billing page */}
       </div>
     </div>
   );

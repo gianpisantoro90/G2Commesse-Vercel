@@ -100,7 +100,8 @@ export interface IStorage {
   deletePrestazione(id: string): Promise<boolean>;
   getPrestazioniStats(): Promise<PrestazioniStats>;
   getPrestazioniByStato(stato: string): Promise<ProjectPrestazione[]>;
-  linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined>;
+  getInvoicesByPrestazione(prestazioneId: string): Promise<ProjectInvoice[]>;
+  recalculatePrestazioneImporti(prestazioneId: string): Promise<ProjectPrestazione | undefined>;
   fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }>;
 
   // Bulk operations
@@ -808,7 +809,6 @@ export class MemStorage implements IStorage {
       importoPrevisto: insertPrestazione.importoPrevisto || 0,
       importoFatturato: insertPrestazione.importoFatturato || 0,
       importoPagato: insertPrestazione.importoPagato || 0,
-      invoiceId: insertPrestazione.invoiceId || null,
       note: insertPrestazione.note || null,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -869,16 +869,41 @@ export class MemStorage implements IStorage {
     return Array.from(this.prestazioni.values()).filter(p => p.stato === stato);
   }
 
-  async linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined> {
+  async getInvoicesByPrestazione(prestazioneId: string): Promise<ProjectInvoice[]> {
+    return Array.from(this.invoices.values()).filter(i => i.prestazioneId === prestazioneId);
+  }
+
+  async recalculatePrestazioneImporti(prestazioneId: string): Promise<ProjectPrestazione | undefined> {
     const existing = this.prestazioni.get(prestazioneId);
     if (!existing) return undefined;
 
+    // Get all invoices linked to this prestazione
+    const invoices = await this.getInvoicesByPrestazione(prestazioneId);
+
+    // Calculate totals from invoices
+    const importoFatturato = invoices.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+    const importoPagato = invoices
+      .filter(inv => inv.stato === 'pagata')
+      .reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+
+    // Determine state based on amounts
+    let stato = existing.stato;
+    let dataFatturazione = existing.dataFatturazione;
+    let dataPagamento = existing.dataPagamento;
+
+    if (importoFatturato > 0 && importoFatturato >= (existing.importoPrevisto || 0)) {
+      stato = importoPagato >= importoFatturato ? 'pagata' : 'fatturata';
+      if (!dataFatturazione) dataFatturazione = new Date();
+      if (stato === 'pagata' && !dataPagamento) dataPagamento = new Date();
+    }
+
     const updated: ProjectPrestazione = {
       ...existing,
-      invoiceId,
-      stato: 'fatturata',
-      dataFatturazione: new Date(),
-      importoFatturato: existing.importoPrevisto || 0,
+      importoFatturato,
+      importoPagato,
+      stato,
+      dataFatturazione,
+      dataPagamento,
       updatedAt: new Date(),
     };
     this.prestazioni.set(prestazioneId, updated);
@@ -1665,26 +1690,55 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined> {
+  async getInvoicesByPrestazione(prestazioneId: string): Promise<ProjectInvoice[]> {
     try {
-      // Get existing prestazione to copy importoPrevisto to importoFatturato
+      return await db.select().from(projectInvoices).where(eq(projectInvoices.prestazioneId, prestazioneId));
+    } catch (error) {
+      console.error('Error getting invoices by prestazione:', error);
+      return [];
+    }
+  }
+
+  async recalculatePrestazioneImporti(prestazioneId: string): Promise<ProjectPrestazione | undefined> {
+    try {
       const existing = await this.getPrestazione(prestazioneId);
       if (!existing) return undefined;
+
+      // Get all invoices linked to this prestazione
+      const invoices = await this.getInvoicesByPrestazione(prestazioneId);
+
+      // Calculate totals from invoices
+      const importoFatturato = invoices.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+      const importoPagato = invoices
+        .filter(inv => inv.stato === 'pagata')
+        .reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+
+      // Determine state based on amounts
+      let stato = existing.stato;
+      let dataFatturazione = existing.dataFatturazione;
+      let dataPagamento = existing.dataPagamento;
+
+      if (importoFatturato > 0 && importoFatturato >= (existing.importoPrevisto || 0)) {
+        stato = importoPagato >= importoFatturato ? 'pagata' : 'fatturata';
+        if (!dataFatturazione) dataFatturazione = new Date();
+        if (stato === 'pagata' && !dataPagamento) dataPagamento = new Date();
+      }
 
       const [updated] = await db
         .update(projectPrestazioni)
         .set({
-          invoiceId,
-          stato: 'fatturata',
-          dataFatturazione: new Date(),
-          importoFatturato: existing.importoFatturato || existing.importoPrevisto || 0,
+          importoFatturato,
+          importoPagato,
+          stato,
+          dataFatturazione,
+          dataPagamento,
           updatedAt: new Date(),
         })
         .where(eq(projectPrestazioni.id, prestazioneId))
         .returning();
       return updated || undefined;
     } catch (error) {
-      console.error('Error linking prestazione to invoice:', error);
+      console.error('Error recalculating prestazione importi:', error);
       return undefined;
     }
   }
@@ -2290,8 +2344,12 @@ class FallbackStorage implements IStorage {
     return this.executeWithFallback(storage => storage.getPrestazioniByStato(stato));
   }
 
-  async linkPrestazioneToInvoice(prestazioneId: string, invoiceId: string): Promise<ProjectPrestazione | undefined> {
-    return this.executeWithFallback(storage => storage.linkPrestazioneToInvoice(prestazioneId, invoiceId));
+  async getInvoicesByPrestazione(prestazioneId: string): Promise<ProjectInvoice[]> {
+    return this.executeWithFallback(storage => storage.getInvoicesByPrestazione(prestazioneId));
+  }
+
+  async recalculatePrestazioneImporti(prestazioneId: string): Promise<ProjectPrestazione | undefined> {
+    return this.executeWithFallback(storage => storage.recalculatePrestazioneImporti(prestazioneId));
   }
 
   async exportAllData(): Promise<{
