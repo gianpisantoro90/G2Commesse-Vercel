@@ -1412,11 +1412,11 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(id: string): Promise<boolean> {
     try {
-      // First, delete all tasks created by or assigned to this user
-      await db.delete(tasks).where(or(
-        eq(tasks.createdById, id),
-        eq(tasks.assignedToId, id)
-      ));
+      // First, delete all tasks created by this user (createdById is NOT NULL)
+      await db.delete(tasks).where(eq(tasks.createdById, id));
+      
+      // Then, nullify assignedToId for tasks assigned to this user
+      await db.update(tasks).set({ assignedToId: null }).where(eq(tasks.assignedToId, id));
       
       // Then delete the user
       const result = await db.delete(users).where(eq(users.id, id));
