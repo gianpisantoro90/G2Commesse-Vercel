@@ -94,42 +94,97 @@ const PERCENTUALI_ALTRE_PRESTAZIONI = {
   }
 };
 
-// Classi DM 143/2013 con range importi indicativi
+// Classi DM 143/2013 - TAVOLA Z-1 (aggiornata con DM 17/06/2016)
 export const CLASSI_DM143 = {
-  // Edilizia
-  'E01': { descrizione: 'Edilizia residenziale < 100k', rangeMin: 0, rangeMax: 100000 },
-  'E11': { descrizione: 'Edilizia residenziale 100k-250k', rangeMin: 100000, rangeMax: 250000 },
-  'E21': { descrizione: 'Edilizia residenziale 250k-500k', rangeMin: 250000, rangeMax: 500000 },
-  'E22': { descrizione: 'Edilizia residenziale 500k-1M', rangeMin: 500000, rangeMax: 1000000 },
-  'E23': { descrizione: 'Edilizia residenziale > 1M', rangeMin: 1000000, rangeMax: 10000000 },
+  // EDILIZIA
+  'E.01': { descrizione: 'Insediamenti produttivi agricoltura-industria-artigianato semplici', grado: 0.65, categoria: 'Edilizia' },
+  'E.02': { descrizione: 'Edifici industriali con corredi tecnici complessi', grado: 0.95, categoria: 'Edilizia' },
+  'E.03': { descrizione: 'Ostelli, Pensioni, Ristoranti, Motel, negozi, mercati semplici', grado: 0.95, categoria: 'Edilizia' },
+  'E.04': { descrizione: 'Alberghi, Villaggi turistici, Centri commerciali complessi', grado: 1.20, categoria: 'Edilizia' },
+  'E.05': { descrizione: 'Edifici, pertinenze, autorimesse semplici', grado: 0.65, categoria: 'Edilizia' },
+  'E.06': { descrizione: 'Edilizia residenziale privata e pubblica di tipo corrente', grado: 0.95, categoria: 'Edilizia' },
+  'E.07': { descrizione: 'Edifici residenziali di tipo pregiato', grado: 1.20, categoria: 'Edilizia' },
+  'E.08': { descrizione: 'Sedi ASL, Ambulatori, Asili, Scuole', grado: 0.95, categoria: 'Edilizia' },
+  'E.09': { descrizione: 'Scuole secondarie grandi, Case di cura', grado: 1.15, categoria: 'Edilizia' },
+  'E.10': { descrizione: 'Poliambulatori, Ospedali, Università, Istituti ricerca', grado: 1.20, categoria: 'Edilizia' },
+  'E.11': { descrizione: 'Padiglioni esposizioni, opere cimiteriali, oratori, campi sportivi semplici', grado: 0.95, categoria: 'Edilizia' },
+  'E.12': { descrizione: 'Campi sportivi complessi, Palestre, piscine coperte', grado: 1.15, categoria: 'Edilizia' },
+  'E.13': { descrizione: 'Biblioteca, Cinema, Teatro, Museo, Chiese, Palasport, Stadio', grado: 1.20, categoria: 'Edilizia' },
+  'E.14': { descrizione: 'Edifici provvisori a servizio di caserme', grado: 0.65, categoria: 'Edilizia' },
+  'E.15': { descrizione: 'Caserme con corredi tecnici correnti', grado: 0.95, categoria: 'Edilizia' },
+  'E.16': { descrizione: 'Sedi Uffici, Tribunali, Penitenziari, Caserme complesse', grado: 1.20, categoria: 'Edilizia' },
 
-  // Infrastrutture
-  'IA01': { descrizione: 'Infrastrutture stradali < 500k', rangeMin: 0, rangeMax: 500000 },
-  'IA02': { descrizione: 'Infrastrutture stradali 500k-2M', rangeMin: 500000, rangeMax: 2000000 },
-  'IA03': { descrizione: 'Infrastrutture stradali > 2M', rangeMin: 2000000, rangeMax: 20000000 },
+  // STRUTTURE
+  'S.01': { descrizione: 'Strutture c.a. non soggette ad azioni sismiche', grado: 0.70, categoria: 'Strutture' },
+  'S.02': { descrizione: 'Strutture muratura/legno/metallo non soggette ad azioni sismiche', grado: 0.50, categoria: 'Strutture' },
+  'S.03': { descrizione: 'Strutture in cemento armato con verifiche strutturali', grado: 0.95, categoria: 'Strutture' },
+  'S.04': { descrizione: 'Strutture muratura, legno, metallo con verifiche strutturali', grado: 0.90, categoria: 'Strutture' },
+  'S.05': { descrizione: 'Strutture speciali (dighe, gallerie, opere sotterranee)', grado: 1.05, categoria: 'Strutture' },
+  'S.06': { descrizione: 'Opere strutturali di notevole importanza costruttiva', grado: 1.15, categoria: 'Strutture' },
 
-  // Strutture
-  'S01': { descrizione: 'Strutture semplici < 100k', rangeMin: 0, rangeMax: 100000 },
-  'S02': { descrizione: 'Strutture medie 100k-500k', rangeMin: 100000, rangeMax: 500000 },
-  'S03': { descrizione: 'Strutture complesse 500k-2M', rangeMin: 500000, rangeMax: 2000000 },
-  'S04': { descrizione: 'Strutture complesse > 2M', rangeMin: 2000000, rangeMax: 20000000 },
+  // IMPIANTI MECCANICI E ELETTRICI
+  'IA.01': { descrizione: 'Impianti idrici, sanitari, fognature domestiche', grado: 0.75, categoria: 'Impianti' },
+  'IA.02': { descrizione: 'Impianti riscaldamento, climatizzazione', grado: 0.85, categoria: 'Impianti' },
+  'IA.03': { descrizione: 'Impianti elettrici standard, illuminazione, antincendio', grado: 1.15, categoria: 'Impianti' },
+  'IA.04': { descrizione: 'Impianti elettrici complessi, cablaggi strutturati, fibra ottica', grado: 1.30, categoria: 'Impianti' },
 
-  // Impianti
-  'I01': { descrizione: 'Impianti semplici < 50k', rangeMin: 0, rangeMax: 50000 },
-  'I02': { descrizione: 'Impianti medi 50k-200k', rangeMin: 50000, rangeMax: 200000 },
-  'I03': { descrizione: 'Impianti complessi > 200k', rangeMin: 200000, rangeMax: 5000000 },
+  // IMPIANTI INDUSTRIALI
+  'IB.04': { descrizione: 'Depositi e discariche senza trattamento', grado: 0.55, categoria: 'Impianti' },
+  'IB.05': { descrizione: 'Impianti industrie molitorie, alimentari, legno', grado: 0.70, categoria: 'Impianti' },
+  'IB.06': { descrizione: 'Impianti industria chimica, siderurgici, termovalorizzatori', grado: 0.70, categoria: 'Impianti' },
+  'IB.07': { descrizione: 'Impianti complessi con rischi rilevanti', grado: 0.75, categoria: 'Impianti' },
+  'IB.08': { descrizione: 'Linee elettriche, reti trasmissione', grado: 0.50, categoria: 'Impianti' },
+  'IB.09': { descrizione: 'Centrali idroelettriche ordinarie', grado: 0.60, categoria: 'Impianti' },
+  'IB.10': { descrizione: 'Impianti termoelettrici, elettrometallurgia', grado: 0.75, categoria: 'Impianti' },
+  'IB.11': { descrizione: 'Campi fotovoltaici, Parchi eolici', grado: 0.90, categoria: 'Impianti' },
+  'IB.12': { descrizione: 'Micro centrali, Impianti termoelettrici complessi', grado: 1.00, categoria: 'Impianti' },
+
+  // INFRASTRUTTURE PER LA MOBILITÀ
+  'V.01': { descrizione: 'Manutenzione viabilità ordinaria', grado: 0.40, categoria: 'Infrastrutture Mobilità' },
+  'V.02': { descrizione: 'Strade, ferrovie ordinarie, piste ciclabili', grado: 0.45, categoria: 'Infrastrutture Mobilità' },
+  'V.03': { descrizione: 'Viabilità speciale, impianti teleferici, piste aeroportuali', grado: 0.75, categoria: 'Infrastrutture Mobilità' },
+
+  // IDRAULICA
+  'D.01': { descrizione: 'Opere navigazione interna e portuali', grado: 0.65, categoria: 'Idraulica' },
+  'D.02': { descrizione: 'Bonifiche e irrigazioni a deflusso naturale', grado: 0.45, categoria: 'Idraulica' },
+  'D.03': { descrizione: 'Bonifiche con sollevamento meccanico', grado: 0.55, categoria: 'Idraulica' },
+  'D.04': { descrizione: 'Acquedotti e fognature semplici', grado: 0.65, categoria: 'Idraulica' },
+  'D.05': { descrizione: 'Acquedotti e fognature complessi', grado: 0.80, categoria: 'Idraulica' },
+
+  // TECNOLOGIE ICT
+  'T.01': { descrizione: 'Sistemi informativi, data center', grado: 0.95, categoria: 'Tecnologie ICT' },
+  'T.02': { descrizione: 'Reti telecomunicazione, videosorveglianza', grado: 0.70, categoria: 'Tecnologie ICT' },
+  'T.03': { descrizione: 'Sistemi elettronici, automazione, robotica', grado: 1.20, categoria: 'Tecnologie ICT' },
+
+  // PAESAGGIO E AMBIENTE
+  'P.01': { descrizione: 'Sistemazione naturalistica o paesaggistica', grado: 0.85, categoria: 'Paesaggio e Ambiente' },
+  'P.02': { descrizione: 'Interventi del verde', grado: 0.85, categoria: 'Paesaggio e Ambiente' },
+  'P.03': { descrizione: 'Recupero e riqualificazione ambientale', grado: 0.85, categoria: 'Paesaggio e Ambiente' },
+  'P.04': { descrizione: 'Sfruttamento cave e torbiere', grado: 0.85, categoria: 'Paesaggio e Ambiente' },
+  'P.05': { descrizione: 'Miglioramento filiera forestale', grado: 0.85, categoria: 'Paesaggio e Ambiente' },
+  'P.06': { descrizione: 'Miglioramento fondiario agrario', grado: 0.85, categoria: 'Paesaggio e Ambiente' },
+
+  // TERRITORIO E URBANISTICA
+  'U.01': { descrizione: 'Valorizzazione filiere agroalimentari', grado: 0.90, categoria: 'Territorio e Urbanistica' },
+  'U.02': { descrizione: 'Valorizzazione filiera naturalistica', grado: 0.95, categoria: 'Territorio e Urbanistica' },
+  'U.03': { descrizione: 'Pianificazione', grado: 1.00, categoria: 'Territorio e Urbanistica' },
 };
 
 export function suggestClasseDM143(importoOpere: number): string[] {
+  // Suggerimenti basati sull'importo opere per le categorie più comuni
   const suggestions: string[] = [];
 
-  for (const [classe, data] of Object.entries(CLASSI_DM143)) {
-    if (importoOpere >= data.rangeMin && importoOpere <= data.rangeMax) {
-      suggestions.push(classe);
-    }
+  if (importoOpere < 100000) {
+    suggestions.push('E.05', 'E.06');
+  } else if (importoOpere < 500000) {
+    suggestions.push('E.06', 'E.08');
+  } else if (importoOpere < 2000000) {
+    suggestions.push('E.06', 'E.07', 'E.10');
+  } else {
+    suggestions.push('E.07', 'E.10', 'E.13');
   }
 
-  return suggestions.length > 0 ? suggestions : ['E22']; // Default
+  return suggestions;
 }
 
 export function calcolaPercentialeProgettazione(

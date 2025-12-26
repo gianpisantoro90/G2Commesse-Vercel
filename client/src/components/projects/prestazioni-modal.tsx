@@ -4,16 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Project, type ProjectMetadata, type ProjectPrestazioni } from "@shared/schema";
-import { 
-  getAllPrestazioni, 
+import {
+  getAllPrestazioni,
   getAllLivelliProgettazione,
   validatePrestazioniData,
   hasProgettazione,
-  formatImporto 
+  formatImporto
 } from "@/lib/prestazioni-utils";
+import { CLASSI_DM143 } from "@/lib/parcella-calculator";
 
 interface PrestazioniModalProps {
   project: Project;
@@ -228,16 +238,113 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                 <Label htmlFor="classe-dm" className="text-sm font-medium">
                   Classe e Categoria
                 </Label>
-                <Input
-                  id="classe-dm"
-                  placeholder="Es: E22, IA03, S05"
+                <Select
                   value={formData.classeDM143 || ''}
-                  onChange={(e) => handleInputChange('classeDM143', e.target.value)}
-                  className="font-mono"
-                  data-testid="input-classe-dm"
-                />
+                  onValueChange={(value) => handleInputChange('classeDM143', value)}
+                >
+                  <SelectTrigger id="classe-dm" className="font-mono" data-testid="select-classe-dm">
+                    <SelectValue placeholder="Seleziona categoria..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[400px]">
+                    {/* EDILIZIA */}
+                    <SelectGroup>
+                      <SelectLabel>Edilizia</SelectLabel>
+                      {Object.entries(CLASSI_DM143)
+                        .filter(([_, data]) => data.categoria === 'Edilizia')
+                        .map(([codice, data]) => (
+                          <SelectItem key={codice} value={codice}>
+                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+
+                    {/* STRUTTURE */}
+                    <SelectGroup>
+                      <SelectLabel>Strutture</SelectLabel>
+                      {Object.entries(CLASSI_DM143)
+                        .filter(([_, data]) => data.categoria === 'Strutture')
+                        .map(([codice, data]) => (
+                          <SelectItem key={codice} value={codice}>
+                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+
+                    {/* IMPIANTI */}
+                    <SelectGroup>
+                      <SelectLabel>Impianti</SelectLabel>
+                      {Object.entries(CLASSI_DM143)
+                        .filter(([_, data]) => data.categoria === 'Impianti')
+                        .map(([codice, data]) => (
+                          <SelectItem key={codice} value={codice}>
+                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+
+                    {/* INFRASTRUTTURE MOBILITÀ */}
+                    <SelectGroup>
+                      <SelectLabel>Infrastrutture Mobilità</SelectLabel>
+                      {Object.entries(CLASSI_DM143)
+                        .filter(([_, data]) => data.categoria === 'Infrastrutture Mobilità')
+                        .map(([codice, data]) => (
+                          <SelectItem key={codice} value={codice}>
+                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+
+                    {/* IDRAULICA */}
+                    <SelectGroup>
+                      <SelectLabel>Idraulica</SelectLabel>
+                      {Object.entries(CLASSI_DM143)
+                        .filter(([_, data]) => data.categoria === 'Idraulica')
+                        .map(([codice, data]) => (
+                          <SelectItem key={codice} value={codice}>
+                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+
+                    {/* TECNOLOGIE ICT */}
+                    <SelectGroup>
+                      <SelectLabel>Tecnologie ICT</SelectLabel>
+                      {Object.entries(CLASSI_DM143)
+                        .filter(([_, data]) => data.categoria === 'Tecnologie ICT')
+                        .map(([codice, data]) => (
+                          <SelectItem key={codice} value={codice}>
+                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+
+                    {/* PAESAGGIO E AMBIENTE */}
+                    <SelectGroup>
+                      <SelectLabel>Paesaggio e Ambiente</SelectLabel>
+                      {Object.entries(CLASSI_DM143)
+                        .filter(([_, data]) => data.categoria === 'Paesaggio e Ambiente')
+                        .map(([codice, data]) => (
+                          <SelectItem key={codice} value={codice}>
+                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+
+                    {/* TERRITORIO E URBANISTICA */}
+                    <SelectGroup>
+                      <SelectLabel>Territorio e Urbanistica</SelectLabel>
+                      {Object.entries(CLASSI_DM143)
+                        .filter(([_, data]) => data.categoria === 'Territorio e Urbanistica')
+                        .map(([codice, data]) => (
+                          <SelectItem key={codice} value={codice}>
+                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Codice secondo il Decreto Ministeriale 143/2013
+                  Categoria secondo DM 143/2013 - TAVOLA Z-1
                 </p>
               </div>
 
