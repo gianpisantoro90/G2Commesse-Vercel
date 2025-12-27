@@ -208,35 +208,52 @@ export function validatePrestazioniData(data: ProjectPrestazioni): {
   errors: string[];
 } {
   const errors: string[] = [];
-  
+
   // Almeno una prestazione deve essere selezionata
   if (!data.prestazioni || data.prestazioni.length === 0) {
     errors.push('Almeno una prestazione deve essere selezionata');
   }
-  
+
   // Se progettazione è selezionata, richiedere livello
   if (hasProgettazione(data.prestazioni) && (!data.livelloProgettazione || data.livelloProgettazione.length === 0)) {
     errors.push('Se la progettazione è selezionata, è necessario specificare il livello');
   }
-  
-  // Validare importi
+
+  // Validare importi (retrocompatibilità)
   if (data.importoOpere && data.importoOpere < 0) {
     errors.push('L\'importo opere deve essere maggiore o uguale a 0');
   }
-  
+
   if (data.importoServizio && data.importoServizio < 0) {
     errors.push('L\'importo servizio deve essere maggiore o uguale a 0');
   }
-  
+
   if (data.percentualeParcella && (data.percentualeParcella < 0 || data.percentualeParcella > 100)) {
     errors.push('La percentuale parcella deve essere tra 0 e 100');
   }
-  
-  // Validare classe DM 143
+
+  // Validare classe DM 143 (retrocompatibilità)
   if (data.classeDM143 && !validateClasseDM143(data.classeDM143)) {
     errors.push('Formato classe DM 143/2013 non valido (es: E.22, IA.03, S.05)');
   }
-  
+
+  // Validare classificazioni DM 143/2013 (nuova struttura)
+  if (data.classificazioniDM143 && data.classificazioniDM143.length > 0) {
+    data.classificazioniDM143.forEach((classificazione, index) => {
+      // Validare codice
+      if (!classificazione.codice || classificazione.codice.trim() === '') {
+        errors.push(`Classificazione ${index + 1}: codice categoria mancante`);
+      } else if (!validateClasseDM143(classificazione.codice)) {
+        errors.push(`Classificazione ${index + 1}: formato codice non valido (${classificazione.codice})`);
+      }
+
+      // Validare importo
+      if (classificazione.importo < 0) {
+        errors.push(`Classificazione ${index + 1}: importo deve essere maggiore o uguale a 0`);
+      }
+    });
+  }
+
   return {
     isValid: errors.length === 0,
     errors
