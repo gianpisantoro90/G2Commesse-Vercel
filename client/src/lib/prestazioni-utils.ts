@@ -128,9 +128,10 @@ export function formatPercentuale(percentage?: number | null): string {
 // Funzione per validare classe DM 143/2013
 export function validateClasseDM143(classe?: string): boolean {
   if (!classe) return true; // Opzionale
-  
-  // Esempi di classi valide: E22, IA03, S05, etc.
-  const pattern = /^[A-Z]{1,2}[0-9]{1,2}$/;
+
+  // Esempi di classi valide: E.22, IA.03, S.05 (formato ufficiale TAVOLA Z-1)
+  // Accetta anche vecchio formato senza punto per retrocompatibilità: E22, IA03, S05
+  const pattern = /^[A-Z]{1,2}\.?[0-9]{1,2}$/;
   return pattern.test(classe);
 }
 
@@ -233,7 +234,7 @@ export function validatePrestazioniData(data: ProjectPrestazioni): {
   
   // Validare classe DM 143
   if (data.classeDM143 && !validateClasseDM143(data.classeDM143)) {
-    errors.push('Formato classe DM 143/2013 non valido (es: E22, IA03, S05)');
+    errors.push('Formato classe DM 143/2013 non valido (es: E.22, IA.03, S.05)');
   }
   
   return {

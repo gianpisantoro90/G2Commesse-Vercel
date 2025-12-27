@@ -731,7 +731,7 @@ export type Task = typeof tasks.$inferSelect;
 export interface ProjectPrestazioni {
   prestazioni?: Array<'progettazione' | 'dl' | 'csp' | 'cse' | 'contabilita' | 'collaudo' | 'perizia' | 'pratiche'>;
   livelloProgettazione?: Array<'pfte' | 'definitivo' | 'esecutivo' | 'variante'>;
-  classeDM143?: string;
+  classeDM143?: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1)
   importoOpere?: number;
   importoServizio?: number;
   percentualeParcella?: number;
