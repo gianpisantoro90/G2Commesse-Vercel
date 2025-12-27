@@ -113,6 +113,12 @@ export const CLASSI_DM143 = {
   'E.14': { descrizione: 'Edifici provvisori a servizio di caserme', grado: 0.65, categoria: 'Edilizia' },
   'E.15': { descrizione: 'Caserme con corredi tecnici correnti', grado: 0.95, categoria: 'Edilizia' },
   'E.16': { descrizione: 'Sedi Uffici, Tribunali, Penitenziari, Caserme complesse', grado: 1.20, categoria: 'Edilizia' },
+  'E.17': { descrizione: 'Verde ed opere di arredo urbano semplici, Campeggi', grado: 0.65, categoria: 'Edilizia' },
+  'E.18': { descrizione: 'Arredamenti standard, Giardini, Parchi gioco, Piazze', grado: 0.95, categoria: 'Edilizia' },
+  'E.19': { descrizione: 'Arredamenti singolari, Parchi urbani, Riqualificazione paesaggistica', grado: 1.20, categoria: 'Edilizia' },
+  'E.20': { descrizione: 'Manutenzione straordinaria, ristrutturazione edifici esistenti', grado: 0.95, categoria: 'Edilizia' },
+  'E.21': { descrizione: 'Restauro edifici di interesse storico artistico', grado: 1.20, categoria: 'Edilizia' },
+  'E.22': { descrizione: 'Restauro conservativo edifici storici vincolati', grado: 1.55, categoria: 'Edilizia' },
 
   // STRUTTURE
   'S.01': { descrizione: 'Strutture c.a. non soggette ad azioni sismiche', grado: 0.70, categoria: 'Strutture' },
