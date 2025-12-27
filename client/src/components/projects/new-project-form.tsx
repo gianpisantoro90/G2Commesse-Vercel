@@ -47,7 +47,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
       object: "",
       year: new Date().getFullYear() % 100,
       template: "LUNGO",
-      status: "in_corso",
+      status: "in corso",
       tipoRapporto: "diretto",
       committenteFinale: undefined,
       code: "",
@@ -393,7 +393,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                 <SelectValue placeholder="Seleziona stato..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="in_corso">🟡 In Corso</SelectItem>
+                <SelectItem value="in corso">🟡 In Corso</SelectItem>
                 <SelectItem value="conclusa">🟢 Conclusa</SelectItem>
                 <SelectItem value="sospesa">🔴 Sospesa</SelectItem>
               </SelectContent>

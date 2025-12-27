@@ -493,7 +493,7 @@ export default function ProjectsTable() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tutti gli stati</SelectItem>
-              <SelectItem value="in_corso">✅ In Corso</SelectItem>
+              <SelectItem value="in corso">✅ In Corso</SelectItem>
               <SelectItem value="sospesa">⏸️ Sospesa</SelectItem>
               <SelectItem value="conclusa">🏁 Conclusa</SelectItem>
             </SelectContent>
