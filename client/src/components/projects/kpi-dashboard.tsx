@@ -370,11 +370,11 @@ export default function KpiDashboard() {
                       €{(project.valore / 100).toLocaleString('it-IT', { maximumFractionDigits: 0 })}
                     </div>
                     <div className={`text-xs ${
-                      project.status === 'in_corso' ? 'text-blue-600 dark:text-blue-400' :
+                      project.status === 'in corso' ? 'text-blue-600 dark:text-blue-400' :
                       project.status === 'conclusa' ? 'text-green-600 dark:text-green-400' :
                       'text-orange-600 dark:text-orange-400'
                     }`}>
-                      {project.status === 'in_corso' ? 'In Corso' :
+                      {project.status === 'in corso' ? 'In Corso' :
                        project.status === 'conclusa' ? 'Conclusa' : 'Sospesa'}
                     </div>
                   </div>
