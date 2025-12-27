@@ -210,7 +210,7 @@ export const insertCommunicationSchema = createInsertSchema(communications).omit
 export interface ProjectPrestazioni {
   prestazioni?: Array<'progettazione' | 'dl' | 'csp' | 'cse' | 'contabilita' | 'collaudo' | 'perizia' | 'pratiche'>;
   livelloProgettazione?: Array<'pfte' | 'definitivo' | 'esecutivo' | 'variante'>;
-  classeDM143?: string; // Es: "E22", "IA03", "S05"
+  classeDM143?: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1)
   importoOpere?: number; // Importo lavori base calcolo parcella
   importoServizio?: number; // Importo servizio professionale al netto
   percentualeParcella?: number; // % parcella applicata
