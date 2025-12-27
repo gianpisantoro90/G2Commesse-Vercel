@@ -39,19 +39,29 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
   const [formData, setFormData] = useState<ProjectPrestazioni>({
     prestazioni: [],
     livelloProgettazione: [],
-    classeDM143: '',
-    importoOpere: undefined,
+    classificazioniDM143: [],
   });
 
   // Initialize form with existing project data
   useEffect(() => {
     if (project && isOpen) {
       const metadata = project.metadata as ProjectMetadata;
+
+      // Migra vecchi dati al nuovo formato se necessario
+      let classificazioni = metadata?.classificazioniDM143 || [];
+
+      // Se esiste il vecchio formato (classeDM143 singola), convertilo al nuovo formato
+      if (!classificazioni.length && metadata?.classeDM143) {
+        classificazioni = [{
+          codice: metadata.classeDM143,
+          importo: metadata.importoOpere || 0
+        }];
+      }
+
       setFormData({
         prestazioni: metadata?.prestazioni || [],
         livelloProgettazione: metadata?.livelloProgettazione || [],
-        classeDM143: metadata?.classeDM143 || '',
-        importoOpere: metadata?.importoOpere,
+        classificazioniDM143: classificazioni,
       });
     }
   }, [project, isOpen]);
@@ -106,6 +116,39 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
     }));
   };
 
+  // Handlers per classificazioni DM 143/2013
+  const handleAddClassificazione = () => {
+    setFormData(prev => ({
+      ...prev,
+      classificazioniDM143: [
+        ...(prev.classificazioniDM143 || []),
+        { codice: '', importo: 0 }
+      ]
+    }));
+  };
+
+  const handleRemoveClassificazione = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      classificazioniDM143: (prev.classificazioniDM143 || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleClassificazioneChange = (index: number, field: 'codice' | 'importo', value: string | number) => {
+    setFormData(prev => {
+      const newClassificazioni = [...(prev.classificazioniDM143 || [])];
+      if (field === 'codice') {
+        newClassificazioni[index] = { ...newClassificazioni[index], codice: value as string };
+      } else {
+        newClassificazioni[index] = { ...newClassificazioni[index], importo: value as number };
+      }
+      return {
+        ...prev,
+        classificazioniDM143: newClassificazioni
+      };
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -133,6 +176,9 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
   const prestazioniList = getAllPrestazioni();
   const livelliProgettazioneList = getAllLivelliProgettazione();
   const showLivelloProgettazione = hasProgettazione(formData.prestazioni);
+
+  // Calcola importo totale opere dalla somma delle classificazioni
+  const importoTotaleOpere = (formData.classificazioniDM143 || []).reduce((sum, c) => sum + (c.importo || 0), 0);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" data-testid="prestazioni-modal">
@@ -222,151 +268,197 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
             </div>
           )}
 
-          {/* Sezione Classificazione DM 143/2013 */}
+          {/* Sezione Classificazioni DM 143/2013 - Multiple */}
           <div className="space-y-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-            <div>
-              <Label className="text-lg font-semibold text-gray-900 dark:text-white">
-                Classificazione DM 143/2013
-              </Label>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Parametri per la determinazione del compenso professionale
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="classe-dm" className="text-sm font-medium">
-                  Classe e Categoria
+            <div className="flex justify-between items-start">
+              <div>
+                <Label className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Classificazioni DM 143/2013
                 </Label>
-                <Select
-                  value={formData.classeDM143 || ''}
-                  onValueChange={(value) => handleInputChange('classeDM143', value)}
-                >
-                  <SelectTrigger id="classe-dm" className="font-mono" data-testid="select-classe-dm">
-                    <SelectValue placeholder="Seleziona categoria..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[400px]">
-                    {/* EDILIZIA */}
-                    <SelectGroup>
-                      <SelectLabel>Edilizia</SelectLabel>
-                      {Object.entries(CLASSI_DM143)
-                        .filter(([_, data]) => data.categoria === 'Edilizia')
-                        .map(([codice, data]) => (
-                          <SelectItem key={codice} value={codice}>
-                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-
-                    {/* STRUTTURE */}
-                    <SelectGroup>
-                      <SelectLabel>Strutture</SelectLabel>
-                      {Object.entries(CLASSI_DM143)
-                        .filter(([_, data]) => data.categoria === 'Strutture')
-                        .map(([codice, data]) => (
-                          <SelectItem key={codice} value={codice}>
-                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-
-                    {/* IMPIANTI */}
-                    <SelectGroup>
-                      <SelectLabel>Impianti</SelectLabel>
-                      {Object.entries(CLASSI_DM143)
-                        .filter(([_, data]) => data.categoria === 'Impianti')
-                        .map(([codice, data]) => (
-                          <SelectItem key={codice} value={codice}>
-                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-
-                    {/* INFRASTRUTTURE MOBILITÀ */}
-                    <SelectGroup>
-                      <SelectLabel>Infrastrutture Mobilità</SelectLabel>
-                      {Object.entries(CLASSI_DM143)
-                        .filter(([_, data]) => data.categoria === 'Infrastrutture Mobilità')
-                        .map(([codice, data]) => (
-                          <SelectItem key={codice} value={codice}>
-                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-
-                    {/* IDRAULICA */}
-                    <SelectGroup>
-                      <SelectLabel>Idraulica</SelectLabel>
-                      {Object.entries(CLASSI_DM143)
-                        .filter(([_, data]) => data.categoria === 'Idraulica')
-                        .map(([codice, data]) => (
-                          <SelectItem key={codice} value={codice}>
-                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-
-                    {/* TECNOLOGIE ICT */}
-                    <SelectGroup>
-                      <SelectLabel>Tecnologie ICT</SelectLabel>
-                      {Object.entries(CLASSI_DM143)
-                        .filter(([_, data]) => data.categoria === 'Tecnologie ICT')
-                        .map(([codice, data]) => (
-                          <SelectItem key={codice} value={codice}>
-                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-
-                    {/* PAESAGGIO E AMBIENTE */}
-                    <SelectGroup>
-                      <SelectLabel>Paesaggio e Ambiente</SelectLabel>
-                      {Object.entries(CLASSI_DM143)
-                        .filter(([_, data]) => data.categoria === 'Paesaggio e Ambiente')
-                        .map(([codice, data]) => (
-                          <SelectItem key={codice} value={codice}>
-                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-
-                    {/* TERRITORIO E URBANISTICA */}
-                    <SelectGroup>
-                      <SelectLabel>Territorio e Urbanistica</SelectLabel>
-                      {Object.entries(CLASSI_DM143)
-                        .filter(([_, data]) => data.categoria === 'Territorio e Urbanistica')
-                        .map(([codice, data]) => (
-                          <SelectItem key={codice} value={codice}>
-                            <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
-                          </SelectItem>
-                        ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Categoria secondo DM 143/2013 - TAVOLA Z-1
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Aggiungi una o più categorie con i rispettivi importi opere
                 </p>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="importo-opere" className="text-sm font-medium">
-                  Importo Opere (€)
-                </Label>
-                <Input
-                  id="importo-opere"
-                  type="number"
-                  placeholder="0"
-                  min="0"
-                  step="0.01"
-                  value={formData.importoOpere || ''}
-                  onChange={(e) => handleInputChange('importoOpere', e.target.value === '' ? '' : parseFloat(e.target.value) || '')}
-                  data-testid="input-importo-opere"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Importo dei lavori base per calcolo parcella
-                </p>
-              </div>
+              <Button
+                type="button"
+                onClick={handleAddClassificazione}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                ➕ Aggiungi
+              </Button>
             </div>
+
+            {/* Lista classificazioni */}
+            <div className="space-y-3">
+              {formData.classificazioniDM143 && formData.classificazioniDM143.length > 0 ? (
+                formData.classificazioniDM143.map((classificazione, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto] gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                    {/* Dropdown Categoria */}
+                    <div className="space-y-1">
+                      <Label htmlFor={`classe-dm-${index}`} className="text-xs font-medium">
+                        Classe e Categoria
+                      </Label>
+                      <Select
+                        value={classificazione.codice || ''}
+                        onValueChange={(value) => handleClassificazioneChange(index, 'codice', value)}
+                      >
+                        <SelectTrigger id={`classe-dm-${index}`} className="font-mono text-sm">
+                          <SelectValue placeholder="Seleziona categoria..." />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[400px]">
+                          {/* EDILIZIA */}
+                          <SelectGroup>
+                            <SelectLabel>Edilizia</SelectLabel>
+                            {Object.entries(CLASSI_DM143)
+                              .filter(([_, data]) => data.categoria === 'Edilizia')
+                              .map(([codice, data]) => (
+                                <SelectItem key={codice} value={codice}>
+                                  <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+
+                          {/* STRUTTURE */}
+                          <SelectGroup>
+                            <SelectLabel>Strutture</SelectLabel>
+                            {Object.entries(CLASSI_DM143)
+                              .filter(([_, data]) => data.categoria === 'Strutture')
+                              .map(([codice, data]) => (
+                                <SelectItem key={codice} value={codice}>
+                                  <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+
+                          {/* IMPIANTI */}
+                          <SelectGroup>
+                            <SelectLabel>Impianti</SelectLabel>
+                            {Object.entries(CLASSI_DM143)
+                              .filter(([_, data]) => data.categoria === 'Impianti')
+                              .map(([codice, data]) => (
+                                <SelectItem key={codice} value={codice}>
+                                  <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+
+                          {/* INFRASTRUTTURE MOBILITÀ */}
+                          <SelectGroup>
+                            <SelectLabel>Infrastrutture Mobilità</SelectLabel>
+                            {Object.entries(CLASSI_DM143)
+                              .filter(([_, data]) => data.categoria === 'Infrastrutture Mobilità')
+                              .map(([codice, data]) => (
+                                <SelectItem key={codice} value={codice}>
+                                  <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+
+                          {/* IDRAULICA */}
+                          <SelectGroup>
+                            <SelectLabel>Idraulica</SelectLabel>
+                            {Object.entries(CLASSI_DM143)
+                              .filter(([_, data]) => data.categoria === 'Idraulica')
+                              .map(([codice, data]) => (
+                                <SelectItem key={codice} value={codice}>
+                                  <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+
+                          {/* TECNOLOGIE ICT */}
+                          <SelectGroup>
+                            <SelectLabel>Tecnologie ICT</SelectLabel>
+                            {Object.entries(CLASSI_DM143)
+                              .filter(([_, data]) => data.categoria === 'Tecnologie ICT')
+                              .map(([codice, data]) => (
+                                <SelectItem key={codice} value={codice}>
+                                  <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+
+                          {/* PAESAGGIO E AMBIENTE */}
+                          <SelectGroup>
+                            <SelectLabel>Paesaggio e Ambiente</SelectLabel>
+                            {Object.entries(CLASSI_DM143)
+                              .filter(([_, data]) => data.categoria === 'Paesaggio e Ambiente')
+                              .map(([codice, data]) => (
+                                <SelectItem key={codice} value={codice}>
+                                  <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+
+                          {/* TERRITORIO E URBANISTICA */}
+                          <SelectGroup>
+                            <SelectLabel>Territorio e Urbanistica</SelectLabel>
+                            {Object.entries(CLASSI_DM143)
+                              .filter(([_, data]) => data.categoria === 'Territorio e Urbanistica')
+                              .map(([codice, data]) => (
+                                <SelectItem key={codice} value={codice}>
+                                  <span className="font-mono font-semibold">{codice}</span> - {data.descrizione}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Input Importo */}
+                    <div className="space-y-1">
+                      <Label htmlFor={`importo-${index}`} className="text-xs font-medium">
+                        Importo Opere (€)
+                      </Label>
+                      <Input
+                        id={`importo-${index}`}
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
+                        value={classificazione.importo || ''}
+                        onChange={(e) => handleClassificazioneChange(index, 'importo', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                        className="text-sm"
+                      />
+                    </div>
+
+                    {/* Bottone Rimuovi */}
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        onClick={() => handleRemoveClassificazione(index)}
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        🗑️
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <p className="text-sm">Nessuna classificazione aggiunta</p>
+                  <p className="text-xs mt-1">Clicca "Aggiungi" per inserire una categoria</p>
+                </div>
+              )}
+            </div>
+
+            {/* Totale Importo Opere */}
+            {formData.classificazioniDM143 && formData.classificazioniDM143.length > 0 && (
+              <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Importo Totale Opere:
+                  </span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    {formatImporto(importoTotaleOpere)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer con azioni */}

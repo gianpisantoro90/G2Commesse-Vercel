@@ -206,12 +206,24 @@ export const insertCommunicationSchema = createInsertSchema(communications).omit
   updatedAt: true,
 });
 
+// Singola classificazione DM 143/2013 con importo associato
+export interface ClassificazioneDM143 {
+  codice: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1)
+  importo: number; // Importo opere per questa categoria
+}
+
 // Prestazioni professionali metadata interfaces
 export interface ProjectPrestazioni {
   prestazioni?: Array<'progettazione' | 'dl' | 'csp' | 'cse' | 'contabilita' | 'collaudo' | 'perizia' | 'pratiche'>;
   livelloProgettazione?: Array<'pfte' | 'definitivo' | 'esecutivo' | 'variante'>;
-  classeDM143?: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1)
-  importoOpere?: number; // Importo lavori base calcolo parcella
+
+  // Nuova struttura: supporto per multiple classificazioni con importi individuali
+  classificazioniDM143?: ClassificazioneDM143[]; // Array di classificazioni con importi
+
+  // Retrocompatibilità: campi singoli (deprecati in favore di classificazioniDM143)
+  classeDM143?: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1) - DEPRECATED
+  importoOpere?: number; // Importo lavori base calcolo parcella - DEPRECATED (ora calcolato come somma classificazioni)
+
   importoServizio?: number; // Importo servizio professionale al netto
   percentualeParcella?: number; // % parcella applicata
 }
@@ -220,12 +232,24 @@ export interface ProjectMetadata extends ProjectPrestazioni {
   [key: string]: any; // Mantieni flessibilità per altri metadata futuri
 }
 
+// Zod schema per singola classificazione DM 143/2013
+export const classificazioneDM143Schema = z.object({
+  codice: z.string().regex(/^[A-Z]{1,2}\.?[0-9]{1,2}$/, 'Formato classe DM 143/2013 non valido (es: E.22, IA.03, S.05)'),
+  importo: z.number().min(0, 'L\'importo deve essere maggiore o uguale a 0'),
+});
+
 // Zod schemas per validazione prestazioni
 export const prestazioniSchema = z.object({
   prestazioni: z.array(z.enum(['progettazione', 'dl', 'csp', 'cse', 'contabilita', 'collaudo', 'perizia', 'pratiche'])).optional(),
   livelloProgettazione: z.array(z.enum(['pfte', 'definitivo', 'esecutivo', 'variante'])).optional(),
+
+  // Nuova struttura: supporto per multiple classificazioni
+  classificazioniDM143: z.array(classificazioneDM143Schema).optional(),
+
+  // Retrocompatibilità: campi singoli (deprecati)
   classeDM143: z.string().optional(),
   importoOpere: z.number().min(0).optional(),
+
   importoServizio: z.number().min(0).optional(),
   percentualeParcella: z.number().min(0).max(100).optional(),
 }).refine((data) => {
