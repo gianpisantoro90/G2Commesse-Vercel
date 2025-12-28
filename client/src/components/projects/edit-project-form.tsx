@@ -40,6 +40,10 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       status: project.status,
       tipoRapporto: project.tipoRapporto || "diretto",
       committenteFinale: project.committenteFinale || undefined,
+      cig: (project as any).cig || undefined,
+      numeroContratto: (project as any).numeroContratto || undefined,
+      dataInizioCommessa: (project as any).dataInizioCommessa || undefined,
+      dataFineCommessa: (project as any).dataFineCommessa || undefined,
       fsRoot: project.fsRoot || undefined,
       metadata: project.metadata || {},
     },
@@ -85,6 +89,10 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
         status: project.status,
         tipoRapporto: project.tipoRapporto || "diretto",
         committenteFinale: project.committenteFinale || undefined,
+        cig: (project as any).cig || undefined,
+        numeroContratto: (project as any).numeroContratto || undefined,
+        dataInizioCommessa: (project as any).dataInizioCommessa || undefined,
+        dataFineCommessa: (project as any).dataFineCommessa || undefined,
         fsRoot: project.fsRoot || undefined,
         metadata: project.metadata || {},
       });
@@ -96,7 +104,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Modifica Commessa - {project.code}</DialogTitle>
         </DialogHeader>
@@ -278,7 +286,92 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                 </FormItem>
               )}
             />
-            
+
+            {/* Sezione CRE - Dati Contratto */}
+            <div className="border-t pt-4 mt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Dati Contratto (per CRE)</h4>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="cig"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CIG</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          placeholder="Codice Identificativo Gara"
+                          data-testid="edit-project-cig"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="numeroContratto"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>N. Contratto</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          value={field.value || ""}
+                          placeholder="Numero contratto/accordo"
+                          data-testid="edit-project-numero-contratto"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mt-4">
+                <FormField
+                  control={form.control}
+                  name="dataInizioCommessa"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data Inizio</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
+                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                          data-testid="edit-project-data-inizio"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="dataFineCommessa"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data Fine</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="date"
+                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
+                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                          data-testid="edit-project-data-fine"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"

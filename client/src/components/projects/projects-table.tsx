@@ -29,6 +29,7 @@ import { type Project, type OneDriveMapping, type ProjectMetadata, type Communic
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
 import PrestazioniModal from "./prestazioni-modal";
+import CREGenerator from "./cre-generator";
 import { 
   renderPrestazioneBadge, 
   formatImporto, 
@@ -580,6 +581,9 @@ export default function ProjectsTable() {
                           className="h-8 w-8 p-0"
                           onClick={() => handleOpenPrestazioniModal(project)}
                         >🏗️</Button>
+                        <CREGenerator project={project}>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Genera CRE">📜</Button>
+                        </CREGenerator>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -1143,6 +1147,17 @@ export default function ProjectsTable() {
                         >
                           🏗️
                         </Button>
+                        <CREGenerator project={project}>
+                          <Button
+                            size="default"
+                            variant="ghost"
+                            className="min-w-[44px] min-h-[44px] p-3 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900 rounded-lg transition-colors"
+                            title="Genera CRE"
+                            data-testid={`cre-generator-${project.id}`}
+                          >
+                            📜
+                          </Button>
+                        </CREGenerator>
                         <Button
                           size="default"
                           variant="ghost"
