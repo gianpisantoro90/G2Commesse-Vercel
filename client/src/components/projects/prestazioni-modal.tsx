@@ -134,13 +134,15 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
     }));
   };
 
-  const handleClassificazioneChange = (index: number, field: 'codice' | 'importo', value: string | number) => {
+  const handleClassificazioneChange = (index: number, field: 'codice' | 'importo' | 'importoServizio', value: string | number) => {
     setFormData(prev => {
       const newClassificazioni = [...(prev.classificazioniDM143 || [])];
       if (field === 'codice') {
         newClassificazioni[index] = { ...newClassificazioni[index], codice: value as string };
-      } else {
+      } else if (field === 'importo') {
         newClassificazioni[index] = { ...newClassificazioni[index], importo: value as number };
+      } else if (field === 'importoServizio') {
+        newClassificazioni[index] = { ...newClassificazioni[index], importoServizio: value as number };
       }
       return {
         ...prev,
@@ -179,6 +181,8 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
 
   // Calcola importo totale opere dalla somma delle classificazioni
   const importoTotaleOpere = (formData.classificazioniDM143 || []).reduce((sum, c) => sum + (c.importo || 0), 0);
+  // Calcola importo totale servizio dalla somma delle classificazioni
+  const importoTotaleServizio = (formData.classificazioniDM143 || []).reduce((sum, c) => sum + (c.importoServizio || 0), 0);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" data-testid="prestazioni-modal">
@@ -294,7 +298,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
             <div className="space-y-3">
               {formData.classificazioniDM143 && formData.classificazioniDM143.length > 0 ? (
                 formData.classificazioniDM143.map((classificazione, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto] gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                     {/* Dropdown Categoria */}
                     <div className="space-y-1">
                       <Label htmlFor={`classe-dm-${index}`} className="text-xs font-medium">
@@ -407,7 +411,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                       </Select>
                     </div>
 
-                    {/* Input Importo */}
+                    {/* Input Importo Opere */}
                     <div className="space-y-1">
                       <Label htmlFor={`importo-${index}`} className="text-xs font-medium">
                         Importo Opere (€)
@@ -420,6 +424,24 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                         step="0.01"
                         value={classificazione.importo || ''}
                         onChange={(e) => handleClassificazioneChange(index, 'importo', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                        className="text-sm"
+                      />
+                    </div>
+
+                    {/* Input Importo Servizio (per CRE) */}
+                    <div className="space-y-1">
+                      <Label htmlFor={`importo-servizio-${index}`} className="text-xs font-medium">
+                        Importo Servizio (€)
+                        <span className="ml-1 text-gray-400 text-[10px]">per CRE</span>
+                      </Label>
+                      <Input
+                        id={`importo-servizio-${index}`}
+                        type="number"
+                        placeholder="0"
+                        min="0"
+                        step="0.01"
+                        value={classificazione.importoServizio || ''}
+                        onChange={(e) => handleClassificazioneChange(index, 'importoServizio', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
                         className="text-sm"
                       />
                     </div>
@@ -446,15 +468,24 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
               )}
             </div>
 
-            {/* Totale Importo Opere */}
+            {/* Totale Importi */}
             {formData.classificazioniDM143 && formData.classificazioniDM143.length > 0 && (
-              <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Importo Totale Opere:
                   </span>
                   <span className="text-lg font-bold text-gray-900 dark:text-white">
                     {formatImporto(importoTotaleOpere)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Importo Totale Servizio:
+                    <span className="ml-1 text-gray-400 text-[10px]">per CRE</span>
+                  </span>
+                  <span className="text-lg font-bold text-primary">
+                    {formatImporto(importoTotaleServizio)}
                   </span>
                 </div>
               </div>
