@@ -30,6 +30,12 @@ export const projects = pgTable("projects", {
   tipoRapporto: text("tipo_rapporto").notNull().default("diretto"), // 'diretto', 'consulenza', 'subappalto', 'ati', 'partnership'
   committenteFinale: text("committente_finale"), // Nome proprietario/ente finale (opzionale)
 
+  // Campi CRE (Certificazione di Buona Esecuzione)
+  cig: text("cig"), // Codice Identificativo Gara
+  numeroContratto: text("numero_contratto"), // Numero Contratto/Accordo Quadro
+  dataInizioCommessa: timestamp("data_inizio_commessa"), // Data inizio esecuzione
+  dataFineCommessa: timestamp("data_fine_commessa"), // Data fine esecuzione
+
   // Campi Fatturazione/Pagamento
   fatturato: boolean("fatturato").default(false), // Se è stato emesso documento fiscale
   numeroFattura: text("numero_fattura"), // Numero fattura/nota/parcella
@@ -206,10 +212,12 @@ export const insertCommunicationSchema = createInsertSchema(communications).omit
   updatedAt: true,
 });
 
-// Singola classificazione DM 143/2013 con importo associato
+// Singola classificazione DM 143/2013 con importi associati
 export interface ClassificazioneDM143 {
   codice: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1)
-  importo: number; // Importo opere per questa categoria
+  importo: number; // Importo opere per questa categoria (retrocompatibilità)
+  importoOpere?: number; // Importo opere per questa categoria (alias di importo)
+  importoServizio?: number; // Importo servizio professionale per questa categoria
 }
 
 // Prestazioni professionali metadata interfaces
@@ -236,6 +244,8 @@ export interface ProjectMetadata extends ProjectPrestazioni {
 export const classificazioneDM143Schema = z.object({
   codice: z.string().regex(/^[A-Z]{1,2}\.?[0-9]{1,2}$/, 'Formato classe DM 143/2013 non valido (es: E.22, IA.03, S.05)'),
   importo: z.number().min(0, 'L\'importo deve essere maggiore o uguale a 0'),
+  importoOpere: z.number().min(0).optional(), // Alias di importo per retrocompatibilità
+  importoServizio: z.number().min(0).optional(), // Importo servizio per questa categoria
 });
 
 // Zod schemas per validazione prestazioni

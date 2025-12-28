@@ -67,6 +67,13 @@ export const projects = sqliteTable("projects", {
   status: text("status").notNull().default("in_corso"),
   tipoRapporto: text("tipo_rapporto").notNull().default("diretto"),
   committenteFinale: text("committente_finale"),
+
+  // Campi CRE (Certificazione di Buona Esecuzione)
+  cig: text("cig"), // Codice Identificativo Gara
+  numeroContratto: text("numero_contratto"), // Numero Contratto/Accordo Quadro
+  dataInizioCommessa: integer("data_inizio_commessa", { mode: "timestamp" }), // Data inizio esecuzione
+  dataFineCommessa: integer("data_fine_commessa", { mode: "timestamp" }), // Data fine esecuzione
+
   fatturato: integer("fatturato", { mode: "boolean" }).default(false),
   numeroFattura: text("numero_fattura"),
   dataFattura: integer("data_fattura", { mode: "timestamp" }),

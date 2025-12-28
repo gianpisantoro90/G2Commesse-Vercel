@@ -3331,6 +3331,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================
+  // CRE (CERTIFICAZIONE DI BUONA ESECUZIONE) API
+  // ============================================
+
+  // Generate CRE document preview (without generating the document)
+  app.get("/api/projects/:projectId/cre/preview", async (req, res) => {
+    try {
+      const project = await storage.getProject(req.params.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Progetto non trovato" });
+      }
+
+      // Get client data
+      let client = null;
+      if (project.clientId) {
+        client = await storage.getClient(project.clientId);
+      }
+
+      if (!client) {
+        // Fallback: create minimal client from project.client name
+        client = {
+          id: "",
+          sigla: "",
+          name: project.client,
+          partitaIva: null,
+          codiceFiscale: null,
+          formaGiuridica: null,
+          indirizzo: null,
+          cap: null,
+          city: project.city,
+          provincia: null,
+          email: null,
+          telefono: null,
+          pec: null,
+          codiceDestinatario: null,
+          nomeReferente: null,
+          ruoloReferente: null,
+          emailReferente: null,
+          telefonoReferente: null,
+          note: null,
+          projectsCount: 0,
+          createdAt: new Date(),
+        };
+      }
+
+      const metadata = (project.metadata || {}) as any;
+
+      // Import CRE generator
+      const { generateCREPreview } = await import("./lib/cre-generator");
+      const preview = generateCREPreview({ project, client, metadata });
+
+      res.json(preview);
+    } catch (error) {
+      console.error('Error generating CRE preview:', error);
+      res.status(500).json({ message: "Errore nella generazione dell'anteprima CRE" });
+    }
+  });
+
+  // Generate CRE document (Word file)
+  app.get("/api/projects/:projectId/cre/generate", async (req, res) => {
+    try {
+      const project = await storage.getProject(req.params.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Progetto non trovato" });
+      }
+
+      // Get client data
+      let client = null;
+      if (project.clientId) {
+        client = await storage.getClient(project.clientId);
+      }
+
+      if (!client) {
+        // Fallback: create minimal client from project.client name
+        client = {
+          id: "",
+          sigla: "",
+          name: project.client,
+          partitaIva: null,
+          codiceFiscale: null,
+          formaGiuridica: null,
+          indirizzo: null,
+          cap: null,
+          city: project.city,
+          provincia: null,
+          email: null,
+          telefono: null,
+          pec: null,
+          codiceDestinatario: null,
+          nomeReferente: null,
+          ruoloReferente: null,
+          emailReferente: null,
+          telefonoReferente: null,
+          note: null,
+          projectsCount: 0,
+          createdAt: new Date(),
+        };
+      }
+
+      const metadata = (project.metadata || {}) as any;
+
+      // Import CRE generator
+      const { generateCREDocument } = await import("./lib/cre-generator");
+      const buffer = await generateCREDocument({ project, client, metadata });
+
+      // Generate filename
+      const filename = `CRE_${project.code}_${new Date().toISOString().split('T')[0]}.docx`;
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(buffer);
+    } catch (error) {
+      console.error('Error generating CRE document:', error);
+      res.status(500).json({ message: "Errore nella generazione del documento CRE" });
+    }
+  });
+
+  // Check CRE completeness
+  app.get("/api/projects/:projectId/cre/check", async (req, res) => {
+    try {
+      const project = await storage.getProject(req.params.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Progetto non trovato" });
+      }
+
+      // Get client data
+      let client = null;
+      if (project.clientId) {
+        client = await storage.getClient(project.clientId);
+      }
+
+      if (!client) {
+        client = {
+          id: "",
+          sigla: "",
+          name: project.client,
+          partitaIva: null,
+          codiceFiscale: null,
+          formaGiuridica: null,
+          indirizzo: null,
+          cap: null,
+          city: project.city,
+          provincia: null,
+          email: null,
+          telefono: null,
+          pec: null,
+          codiceDestinatario: null,
+          nomeReferente: null,
+          ruoloReferente: null,
+          emailReferente: null,
+          telefonoReferente: null,
+          note: null,
+          projectsCount: 0,
+          createdAt: new Date(),
+        };
+      }
+
+      const metadata = (project.metadata || {}) as any;
+
+      // Import CRE generator
+      const { checkCRECompleteness } = await import("./lib/cre-generator");
+      const result = checkCRECompleteness({ project, client, metadata });
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error checking CRE completeness:', error);
+      res.status(500).json({ message: "Errore nel controllo completezza CRE" });
+    }
+  });
+
+  // ============================================
   // PRESTAZIONI PROFESSIONALI API
   // ============================================
 
