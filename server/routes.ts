@@ -3377,9 +3377,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const metadata = (project.metadata || {}) as any;
 
+      // Fetch prestazioni to derive dates automatically
+      const prestazioni = await storage.getPrestazioniByProject(req.params.projectId);
+
+      // Derive dates from prestazioni if not set manually in project
+      let derivedDataInizio = project.dataInizioCommessa;
+      let derivedDataFine = project.dataFineCommessa;
+
+      if (prestazioni.length > 0) {
+        // Get MIN(dataInizio) from prestazioni with valid dates
+        const prestazioniConDataInizio = prestazioni.filter(p => p.dataInizio);
+        if (!derivedDataInizio && prestazioniConDataInizio.length > 0) {
+          const minDate = prestazioniConDataInizio.reduce((min, p) => {
+            const pDate = new Date(p.dataInizio!);
+            return pDate < min ? pDate : min;
+          }, new Date(prestazioniConDataInizio[0].dataInizio!));
+          derivedDataInizio = minDate;
+        }
+
+        // Get MAX(dataCompletamento) from prestazioni with valid dates
+        const prestazioniConDataFine = prestazioni.filter(p => p.dataCompletamento);
+        if (!derivedDataFine && prestazioniConDataFine.length > 0) {
+          const maxDate = prestazioniConDataFine.reduce((max, p) => {
+            const pDate = new Date(p.dataCompletamento!);
+            return pDate > max ? pDate : max;
+          }, new Date(prestazioniConDataFine[0].dataCompletamento!));
+          derivedDataFine = maxDate;
+        }
+      }
+
+      // Create project copy with derived dates
+      const projectWithDates = {
+        ...project,
+        dataInizioCommessa: derivedDataInizio,
+        dataFineCommessa: derivedDataFine,
+      };
+
       // Import CRE generator
       const { generateCREPreview } = await import("./lib/cre-generator");
-      const preview = generateCREPreview({ project, client, metadata });
+      const preview = generateCREPreview({ project: projectWithDates, client, metadata });
 
       res.json(preview);
     } catch (error) {
@@ -3431,9 +3467,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const metadata = (project.metadata || {}) as any;
 
+      // Fetch prestazioni to derive dates automatically
+      const prestazioni = await storage.getPrestazioniByProject(req.params.projectId);
+
+      // Derive dates from prestazioni if not set manually in project
+      let derivedDataInizio = project.dataInizioCommessa;
+      let derivedDataFine = project.dataFineCommessa;
+
+      if (prestazioni.length > 0) {
+        // Get MIN(dataInizio) from prestazioni with valid dates
+        const prestazioniConDataInizio = prestazioni.filter(p => p.dataInizio);
+        if (!derivedDataInizio && prestazioniConDataInizio.length > 0) {
+          const minDate = prestazioniConDataInizio.reduce((min, p) => {
+            const pDate = new Date(p.dataInizio!);
+            return pDate < min ? pDate : min;
+          }, new Date(prestazioniConDataInizio[0].dataInizio!));
+          derivedDataInizio = minDate;
+        }
+
+        // Get MAX(dataCompletamento) from prestazioni with valid dates
+        const prestazioniConDataFine = prestazioni.filter(p => p.dataCompletamento);
+        if (!derivedDataFine && prestazioniConDataFine.length > 0) {
+          const maxDate = prestazioniConDataFine.reduce((max, p) => {
+            const pDate = new Date(p.dataCompletamento!);
+            return pDate > max ? pDate : max;
+          }, new Date(prestazioniConDataFine[0].dataCompletamento!));
+          derivedDataFine = maxDate;
+        }
+      }
+
+      // Create project copy with derived dates
+      const projectWithDates = {
+        ...project,
+        dataInizioCommessa: derivedDataInizio,
+        dataFineCommessa: derivedDataFine,
+      };
+
       // Import CRE generator
       const { generateCREDocument } = await import("./lib/cre-generator");
-      const buffer = await generateCREDocument({ project, client, metadata });
+      const buffer = await generateCREDocument({ project: projectWithDates, client, metadata });
 
       // Generate filename
       const filename = `CRE_${project.code}_${new Date().toISOString().split('T')[0]}.docx`;
