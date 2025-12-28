@@ -150,6 +150,23 @@ async function runMigrations() {
       console.log('✅ prestazione_id and tipo_fattura columns added to project_invoices');
     }
 
+    // Migration: Add CRE (Certificazione di Buona Esecuzione) fields to projects table
+    const cigExists = await client.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.columns
+        WHERE table_name = 'projects' AND column_name = 'cig'
+      );
+    `);
+
+    if (!cigExists.rows[0].exists) {
+      console.log('🔄 Adding CRE fields to projects table...');
+      await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cig TEXT`);
+      await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS numero_contratto TEXT`);
+      await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_inizio_commessa TIMESTAMP`);
+      await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_fine_commessa TIMESTAMP`);
+      console.log('✅ CRE fields added to projects table');
+    }
+
     client.release();
   } catch (error) {
     console.error('❌ Migration error:', error);
