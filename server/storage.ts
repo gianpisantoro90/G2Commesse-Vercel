@@ -4,7 +4,7 @@ import { eq, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
 // Use serverless database for now (local fix will be in exported version)
-import { db } from "./db";
+import { db, pool } from "./db";
 
 export interface IStorage {
   // Projects
@@ -130,6 +130,10 @@ export interface IStorage {
     deadlines?: Deadline[]
   }, mode?: 'merge' | 'overwrite'): Promise<void>;
   clearAllData(): Promise<void>;
+
+  // Connection and migrations (optional - only implemented by database storages)
+  testConnection?(): Promise<boolean>;
+  runMigrations?(): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -932,14 +936,109 @@ export class MemStorage implements IStorage {
 
 // DatabaseStorage implementation
 export class DatabaseStorage implements IStorage {
-  // Test database connection
+  // Test database connection - uses raw SQL to avoid schema dependency issues
   async testConnection(): Promise<boolean> {
     try {
-      await db.select().from(projects).limit(1);
+      // Use raw SQL query to test connection without depending on schema columns
+      // This prevents failures when new columns are added to schema but not yet migrated
+      if (pool) {
+        const client = await pool.connect();
+        await client.query('SELECT 1');
+        client.release();
+      } else {
+        // Fallback: use db.execute with raw SQL
+        await db.execute(sql`SELECT 1`);
+      }
       return true;
     } catch (error) {
       console.error('🔥 Database connection test failed:', error);
       return false;
+    }
+  }
+
+  // Run database migrations to ensure schema is up to date
+  async runMigrations(): Promise<void> {
+    if (!pool) {
+      console.warn('⚠️ No pool available for migrations');
+      return;
+    }
+
+    try {
+      const client = await pool.connect();
+
+      // Migration: Add CRE fields to projects table
+      const cigExists = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_name = 'projects' AND column_name = 'cig'
+        );
+      `);
+
+      if (!cigExists.rows[0].exists) {
+        console.log('🔄 Adding CRE fields to projects table...');
+        await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cig TEXT`);
+        await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS numero_contratto TEXT`);
+        await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_inizio_commessa TIMESTAMP`);
+        await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_fine_commessa TIMESTAMP`);
+        console.log('✅ CRE fields added to projects table');
+      }
+
+      // Migration: Ensure project_prestazioni table exists
+      const prestazioniExists = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables
+          WHERE table_name = 'project_prestazioni'
+        );
+      `);
+
+      if (!prestazioniExists.rows[0].exists) {
+        console.log('🔄 Creating project_prestazioni table...');
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS project_prestazioni (
+            id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+            project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            tipo TEXT NOT NULL,
+            livello_progettazione TEXT,
+            descrizione TEXT,
+            stato TEXT NOT NULL DEFAULT 'da_iniziare',
+            data_inizio TIMESTAMP,
+            data_completamento TIMESTAMP,
+            data_fatturazione TIMESTAMP,
+            data_pagamento TIMESTAMP,
+            importo_previsto INTEGER DEFAULT 0,
+            importo_fatturato INTEGER DEFAULT 0,
+            importo_pagato INTEGER DEFAULT 0,
+            note TEXT,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+          )
+        `);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_project ON project_prestazioni(project_id)`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_stato ON project_prestazioni(stato)`);
+        console.log('✅ project_prestazioni table created');
+      }
+
+      // Migration: Add prestazione_id and tipo_fattura to project_invoices
+      const prestazioneIdExists = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_name = 'project_invoices' AND column_name = 'prestazione_id'
+        );
+      `);
+
+      if (!prestazioneIdExists.rows[0].exists) {
+        console.log('🔄 Adding prestazione_id and tipo_fattura to project_invoices...');
+        await client.query(`ALTER TABLE project_invoices ADD COLUMN IF NOT EXISTS prestazione_id TEXT`);
+        await client.query(`ALTER TABLE project_invoices ADD COLUMN IF NOT EXISTS tipo_fattura TEXT DEFAULT 'unica'`);
+        await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_prestazione ON project_invoices(prestazione_id)`);
+        console.log('✅ prestazione_id and tipo_fattura columns added');
+      }
+
+      client.release();
+      console.log('✅ All migrations completed successfully');
+    } catch (error) {
+      console.error('❌ Migration error:', error);
+      throw error;
     }
   }
 
@@ -2010,6 +2109,9 @@ async function initializeStorage(): Promise<IStorage> {
     try {
       const isConnected = await dbStorage.testConnection();
       if (isConnected) {
+        // Run migrations BEFORE returning storage to ensure schema is up to date
+        console.log('🔄 Running database migrations...');
+        await dbStorage.runMigrations();
         console.log('✅ Using DatabaseStorage (PostgreSQL) - connection verified');
         return dbStorage;
       } else {
