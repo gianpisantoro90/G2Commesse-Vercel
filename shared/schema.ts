@@ -35,6 +35,8 @@ export const projects = pgTable("projects", {
   numeroContratto: text("numero_contratto"), // Numero Contratto/Accordo Quadro
   dataInizioCommessa: timestamp("data_inizio_commessa"), // Data inizio esecuzione
   dataFineCommessa: timestamp("data_fine_commessa"), // Data fine esecuzione
+  creArchiviato: boolean("cre_archiviato").default(false), // CRE firmato ricevuto e archiviato
+  creDataArchiviazione: timestamp("cre_data_archiviazione"), // Data ricezione CRE firmato
 
   // Campi Fatturazione/Pagamento
   fatturato: boolean("fatturato").default(false), // Se è stato emesso documento fiscale
