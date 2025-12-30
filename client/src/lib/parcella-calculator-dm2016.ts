@@ -318,4 +318,4 @@ export function calcolaFattura(
 // CATEGORIE OPERE (da parcella-calculator-complete.ts)
 // ============================================
 
-export { CATEGORIE_DM143 } from './parcella-calculator-complete';
+export { CATEGORIE_DM2016 } from './parcella-calculator-complete';

@@ -1040,17 +1040,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Commessa non trovata" });
       }
 
-      // Sincronizza campi deprecati da classificazioniDM143 per retrocompatibilità
+      // Sincronizza campi deprecati da classificazioniDM2016 per retrocompatibilità
       let importoOpereCalcolato: number | undefined;
-      let classeDM143Principale: string | undefined;
+      let classeDM2016Principale: string | undefined;
 
-      if (validatedPrestazioni.classificazioniDM143 && validatedPrestazioni.classificazioniDM143.length > 0) {
+      if (validatedPrestazioni.classificazioniDM2016 && validatedPrestazioni.classificazioniDM2016.length > 0) {
         // Calcola la somma totale degli importi opere
-        importoOpereCalcolato = validatedPrestazioni.classificazioniDM143.reduce(
+        importoOpereCalcolato = validatedPrestazioni.classificazioniDM2016.reduce(
           (sum, c) => sum + (c.importo || 0), 0
         );
-        // Usa la prima classificazione come classeDM143 principale (retrocompatibilità)
-        classeDM143Principale = validatedPrestazioni.classificazioniDM143[0].codice;
+        // Usa la prima classificazione come classeDM2016 principale (retrocompatibilità)
+        classeDM2016Principale = validatedPrestazioni.classificazioniDM2016[0].codice;
       }
 
       // Merge prestazioni into existing metadata
@@ -1060,7 +1060,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...validatedPrestazioni,
         // Sincronizza campi deprecati per retrocompatibilità con dashboard
         ...(importoOpereCalcolato !== undefined && { importoOpere: importoOpereCalcolato }),
-        ...(classeDM143Principale && { classeDM143: classeDM143Principale }),
+        ...(classeDM2016Principale && { classeDM2016: classeDM2016Principale }),
       };
 
       // Update project with new metadata

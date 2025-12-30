@@ -203,15 +203,15 @@ export function calcolaImportoTotale(importoOpere?: number, importoServizio?: nu
 }
 
 /**
- * Calcola l'importo opere da classificazioniDM143 (preferito) o fallback a importoOpere (deprecato)
+ * Calcola l'importo opere da classificazioniDM2016 (preferito) o fallback a importoOpere (deprecato)
  * Questa funzione garantisce retrocompatibilità con dati vecchi mentre supporta la nuova struttura
  */
 export function getImportoOpere(metadata?: ProjectPrestazioni | null): number {
   if (!metadata) return 0;
 
-  // Preferisci la nuova struttura classificazioniDM143
-  if (metadata.classificazioniDM143 && metadata.classificazioniDM143.length > 0) {
-    return metadata.classificazioniDM143.reduce((sum, c) => sum + (c.importo || 0), 0);
+  // Preferisci la nuova struttura classificazioniDM2016
+  if (metadata.classificazioniDM2016 && metadata.classificazioniDM2016.length > 0) {
+    return metadata.classificazioniDM2016.reduce((sum, c) => sum + (c.importo || 0), 0);
   }
 
   // Fallback al campo deprecato per retrocompatibilità

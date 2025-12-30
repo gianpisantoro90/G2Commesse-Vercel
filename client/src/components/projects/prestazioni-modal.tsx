@@ -23,7 +23,7 @@ import {
   hasProgettazione,
   formatImporto
 } from "@/lib/prestazioni-utils";
-import { CLASSI_DM143 } from "@/lib/parcella-calculator";
+import { CATEGORIE_DM2016 } from "@/lib/parcella-calculator";
 
 interface PrestazioniModalProps {
   project: Project;
@@ -39,7 +39,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
   const [formData, setFormData] = useState<ProjectPrestazioni>({
     prestazioni: [],
     livelloProgettazione: [],
-    classificazioniDM143: [],
+    classificazioniDM2016: [],
   });
 
   // Initialize form with existing project data
@@ -48,12 +48,12 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
       const metadata = project.metadata as ProjectMetadata;
 
       // Migra vecchi dati al nuovo formato se necessario
-      let classificazioni = metadata?.classificazioniDM143 || [];
+      let classificazioni = metadata?.classificazioniDM2016 || [];
 
-      // Se esiste il vecchio formato (classeDM143 singola), convertilo al nuovo formato
-      if (!classificazioni.length && metadata?.classeDM143) {
+      // Se esiste il vecchio formato (classeDM2016 singola), convertilo al nuovo formato
+      if (!classificazioni.length && metadata?.classeDM2016) {
         classificazioni = [{
-          codice: metadata.classeDM143,
+          codice: metadata.classeDM2016,
           importo: metadata.importoOpere || 0
         }];
       }
@@ -61,7 +61,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
       setFormData({
         prestazioni: metadata?.prestazioni || [],
         livelloProgettazione: metadata?.livelloProgettazione || [],
-        classificazioniDM143: classificazioni,
+        classificazioniDM2016: classificazioni,
       });
     }
   }, [project, isOpen]);
@@ -120,8 +120,8 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
   const handleAddClassificazione = () => {
     setFormData(prev => ({
       ...prev,
-      classificazioniDM143: [
-        ...(prev.classificazioniDM143 || []),
+      classificazioniDM2016: [
+        ...(prev.classificazioniDM2016 || []),
         { codice: '', importo: 0 }
       ]
     }));
@@ -130,13 +130,13 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
   const handleRemoveClassificazione = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      classificazioniDM143: (prev.classificazioniDM143 || []).filter((_, i) => i !== index)
+      classificazioniDM2016: (prev.classificazioniDM2016 || []).filter((_, i) => i !== index)
     }));
   };
 
   const handleClassificazioneChange = (index: number, field: 'codice' | 'importo' | 'importoServizio', value: string | number) => {
     setFormData(prev => {
-      const newClassificazioni = [...(prev.classificazioniDM143 || [])];
+      const newClassificazioni = [...(prev.classificazioniDM2016 || [])];
       if (field === 'codice') {
         newClassificazioni[index] = { ...newClassificazioni[index], codice: value as string };
       } else if (field === 'importo') {
@@ -146,7 +146,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
       }
       return {
         ...prev,
-        classificazioniDM143: newClassificazioni
+        classificazioniDM2016: newClassificazioni
       };
     });
   };
@@ -180,9 +180,9 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
   const showLivelloProgettazione = hasProgettazione(formData.prestazioni);
 
   // Calcola importo totale opere dalla somma delle classificazioni
-  const importoTotaleOpere = (formData.classificazioniDM143 || []).reduce((sum, c) => sum + (c.importo || 0), 0);
+  const importoTotaleOpere = (formData.classificazioniDM2016 || []).reduce((sum, c) => sum + (c.importo || 0), 0);
   // Calcola importo totale servizio dalla somma delle classificazioni
-  const importoTotaleServizio = (formData.classificazioniDM143 || []).reduce((sum, c) => sum + (c.importoServizio || 0), 0);
+  const importoTotaleServizio = (formData.classificazioniDM2016 || []).reduce((sum, c) => sum + (c.importoServizio || 0), 0);
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" data-testid="prestazioni-modal">
@@ -296,8 +296,8 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
 
             {/* Lista classificazioni */}
             <div className="space-y-3">
-              {formData.classificazioniDM143 && formData.classificazioniDM143.length > 0 ? (
-                formData.classificazioniDM143.map((classificazione, index) => (
+              {formData.classificazioniDM2016 && formData.classificazioniDM2016.length > 0 ? (
+                formData.classificazioniDM2016.map((classificazione, index) => (
                   <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 p-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                     {/* Dropdown Categoria */}
                     <div className="space-y-1">
@@ -315,7 +315,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                           {/* EDILIZIA */}
                           <SelectGroup>
                             <SelectLabel>Edilizia</SelectLabel>
-                            {Object.entries(CLASSI_DM143)
+                            {Object.entries(CATEGORIE_DM2016)
                               .filter(([_, data]) => data.categoria === 'Edilizia')
                               .map(([codice, data]) => (
                                 <SelectItem key={codice} value={codice}>
@@ -327,7 +327,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                           {/* STRUTTURE */}
                           <SelectGroup>
                             <SelectLabel>Strutture</SelectLabel>
-                            {Object.entries(CLASSI_DM143)
+                            {Object.entries(CATEGORIE_DM2016)
                               .filter(([_, data]) => data.categoria === 'Strutture')
                               .map(([codice, data]) => (
                                 <SelectItem key={codice} value={codice}>
@@ -339,7 +339,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                           {/* IMPIANTI */}
                           <SelectGroup>
                             <SelectLabel>Impianti</SelectLabel>
-                            {Object.entries(CLASSI_DM143)
+                            {Object.entries(CATEGORIE_DM2016)
                               .filter(([_, data]) => data.categoria === 'Impianti')
                               .map(([codice, data]) => (
                                 <SelectItem key={codice} value={codice}>
@@ -351,7 +351,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                           {/* INFRASTRUTTURE MOBILITÀ */}
                           <SelectGroup>
                             <SelectLabel>Infrastrutture Mobilità</SelectLabel>
-                            {Object.entries(CLASSI_DM143)
+                            {Object.entries(CATEGORIE_DM2016)
                               .filter(([_, data]) => data.categoria === 'Infrastrutture Mobilità')
                               .map(([codice, data]) => (
                                 <SelectItem key={codice} value={codice}>
@@ -363,7 +363,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                           {/* IDRAULICA */}
                           <SelectGroup>
                             <SelectLabel>Idraulica</SelectLabel>
-                            {Object.entries(CLASSI_DM143)
+                            {Object.entries(CATEGORIE_DM2016)
                               .filter(([_, data]) => data.categoria === 'Idraulica')
                               .map(([codice, data]) => (
                                 <SelectItem key={codice} value={codice}>
@@ -375,7 +375,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                           {/* TECNOLOGIE ICT */}
                           <SelectGroup>
                             <SelectLabel>Tecnologie ICT</SelectLabel>
-                            {Object.entries(CLASSI_DM143)
+                            {Object.entries(CATEGORIE_DM2016)
                               .filter(([_, data]) => data.categoria === 'Tecnologie ICT')
                               .map(([codice, data]) => (
                                 <SelectItem key={codice} value={codice}>
@@ -387,7 +387,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                           {/* PAESAGGIO E AMBIENTE */}
                           <SelectGroup>
                             <SelectLabel>Paesaggio e Ambiente</SelectLabel>
-                            {Object.entries(CLASSI_DM143)
+                            {Object.entries(CATEGORIE_DM2016)
                               .filter(([_, data]) => data.categoria === 'Paesaggio e Ambiente')
                               .map(([codice, data]) => (
                                 <SelectItem key={codice} value={codice}>
@@ -399,7 +399,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
                           {/* TERRITORIO E URBANISTICA */}
                           <SelectGroup>
                             <SelectLabel>Territorio e Urbanistica</SelectLabel>
-                            {Object.entries(CLASSI_DM143)
+                            {Object.entries(CATEGORIE_DM2016)
                               .filter(([_, data]) => data.categoria === 'Territorio e Urbanistica')
                               .map(([codice, data]) => (
                                 <SelectItem key={codice} value={codice}>
@@ -469,7 +469,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
             </div>
 
             {/* Totale Importi */}
-            {formData.classificazioniDM143 && formData.classificazioniDM143.length > 0 && (
+            {formData.classificazioniDM2016 && formData.classificazioniDM2016.length > 0 && (
               <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

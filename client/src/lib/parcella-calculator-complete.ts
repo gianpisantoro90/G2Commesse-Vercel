@@ -1,4 +1,4 @@
-// Calcolatore Parcella Professionale secondo DM 17 giugno 2016 (ex DM 143/2013)
+// Calcolatore Parcella Professionale secondo DM 17 giugno 2016
 // Tariffe professionali per servizi di architettura e ingegneria
 // COMPLETO CON TUTTE LE CATEGORIE E PRESTAZIONI
 
@@ -61,7 +61,7 @@ export interface ParcellaResult {
 // CATEGORIE E ARTICOLAZIONI DM 143/2013
 // ============================================
 
-export const CATEGORIE_DM143 = {
+export const CATEGORIE_DM2016 = {
   // EDILIZIA (E)
   E: {
     nome: 'Edilizia',
@@ -372,7 +372,7 @@ export function calcolaParcella(input: ParcellaInput): ParcellaResult {
   const percentualeTotale = (compensoTotale / input.importoOpere) * 100;
 
   // Note informative
-  const catInfo = CATEGORIE_DM143[input.categoria as keyof typeof CATEGORIE_DM143];
+  const catInfo = CATEGORIE_DM2016[input.categoria as keyof typeof CATEGORIE_DM2016];
   if (catInfo) {
     note.push(`Categoria: ${catInfo.nome} (${input.categoria})`);
     const articolazioneDesc = catInfo.articolazioni[input.articolazione as keyof typeof catInfo.articolazioni];
@@ -464,30 +464,30 @@ export function suggestCategoriaArticolazione(
   switch (tipoOpera) {
     case 'edilizia':
       if (importoOpere < 100000) {
-        suggerimenti.push({ categoria: 'E', articolazione: '01', descrizione: CATEGORIE_DM143.E.articolazioni['01'] });
-        suggerimenti.push({ categoria: 'E', articolazione: '06', descrizione: CATEGORIE_DM143.E.articolazioni['06'] });
+        suggerimenti.push({ categoria: 'E', articolazione: '01', descrizione: CATEGORIE_DM2016.E.articolazioni['01'] });
+        suggerimenti.push({ categoria: 'E', articolazione: '06', descrizione: CATEGORIE_DM2016.E.articolazioni['06'] });
       } else if (importoOpere < 500000) {
-        suggerimenti.push({ categoria: 'E', articolazione: '02', descrizione: CATEGORIE_DM143.E.articolazioni['02'] });
-        suggerimenti.push({ categoria: 'E', articolazione: '07', descrizione: CATEGORIE_DM143.E.articolazioni['07'] });
+        suggerimenti.push({ categoria: 'E', articolazione: '02', descrizione: CATEGORIE_DM2016.E.articolazioni['02'] });
+        suggerimenti.push({ categoria: 'E', articolazione: '07', descrizione: CATEGORIE_DM2016.E.articolazioni['07'] });
       } else if (importoOpere < 2500000) {
-        suggerimenti.push({ categoria: 'E', articolazione: '03', descrizione: CATEGORIE_DM143.E.articolazioni['03'] });
-        suggerimenti.push({ categoria: 'E', articolazione: '08', descrizione: CATEGORIE_DM143.E.articolazioni['08'] });
+        suggerimenti.push({ categoria: 'E', articolazione: '03', descrizione: CATEGORIE_DM2016.E.articolazioni['03'] });
+        suggerimenti.push({ categoria: 'E', articolazione: '08', descrizione: CATEGORIE_DM2016.E.articolazioni['08'] });
       }
       break;
     case 'strutture':
       if (importoOpere < 100000) {
-        suggerimenti.push({ categoria: 'S', articolazione: '01', descrizione: CATEGORIE_DM143.S.articolazioni['01'] });
+        suggerimenti.push({ categoria: 'S', articolazione: '01', descrizione: CATEGORIE_DM2016.S.articolazioni['01'] });
       } else if (importoOpere < 500000) {
-        suggerimenti.push({ categoria: 'S', articolazione: '02', descrizione: CATEGORIE_DM143.S.articolazioni['02'] });
+        suggerimenti.push({ categoria: 'S', articolazione: '02', descrizione: CATEGORIE_DM2016.S.articolazioni['02'] });
       } else if (importoOpere < 2500000) {
-        suggerimenti.push({ categoria: 'S', articolazione: '03', descrizione: CATEGORIE_DM143.S.articolazioni['03'] });
+        suggerimenti.push({ categoria: 'S', articolazione: '03', descrizione: CATEGORIE_DM2016.S.articolazioni['03'] });
       }
       break;
     case 'impianti':
       if (importoOpere < 50000) {
-        suggerimenti.push({ categoria: 'IM', articolazione: '01', descrizione: CATEGORIE_DM143.IM.articolazioni['01'] });
+        suggerimenti.push({ categoria: 'IM', articolazione: '01', descrizione: CATEGORIE_DM2016.IM.articolazioni['01'] });
       } else if (importoOpere < 250000) {
-        suggerimenti.push({ categoria: 'IM', articolazione: '02', descrizione: CATEGORIE_DM143.IM.articolazioni['02'] });
+        suggerimenti.push({ categoria: 'IM', articolazione: '02', descrizione: CATEGORIE_DM2016.IM.articolazioni['02'] });
       }
       break;
     // ...altri casi

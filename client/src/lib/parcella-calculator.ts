@@ -1,9 +1,9 @@
-// Calcolatore Parcella Professionale secondo DM 143/2013
+// Calcolatore Parcella Professionale secondo DM 17/06/2016
 // Tariffe professionali per servizi di architettura e ingegneria
 
 export interface ParcellaInput {
   importoOpere: number; // Importo lavori in euro
-  classeDM143?: string; // Classe DM 143 (es: "E22", "IA03")
+  classeDM2016?: string; // Classe DM 17/06/2016 (es: "E22", "IA03")
   prestazioni: string[]; // Array prestazioni selezionate
   livelloProgettazione?: string[]; // Livelli progettazione se applicabile
   complessita?: 'bassa' | 'media' | 'alta'; // Complessità opera
@@ -30,8 +30,8 @@ export interface ParcellaResult {
   note: string[];
 }
 
-// Tabelle percentuali DM 143/2013 semplificate
-// Note: Queste sono percentuali indicative - adattare ai valori reali del DM 143
+// Tabelle percentuali DM 17/06/2016 semplificate
+// Note: Queste sono percentuali indicative - adattare ai valori reali del DM 17/06/2016
 
 const PERCENTUALI_PROGETTAZIONE = {
   pfte: {
@@ -94,8 +94,8 @@ const PERCENTUALI_ALTRE_PRESTAZIONI = {
   }
 };
 
-// Classi DM 143/2013 - TAVOLA Z-1 (aggiornata con DM 17/06/2016)
-export const CLASSI_DM143 = {
+// Classi DM 17/06/2016 - TAVOLA Z-1
+export const CATEGORIE_DM2016 = {
   // EDILIZIA
   'E.01': { descrizione: 'Insediamenti produttivi agricoltura-industria-artigianato semplici', grado: 0.65, categoria: 'Edilizia' },
   'E.02': { descrizione: 'Edifici industriali con corredi tecnici complessi', grado: 0.95, categoria: 'Edilizia' },
@@ -176,7 +176,7 @@ export const CLASSI_DM143 = {
   'U.03': { descrizione: 'Pianificazione', grado: 1.00, categoria: 'Territorio e Urbanistica' },
 };
 
-export function suggestClasseDM143(importoOpere: number): string[] {
+export function suggestClasseDM2016(importoOpere: number): string[] {
   // Suggerimenti basati sull'importo opere per le categorie più comuni
   const suggestions: string[] = [];
 
@@ -351,10 +351,10 @@ export function calcolaParcella(input: ParcellaInput): ParcellaResult {
 
   // Note aggiuntive
   note.push(`Complessità opera: ${complessita.toUpperCase()}`);
-  if (input.classeDM143) {
-    const classeInfo = CLASSI_DM143[input.classeDM143 as keyof typeof CLASSI_DM143];
+  if (input.classeDM2016) {
+    const classeInfo = CATEGORIE_DM2016[input.classeDM2016 as keyof typeof CATEGORIE_DM2016];
     if (classeInfo) {
-      note.push(`Classe DM 143: ${input.classeDM143} - ${classeInfo.descrizione}`);
+      note.push(`Classe DM 17/06/2016: ${input.classeDM2016} - ${classeInfo.descrizione}`);
     }
   }
   note.push(`Percentuale totale applicata: ${percentualeTotale.toFixed(2)}%`);

@@ -37,7 +37,7 @@ export default function EconomicDashboardCard() {
     );
   }
 
-  // Calcoli economici - importo opere da metadata progetto (usa classificazioniDM143 con fallback)
+  // Calcoli economici - importo opere da metadata progetto (usa classificazioniDM2016 con fallback)
   const projectsWithEconomicData = projects.filter(p => {
     const metadata = p.metadata as ProjectMetadata;
     return getImportoOpere(metadata) > 0;
