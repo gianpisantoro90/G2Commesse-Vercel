@@ -63,34 +63,50 @@ export class TursoStorage implements IStorage {
   async createProject(insertProject: InsertProject): Promise<Project> {
     if (!db) throw new Error('Database not available');
 
+    // Prima trova o crea il client per ottenere clientId
+    const clientSigla = this.generateSafeAcronym(insertProject.client);
+    let clientId = insertProject.clientId;
+
+    if (!clientId) {
+      const existingClient = await this.getClientBySigla(clientSigla);
+
+      if (existingClient) {
+        clientId = existingClient.id;
+        await db.update(clients)
+          .set({ projectsCount: (existingClient.projectsCount || 0) + 1 })
+          .where(eq(clients.id, existingClient.id));
+      } else {
+        // Crea nuovo client e ottieni l'ID
+        const newClient = await this.createClient({
+          sigla: clientSigla,
+          name: insertProject.client,
+          city: insertProject.city,
+          projectsCount: 1,
+        });
+        clientId = newClient.id;
+      }
+    } else {
+      // clientId già fornito, aggiorna solo il contatore
+      const existingClient = await this.getClient(clientId);
+      if (existingClient) {
+        await db.update(clients)
+          .set({ projectsCount: (existingClient.projectsCount || 0) + 1 })
+          .where(eq(clients.id, existingClient.id));
+      }
+    }
+
     const id = generateId();
     const now = new Date();
 
     const [project] = await db.insert(projects).values({
       id,
       ...insertProject,
+      clientId: clientId,
       status: insertProject.status || "in_corso",
       tipoRapporto: insertProject.tipoRapporto || "diretto",
       metadata: insertProject.metadata || {},
       createdAt: now,
     }).returning();
-
-    // Update client projects count
-    const clientSigla = this.generateSafeAcronym(insertProject.client);
-    const existingClient = await this.getClientBySigla(clientSigla);
-
-    if (existingClient) {
-      await db.update(clients)
-        .set({ projectsCount: (existingClient.projectsCount || 0) + 1 })
-        .where(eq(clients.id, existingClient.id));
-    } else {
-      await this.createClient({
-        sigla: clientSigla,
-        name: insertProject.client,
-        city: insertProject.city,
-        projectsCount: 1,
-      });
-    }
 
     return project;
   }
@@ -167,6 +183,14 @@ export class TursoStorage implements IStorage {
       .set(updateData)
       .where(eq(clients.id, id))
       .returning();
+
+    // Se il nome del cliente è cambiato, sincronizza tutti i progetti collegati
+    if (updated && updateData.name) {
+      await db.update(projects)
+        .set({ client: updateData.name })
+        .where(eq(projects.clientId, id));
+    }
+
     return updated || undefined;
   }
 

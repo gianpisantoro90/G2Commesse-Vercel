@@ -176,12 +176,43 @@ export class FileStorage implements IStorage {
   }
 
   async createProject(insertProject: InsertProject): Promise<Project> {
+    // Prima trova o crea il client per ottenere clientId
+    const clientSigla = this.generateSafeAcronym(insertProject.client);
+    let clientId = insertProject.clientId;
+
+    if (!clientId) {
+      const existingClient = await this.getClientBySigla(clientSigla);
+      if (existingClient) {
+        clientId = existingClient.id;
+        await this.updateClient(existingClient.id, {
+          projectsCount: (existingClient.projectsCount || 0) + 1
+        });
+      } else {
+        // Crea nuovo client e ottieni l'ID
+        const newClient = await this.createClient({
+          sigla: clientSigla,
+          name: insertProject.client,
+          city: insertProject.city,
+          projectsCount: 1,
+        });
+        clientId = newClient.id;
+      }
+    } else {
+      // clientId già fornito, aggiorna solo il contatore
+      const existingClient = await this.getClient(clientId);
+      if (existingClient) {
+        await this.updateClient(existingClient.id, {
+          projectsCount: (existingClient.projectsCount || 0) + 1
+        });
+      }
+    }
+
     const projects = this.readJsonFile<Project>(this.projectsFile, []);
     const id = randomUUID();
     const project: Project = {
       ...insertProject,
       id,
-      clientId: insertProject.clientId || null,
+      clientId: clientId,
       status: insertProject.status || "in_corso",
       tipoRapporto: insertProject.tipoRapporto || "diretto",
       committenteFinale: insertProject.committenteFinale || null,
@@ -197,27 +228,10 @@ export class FileStorage implements IStorage {
       importoPagato: insertProject.importoPagato || null,
       noteFatturazione: insertProject.noteFatturazione || null,
     };
-    
+
     projects.push(project);
     this.writeJsonFile(this.projectsFile, projects);
-    
-    // Update client projects count
-    const clientSigla = this.generateSafeAcronym(insertProject.client);
-    const existingClient = await this.getClientBySigla(clientSigla);
-    if (existingClient) {
-      await this.updateClient(existingClient.id, {
-        projectsCount: (existingClient.projectsCount || 0) + 1
-      });
-    } else {
-      // Create new client
-      await this.createClient({
-        sigla: clientSigla,
-        name: insertProject.client,
-        city: insertProject.city,
-        projectsCount: 1,
-      });
-    }
-    
+
     return project;
   }
 
@@ -291,9 +305,25 @@ export class FileStorage implements IStorage {
     const clients = this.readJsonFile<Client>(this.clientsFile, []);
     const index = clients.findIndex(c => c.id === id);
     if (index === -1) return undefined;
-    
+
     clients[index] = { ...clients[index], ...updateData };
     this.writeJsonFile(this.clientsFile, clients);
+
+    // Se il nome del cliente è cambiato, sincronizza tutti i progetti collegati
+    if (updateData.name) {
+      const projects = this.readJsonFile<Project>(this.projectsFile, []);
+      let updated = false;
+      for (const project of projects) {
+        if (project.clientId === id) {
+          project.client = updateData.name;
+          updated = true;
+        }
+      }
+      if (updated) {
+        this.writeJsonFile(this.projectsFile, projects);
+      }
+    }
+
     return clients[index];
   }
 
