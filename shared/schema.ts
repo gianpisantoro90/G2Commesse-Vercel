@@ -387,35 +387,6 @@ export const projectDeadlines = pgTable("project_deadlines", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Registro comunicazioni per commessa
-export const projectCommunications = pgTable("project_communications", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // 'email', 'pec', 'raccomandata', 'telefono', 'meeting', 'nota_interna'
-  direction: text("direction").notNull().default("outgoing"), // 'incoming', 'outgoing', 'internal'
-  subject: text("subject").notNull(),
-  body: text("body"),
-  recipient: text("recipient"), // Destinatario/Mittente
-  sender: text("sender"),
-  attachments: jsonb("attachments").default([]), // Array di {name, path, size}
-  tags: jsonb("tags").default([]), // Array di string per categorizzazione
-  isImportant: boolean("is_important").default(false),
-  communicationDate: timestamp("communication_date").defaultNow(),
-  createdAt: timestamp("created_at").defaultNow(),
-  createdBy: text("created_by"), // Username dell'utente
-
-  // Email-specific fields for forwarding integration
-  emailMessageId: text("email_message_id"), // Unique email ID from provider
-  emailHeaders: jsonb("email_headers"), // Full email headers for reference
-  emailRaw: text("email_raw"), // Raw email content (optional, for debugging)
-  emailHtml: text("email_html"), // HTML version of email body
-  emailText: text("email_text"), // Plain text version
-  autoImported: boolean("auto_imported").default(false), // Was it auto-imported via forwarding?
-  aiSuggestions: jsonb("ai_suggestions"), // AI analysis results: {projectMatch, confidence, extractedData}
-  aiSuggestionsStatus: jsonb("ai_suggestions_status"), // Track approval status of AI suggestions
-  importedAt: timestamp("imported_at"), // When was it imported (if auto-imported)
-});
-
 // Gestione SAL (Stati Avanzamento Lavori)
 export const projectSAL = pgTable("project_sal", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -616,11 +587,6 @@ export const insertProjectDeadlineSchema = createInsertSchema(projectDeadlines).
   updatedAt: true,
 });
 
-export const insertProjectCommunicationSchema = createInsertSchema(projectCommunications).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertProjectSALSchema = createInsertSchema(projectSAL).omit({
   id: true,
   createdAt: true,
@@ -716,9 +682,6 @@ export type ProjectCategoryRelation = typeof projectCategoryRelation.$inferSelec
 export type InsertProjectDeadline = z.infer<typeof insertProjectDeadlineSchema>;
 export type ProjectDeadline = typeof projectDeadlines.$inferSelect;
 export type Deadline = ProjectDeadline; // Alias for convenience
-
-export type InsertProjectCommunication = z.infer<typeof insertProjectCommunicationSchema>;
-export type ProjectCommunication = typeof projectCommunications.$inferSelect;
 
 export type InsertProjectSAL = z.infer<typeof insertProjectSALSchema>;
 export type ProjectSAL = typeof projectSAL.$inferSelect;
