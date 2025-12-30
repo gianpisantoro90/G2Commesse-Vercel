@@ -881,6 +881,33 @@ export class MemStorage implements IStorage {
     return this.prestazioni.get(id);
   }
 
+  // Sincronizza metadata.prestazioni e metadata.livelloProgettazione dalla tabella projectPrestazioni
+  private async syncMetadataFromPrestazioni(projectId: string): Promise<void> {
+    const prestazioniList = await this.getPrestazioniByProject(projectId);
+    const project = await this.getProject(projectId);
+    if (!project) return;
+
+    // Estrai tipi unici di prestazione
+    const tipiUnici = [...new Set(prestazioniList.map(p => p.tipo))];
+
+    // Estrai livelli progettazione unici (solo da prestazioni di tipo 'progettazione')
+    const livelliUnici = [...new Set(
+      prestazioniList
+        .filter(p => p.tipo === 'progettazione' && p.livelloProgettazione)
+        .map(p => p.livelloProgettazione!)
+    )];
+
+    // Aggiorna il metadata del progetto
+    const currentMetadata = (project.metadata || {}) as Record<string, any>;
+    const updatedMetadata = {
+      ...currentMetadata,
+      prestazioni: tipiUnici,
+      livelloProgettazione: livelliUnici,
+    };
+
+    await this.updateProject(projectId, { metadata: updatedMetadata });
+  }
+
   async createPrestazione(insertPrestazione: InsertProjectPrestazione): Promise<ProjectPrestazione> {
     const id = randomUUID();
     const prestazione: ProjectPrestazione = {
@@ -901,6 +928,10 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.prestazioni.set(id, prestazione);
+
+    // Sincronizza metadata del progetto con le prestazioni dalla tabella
+    await this.syncMetadataFromPrestazioni(insertPrestazione.projectId);
+
     return prestazione;
   }
 
@@ -927,7 +958,16 @@ export class MemStorage implements IStorage {
   }
 
   async deletePrestazione(id: string): Promise<boolean> {
-    return this.prestazioni.delete(id);
+    const prestazione = this.prestazioni.get(id);
+    const projectId = prestazione?.projectId;
+    const deleted = this.prestazioni.delete(id);
+
+    // Sincronizza metadata del progetto dopo l'eliminazione
+    if (deleted && projectId) {
+      await this.syncMetadataFromPrestazioni(projectId);
+    }
+
+    return deleted;
   }
 
   async getPrestazioniStats(): Promise<PrestazioniStats> {
@@ -1912,9 +1952,44 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Sincronizza metadata.prestazioni e metadata.livelloProgettazione dalla tabella projectPrestazioni
+  private async syncMetadataFromPrestazioni(projectId: string): Promise<void> {
+    try {
+      const prestazioniList = await this.getPrestazioniByProject(projectId);
+      const project = await this.getProject(projectId);
+      if (!project) return;
+
+      // Estrai tipi unici di prestazione
+      const tipiUnici = [...new Set(prestazioniList.map(p => p.tipo))];
+
+      // Estrai livelli progettazione unici (solo da prestazioni di tipo 'progettazione')
+      const livelliUnici = [...new Set(
+        prestazioniList
+          .filter(p => p.tipo === 'progettazione' && p.livelloProgettazione)
+          .map(p => p.livelloProgettazione!)
+      )];
+
+      // Aggiorna il metadata del progetto
+      const currentMetadata = (project.metadata || {}) as Record<string, any>;
+      const updatedMetadata = {
+        ...currentMetadata,
+        prestazioni: tipiUnici,
+        livelloProgettazione: livelliUnici,
+      };
+
+      await this.updateProject(projectId, { metadata: updatedMetadata });
+    } catch (error) {
+      console.error('Error syncing metadata from prestazioni:', error);
+    }
+  }
+
   async createPrestazione(insertPrestazione: InsertProjectPrestazione): Promise<ProjectPrestazione> {
     try {
       const [prestazione] = await db.insert(projectPrestazioni).values(insertPrestazione).returning();
+
+      // Sincronizza metadata del progetto con le prestazioni dalla tabella
+      await this.syncMetadataFromPrestazioni(insertPrestazione.projectId);
+
       return prestazione;
     } catch (error) {
       console.error('Error creating prestazione:', error);
@@ -1951,8 +2026,19 @@ export class DatabaseStorage implements IStorage {
 
   async deletePrestazione(id: string): Promise<boolean> {
     try {
+      // Salva il projectId prima dell'eliminazione per la sincronizzazione
+      const prestazione = await this.getPrestazione(id);
+      const projectId = prestazione?.projectId;
+
       const result = await db.delete(projectPrestazioni).where(eq(projectPrestazioni.id, id));
-      return (result.rowCount || 0) > 0;
+      const deleted = (result.rowCount || 0) > 0;
+
+      // Sincronizza metadata del progetto dopo l'eliminazione
+      if (deleted && projectId) {
+        await this.syncMetadataFromPrestazioni(projectId);
+      }
+
+      return deleted;
     } catch (error) {
       console.error('Error deleting prestazione:', error);
       return false;
