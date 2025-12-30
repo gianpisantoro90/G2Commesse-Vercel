@@ -4,7 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, TrendingDown, Clock, Euro, Users, AlertTriangle } from "lucide-react";
-import { type Project } from "@shared/schema";
+import { type Project, type ProjectPrestazioni } from "@shared/schema";
+import { getImportoOpere } from "@/lib/prestazioni-utils";
 import { useState } from "react";
 
 interface ProjectResource {
@@ -14,12 +15,6 @@ interface ProjectResource {
   oreAssegnate: number;
   oreLavorate: number;
   costoOrario: number;
-}
-
-interface ProjectMetadata {
-  importoOpere?: number;
-  importoServizio?: number;
-  prestazioni?: string[];
 }
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
@@ -65,13 +60,13 @@ export default function KpiDashboard() {
     progettiSospesi: filteredProjects.filter(p => p.status === "sospesa").length,
     progettiConclussi: filteredProjects.filter(p => p.status === "conclusa").length,
 
-    // Economici
+    // Economici (usa classificazioniDM143 con fallback a campi deprecati)
     valoreCommesse: filteredProjects.reduce((sum, p) => {
-      const metadata = p.metadata as ProjectMetadata;
-      return sum + (metadata?.importoOpere || 0);
+      const metadata = p.metadata as ProjectPrestazioni;
+      return sum + getImportoOpere(metadata);
     }, 0),
     compensoPrevisto: filteredProjects.reduce((sum, p) => {
-      const metadata = p.metadata as ProjectMetadata;
+      const metadata = p.metadata as ProjectPrestazioni;
       return sum + (metadata?.importoServizio || 0);
     }, 0),
 
@@ -127,10 +122,10 @@ export default function KpiDashboard() {
   // Top 5 commesse per valore
   const top5Progetti = [...filteredProjects]
     .map(p => {
-      const metadata = p.metadata as ProjectMetadata;
+      const metadata = p.metadata as ProjectPrestazioni;
       return {
         ...p,
-        valore: metadata?.importoOpere || 0
+        valore: getImportoOpere(metadata)
       };
     })
     .sort((a, b) => b.valore - a.valore)

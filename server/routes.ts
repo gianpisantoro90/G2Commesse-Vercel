@@ -1030,42 +1030,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/projects/:id/prestazioni", async (req, res) => {
     try {
       console.log(`🏗️ Updating prestazioni for project: ${req.params.id}`);
-      
+
       // Validate prestazioni data
       const validatedPrestazioni = prestazioniSchema.parse(req.body);
-      
+
       // Get existing project first
       const existingProject = await storage.getProject(req.params.id);
       if (!existingProject) {
         return res.status(404).json({ message: "Commessa non trovata" });
       }
-      
+
+      // Sincronizza campi deprecati da classificazioniDM143 per retrocompatibilità
+      let importoOpereCalcolato: number | undefined;
+      let classeDM143Principale: string | undefined;
+
+      if (validatedPrestazioni.classificazioniDM143 && validatedPrestazioni.classificazioniDM143.length > 0) {
+        // Calcola la somma totale degli importi opere
+        importoOpereCalcolato = validatedPrestazioni.classificazioniDM143.reduce(
+          (sum, c) => sum + (c.importo || 0), 0
+        );
+        // Usa la prima classificazione come classeDM143 principale (retrocompatibilità)
+        classeDM143Principale = validatedPrestazioni.classificazioniDM143[0].codice;
+      }
+
       // Merge prestazioni into existing metadata
       const currentMetadata = existingProject.metadata || {};
       const updatedMetadata = {
         ...currentMetadata,
-        ...validatedPrestazioni
+        ...validatedPrestazioni,
+        // Sincronizza campi deprecati per retrocompatibilità con dashboard
+        ...(importoOpereCalcolato !== undefined && { importoOpere: importoOpereCalcolato }),
+        ...(classeDM143Principale && { classeDM143: classeDM143Principale }),
       };
-      
+
       // Update project with new metadata
       const updatedProject = await storage.updateProject(req.params.id, {
         metadata: updatedMetadata
       });
-      
+
       if (!updatedProject) {
         return res.status(404).json({ message: "Errore nell'aggiornamento delle prestazioni" });
       }
-      
+
       console.log(`✅ Successfully updated prestazioni for project: ${existingProject.code}`);
       console.log(`📊 New prestazioni:`, validatedPrestazioni.prestazioni);
-      
+      if (importoOpereCalcolato !== undefined) {
+        console.log(`💰 Sincronizzato importoOpere: ${importoOpereCalcolato}`);
+      }
+
       res.json(updatedProject);
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error(`❌ Validation error for prestazioni:`, error.errors);
-        return res.status(400).json({ 
-          message: "Dati prestazioni non validi", 
-          errors: error.errors 
+        return res.status(400).json({
+          message: "Dati prestazioni non validi",
+          errors: error.errors
         });
       }
       console.error(`❌ Error updating prestazioni for project ${req.params.id}:`, error);

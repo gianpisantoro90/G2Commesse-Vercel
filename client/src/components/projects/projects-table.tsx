@@ -30,15 +30,16 @@ import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
 import PrestazioniModal from "./prestazioni-modal";
 import CREGenerator from "./cre-generator";
-import { 
-  renderPrestazioneBadge, 
-  formatImporto, 
+import {
+  renderPrestazioneBadge,
+  formatImporto,
   renderClasseDMColumn,
   renderLivelliProgettazioneColumn,
   renderTipoRapportoBadge,
+  getImportoOpere,
   PRESTAZIONI_CONFIG,
   type PrestazioneType,
-  type TipoRapportoType 
+  type TipoRapportoType
 } from "@/lib/prestazioni-utils";
 
 type SortField = "code" | "client" | "city" | "object" | "year" | "status";
@@ -931,7 +932,7 @@ export default function ProjectsTable() {
                         <td className="py-4 px-4" data-testid={`project-classe-dm-${project.id}`}>
                           {(() => {
                             const metadata = project.metadata as ProjectMetadata;
-                            const classeDM = renderClasseDMColumn(metadata?.classeDM143, metadata?.importoOpere);
+                            const classeDM = renderClasseDMColumn(metadata?.classeDM143, getImportoOpere(metadata));
                             return (
                               <div>
                                 <span className={`px-2 py-1 rounded text-xs font-mono font-bold ${

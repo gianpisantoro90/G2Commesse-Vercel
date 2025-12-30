@@ -696,6 +696,55 @@ export class TursoStorage implements IStorage {
     return invoice || undefined;
   }
 
+  // Helper: sincronizza i campi fatturazione del progetto basandosi sulle fatture
+  private async syncProjectInvoiceFields(projectId: string): Promise<void> {
+    if (!db) return;
+
+    try {
+      const invoicesList = await this.getInvoicesByProject(projectId);
+
+      if (invoicesList.length === 0) {
+        // Nessuna fattura: reset campi
+        await db.update(projects).set({
+          fatturato: false,
+          numeroFattura: null,
+          dataFattura: null,
+          importoFatturato: 0,
+          pagato: false,
+          dataPagamento: null,
+          importoPagato: 0,
+        }).where(eq(projects.id, projectId));
+      } else {
+        // Calcola totali dalle fatture
+        const importoTotaleFatturato = invoicesList.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+        const fatturePagate = invoicesList.filter(inv => inv.stato === 'pagata');
+        const importoTotalePagato = fatturePagate.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+        const tuttePagate = invoicesList.length > 0 && invoicesList.every(inv => inv.stato === 'pagata');
+
+        // Prima fattura per riferimento
+        const primaFattura = invoicesList.sort((a, b) =>
+          new Date(a.dataEmissione).getTime() - new Date(b.dataEmissione).getTime()
+        )[0];
+
+        await db.update(projects).set({
+          fatturato: true,
+          numeroFattura: invoicesList.length === 1
+            ? primaFattura.numeroFattura
+            : `${primaFattura.numeroFattura} (+${invoicesList.length - 1})`,
+          dataFattura: primaFattura.dataEmissione,
+          importoFatturato: importoTotaleFatturato,
+          pagato: tuttePagate,
+          dataPagamento: tuttePagate && fatturePagate.length > 0
+            ? fatturePagate[fatturePagate.length - 1].dataPagamento
+            : null,
+          importoPagato: importoTotalePagato,
+        }).where(eq(projects.id, projectId));
+      }
+    } catch (error) {
+      console.error('Error syncing project invoice fields:', error);
+    }
+  }
+
   async createInvoice(insertInvoice: InsertProjectInvoice): Promise<ProjectInvoice> {
     if (!db) throw new Error('Database not available');
 
@@ -712,22 +761,47 @@ export class TursoStorage implements IStorage {
       updatedAt: now,
     }).returning();
 
+    // Sincronizza i campi fatturazione del progetto
+    await this.syncProjectInvoiceFields(insertInvoice.projectId);
+
     return invoice;
   }
 
   async updateInvoice(id: string, updates: Partial<InsertProjectInvoice>): Promise<ProjectInvoice | undefined> {
     if (!db) throw new Error('Database not available');
+
+    // Prima ottieni la fattura esistente per avere il projectId
+    const existing = await this.getInvoice(id);
+    if (!existing) return undefined;
+
     const now = new Date();
     const [updated] = await db.update(projectInvoices)
       .set({ ...updates, updatedAt: now })
       .where(eq(projectInvoices.id, id))
       .returning();
+
+    // Sincronizza i campi fatturazione del progetto
+    if (updated) {
+      await this.syncProjectInvoiceFields(existing.projectId);
+    }
+
     return updated || undefined;
   }
 
   async deleteInvoice(id: string): Promise<boolean> {
     if (!db) throw new Error('Database not available');
+
+    // Prima ottieni la fattura per avere il projectId
+    const invoice = await this.getInvoice(id);
+    const projectId = invoice?.projectId;
+
     await db.delete(projectInvoices).where(eq(projectInvoices.id, id));
+
+    // Sincronizza i campi fatturazione del progetto
+    if (projectId) {
+      await this.syncProjectInvoiceFields(projectId);
+    }
+
     return true;
   }
 

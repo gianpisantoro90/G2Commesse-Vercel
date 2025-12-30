@@ -774,6 +774,47 @@ export class MemStorage implements IStorage {
     return this.invoices.get(id);
   }
 
+  // Helper: sincronizza i campi fatturazione del progetto basandosi sulle fatture
+  private async syncProjectInvoiceFields(projectId: string): Promise<void> {
+    const invoices = await this.getInvoicesByProject(projectId);
+    const project = this.projects.get(projectId);
+    if (!project) return;
+
+    if (invoices.length === 0) {
+      // Nessuna fattura: reset campi
+      project.fatturato = false;
+      project.numeroFattura = null;
+      project.dataFattura = null;
+      project.importoFatturato = 0;
+      project.pagato = false;
+      project.dataPagamento = null;
+      project.importoPagato = 0;
+    } else {
+      // Calcola totali dalle fatture
+      const importoTotaleFatturato = invoices.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+      const fatturePagate = invoices.filter(inv => inv.stato === 'pagata');
+      const importoTotalePagato = fatturePagate.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+      const tuttePagate = invoices.length > 0 && invoices.every(inv => inv.stato === 'pagata');
+
+      // Prima fattura per riferimento
+      const primaFattura = invoices.sort((a, b) =>
+        new Date(a.dataEmissione).getTime() - new Date(b.dataEmissione).getTime()
+      )[0];
+
+      project.fatturato = true;
+      project.numeroFattura = invoices.length === 1
+        ? primaFattura.numeroFattura
+        : `${primaFattura.numeroFattura} (+${invoices.length - 1})`;
+      project.dataFattura = primaFattura.dataEmissione;
+      project.importoFatturato = importoTotaleFatturato;
+      project.pagato = tuttePagate;
+      project.dataPagamento = tuttePagate && fatturePagate.length > 0
+        ? fatturePagate[fatturePagate.length - 1].dataPagamento
+        : null;
+      project.importoPagato = importoTotalePagato;
+    }
+  }
+
   async createInvoice(insertInvoice: InsertProjectInvoice): Promise<ProjectInvoice> {
     const id = randomUUID();
     const invoice: ProjectInvoice = {
@@ -790,6 +831,10 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.invoices.set(id, invoice);
+
+    // Sincronizza i campi fatturazione del progetto
+    await this.syncProjectInvoiceFields(insertInvoice.projectId);
+
     return invoice;
   }
 
@@ -803,11 +848,24 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.invoices.set(id, updated);
+
+    // Sincronizza i campi fatturazione del progetto
+    await this.syncProjectInvoiceFields(existing.projectId);
+
     return updated;
   }
 
   async deleteInvoice(id: string): Promise<boolean> {
-    return this.invoices.delete(id);
+    const invoice = this.invoices.get(id);
+    const projectId = invoice?.projectId;
+    const deleted = this.invoices.delete(id);
+
+    // Sincronizza i campi fatturazione del progetto
+    if (deleted && projectId) {
+      await this.syncProjectInvoiceFields(projectId);
+    }
+
+    return deleted;
   }
 
   // Prestazioni methods
@@ -821,6 +879,33 @@ export class MemStorage implements IStorage {
 
   async getPrestazione(id: string): Promise<ProjectPrestazione | undefined> {
     return this.prestazioni.get(id);
+  }
+
+  // Sincronizza metadata.prestazioni e metadata.livelloProgettazione dalla tabella projectPrestazioni
+  private async syncMetadataFromPrestazioni(projectId: string): Promise<void> {
+    const prestazioniList = await this.getPrestazioniByProject(projectId);
+    const project = await this.getProject(projectId);
+    if (!project) return;
+
+    // Estrai tipi unici di prestazione
+    const tipiUnici = [...new Set(prestazioniList.map(p => p.tipo))];
+
+    // Estrai livelli progettazione unici (solo da prestazioni di tipo 'progettazione')
+    const livelliUnici = [...new Set(
+      prestazioniList
+        .filter(p => p.tipo === 'progettazione' && p.livelloProgettazione)
+        .map(p => p.livelloProgettazione!)
+    )];
+
+    // Aggiorna il metadata del progetto
+    const currentMetadata = (project.metadata || {}) as Record<string, any>;
+    const updatedMetadata = {
+      ...currentMetadata,
+      prestazioni: tipiUnici,
+      livelloProgettazione: livelliUnici,
+    };
+
+    await this.updateProject(projectId, { metadata: updatedMetadata });
   }
 
   async createPrestazione(insertPrestazione: InsertProjectPrestazione): Promise<ProjectPrestazione> {
@@ -843,6 +928,10 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.prestazioni.set(id, prestazione);
+
+    // Sincronizza metadata del progetto con le prestazioni dalla tabella
+    await this.syncMetadataFromPrestazioni(insertPrestazione.projectId);
+
     return prestazione;
   }
 
@@ -869,7 +958,16 @@ export class MemStorage implements IStorage {
   }
 
   async deletePrestazione(id: string): Promise<boolean> {
-    return this.prestazioni.delete(id);
+    const prestazione = this.prestazioni.get(id);
+    const projectId = prestazione?.projectId;
+    const deleted = this.prestazioni.delete(id);
+
+    // Sincronizza metadata del progetto dopo l'eliminazione
+    if (deleted && projectId) {
+      await this.syncMetadataFromPrestazioni(projectId);
+    }
+
+    return deleted;
   }
 
   async getPrestazioniStats(): Promise<PrestazioniStats> {
@@ -1675,9 +1773,60 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Helper: sincronizza i campi fatturazione del progetto basandosi sulle fatture
+  private async syncProjectInvoiceFields(projectId: string): Promise<void> {
+    try {
+      const invoicesList = await this.getInvoicesByProject(projectId);
+
+      if (invoicesList.length === 0) {
+        // Nessuna fattura: reset campi
+        await db.update(projects).set({
+          fatturato: false,
+          numeroFattura: null,
+          dataFattura: null,
+          importoFatturato: 0,
+          pagato: false,
+          dataPagamento: null,
+          importoPagato: 0,
+        }).where(eq(projects.id, projectId));
+      } else {
+        // Calcola totali dalle fatture
+        const importoTotaleFatturato = invoicesList.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+        const fatturePagate = invoicesList.filter(inv => inv.stato === 'pagata');
+        const importoTotalePagato = fatturePagate.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+        const tuttePagate = invoicesList.length > 0 && invoicesList.every(inv => inv.stato === 'pagata');
+
+        // Prima fattura per riferimento
+        const primaFattura = invoicesList.sort((a, b) =>
+          new Date(a.dataEmissione).getTime() - new Date(b.dataEmissione).getTime()
+        )[0];
+
+        await db.update(projects).set({
+          fatturato: true,
+          numeroFattura: invoicesList.length === 1
+            ? primaFattura.numeroFattura
+            : `${primaFattura.numeroFattura} (+${invoicesList.length - 1})`,
+          dataFattura: primaFattura.dataEmissione,
+          importoFatturato: importoTotaleFatturato,
+          pagato: tuttePagate,
+          dataPagamento: tuttePagate && fatturePagate.length > 0
+            ? fatturePagate[fatturePagate.length - 1].dataPagamento
+            : null,
+          importoPagato: importoTotalePagato,
+        }).where(eq(projects.id, projectId));
+      }
+    } catch (error) {
+      console.error('Error syncing project invoice fields:', error);
+    }
+  }
+
   async createInvoice(insertInvoice: InsertProjectInvoice): Promise<ProjectInvoice> {
     try {
       const [invoice] = await db.insert(projectInvoices).values(insertInvoice).returning();
+
+      // Sincronizza i campi fatturazione del progetto
+      await this.syncProjectInvoiceFields(insertInvoice.projectId);
+
       return invoice;
     } catch (error) {
       console.error('Error creating invoice:', error);
@@ -1687,7 +1836,17 @@ export class DatabaseStorage implements IStorage {
 
   async updateInvoice(id: string, updates: Partial<InsertProjectInvoice>): Promise<ProjectInvoice | undefined> {
     try {
+      // Prima ottieni la fattura esistente per avere il projectId
+      const existing = await this.getInvoice(id);
+      if (!existing) return undefined;
+
       const [updated] = await db.update(projectInvoices).set(updates).where(eq(projectInvoices.id, id)).returning();
+
+      // Sincronizza i campi fatturazione del progetto
+      if (updated) {
+        await this.syncProjectInvoiceFields(existing.projectId);
+      }
+
       return updated || undefined;
     } catch (error) {
       console.error('Error updating invoice:', error);
@@ -1697,8 +1856,19 @@ export class DatabaseStorage implements IStorage {
 
   async deleteInvoice(id: string): Promise<boolean> {
     try {
+      // Prima ottieni la fattura per avere il projectId
+      const invoice = await this.getInvoice(id);
+      const projectId = invoice?.projectId;
+
       const result = await db.delete(projectInvoices).where(eq(projectInvoices.id, id));
-      return (result.rowCount || 0) > 0;
+      const deleted = (result.rowCount || 0) > 0;
+
+      // Sincronizza i campi fatturazione del progetto
+      if (deleted && projectId) {
+        await this.syncProjectInvoiceFields(projectId);
+      }
+
+      return deleted;
     } catch (error) {
       console.error('Error deleting invoice:', error);
       return false;
@@ -1782,9 +1952,44 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Sincronizza metadata.prestazioni e metadata.livelloProgettazione dalla tabella projectPrestazioni
+  private async syncMetadataFromPrestazioni(projectId: string): Promise<void> {
+    try {
+      const prestazioniList = await this.getPrestazioniByProject(projectId);
+      const project = await this.getProject(projectId);
+      if (!project) return;
+
+      // Estrai tipi unici di prestazione
+      const tipiUnici = [...new Set(prestazioniList.map(p => p.tipo))];
+
+      // Estrai livelli progettazione unici (solo da prestazioni di tipo 'progettazione')
+      const livelliUnici = [...new Set(
+        prestazioniList
+          .filter(p => p.tipo === 'progettazione' && p.livelloProgettazione)
+          .map(p => p.livelloProgettazione!)
+      )];
+
+      // Aggiorna il metadata del progetto
+      const currentMetadata = (project.metadata || {}) as Record<string, any>;
+      const updatedMetadata = {
+        ...currentMetadata,
+        prestazioni: tipiUnici,
+        livelloProgettazione: livelliUnici,
+      };
+
+      await this.updateProject(projectId, { metadata: updatedMetadata });
+    } catch (error) {
+      console.error('Error syncing metadata from prestazioni:', error);
+    }
+  }
+
   async createPrestazione(insertPrestazione: InsertProjectPrestazione): Promise<ProjectPrestazione> {
     try {
       const [prestazione] = await db.insert(projectPrestazioni).values(insertPrestazione).returning();
+
+      // Sincronizza metadata del progetto con le prestazioni dalla tabella
+      await this.syncMetadataFromPrestazioni(insertPrestazione.projectId);
+
       return prestazione;
     } catch (error) {
       console.error('Error creating prestazione:', error);
@@ -1821,8 +2026,19 @@ export class DatabaseStorage implements IStorage {
 
   async deletePrestazione(id: string): Promise<boolean> {
     try {
+      // Salva il projectId prima dell'eliminazione per la sincronizzazione
+      const prestazione = await this.getPrestazione(id);
+      const projectId = prestazione?.projectId;
+
       const result = await db.delete(projectPrestazioni).where(eq(projectPrestazioni.id, id));
-      return (result.rowCount || 0) > 0;
+      const deleted = (result.rowCount || 0) > 0;
+
+      // Sincronizza metadata del progetto dopo l'eliminazione
+      if (deleted && projectId) {
+        await this.syncMetadataFromPrestazioni(projectId);
+      }
+
+      return deleted;
     } catch (error) {
       console.error('Error deleting prestazione:', error);
       return false;
