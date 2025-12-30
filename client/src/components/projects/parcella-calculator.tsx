@@ -18,8 +18,8 @@ import {
   calcolaParcella,
   calcolaFattura,
   formatEuro,
-  suggestClasseDM143,
-  CLASSI_DM143,
+  suggestClasseDM2016,
+  CATEGORIE_DM2016,
   type ParcellaInput,
   type ParcellaResult,
   type FatturaCalculation
@@ -49,7 +49,7 @@ export default function ParcellaCalculator() {
 
   // Form state
   const [importoOpere, setImportoOpere] = useState<string>('');
-  const [classeDM143, setClasseDM143] = useState<string>('');
+  const [classeDM2016, setClasseDM143] = useState<string>('');
   const [prestazioni, setPrestazioni] = useState<string[]>([]);
   const [livelloProgettazione, setLivelloProgettazione] = useState<string[]>([]);
   const [complessita, setComplessita] = useState<'bassa' | 'media' | 'alta'>('media');
@@ -112,7 +112,7 @@ export default function ParcellaCalculator() {
 
     const input: ParcellaInput = {
       importoOpere: importo,
-      classeDM143: classeDM143 || undefined,
+      classeDM2016: classeDM2016 || undefined,
       prestazioni,
       livelloProgettazione: livelloProgettazione.length > 0 ? livelloProgettazione : undefined,
       complessita
@@ -147,12 +147,12 @@ export default function ParcellaCalculator() {
   const handleSuggestClasse = () => {
     const importo = parseFloat(importoOpere.replace(/[^0-9.-]/g, ''));
     if (importo > 0) {
-      const suggestions = suggestClasseDM143(importo);
+      const suggestions = suggestClasseDM2016(importo);
       if (suggestions.length > 0) {
         setClasseDM143(suggestions[0]);
         toast({
           title: "Classe suggerita",
-          description: `${suggestions[0]} - ${CLASSI_DM143[suggestions[0] as keyof typeof CLASSI_DM143]?.descrizione}`,
+          description: `${suggestions[0]} - ${CATEGORIE_DM2016[suggestions[0] as keyof typeof CATEGORIE_DM2016]?.descrizione}`,
         });
       }
     }
@@ -172,7 +172,7 @@ export default function ParcellaCalculator() {
 CALCOLO PARCELLA PROFESSIONALE DM 143/2013
 
 Importo Opere: ${formatEuro(calculationResult.importoBase)}
-Classe DM 143: ${classeDM143 || 'Non specificata'}
+Classe DM 143: ${classeDM2016 || 'Non specificata'}
 Complessità: ${complessita.toUpperCase()}
 
 DETTAGLIO COMPENSI:
@@ -281,12 +281,12 @@ PROSPETTO FATTURA:
                     Suggerisci
                   </Button>
                 </div>
-                <Select value={classeDM143} onValueChange={setClasseDM143}>
+                <Select value={classeDM2016} onValueChange={setClasseDM143}>
                   <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                     <SelectValue placeholder="Seleziona classe..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(CLASSI_DM143).map(([classe, info]) => (
+                    {Object.entries(CATEGORIE_DM2016).map(([classe, info]) => (
                       <SelectItem key={classe} value={classe}>
                         {classe} - {info.descrizione}
                       </SelectItem>

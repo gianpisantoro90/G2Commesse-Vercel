@@ -214,8 +214,8 @@ export const insertCommunicationSchema = createInsertSchema(communications).omit
   updatedAt: true,
 });
 
-// Singola classificazione DM 143/2013 con importi associati
-export interface ClassificazioneDM143 {
+// Singola classificazione DM 17/06/2016 con importi associati
+export interface ClassificazioneDM2016 {
   codice: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1)
   importo: number; // Importo opere per questa categoria (retrocompatibilità)
   importoOpere?: number; // Importo opere per questa categoria (alias di importo)
@@ -228,10 +228,10 @@ export interface ProjectPrestazioni {
   livelloProgettazione?: Array<'pfte' | 'definitivo' | 'esecutivo' | 'variante'>;
 
   // Nuova struttura: supporto per multiple classificazioni con importi individuali
-  classificazioniDM143?: ClassificazioneDM143[]; // Array di classificazioni con importi
+  classificazioniDM2016?: ClassificazioneDM2016[]; // Array di classificazioni con importi
 
-  // Retrocompatibilità: campi singoli (deprecati in favore di classificazioniDM143)
-  classeDM143?: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1) - DEPRECATED
+  // Retrocompatibilità: campi singoli (deprecati in favore di classificazioniDM2016)
+  classeDM2016?: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1) - DEPRECATED
   importoOpere?: number; // Importo lavori base calcolo parcella - DEPRECATED (ora calcolato come somma classificazioni)
 
   importoServizio?: number; // Importo servizio professionale al netto
@@ -242,9 +242,9 @@ export interface ProjectMetadata extends ProjectPrestazioni {
   [key: string]: any; // Mantieni flessibilità per altri metadata futuri
 }
 
-// Zod schema per singola classificazione DM 143/2013
-export const classificazioneDM143Schema = z.object({
-  codice: z.string().regex(/^[A-Z]{1,2}\.?[0-9]{1,2}$/, 'Formato classe DM 143/2013 non valido (es: E.22, IA.03, S.05)'),
+// Zod schema per singola classificazione DM 17/06/2016
+export const classificazioneDM2016Schema = z.object({
+  codice: z.string().regex(/^[A-Z]{1,2}\.?[0-9]{1,2}$/, 'Formato classe DM 17/06/2016 non valido (es: E.22, IA.03, S.05)'),
   importo: z.number().min(0, 'L\'importo deve essere maggiore o uguale a 0'),
   importoOpere: z.number().min(0).optional(), // Alias di importo per retrocompatibilità
   importoServizio: z.number().min(0).optional(), // Importo servizio per questa categoria
@@ -256,10 +256,10 @@ export const prestazioniSchema = z.object({
   livelloProgettazione: z.array(z.enum(['pfte', 'definitivo', 'esecutivo', 'variante'])).optional(),
 
   // Nuova struttura: supporto per multiple classificazioni
-  classificazioniDM143: z.array(classificazioneDM143Schema).optional(),
+  classificazioniDM2016: z.array(classificazioneDM2016Schema).optional(),
 
   // Retrocompatibilità: campi singoli (deprecati)
-  classeDM143: z.string().optional(),
+  classeDM2016: z.string().optional(),
   importoOpere: z.number().min(0).optional(),
 
   importoServizio: z.number().min(0).optional(),

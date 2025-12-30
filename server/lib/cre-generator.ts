@@ -23,7 +23,7 @@ import {
   PageNumber,
   NumberFormat,
 } from "docx";
-import { Project, Client, ClassificazioneDM143 } from "../../shared/schema";
+import { Project, Client, ClassificazioneDM2016 } from "../../shared/schema";
 
 // Import tavola Z-1 per gradi di complessità
 // Nota: usiamo una mappa statica per il server-side
@@ -77,7 +77,7 @@ export interface CREData {
   metadata: {
     prestazioni?: string[];
     livelloProgettazione?: string[];
-    classificazioniDM143?: ClassificazioneDM143[];
+    classificazioniDM2016?: ClassificazioneDM2016[];
     importoServizio?: number;
   };
 }
@@ -132,7 +132,7 @@ function getGradoComplessita(codice: string): string {
 /**
  * Calcola il totale importo opere dalle classificazioni
  */
-function calcolaTotaleOpere(classificazioni: ClassificazioneDM143[] | undefined): number {
+function calcolaTotaleOpere(classificazioni: ClassificazioneDM2016[] | undefined): number {
   if (!classificazioni || classificazioni.length === 0) return 0;
   return classificazioni.reduce((sum, c) => sum + (c.importoOpere || c.importo || 0), 0);
 }
@@ -140,7 +140,7 @@ function calcolaTotaleOpere(classificazioni: ClassificazioneDM143[] | undefined)
 /**
  * Calcola il totale importo servizio dalle classificazioni
  */
-function calcolaTotaleServizio(classificazioni: ClassificazioneDM143[] | undefined): number {
+function calcolaTotaleServizio(classificazioni: ClassificazioneDM2016[] | undefined): number {
   if (!classificazioni || classificazioni.length === 0) return 0;
   return classificazioni.reduce((sum, c) => sum + (c.importoServizio || 0), 0);
 }
@@ -191,7 +191,7 @@ function getTipologiaServizio(metadata: CREData['metadata']): string[] {
 /**
  * Calcola l'importo CSE separato (se presente)
  */
-function getImportoCSE(classificazioni: ClassificazioneDM143[] | undefined, metadata: CREData['metadata']): number {
+function getImportoCSE(classificazioni: ClassificazioneDM2016[] | undefined, metadata: CREData['metadata']): number {
   // Se CSE è tra le prestazioni, usa una stima del 10% dell'importo servizio totale
   // oppure usa un valore specifico se disponibile
   if (metadata.prestazioni?.includes('cse') || metadata.prestazioni?.includes('csp')) {
@@ -208,9 +208,9 @@ function getImportoCSE(classificazioni: ClassificazioneDM143[] | undefined, meta
 export async function generateCREDocument(data: CREData): Promise<Buffer> {
   const { project, client, metadata } = data;
 
-  const totaleOpere = calcolaTotaleOpere(metadata.classificazioniDM143);
-  const totaleServizio = metadata.importoServizio || calcolaTotaleServizio(metadata.classificazioniDM143);
-  const importoCSE = getImportoCSE(metadata.classificazioniDM143, metadata);
+  const totaleOpere = calcolaTotaleOpere(metadata.classificazioniDM2016);
+  const totaleServizio = metadata.importoServizio || calcolaTotaleServizio(metadata.classificazioniDM2016);
+  const importoCSE = getImportoCSE(metadata.classificazioniDM2016, metadata);
   const tipologiaServizio = getTipologiaServizio(metadata);
 
   const doc = new Document({
@@ -423,7 +423,7 @@ export async function generateCREDocument(data: CREData): Promise<Buffer> {
         }),
 
         // Tabella classificazioni
-        createClassificazioniTable(metadata.classificazioniDM143 || []),
+        createClassificazioniTable(metadata.classificazioniDM2016 || []),
 
         // Spazio
         new Paragraph({ children: [] }),
@@ -673,7 +673,7 @@ function createInfoTable(
 /**
  * Crea la tabella delle classificazioni DM
  */
-function createClassificazioniTable(classificazioni: ClassificazioneDM143[]): Table {
+function createClassificazioniTable(classificazioni: ClassificazioneDM2016[]): Table {
   // Header
   const headerRow = new TableRow({
     tableHeader: true,
@@ -777,7 +777,7 @@ function createDichiarazioni(project: Project, client: Client): Paragraph[] {
 export function generateCREPreview(data: CREData): object {
   const { project, client, metadata } = data;
 
-  const classificazioniWithG = (metadata.classificazioniDM143 || []).map(c => ({
+  const classificazioniWithG = (metadata.classificazioniDM2016 || []).map(c => ({
     ...c,
     gradoComplessita: getGradoComplessita(c.codice),
   }));
@@ -800,8 +800,8 @@ export function generateCREPreview(data: CREData): object {
     },
     servizio: {
       tipologie: getTipologiaServizio(metadata),
-      importoTotaleOpere: calcolaTotaleOpere(metadata.classificazioniDM143),
-      importoTotaleServizio: metadata.importoServizio || calcolaTotaleServizio(metadata.classificazioniDM143),
+      importoTotaleOpere: calcolaTotaleOpere(metadata.classificazioniDM2016),
+      importoTotaleServizio: metadata.importoServizio || calcolaTotaleServizio(metadata.classificazioniDM2016),
     },
     classificazioni: classificazioniWithG,
     isComplete: checkCRECompleteness(data),
@@ -836,11 +836,11 @@ export function checkCRECompleteness(data: CREData): {
   if (!metadata.prestazioni || metadata.prestazioni.length === 0) {
     missing.push("Tipologia prestazioni");
   }
-  if (!metadata.classificazioniDM143 || metadata.classificazioniDM143.length === 0) {
+  if (!metadata.classificazioniDM2016 || metadata.classificazioniDM2016.length === 0) {
     missing.push("Classificazioni DM 143/2013");
   } else {
     // Verifica che ogni classificazione abbia importoServizio
-    const missingServizio = metadata.classificazioniDM143.some(c => !c.importoServizio && c.importoServizio !== 0);
+    const missingServizio = metadata.classificazioniDM2016.some(c => !c.importoServizio && c.importoServizio !== 0);
     if (missingServizio) {
       missing.push("Importo servizio per alcune classificazioni");
     }
