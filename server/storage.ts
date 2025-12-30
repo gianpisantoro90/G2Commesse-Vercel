@@ -164,11 +164,38 @@ export class MemStorage implements IStorage {
   }
 
   async createProject(insertProject: InsertProject): Promise<Project> {
+    // Prima trova o crea il client per ottenere clientId
+    const clientSigla = this.generateSafeAcronym(insertProject.client);
+    let clientId = insertProject.clientId;
+
+    if (!clientId) {
+      const existingClient = Array.from(this.clients.values()).find(c => c.sigla === clientSigla);
+      if (existingClient) {
+        clientId = existingClient.id;
+        existingClient.projectsCount = (existingClient.projectsCount || 0) + 1;
+      } else {
+        // Crea nuovo client e ottieni l'ID
+        const newClient = await this.createClient({
+          sigla: clientSigla,
+          name: insertProject.client,
+          city: insertProject.city,
+          projectsCount: 1,
+        });
+        clientId = newClient.id;
+      }
+    } else {
+      // clientId già fornito, aggiorna solo il contatore
+      const existingClient = this.clients.get(clientId);
+      if (existingClient) {
+        existingClient.projectsCount = (existingClient.projectsCount || 0) + 1;
+      }
+    }
+
     const id = randomUUID();
     const project: Project = {
       ...insertProject,
       id,
-      clientId: insertProject.clientId || null,
+      clientId: clientId,
       status: insertProject.status || "in_corso",
       tipoRapporto: insertProject.tipoRapporto || "diretto",
       committenteFinale: insertProject.committenteFinale || null,
@@ -188,22 +215,7 @@ export class MemStorage implements IStorage {
       creDataArchiviazione: insertProject.creDataArchiviazione || null,
     };
     this.projects.set(id, project);
-    
-    // Update client projects count
-    const clientSigla = this.generateSafeAcronym(insertProject.client);
-    const existingClient = Array.from(this.clients.values()).find(c => c.sigla === clientSigla);
-    if (existingClient) {
-      existingClient.projectsCount = (existingClient.projectsCount || 0) + 1;
-    } else {
-      // Create new client
-      await this.createClient({
-        sigla: clientSigla,
-        name: insertProject.client,
-        city: insertProject.city,
-        projectsCount: 1,
-      });
-    }
-    
+
     return project;
   }
 
@@ -261,9 +273,19 @@ export class MemStorage implements IStorage {
   async updateClient(id: string, updateData: Partial<InsertClient>): Promise<Client | undefined> {
     const existing = this.clients.get(id);
     if (!existing) return undefined;
-    
+
     const updated: Client = { ...existing, ...updateData };
     this.clients.set(id, updated);
+
+    // Se il nome del cliente è cambiato, sincronizza tutti i progetti collegati
+    if (updateData.name) {
+      for (const project of this.projects.values()) {
+        if (project.clientId === id) {
+          project.client = updateData.name;
+        }
+      }
+    }
+
     return updated;
   }
 
@@ -1086,34 +1108,52 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createProject(insertProject: InsertProject): Promise<Project> {
+    // Prima trova o crea il client per ottenere clientId
+    const clientSigla = this.generateSafeAcronym(insertProject.client);
+    let clientId = insertProject.clientId;
+
+    if (!clientId) {
+      const existingClient = await this.getClientBySigla(clientSigla);
+
+      if (existingClient) {
+        clientId = existingClient.id;
+        // Aggiorna contatore progetti del client esistente
+        await db
+          .update(clients)
+          .set({ projectsCount: (existingClient.projectsCount || 0) + 1 })
+          .where(eq(clients.id, existingClient.id));
+      } else {
+        // Crea nuovo client e ottieni l'ID
+        const newClient = await this.createClient({
+          sigla: clientSigla,
+          name: insertProject.client,
+          city: insertProject.city,
+          projectsCount: 1,
+        });
+        clientId = newClient.id;
+      }
+    } else {
+      // clientId già fornito, aggiorna solo il contatore
+      const existingClient = await this.getClient(clientId);
+      if (existingClient) {
+        await db
+          .update(clients)
+          .set({ projectsCount: (existingClient.projectsCount || 0) + 1 })
+          .where(eq(clients.id, existingClient.id));
+      }
+    }
+
+    // Ora crea il progetto con clientId sempre valorizzato
     const [project] = await db
       .insert(projects)
       .values({
         ...insertProject,
+        clientId: clientId,
         fsRoot: insertProject.fsRoot || null,
         metadata: insertProject.metadata || {},
       })
       .returning();
-    
-    // Update client projects count
-    const clientSigla = this.generateSafeAcronym(insertProject.client);
-    const existingClient = await this.getClientBySigla(clientSigla);
-    
-    if (existingClient) {
-      await db
-        .update(clients)
-        .set({ projectsCount: (existingClient.projectsCount || 0) + 1 })
-        .where(eq(clients.id, existingClient.id));
-    } else {
-      // Create new client
-      await this.createClient({
-        sigla: clientSigla,
-        name: insertProject.client,
-        city: insertProject.city,
-        projectsCount: 1,
-      });
-    }
-    
+
     return project;
   }
 
@@ -1178,6 +1218,15 @@ export class DatabaseStorage implements IStorage {
       .set(updateData)
       .where(eq(clients.id, id))
       .returning();
+
+    // Se il nome del cliente è cambiato, sincronizza tutti i progetti collegati
+    if (updated && updateData.name) {
+      await db
+        .update(projects)
+        .set({ client: updateData.name })
+        .where(eq(projects.clientId, id));
+    }
+
     return updated || undefined;
   }
 

@@ -254,35 +254,6 @@ export const projectDeadlines = sqliteTable("project_deadlines", {
 });
 
 // ============================================
-// PROJECT COMMUNICATIONS TABLE (Legacy)
-// ============================================
-export const projectCommunications = sqliteTable("project_communications", {
-  id: text("id").primaryKey().$defaultFn(() => generateId()),
-  projectId: text("project_id").notNull().references(() => projects.id),
-  type: text("type").notNull(),
-  direction: text("direction").notNull().default("outgoing"),
-  subject: text("subject").notNull(),
-  body: text("body"),
-  recipient: text("recipient"),
-  sender: text("sender"),
-  attachments: text("attachments", { mode: "json" }).default("[]"),
-  tags: text("tags", { mode: "json" }).default("[]"),
-  isImportant: integer("is_important", { mode: "boolean" }).default(false),
-  communicationDate: integer("communication_date", { mode: "timestamp" }).$defaultFn(() => new Date()),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-  createdBy: text("created_by"),
-  emailMessageId: text("email_message_id"),
-  emailHeaders: text("email_headers", { mode: "json" }),
-  emailRaw: text("email_raw"),
-  emailHtml: text("email_html"),
-  emailText: text("email_text"),
-  autoImported: integer("auto_imported", { mode: "boolean" }).default(false),
-  aiSuggestions: text("ai_suggestions", { mode: "json" }),
-  aiSuggestionsStatus: text("ai_suggestions_status", { mode: "json" }),
-  importedAt: integer("imported_at", { mode: "timestamp" }),
-});
-
-// ============================================
 // PROJECT SAL TABLE
 // ============================================
 export const projectSAL = sqliteTable("project_sal", {
@@ -549,11 +520,6 @@ export const insertProjectDeadlineSchema = createInsertSchema(projectDeadlines).
   updatedAt: true,
 });
 
-export const insertProjectCommunicationSchema = createInsertSchema(projectCommunications).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertProjectSALSchema = createInsertSchema(projectSAL).omit({
   id: true,
   createdAt: true,
@@ -669,9 +635,6 @@ export type ProjectCategoryRelation = typeof projectCategoryRelation.$inferSelec
 export type InsertProjectDeadline = z.infer<typeof insertProjectDeadlineSchema>;
 export type ProjectDeadline = typeof projectDeadlines.$inferSelect;
 export type Deadline = ProjectDeadline;
-
-export type InsertProjectCommunication = z.infer<typeof insertProjectCommunicationSchema>;
-export type ProjectCommunication = typeof projectCommunications.$inferSelect;
 
 export type InsertProjectSAL = z.infer<typeof insertProjectSALSchema>;
 export type ProjectSAL = typeof projectSAL.$inferSelect;
