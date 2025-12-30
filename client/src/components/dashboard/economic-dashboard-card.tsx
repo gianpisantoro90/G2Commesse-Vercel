@@ -8,7 +8,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { type Project, type ProjectMetadata, type PrestazioniStats } from "@shared/schema";
-import { formatImporto } from "@/lib/prestazioni-utils";
+import { formatImporto, getImportoOpere } from "@/lib/prestazioni-utils";
 import {
   DollarSign, Briefcase,
   PieChart as PieChartIcon, BarChart3, Target, AlertCircle, FileText, Euro
@@ -37,15 +37,15 @@ export default function EconomicDashboardCard() {
     );
   }
 
-  // Calcoli economici - importo opere da metadata progetto
+  // Calcoli economici - importo opere da metadata progetto (usa classificazioniDM143 con fallback)
   const projectsWithEconomicData = projects.filter(p => {
     const metadata = p.metadata as ProjectMetadata;
-    return metadata?.importoOpere;
+    return getImportoOpere(metadata) > 0;
   });
 
   const totalImportoOpere = projectsWithEconomicData.reduce((sum, p) => {
     const metadata = p.metadata as ProjectMetadata;
-    return sum + (metadata?.importoOpere || 0);
+    return sum + getImportoOpere(metadata);
   }, 0);
 
   // Compensi professionali ora provengono dalle prestazioni
@@ -77,7 +77,7 @@ export default function EconomicDashboardCard() {
   const yearlyData = projects.reduce((acc, project) => {
     const year = `20${project.year.toString().padStart(2, '0')}`;
     const metadata = project.metadata as ProjectMetadata;
-    const importo = metadata?.importoOpere || 0;
+    const importo = getImportoOpere(metadata);
 
     const existing = acc.find(item => item.year === year);
     if (existing) {
@@ -379,7 +379,7 @@ export default function EconomicDashboardCard() {
                   ) : (
                     topProjectsByValue.map((project, index) => {
                       const metadata = project.metadata as ProjectMetadata;
-                      const importoOpere = metadata?.importoOpere || 0;
+                      const importoOpere = getImportoOpere(metadata);
                       const percentage = totalImportoOpere > 0 ? (importoOpere / totalImportoOpere) * 100 : 0;
 
                       return (

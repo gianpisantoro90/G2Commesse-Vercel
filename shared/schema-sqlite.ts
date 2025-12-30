@@ -192,50 +192,6 @@ export const users = sqliteTable("users", {
 });
 
 // ============================================
-// PROJECT TAGS TABLE
-// ============================================
-export const projectTags = sqliteTable("project_tags", {
-  id: text("id").primaryKey().$defaultFn(() => generateId()),
-  name: text("name").notNull().unique(),
-  color: text("color").notNull().default("#3B82F6"),
-  icon: text("icon"),
-  description: text("description"),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-});
-
-// ============================================
-// PROJECT TAGS RELATION TABLE
-// ============================================
-export const projectTagsRelation = sqliteTable("project_tags_relation", {
-  id: text("id").primaryKey().$defaultFn(() => generateId()),
-  projectId: text("project_id").notNull().references(() => projects.id),
-  tagId: text("tag_id").notNull().references(() => projectTags.id),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-});
-
-// ============================================
-// PROJECT CATEGORIES TABLE
-// ============================================
-export const projectCategories = sqliteTable("project_categories", {
-  id: text("id").primaryKey().$defaultFn(() => generateId()),
-  name: text("name").notNull().unique(),
-  description: text("description"),
-  color: text("color").notNull().default("#10B981"),
-  icon: text("icon"),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-});
-
-// ============================================
-// PROJECT CATEGORY RELATION TABLE
-// ============================================
-export const projectCategoryRelation = sqliteTable("project_category_relation", {
-  id: text("id").primaryKey().$defaultFn(() => generateId()),
-  projectId: text("project_id").notNull().references(() => projects.id).unique(),
-  categoryId: text("category_id").notNull().references(() => projectCategories.id),
-  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-});
-
-// ============================================
 // PROJECT DEADLINES TABLE
 // ============================================
 export const projectDeadlines = sqliteTable("project_deadlines", {
@@ -494,26 +450,6 @@ export const createUserSchema = insertUserSchema.omit({
   password: z.string().min(8, "La password deve essere di almeno 8 caratteri"),
 });
 
-export const insertProjectTagSchema = createInsertSchema(projectTags).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertProjectTagsRelationSchema = createInsertSchema(projectTagsRelation).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertProjectCategorySchema = createInsertSchema(projectCategories).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertProjectCategoryRelationSchema = createInsertSchema(projectCategoryRelation).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertProjectDeadlineSchema = createInsertSchema(projectDeadlines).omit({
   id: true,
   createdAt: true,
@@ -619,18 +555,6 @@ export type Communication = typeof communications.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type CreateUser = z.infer<typeof createUserSchema>;
 export type User = typeof users.$inferSelect;
-
-export type InsertProjectTag = z.infer<typeof insertProjectTagSchema>;
-export type ProjectTag = typeof projectTags.$inferSelect;
-
-export type InsertProjectTagsRelation = z.infer<typeof insertProjectTagsRelationSchema>;
-export type ProjectTagsRelation = typeof projectTagsRelation.$inferSelect;
-
-export type InsertProjectCategory = z.infer<typeof insertProjectCategorySchema>;
-export type ProjectCategory = typeof projectCategories.$inferSelect;
-
-export type InsertProjectCategoryRelation = z.infer<typeof insertProjectCategoryRelationSchema>;
-export type ProjectCategoryRelation = typeof projectCategoryRelation.$inferSelect;
 
 export type InsertProjectDeadline = z.infer<typeof insertProjectDeadlineSchema>;
 export type ProjectDeadline = typeof projectDeadlines.$inferSelect;

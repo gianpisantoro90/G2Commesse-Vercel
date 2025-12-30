@@ -335,42 +335,6 @@ export type User = typeof users.$inferSelect;
 // NUOVE TABELLE PER FUNZIONALITÀ AVANZATE
 // ============================================
 
-// Tags personalizzabili per commesse
-export const projectTags = pgTable("project_tags", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull().unique(),
-  color: text("color").notNull().default("#3B82F6"), // Hex color
-  icon: text("icon"), // Emoji or icon name
-  description: text("description"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Relazione molti-a-molti tra progetti e tags
-export const projectTagsRelation = pgTable("project_tags_relation", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  tagId: text("tag_id").notNull().references(() => projectTags.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Categorie tematiche per commesse
-export const projectCategories = pgTable("project_categories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull().unique(),
-  description: text("description"),
-  color: text("color").notNull().default("#10B981"),
-  icon: text("icon"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-// Relazione progetto-categoria (una categoria per progetto)
-export const projectCategoryRelation = pgTable("project_category_relation", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }).unique(),
-  categoryId: text("category_id").notNull().references(() => projectCategories.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Scadenze e milestone per commesse
 export const projectDeadlines = pgTable("project_deadlines", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -561,26 +525,6 @@ export const tasks = pgTable("tasks", {
 // INSERT SCHEMAS PER NUOVE TABELLE
 // ============================================
 
-export const insertProjectTagSchema = createInsertSchema(projectTags).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertProjectTagsRelationSchema = createInsertSchema(projectTagsRelation).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertProjectCategorySchema = createInsertSchema(projectCategories).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertProjectCategoryRelationSchema = createInsertSchema(projectCategoryRelation).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertProjectDeadlineSchema = createInsertSchema(projectDeadlines).omit({
   id: true,
   createdAt: true,
@@ -666,18 +610,6 @@ export const insertTaskSchema = createInsertSchema(tasks).omit({
 // ============================================
 // TYPES PER NUOVE TABELLE
 // ============================================
-
-export type InsertProjectTag = z.infer<typeof insertProjectTagSchema>;
-export type ProjectTag = typeof projectTags.$inferSelect;
-
-export type InsertProjectTagsRelation = z.infer<typeof insertProjectTagsRelationSchema>;
-export type ProjectTagsRelation = typeof projectTagsRelation.$inferSelect;
-
-export type InsertProjectCategory = z.infer<typeof insertProjectCategorySchema>;
-export type ProjectCategory = typeof projectCategories.$inferSelect;
-
-export type InsertProjectCategoryRelation = z.infer<typeof insertProjectCategoryRelationSchema>;
-export type ProjectCategoryRelation = typeof projectCategoryRelation.$inferSelect;
 
 export type InsertProjectDeadline = z.infer<typeof insertProjectDeadlineSchema>;
 export type ProjectDeadline = typeof projectDeadlines.$inferSelect;
