@@ -52,6 +52,7 @@ export default function ProjectsTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
+  const [creFilter, setCreFilter] = useState<string>("all"); // 'all', 'archiviato', 'non_archiviato'
   const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
@@ -159,6 +160,37 @@ export default function ProjectsTable() {
     },
   });
 
+  // Toggle CRE archival status
+  const toggleCREMutation = useMutation({
+    mutationFn: async ({ projectId, archiviato }: { projectId: string; archiviato: boolean }) => {
+      const response = await apiRequest("PATCH", `/api/projects/${projectId}/cre/archiviato`, { archiviato });
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.archiviato ? "CRE archiviato" : "CRE rimosso dall'archivio",
+        description: variables.archiviato
+          ? "Il CRE firmato è stato segnato come ricevuto"
+          : "Lo stato di archiviazione CRE è stato rimosso",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Si è verificato un errore nell'aggiornamento dello stato CRE",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleToggleCRE = (project: Project) => {
+    toggleCREMutation.mutate({
+      projectId: project.id,
+      archiviato: !project.creArchiviato,
+    });
+  };
+
   // Get unique years from projects
   const availableYears = Array.from(new Set(projects.map(p => p.year))).sort((a, b) => b - a);
 
@@ -198,7 +230,12 @@ export default function ProjectsTable() {
     // Year filter
     const matchesYear = yearFilter === "all" || project.year === parseInt(yearFilter);
 
-    return matchesSearch && matchesStatus && matchesYear;
+    // CRE filter
+    const matchesCre = creFilter === "all" ||
+      (creFilter === "archiviato" && project.creArchiviato) ||
+      (creFilter === "non_archiviato" && !project.creArchiviato);
+
+    return matchesSearch && matchesStatus && matchesYear && matchesCre;
   });
 
   // Sort filtered projects
@@ -514,13 +551,25 @@ export default function ProjectsTable() {
             </SelectContent>
           </Select>
 
-          {(statusFilter !== "all" || yearFilter !== "all" || searchTerm !== "") && (
+          <Select value={creFilter} onValueChange={setCreFilter}>
+            <SelectTrigger className="w-[calc(50%-0.25rem)] sm:w-[150px]" data-testid="filter-cre">
+              <SelectValue placeholder="CRE" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tutti i CRE</SelectItem>
+              <SelectItem value="archiviato">✓ CRE archiviato</SelectItem>
+              <SelectItem value="non_archiviato">○ CRE mancante</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {(statusFilter !== "all" || yearFilter !== "all" || creFilter !== "all" || searchTerm !== "") && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 setStatusFilter("all");
                 setYearFilter("all");
+                setCreFilter("all");
                 setSearchTerm("");
               }}
               className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
@@ -584,6 +633,16 @@ export default function ProjectsTable() {
                         <CREGenerator project={project}>
                           <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Genera CRE">📜</Button>
                         </CREGenerator>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className={`h-8 w-8 p-0 ${project.creArchiviato ? 'text-green-600' : 'text-gray-400'}`}
+                          onClick={() => handleToggleCRE(project)}
+                          disabled={toggleCREMutation.isPending}
+                          title={project.creArchiviato ? 'CRE archiviato - clicca per rimuovere' : 'Segna CRE come archiviato'}
+                        >
+                          {project.creArchiviato ? '✓' : '○'}
+                        </Button>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -1158,6 +1217,23 @@ export default function ProjectsTable() {
                             📜
                           </Button>
                         </CREGenerator>
+                        <Button
+                          size="default"
+                          variant="ghost"
+                          onClick={() => handleToggleCRE(project)}
+                          disabled={toggleCREMutation.isPending}
+                          className={`min-w-[44px] min-h-[44px] p-3 rounded-lg transition-colors ${
+                            project.creArchiviato
+                              ? 'text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900'
+                              : 'text-gray-400 hover:bg-gray-50 dark:text-gray-500 dark:hover:bg-gray-800'
+                          }`}
+                          title={project.creArchiviato
+                            ? `CRE archiviato il ${project.creDataArchiviazione ? new Date(project.creDataArchiviazione).toLocaleDateString('it-IT') : ''} - clicca per rimuovere`
+                            : 'Segna CRE come archiviato'}
+                          data-testid={`cre-archivio-${project.id}`}
+                        >
+                          {project.creArchiviato ? '✓' : '○'}
+                        </Button>
                         <Button
                           size="default"
                           variant="ghost"

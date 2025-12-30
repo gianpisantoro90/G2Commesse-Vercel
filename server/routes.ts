@@ -3572,6 +3572,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Toggle CRE archival status
+  app.patch("/api/projects/:projectId/cre/archiviato", async (req, res) => {
+    try {
+      const project = await storage.getProject(req.params.projectId);
+      if (!project) {
+        return res.status(404).json({ message: "Progetto non trovato" });
+      }
+
+      const { archiviato } = req.body;
+      const isArchiviato = archiviato === true || archiviato === 'true';
+
+      // Update project with CRE archival status
+      const updatedProject = await storage.updateProject(req.params.projectId, {
+        creArchiviato: isArchiviato,
+        creDataArchiviazione: isArchiviato ? new Date() : null,
+      });
+
+      if (!updatedProject) {
+        return res.status(500).json({ message: "Errore nell'aggiornamento" });
+      }
+
+      res.json({
+        success: true,
+        creArchiviato: updatedProject.creArchiviato,
+        creDataArchiviazione: updatedProject.creDataArchiviazione,
+      });
+    } catch (error) {
+      console.error('Error updating CRE archival status:', error);
+      res.status(500).json({ message: "Errore nell'aggiornamento stato CRE" });
+    }
+  });
+
   // ============================================
   // PRESTAZIONI PROFESSIONALI API
   // ============================================

@@ -183,6 +183,9 @@ export class MemStorage implements IStorage {
       dataPagamento: insertProject.dataPagamento || null,
       importoPagato: insertProject.importoPagato || null,
       noteFatturazione: insertProject.noteFatturazione || null,
+      // CRE archival fields
+      creArchiviato: insertProject.creArchiviato || false,
+      creDataArchiviazione: insertProject.creDataArchiviazione || null,
     };
     this.projects.set(id, project);
     
@@ -981,6 +984,21 @@ export class DatabaseStorage implements IStorage {
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_inizio_commessa TIMESTAMP`);
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_fine_commessa TIMESTAMP`);
         console.log('✅ CRE fields added to projects table');
+      }
+
+      // Migration: Add CRE archival tracking fields
+      const creArchiviatoExists = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_name = 'projects' AND column_name = 'cre_archiviato'
+        );
+      `);
+
+      if (!creArchiviatoExists.rows[0].exists) {
+        console.log('🔄 Adding CRE archival fields to projects table...');
+        await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cre_archiviato BOOLEAN DEFAULT FALSE`);
+        await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cre_data_archiviazione TIMESTAMP`);
+        console.log('✅ CRE archival fields added to projects table');
       }
 
       // Migration: Ensure project_prestazioni table exists
