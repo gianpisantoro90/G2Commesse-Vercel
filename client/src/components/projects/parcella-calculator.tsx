@@ -49,7 +49,7 @@ export default function ParcellaCalculator() {
 
   // Form state
   const [importoOpere, setImportoOpere] = useState<string>('');
-  const [classeDM2016, setClasseDM143] = useState<string>('');
+  const [classeDM2016, setClasseDM2016] = useState<string>('');
   const [prestazioni, setPrestazioni] = useState<string[]>([]);
   const [livelloProgettazione, setLivelloProgettazione] = useState<string[]>([]);
   const [complessita, setComplessita] = useState<'bassa' | 'media' | 'alta'>('media');
@@ -136,7 +136,7 @@ export default function ParcellaCalculator() {
   const handleReset = () => {
     setCurrentStep('input');
     setImportoOpere('');
-    setClasseDM143('');
+    setClasseDM2016('');
     setPrestazioni([]);
     setLivelloProgettazione([]);
     setComplessita('media');
@@ -149,7 +149,7 @@ export default function ParcellaCalculator() {
     if (importo > 0) {
       const suggestions = suggestClasseDM2016(importo);
       if (suggestions.length > 0) {
-        setClasseDM143(suggestions[0]);
+        setClasseDM2016(suggestions[0]);
         toast({
           title: "Classe suggerita",
           description: `${suggestions[0]} - ${CATEGORIE_DM2016[suggestions[0] as keyof typeof CATEGORIE_DM2016]?.descrizione}`,
@@ -281,7 +281,7 @@ PROSPETTO FATTURA:
                     Suggerisci
                   </Button>
                 </div>
-                <Select value={classeDM2016} onValueChange={setClasseDM143}>
+                <Select value={classeDM2016} onValueChange={setClasseDM2016}>
                   <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                     <SelectValue placeholder="Seleziona classe..." />
                   </SelectTrigger>

@@ -60,7 +60,7 @@ export default function KpiDashboard() {
     progettiSospesi: filteredProjects.filter(p => p.status === "sospesa").length,
     progettiConclussi: filteredProjects.filter(p => p.status === "conclusa").length,
 
-    // Economici (usa classificazioniDM143 con fallback a campi deprecati)
+    // Economici (usa classificazioniDM2016 con fallback a campi deprecati)
     valoreCommesse: filteredProjects.reduce((sum, p) => {
       const metadata = p.metadata as ProjectPrestazioni;
       return sum + getImportoOpere(metadata);

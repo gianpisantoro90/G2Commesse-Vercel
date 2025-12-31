@@ -125,8 +125,8 @@ export function formatPercentuale(percentage?: number | null): string {
   return `${percentage.toFixed(2)}%`;
 }
 
-// Funzione per validare classe DM 143/2013
-export function validateClasseDM143(classe?: string): boolean {
+// Funzione per validare classe DM 17/06/2016
+export function validateClasseDM2016(classe?: string): boolean {
   if (!classe) return true; // Opzionale
 
   // Esempi di classi valide: E.22, IA.03, S.05 (formato ufficiale TAVOLA Z-1)
@@ -248,18 +248,18 @@ export function validatePrestazioniData(data: ProjectPrestazioni): {
     errors.push('La percentuale parcella deve essere tra 0 e 100');
   }
 
-  // Validare classe DM 143 (retrocompatibilità)
-  if (data.classeDM143 && !validateClasseDM143(data.classeDM143)) {
-    errors.push('Formato classe DM 143/2013 non valido (es: E.22, IA.03, S.05)');
+  // Validare classe DM 2016 (retrocompatibilità)
+  if (data.classeDM2016 && !validateClasseDM2016(data.classeDM2016)) {
+    errors.push('Formato classe DM 17/06/2016 non valido (es: E.22, IA.03, S.05)');
   }
 
-  // Validare classificazioni DM 143/2013 (nuova struttura)
-  if (data.classificazioniDM143 && data.classificazioniDM143.length > 0) {
-    data.classificazioniDM143.forEach((classificazione, index) => {
+  // Validare classificazioni DM 17/06/2016 (nuova struttura)
+  if (data.classificazioniDM2016 && data.classificazioniDM2016.length > 0) {
+    data.classificazioniDM2016.forEach((classificazione, index) => {
       // Validare codice
       if (!classificazione.codice || classificazione.codice.trim() === '') {
         errors.push(`Classificazione ${index + 1}: codice categoria mancante`);
-      } else if (!validateClasseDM143(classificazione.codice)) {
+      } else if (!validateClasseDM2016(classificazione.codice)) {
         errors.push(`Classificazione ${index + 1}: formato codice non valido (${classificazione.codice})`);
       }
 
