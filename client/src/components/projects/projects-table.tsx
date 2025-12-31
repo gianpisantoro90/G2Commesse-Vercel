@@ -783,10 +783,10 @@ export default function ProjectsTable() {
                       </th>
                       <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-40">
                         Livelli Progettazione
-                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Livelli di progettazione DM 143/2013">ⓘ</span>
+                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Livelli di progettazione DM 17/06/2016">ⓘ</span>
                       </th>
                       <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-32">
-                        Classe DM 143/2013
+                        Classe DM 17/06/2016
                         <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
                       </th>
                     </>
