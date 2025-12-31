@@ -475,7 +475,7 @@ export default function ProjectsTable() {
             onClick={() => setShowPrestazioni(!showPrestazioni)}
             className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
           >
-            📋 <span className="hidden sm:inline">Prestazioni/</span>DM143
+            📋 <span className="hidden sm:inline">Prestazioni/</span>DM2016
           </Button>
           {isAdmin && (
             <Button
@@ -928,11 +928,11 @@ export default function ProjectsTable() {
                             })()}
                           </div>
                         </td>
-                        {/* Colonna Classe DM 143/2013 */}
+                        {/* Colonna Classe DM 17/06/2016 */}
                         <td className="py-4 px-4" data-testid={`project-classe-dm-${project.id}`}>
                           {(() => {
                             const metadata = project.metadata as ProjectMetadata;
-                            const classeDM = renderClasseDMColumn(metadata?.classeDM143, getImportoOpere(metadata));
+                            const classeDM = renderClasseDMColumn(metadata?.classeDM2016, getImportoOpere(metadata));
                             return (
                               <div>
                                 <span className={`px-2 py-1 rounded text-xs font-mono font-bold ${
