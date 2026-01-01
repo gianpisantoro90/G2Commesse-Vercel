@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectSAL, type InsertProjectSAL, type ProjectChangelog, type InsertProjectChangelog, type ProjectBudget, type InsertProjectBudget, type ProjectResource, type InsertProjectResource, type SavedFilter, type InsertSavedFilter } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectSAL, projectChangelog, projectBudget, projectResources, savedFilters } from "@shared/schema";
 import { eq, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -85,6 +85,7 @@ export interface IStorage {
   deleteTask(id: string): Promise<boolean>;
 
   // Project Invoices
+  getAllInvoices(): Promise<ProjectInvoice[]>;
   getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]>;
   getInvoice(id: string): Promise<ProjectInvoice | undefined>;
   createInvoice(invoice: InsertProjectInvoice): Promise<ProjectInvoice>;
@@ -105,29 +106,43 @@ export interface IStorage {
   fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }>;
 
   // Bulk operations
-  exportAllData(): Promise<{ 
-    projects: Project[], 
-    clients: Client[], 
-    fileRoutings: FileRouting[], 
-    systemConfig: SystemConfig[], 
-    oneDriveMappings: OneDriveMapping[], 
+  exportAllData(): Promise<{
+    projects: Project[],
+    clients: Client[],
+    fileRoutings: FileRouting[],
+    systemConfig: SystemConfig[],
+    oneDriveMappings: OneDriveMapping[],
     filesIndex: FilesIndex[],
     users: User[],
     tasks: Task[],
     communications: Communication[],
-    deadlines: Deadline[]
+    deadlines: Deadline[],
+    invoices: ProjectInvoice[],
+    prestazioni: ProjectPrestazione[],
+    sal: ProjectSAL[],
+    changelog: ProjectChangelog[],
+    budget: ProjectBudget[],
+    resources: ProjectResource[],
+    filters: SavedFilter[]
   }>;
-  importAllData(data: { 
-    projects?: Project[], 
-    clients?: Client[], 
-    fileRoutings?: FileRouting[], 
-    systemConfig?: SystemConfig[], 
-    oneDriveMappings?: OneDriveMapping[], 
+  importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
     filesIndex?: FilesIndex[],
     users?: User[],
     tasks?: Task[],
     communications?: Communication[],
-    deadlines?: Deadline[]
+    deadlines?: Deadline[],
+    invoices?: ProjectInvoice[],
+    prestazioni?: ProjectPrestazione[],
+    sal?: ProjectSAL[],
+    changelog?: ProjectChangelog[],
+    budget?: ProjectBudget[],
+    resources?: ProjectResource[],
+    filters?: SavedFilter[]
   }, mode?: 'merge' | 'overwrite'): Promise<void>;
   clearAllData(): Promise<void>;
 
@@ -149,6 +164,11 @@ export class MemStorage implements IStorage {
   private tasks: Map<string, Task> = new Map();
   private invoices: Map<string, ProjectInvoice> = new Map();
   private prestazioni: Map<string, ProjectPrestazione> = new Map();
+  private sal: Map<string, ProjectSAL> = new Map();
+  private changelog: Map<string, ProjectChangelog> = new Map();
+  private budget: Map<string, ProjectBudget> = new Map();
+  private resources: Map<string, ProjectResource> = new Map();
+  private filters: Map<string, SavedFilter> = new Map();
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -508,20 +528,34 @@ export class MemStorage implements IStorage {
       tasks: Array.from(this.tasks.values()),
       communications: Array.from(this.communications.values()),
       deadlines: Array.from(this.deadlines.values()),
+      invoices: Array.from(this.invoices.values()),
+      prestazioni: Array.from(this.prestazioni.values()),
+      sal: Array.from(this.sal.values()),
+      changelog: Array.from(this.changelog.values()),
+      budget: Array.from(this.budget.values()),
+      resources: Array.from(this.resources.values()),
+      filters: Array.from(this.filters.values()),
     };
   }
 
-  async importAllData(data: { 
-    projects?: Project[], 
-    clients?: Client[], 
-    fileRoutings?: FileRouting[], 
-    systemConfig?: SystemConfig[], 
-    oneDriveMappings?: OneDriveMapping[], 
+  async importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
     filesIndex?: FilesIndex[],
     users?: User[],
     tasks?: Task[],
     communications?: Communication[],
-    deadlines?: Deadline[]
+    deadlines?: Deadline[],
+    invoices?: ProjectInvoice[],
+    prestazioni?: ProjectPrestazione[],
+    sal?: ProjectSAL[],
+    changelog?: ProjectChangelog[],
+    budget?: ProjectBudget[],
+    resources?: ProjectResource[],
+    filters?: SavedFilter[]
   }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (mode === 'overwrite') {
       // Clear all existing data
@@ -535,6 +569,13 @@ export class MemStorage implements IStorage {
       this.tasks.clear();
       this.communications.clear();
       this.deadlines.clear();
+      this.invoices.clear();
+      this.prestazioni.clear();
+      this.sal.clear();
+      this.changelog.clear();
+      this.budget.clear();
+      this.resources.clear();
+      this.filters.clear();
     }
     // For merge mode, we don't clear - we just add/update
 
@@ -549,6 +590,13 @@ export class MemStorage implements IStorage {
     data.tasks?.forEach(t => this.tasks.set(t.id, t));
     data.communications?.forEach(c => this.communications.set(c.id, c));
     data.deadlines?.forEach(d => this.deadlines.set(d.id, d));
+    data.invoices?.forEach(inv => this.invoices.set(inv.id, inv));
+    data.prestazioni?.forEach(prest => this.prestazioni.set(prest.id, prest));
+    data.sal?.forEach(s => this.sal.set(s.id, s));
+    data.changelog?.forEach(cl => this.changelog.set(cl.id, cl));
+    data.budget?.forEach(b => this.budget.set(b.id, b));
+    data.resources?.forEach(r => this.resources.set(r.id, r));
+    data.filters?.forEach(f => this.filters.set(f.id, f));
   }
 
   // Communications methods
@@ -766,6 +814,10 @@ export class MemStorage implements IStorage {
   }
 
   // Invoice methods
+  async getAllInvoices(): Promise<ProjectInvoice[]> {
+    return Array.from(this.invoices.values());
+  }
+
   async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
     return Array.from(this.invoices.values()).filter(i => i.projectId === projectId);
   }
@@ -1754,6 +1806,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Invoice methods
+  async getAllInvoices(): Promise<ProjectInvoice[]> {
+    try {
+      return await db.select().from(projectInvoices);
+    } catch (error) {
+      console.error('Error getting all invoices:', error);
+      return [];
+    }
+  }
+
   async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
     try {
       return await db.select().from(projectInvoices).where(eq(projectInvoices.projectId, projectId));
@@ -2139,7 +2200,7 @@ export class DatabaseStorage implements IStorage {
 
   // Bulk operations
   async exportAllData() {
-    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData, usersData, tasksData, communicationsData, deadlinesData] = await Promise.all([
+    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData, usersData, tasksData, communicationsData, deadlinesData, invoicesData, prestazioniData, salData, changelogData, budgetData, resourcesData, filtersData] = await Promise.all([
       this.getAllProjects(),
       this.getAllClients(),
       db.select().from(fileRoutings),
@@ -2150,6 +2211,13 @@ export class DatabaseStorage implements IStorage {
       this.getAllTasks(),
       this.getAllCommunications(),
       this.getAllDeadlines(),
+      this.getAllInvoices(),
+      this.getAllPrestazioni(),
+      db.select().from(projectSAL),
+      db.select().from(projectChangelog),
+      db.select().from(projectBudget),
+      db.select().from(projectResources),
+      db.select().from(savedFilters),
     ]);
 
     return {
@@ -2163,6 +2231,13 @@ export class DatabaseStorage implements IStorage {
       tasks: tasksData,
       communications: communicationsData,
       deadlines: deadlinesData,
+      invoices: invoicesData,
+      prestazioni: prestazioniData,
+      sal: salData,
+      changelog: changelogData,
+      budget: budgetData,
+      resources: resourcesData,
+      filters: filtersData,
     };
   }
 
@@ -2182,17 +2257,24 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async importAllData(data: { 
-    projects?: Project[], 
-    clients?: Client[], 
-    fileRoutings?: FileRouting[], 
-    systemConfig?: SystemConfig[], 
-    oneDriveMappings?: OneDriveMapping[], 
+  async importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
     filesIndex?: FilesIndex[],
     users?: User[],
     tasks?: Task[],
     communications?: Communication[],
-    deadlines?: Deadline[]
+    deadlines?: Deadline[],
+    invoices?: ProjectInvoice[],
+    prestazioni?: ProjectPrestazione[],
+    sal?: ProjectSAL[],
+    changelog?: ProjectChangelog[],
+    budget?: ProjectBudget[],
+    resources?: ProjectResource[],
+    filters?: SavedFilter[]
   }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (mode === 'overwrite') {
       // Clear all existing data
@@ -2332,6 +2414,97 @@ export class DatabaseStorage implements IStorage {
         }
       }
 
+      // 11. Invoices (depends on projects)
+      if (data.invoices && data.invoices.length > 0) {
+        console.log(`📥 Importing ${data.invoices.length} invoices...`);
+        const invoicesWithDates = this.convertTimestampsToDate(data.invoices, ['createdAt', 'updatedAt', 'dataEmissione', 'dataPagamento']);
+        if (mode === 'merge') {
+          for (const invoice of invoicesWithDates) {
+            await db.insert(projectInvoices).values(invoice).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectInvoices).values(invoicesWithDates);
+        }
+      }
+
+      // 12. Prestazioni (depends on projects)
+      if (data.prestazioni && data.prestazioni.length > 0) {
+        console.log(`📥 Importing ${data.prestazioni.length} prestazioni...`);
+        const prestazioniWithDates = this.convertTimestampsToDate(data.prestazioni, ['createdAt', 'updatedAt', 'dataFatturazione', 'dataPagamento']);
+        if (mode === 'merge') {
+          for (const prestazione of prestazioniWithDates) {
+            await db.insert(projectPrestazioni).values(prestazione).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectPrestazioni).values(prestazioniWithDates);
+        }
+      }
+
+      // 13. SAL (depends on projects)
+      if (data.sal && data.sal.length > 0) {
+        console.log(`📥 Importing ${data.sal.length} SAL...`);
+        const salWithDates = this.convertTimestampsToDate(data.sal, ['createdAt', 'updatedAt', 'dataApprovazione']);
+        if (mode === 'merge') {
+          for (const sal of salWithDates) {
+            await db.insert(projectSAL).values(sal).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectSAL).values(salWithDates);
+        }
+      }
+
+      // 14. Changelog (depends on projects)
+      if (data.changelog && data.changelog.length > 0) {
+        console.log(`📥 Importing ${data.changelog.length} changelog entries...`);
+        const changelogWithDates = this.convertTimestampsToDate(data.changelog, ['timestamp']);
+        if (mode === 'merge') {
+          for (const entry of changelogWithDates) {
+            await db.insert(projectChangelog).values(entry).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectChangelog).values(changelogWithDates);
+        }
+      }
+
+      // 15. Budget (depends on projects)
+      if (data.budget && data.budget.length > 0) {
+        console.log(`📥 Importing ${data.budget.length} budget entries...`);
+        const budgetWithDates = this.convertTimestampsToDate(data.budget, ['createdAt', 'updatedAt']);
+        if (mode === 'merge') {
+          for (const budget of budgetWithDates) {
+            await db.insert(projectBudget).values(budget).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectBudget).values(budgetWithDates);
+        }
+      }
+
+      // 16. Resources (depends on projects)
+      if (data.resources && data.resources.length > 0) {
+        console.log(`📥 Importing ${data.resources.length} resources...`);
+        const resourcesWithDates = this.convertTimestampsToDate(data.resources, ['createdAt', 'updatedAt']);
+        if (mode === 'merge') {
+          for (const resource of resourcesWithDates) {
+            await db.insert(projectResources).values(resource).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectResources).values(resourcesWithDates);
+        }
+      }
+
+      // 17. Saved Filters (no dependencies)
+      if (data.filters && data.filters.length > 0) {
+        console.log(`📥 Importing ${data.filters.length} saved filters...`);
+        const filtersWithDates = this.convertTimestampsToDate(data.filters, ['createdAt', 'updatedAt']);
+        if (mode === 'merge') {
+          for (const filter of filtersWithDates) {
+            await db.insert(savedFilters).values(filter).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(savedFilters).values(filtersWithDates);
+        }
+      }
+
       console.log('✅ All data imported successfully');
     } catch (error) {
       console.error('❌ Error during import:', error);
@@ -2346,6 +2519,13 @@ export class DatabaseStorage implements IStorage {
     await db.delete(filesIndex);
     await db.delete(fileRoutings);
     await db.delete(oneDriveMappings);
+    await db.delete(projectInvoices);
+    await db.delete(projectPrestazioni);
+    await db.delete(projectSAL);
+    await db.delete(projectChangelog);
+    await db.delete(projectBudget);
+    await db.delete(projectResources);
+    await db.delete(savedFilters);
     await db.delete(projects);
     await db.delete(clients);
     await db.delete(systemConfig);
