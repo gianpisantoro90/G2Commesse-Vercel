@@ -35,6 +35,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       client: project.client,
       city: project.city,
       object: project.object,
+      oggettoCompleto: (project as any).oggettoCompleto || undefined,
       year: project.year,
       template: project.template,
       status: project.status,
@@ -82,6 +83,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
         client: project.client,
         city: project.city,
         object: project.object,
+        oggettoCompleto: (project as any).oggettoCompleto || undefined,
         year: project.year,
         template: project.template,
         status: project.status,
@@ -208,15 +210,40 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
               name="object"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Oggetto</FormLabel>
+                  <FormLabel>
+                    Oggetto (Abbreviato)
+                    <span className="ml-1 text-xs text-gray-500 font-normal">Per cartelle e tabella</span>
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} data-testid="edit-project-object" />
+                    <Input {...field} data-testid="edit-project-object" placeholder="Es. Ristrutturazione edificio" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
+            <FormField
+              control={form.control}
+              name="oggettoCompleto"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Oggetto Completo
+                    <span className="ml-1 text-xs text-gray-500 font-normal">Descrizione estesa per CRE</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value || ""}
+                      data-testid="edit-project-oggetto-completo"
+                      placeholder="Es. Ristrutturazione e riqualificazione energetica edificio residenziale in Via..."
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="year"

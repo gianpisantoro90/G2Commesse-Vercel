@@ -377,7 +377,7 @@ export async function generateCREDocument(data: CREData): Promise<Buffer> {
           spacing: { after: 300 },
           children: [
             new TextRun({ text: "L'avvenuta esecuzione delle prestazioni professionali eseguite relativamente al/all' ", size: 22 }),
-            new TextRun({ text: project.object || "[Denominazione Opera/Intervento]", bold: true, size: 22 }),
+            new TextRun({ text: (project as any).oggettoCompleto || project.object || "[Denominazione Opera/Intervento]", bold: true, size: 22 }),
             new TextRun({ text: " nel contesto del/dell' ", size: 22 }),
             new TextRun({ text: `${project.numeroContratto ? `Contratto/Accordo Quadro n. ${project.numeroContratto}` : "[Contratto/Accordo Quadro n. XXXX]"} - CIG n. ${project.cig || "XXXXXXXXXX"}`, bold: true, size: 22 }),
             new TextRun({ text: " di seguito indicate:", size: 22 }),
@@ -606,7 +606,7 @@ function createInfoTable(
     new Paragraph({
       children: [
         new TextRun({
-          text: `${project.object || "[Descrizione completa dell'opera/intervento]"} - CIG n. ${project.cig || "XXXXXXXXXX"}`,
+          text: `${(project as any).oggettoCompleto || project.object || "[Descrizione completa dell'opera/intervento]"} - CIG n. ${project.cig || "XXXXXXXXXX"}`,
           size: 20
         }),
       ],
@@ -792,7 +792,7 @@ export function generateCREPreview(data: CREData): object {
       qualifica: client.ruoloReferente,
     },
     opera: {
-      oggetto: project.object,
+      oggetto: (project as any).oggettoCompleto || project.object,
       cig: project.cig,
       numeroContratto: project.numeroContratto,
       dataInizio: formatDate(project.dataInizioCommessa),

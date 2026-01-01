@@ -23,7 +23,8 @@ export const projects = pgTable("projects", {
   client: text("client").notNull(),
   clientId: text("client_id").references(() => clients.id), // Relazione con clients table
   city: text("city").notNull(),
-  object: text("object").notNull(),
+  object: text("object").notNull(), // Oggetto abbreviato (per cartelle e tabella)
+  oggettoCompleto: text("oggetto_completo"), // Oggetto completo esteso (per CRE)
   year: integer("year").notNull(),
   template: text("template").notNull(), // 'LUNGO' or 'BREVE'
   status: text("status").notNull().default("in_corso"), // 'in_corso', 'conclusa', 'sospesa'
