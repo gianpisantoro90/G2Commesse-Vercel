@@ -8,14 +8,17 @@ import { db, client, initializeDatabase, isDatabaseAvailable } from "./db-turso"
 import {
   projects, clients, fileRoutings, systemConfig, oneDriveMappings,
   filesIndex, communications, projectDeadlines, users, tasks, projectInvoices,
-  projectPrestazioni, generateId
+  projectPrestazioni, projectSAL, projectChangelog, projectBudget, projectResources, savedFilters, generateId
 } from "@shared/schema-sqlite";
 import type {
   Project, InsertProject, Client, InsertClient, FileRouting, InsertFileRouting,
   SystemConfig, InsertSystemConfig, OneDriveMapping, InsertOneDriveMapping,
   FilesIndex, InsertFilesIndex, Communication, InsertCommunication,
   Deadline, InsertProjectDeadline, User, InsertUser, Task, InsertTask,
-  ProjectInvoice, InsertProjectInvoice, ProjectPrestazione, InsertProjectPrestazione
+  ProjectInvoice, InsertProjectInvoice, ProjectPrestazione, InsertProjectPrestazione,
+  ProjectSAL, InsertProjectSAL, ProjectChangelog, InsertProjectChangelog,
+  ProjectBudget, InsertProjectBudget, ProjectResource, InsertProjectResource,
+  SavedFilter, InsertSavedFilter
 } from "@shared/schema-sqlite";
 import type { IStorage } from "./storage";
 
@@ -819,7 +822,8 @@ export class TursoStorage implements IStorage {
 
     const [projectsData, clientsData, fileRoutingsData, systemConfigData,
            oneDriveMappingsData, filesIndexData, usersData, tasksData,
-           communicationsData, deadlinesData, invoicesData, prestazioniData] = await Promise.all([
+           communicationsData, deadlinesData, invoicesData, prestazioniData,
+           salData, changelogData, budgetData, resourcesData, filtersData] = await Promise.all([
       this.getAllProjects(),
       this.getAllClients(),
       db.select().from(fileRoutings),
@@ -832,6 +836,11 @@ export class TursoStorage implements IStorage {
       this.getAllDeadlines(),
       this.getAllInvoices(),
       this.getAllPrestazioni(),
+      db.select().from(projectSAL),
+      db.select().from(projectChangelog),
+      db.select().from(projectBudget),
+      db.select().from(projectResources),
+      db.select().from(savedFilters),
     ]);
 
     return {
@@ -847,6 +856,11 @@ export class TursoStorage implements IStorage {
       deadlines: deadlinesData,
       invoices: invoicesData,
       prestazioni: prestazioniData,
+      sal: salData,
+      changelog: changelogData,
+      budget: budgetData,
+      resources: resourcesData,
+      filters: filtersData,
     };
   }
 
@@ -862,7 +876,12 @@ export class TursoStorage implements IStorage {
     communications?: Communication[],
     deadlines?: Deadline[],
     invoices?: ProjectInvoice[],
-    prestazioni?: ProjectPrestazione[]
+    prestazioni?: ProjectPrestazione[],
+    sal?: ProjectSAL[],
+    changelog?: ProjectChangelog[],
+    budget?: ProjectBudget[],
+    resources?: ProjectResource[],
+    filters?: SavedFilter[]
   }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (!db) throw new Error('Database not available');
 
@@ -943,6 +962,36 @@ export class TursoStorage implements IStorage {
       }
     }
 
+    if (data.sal?.length) {
+      for (const sal of data.sal) {
+        await db.insert(projectSAL).values(sal).onConflictDoNothing();
+      }
+    }
+
+    if (data.changelog?.length) {
+      for (const entry of data.changelog) {
+        await db.insert(projectChangelog).values(entry).onConflictDoNothing();
+      }
+    }
+
+    if (data.budget?.length) {
+      for (const budget of data.budget) {
+        await db.insert(projectBudget).values(budget).onConflictDoNothing();
+      }
+    }
+
+    if (data.resources?.length) {
+      for (const resource of data.resources) {
+        await db.insert(projectResources).values(resource).onConflictDoNothing();
+      }
+    }
+
+    if (data.filters?.length) {
+      for (const filter of data.filters) {
+        await db.insert(savedFilters).values(filter).onConflictDoNothing();
+      }
+    }
+
     console.log('✅ All data imported to Turso');
   }
 
@@ -958,6 +1007,11 @@ export class TursoStorage implements IStorage {
     await db.delete(oneDriveMappings);
     await db.delete(projectInvoices);
     await db.delete(projectPrestazioni);
+    await db.delete(projectSAL);
+    await db.delete(projectChangelog);
+    await db.delete(projectBudget);
+    await db.delete(projectResources);
+    await db.delete(savedFilters);
     await db.delete(projects);
     await db.delete(clients);
     await db.delete(systemConfig);
