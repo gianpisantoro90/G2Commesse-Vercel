@@ -3399,14 +3399,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch prestazioni to derive dates automatically
       const prestazioni = await storage.getPrestazioniByProject(req.params.projectId);
 
-      // Derive dates from prestazioni if not set manually in project
-      let derivedDataInizio = project.dataInizioCommessa;
-      let derivedDataFine = project.dataFineCommessa;
+      // ALWAYS derive dates from prestazioni (ignore manual values)
+      let derivedDataInizio = null;
+      let derivedDataFine = null;
 
       if (prestazioni.length > 0) {
         // Get MIN(dataInizio) from prestazioni with valid dates
         const prestazioniConDataInizio = prestazioni.filter(p => p.dataInizio);
-        if (!derivedDataInizio && prestazioniConDataInizio.length > 0) {
+        if (prestazioniConDataInizio.length > 0) {
           const minDate = prestazioniConDataInizio.reduce((min, p) => {
             const pDate = new Date(p.dataInizio!);
             return pDate < min ? pDate : min;
@@ -3416,7 +3416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Get MAX(dataCompletamento) from prestazioni with valid dates
         const prestazioniConDataFine = prestazioni.filter(p => p.dataCompletamento);
-        if (!derivedDataFine && prestazioniConDataFine.length > 0) {
+        if (prestazioniConDataFine.length > 0) {
           const maxDate = prestazioniConDataFine.reduce((max, p) => {
             const pDate = new Date(p.dataCompletamento!);
             return pDate > max ? pDate : max;
@@ -3489,14 +3489,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch prestazioni to derive dates automatically
       const prestazioni = await storage.getPrestazioniByProject(req.params.projectId);
 
-      // Derive dates from prestazioni if not set manually in project
-      let derivedDataInizio = project.dataInizioCommessa;
-      let derivedDataFine = project.dataFineCommessa;
+      // ALWAYS derive dates from prestazioni (ignore manual values)
+      let derivedDataInizio = null;
+      let derivedDataFine = null;
 
       if (prestazioni.length > 0) {
         // Get MIN(dataInizio) from prestazioni with valid dates
         const prestazioniConDataInizio = prestazioni.filter(p => p.dataInizio);
-        if (!derivedDataInizio && prestazioniConDataInizio.length > 0) {
+        if (prestazioniConDataInizio.length > 0) {
           const minDate = prestazioniConDataInizio.reduce((min, p) => {
             const pDate = new Date(p.dataInizio!);
             return pDate < min ? pDate : min;
@@ -3506,7 +3506,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Get MAX(dataCompletamento) from prestazioni with valid dates
         const prestazioniConDataFine = prestazioni.filter(p => p.dataCompletamento);
-        if (!derivedDataFine && prestazioniConDataFine.length > 0) {
+        if (prestazioniConDataFine.length > 0) {
           const maxDate = prestazioniConDataFine.reduce((max, p) => {
             const pDate = new Date(p.dataCompletamento!);
             return pDate > max ? pDate : max;
@@ -3670,6 +3670,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function: Update project dates from prestazioni
+  async function updateProjectDatesFromPrestazioni(projectId: string) {
+    try {
+      const prestazioni = await storage.getPrestazioniByProject(projectId);
+
+      let dataInizioCommessa = null;
+      let dataFineCommessa = null;
+
+      if (prestazioni.length > 0) {
+        // Get MIN(dataInizio)
+        const prestazioniConDataInizio = prestazioni.filter(p => p.dataInizio);
+        if (prestazioniConDataInizio.length > 0) {
+          const minDate = prestazioniConDataInizio.reduce((min, p) => {
+            const pDate = new Date(p.dataInizio!);
+            return pDate < min ? pDate : min;
+          }, new Date(prestazioniConDataInizio[0].dataInizio!));
+          dataInizioCommessa = minDate;
+        }
+
+        // Get MAX(dataCompletamento)
+        const prestazioniConDataFine = prestazioni.filter(p => p.dataCompletamento);
+        if (prestazioniConDataFine.length > 0) {
+          const maxDate = prestazioniConDataFine.reduce((max, p) => {
+            const pDate = new Date(p.dataCompletamento!);
+            return pDate > max ? pDate : max;
+          }, new Date(prestazioniConDataFine[0].dataCompletamento!));
+          dataFineCommessa = maxDate;
+        }
+      }
+
+      // Update project with derived dates
+      await storage.updateProject(projectId, {
+        dataInizioCommessa,
+        dataFineCommessa,
+      });
+    } catch (error) {
+      console.error('Error updating project dates from prestazioni:', error);
+      // Don't throw - this is a background operation
+    }
+  }
+
+  // Helper function: Sync metadata.prestazioni with actual prestazioni records
+  async function syncProjectMetadataPrestazioni(projectId: string) {
+    try {
+      const prestazioni = await storage.getPrestazioniByProject(projectId);
+      const project = await storage.getProject(projectId);
+
+      if (!project) return;
+
+      // Extract unique prestazioni types from records
+      const prestazioniTypes = new Set<string>();
+      const livelloProgettazione = new Set<string>();
+
+      for (const prest of prestazioni) {
+        prestazioniTypes.add(prest.tipo);
+
+        // If tipo is 'progettazione', also collect livelli
+        if (prest.tipo === 'progettazione' && prest.livelloProgettazione) {
+          livelloProgettazione.add(prest.livelloProgettazione);
+        }
+      }
+
+      // Update project metadata
+      const currentMetadata = (project.metadata || {}) as any;
+      const updatedMetadata = {
+        ...currentMetadata,
+        prestazioni: Array.from(prestazioniTypes),
+        livelloProgettazione: livelloProgettazione.size > 0 ? Array.from(livelloProgettazione) : currentMetadata.livelloProgettazione,
+      };
+
+      await storage.updateProject(projectId, {
+        metadata: updatedMetadata,
+      });
+    } catch (error) {
+      console.error('Error syncing project metadata prestazioni:', error);
+      // Don't throw - this is a background operation
+    }
+  }
+
   // Create a new prestazione
   app.post("/api/projects/:projectId/prestazioni", async (req, res) => {
     try {
@@ -3678,6 +3757,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectId: req.params.projectId,
       });
       const prestazione = await storage.createPrestazione(data);
+
+      // Update project dates and metadata automatically
+      await updateProjectDatesFromPrestazioni(req.params.projectId);
+      await syncProjectMetadataPrestazioni(req.params.projectId);
+
       res.status(201).json(prestazione);
     } catch (error) {
       console.error('Error creating prestazione:', error);
@@ -3709,6 +3793,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updated) {
         return res.status(404).json({ message: "Prestazione non trovata" });
       }
+
+      // Update project dates and metadata automatically
+      await updateProjectDatesFromPrestazioni(updated.projectId);
+      await syncProjectMetadataPrestazioni(updated.projectId);
+
       res.json(updated);
     } catch (error) {
       console.error('Error updating prestazione:', error);
@@ -3763,6 +3852,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updated) {
         return res.status(404).json({ message: "Prestazione non trovata" });
       }
+
+      // Update project dates and metadata automatically
+      await updateProjectDatesFromPrestazioni(updated.projectId);
+      await syncProjectMetadataPrestazioni(updated.projectId);
+
       res.json(updated);
     } catch (error) {
       console.error('Error updating prestazione stato:', error);
@@ -3798,10 +3892,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete a prestazione
   app.delete("/api/prestazioni/:id", async (req, res) => {
     try {
+      // Get prestazione first to retrieve projectId before deletion
+      const prestazione = await storage.getPrestazione(req.params.id);
+      if (!prestazione) {
+        return res.status(404).json({ message: "Prestazione non trovata" });
+      }
+
+      const projectId = prestazione.projectId;
       const deleted = await storage.deletePrestazione(req.params.id);
       if (!deleted) {
         return res.status(404).json({ message: "Prestazione non trovata" });
       }
+
+      // Update project dates and metadata automatically
+      await updateProjectDatesFromPrestazioni(projectId);
+      await syncProjectMetadataPrestazioni(projectId);
+
       res.json({ message: "Prestazione eliminata con successo" });
     } catch (error) {
       console.error('Error deleting prestazione:', error);

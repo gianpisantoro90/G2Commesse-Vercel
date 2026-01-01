@@ -169,6 +169,8 @@ export const communications = pgTable("communications", {
 export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
   createdAt: true,
+  dataInizioCommessa: true, // Derivato automaticamente dalle prestazioni
+  dataFineCommessa: true, // Derivato automaticamente dalle prestazioni
 });
 
 export const insertClientSchema = createInsertSchema(clients).omit({
