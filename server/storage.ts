@@ -85,6 +85,7 @@ export interface IStorage {
   deleteTask(id: string): Promise<boolean>;
 
   // Project Invoices
+  getAllInvoices(): Promise<ProjectInvoice[]>;
   getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]>;
   getInvoice(id: string): Promise<ProjectInvoice | undefined>;
   createInvoice(invoice: InsertProjectInvoice): Promise<ProjectInvoice>;
@@ -105,29 +106,33 @@ export interface IStorage {
   fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }>;
 
   // Bulk operations
-  exportAllData(): Promise<{ 
-    projects: Project[], 
-    clients: Client[], 
-    fileRoutings: FileRouting[], 
-    systemConfig: SystemConfig[], 
-    oneDriveMappings: OneDriveMapping[], 
+  exportAllData(): Promise<{
+    projects: Project[],
+    clients: Client[],
+    fileRoutings: FileRouting[],
+    systemConfig: SystemConfig[],
+    oneDriveMappings: OneDriveMapping[],
     filesIndex: FilesIndex[],
     users: User[],
     tasks: Task[],
     communications: Communication[],
-    deadlines: Deadline[]
+    deadlines: Deadline[],
+    invoices: ProjectInvoice[],
+    prestazioni: ProjectPrestazione[]
   }>;
-  importAllData(data: { 
-    projects?: Project[], 
-    clients?: Client[], 
-    fileRoutings?: FileRouting[], 
-    systemConfig?: SystemConfig[], 
-    oneDriveMappings?: OneDriveMapping[], 
+  importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
     filesIndex?: FilesIndex[],
     users?: User[],
     tasks?: Task[],
     communications?: Communication[],
-    deadlines?: Deadline[]
+    deadlines?: Deadline[],
+    invoices?: ProjectInvoice[],
+    prestazioni?: ProjectPrestazione[]
   }, mode?: 'merge' | 'overwrite'): Promise<void>;
   clearAllData(): Promise<void>;
 
@@ -508,20 +513,24 @@ export class MemStorage implements IStorage {
       tasks: Array.from(this.tasks.values()),
       communications: Array.from(this.communications.values()),
       deadlines: Array.from(this.deadlines.values()),
+      invoices: Array.from(this.invoices.values()),
+      prestazioni: Array.from(this.prestazioni.values()),
     };
   }
 
-  async importAllData(data: { 
-    projects?: Project[], 
-    clients?: Client[], 
-    fileRoutings?: FileRouting[], 
-    systemConfig?: SystemConfig[], 
-    oneDriveMappings?: OneDriveMapping[], 
+  async importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
     filesIndex?: FilesIndex[],
     users?: User[],
     tasks?: Task[],
     communications?: Communication[],
-    deadlines?: Deadline[]
+    deadlines?: Deadline[],
+    invoices?: ProjectInvoice[],
+    prestazioni?: ProjectPrestazione[]
   }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (mode === 'overwrite') {
       // Clear all existing data
@@ -535,6 +544,8 @@ export class MemStorage implements IStorage {
       this.tasks.clear();
       this.communications.clear();
       this.deadlines.clear();
+      this.invoices.clear();
+      this.prestazioni.clear();
     }
     // For merge mode, we don't clear - we just add/update
 
@@ -549,6 +560,8 @@ export class MemStorage implements IStorage {
     data.tasks?.forEach(t => this.tasks.set(t.id, t));
     data.communications?.forEach(c => this.communications.set(c.id, c));
     data.deadlines?.forEach(d => this.deadlines.set(d.id, d));
+    data.invoices?.forEach(inv => this.invoices.set(inv.id, inv));
+    data.prestazioni?.forEach(prest => this.prestazioni.set(prest.id, prest));
   }
 
   // Communications methods
@@ -766,6 +779,10 @@ export class MemStorage implements IStorage {
   }
 
   // Invoice methods
+  async getAllInvoices(): Promise<ProjectInvoice[]> {
+    return Array.from(this.invoices.values());
+  }
+
   async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
     return Array.from(this.invoices.values()).filter(i => i.projectId === projectId);
   }
@@ -1754,6 +1771,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Invoice methods
+  async getAllInvoices(): Promise<ProjectInvoice[]> {
+    try {
+      return await db.select().from(projectInvoices);
+    } catch (error) {
+      console.error('Error getting all invoices:', error);
+      return [];
+    }
+  }
+
   async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
     try {
       return await db.select().from(projectInvoices).where(eq(projectInvoices.projectId, projectId));
@@ -2139,7 +2165,7 @@ export class DatabaseStorage implements IStorage {
 
   // Bulk operations
   async exportAllData() {
-    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData, usersData, tasksData, communicationsData, deadlinesData] = await Promise.all([
+    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData, usersData, tasksData, communicationsData, deadlinesData, invoicesData, prestazioniData] = await Promise.all([
       this.getAllProjects(),
       this.getAllClients(),
       db.select().from(fileRoutings),
@@ -2150,6 +2176,8 @@ export class DatabaseStorage implements IStorage {
       this.getAllTasks(),
       this.getAllCommunications(),
       this.getAllDeadlines(),
+      this.getAllInvoices(),
+      this.getAllPrestazioni(),
     ]);
 
     return {
@@ -2163,6 +2191,8 @@ export class DatabaseStorage implements IStorage {
       tasks: tasksData,
       communications: communicationsData,
       deadlines: deadlinesData,
+      invoices: invoicesData,
+      prestazioni: prestazioniData,
     };
   }
 
@@ -2182,17 +2212,19 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async importAllData(data: { 
-    projects?: Project[], 
-    clients?: Client[], 
-    fileRoutings?: FileRouting[], 
-    systemConfig?: SystemConfig[], 
-    oneDriveMappings?: OneDriveMapping[], 
+  async importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
     filesIndex?: FilesIndex[],
     users?: User[],
     tasks?: Task[],
     communications?: Communication[],
-    deadlines?: Deadline[]
+    deadlines?: Deadline[],
+    invoices?: ProjectInvoice[],
+    prestazioni?: ProjectPrestazione[]
   }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (mode === 'overwrite') {
       // Clear all existing data
@@ -2332,6 +2364,32 @@ export class DatabaseStorage implements IStorage {
         }
       }
 
+      // 11. Invoices (depends on projects)
+      if (data.invoices && data.invoices.length > 0) {
+        console.log(`📥 Importing ${data.invoices.length} invoices...`);
+        const invoicesWithDates = this.convertTimestampsToDate(data.invoices, ['createdAt', 'updatedAt', 'dataEmissione', 'dataPagamento']);
+        if (mode === 'merge') {
+          for (const invoice of invoicesWithDates) {
+            await db.insert(projectInvoices).values(invoice).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectInvoices).values(invoicesWithDates);
+        }
+      }
+
+      // 12. Prestazioni (depends on projects)
+      if (data.prestazioni && data.prestazioni.length > 0) {
+        console.log(`📥 Importing ${data.prestazioni.length} prestazioni...`);
+        const prestazioniWithDates = this.convertTimestampsToDate(data.prestazioni, ['createdAt', 'updatedAt', 'dataFatturazione', 'dataPagamento']);
+        if (mode === 'merge') {
+          for (const prestazione of prestazioniWithDates) {
+            await db.insert(projectPrestazioni).values(prestazione).onConflictDoNothing();
+          }
+        } else {
+          await db.insert(projectPrestazioni).values(prestazioniWithDates);
+        }
+      }
+
       console.log('✅ All data imported successfully');
     } catch (error) {
       console.error('❌ Error during import:', error);
@@ -2346,6 +2404,8 @@ export class DatabaseStorage implements IStorage {
     await db.delete(filesIndex);
     await db.delete(fileRoutings);
     await db.delete(oneDriveMappings);
+    await db.delete(projectInvoices);
+    await db.delete(projectPrestazioni);
     await db.delete(projects);
     await db.delete(clients);
     await db.delete(systemConfig);

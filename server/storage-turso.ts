@@ -8,14 +8,14 @@ import { db, client, initializeDatabase, isDatabaseAvailable } from "./db-turso"
 import {
   projects, clients, fileRoutings, systemConfig, oneDriveMappings,
   filesIndex, communications, projectDeadlines, users, tasks, projectInvoices,
-  generateId
+  projectPrestazioni, generateId
 } from "@shared/schema-sqlite";
 import type {
   Project, InsertProject, Client, InsertClient, FileRouting, InsertFileRouting,
   SystemConfig, InsertSystemConfig, OneDriveMapping, InsertOneDriveMapping,
   FilesIndex, InsertFilesIndex, Communication, InsertCommunication,
   Deadline, InsertProjectDeadline, User, InsertUser, Task, InsertTask,
-  ProjectInvoice, InsertProjectInvoice
+  ProjectInvoice, InsertProjectInvoice, ProjectPrestazione, InsertProjectPrestazione
 } from "@shared/schema-sqlite";
 import type { IStorage } from "./storage";
 
@@ -685,6 +685,11 @@ export class TursoStorage implements IStorage {
   // INVOICES
   // ============================================
 
+  async getAllInvoices(): Promise<ProjectInvoice[]> {
+    if (!db) throw new Error('Database not available');
+    return await db.select().from(projectInvoices);
+  }
+
   async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
     if (!db) throw new Error('Database not available');
     return await db.select().from(projectInvoices).where(eq(projectInvoices.projectId, projectId));
@@ -814,7 +819,7 @@ export class TursoStorage implements IStorage {
 
     const [projectsData, clientsData, fileRoutingsData, systemConfigData,
            oneDriveMappingsData, filesIndexData, usersData, tasksData,
-           communicationsData, deadlinesData] = await Promise.all([
+           communicationsData, deadlinesData, invoicesData, prestazioniData] = await Promise.all([
       this.getAllProjects(),
       this.getAllClients(),
       db.select().from(fileRoutings),
@@ -825,6 +830,8 @@ export class TursoStorage implements IStorage {
       this.getAllTasks(),
       this.getAllCommunications(),
       this.getAllDeadlines(),
+      this.getAllInvoices(),
+      this.getAllPrestazioni(),
     ]);
 
     return {
@@ -838,6 +845,8 @@ export class TursoStorage implements IStorage {
       tasks: tasksData,
       communications: communicationsData,
       deadlines: deadlinesData,
+      invoices: invoicesData,
+      prestazioni: prestazioniData,
     };
   }
 
@@ -851,7 +860,9 @@ export class TursoStorage implements IStorage {
     users?: User[],
     tasks?: Task[],
     communications?: Communication[],
-    deadlines?: Deadline[]
+    deadlines?: Deadline[],
+    invoices?: ProjectInvoice[],
+    prestazioni?: ProjectPrestazione[]
   }, mode: 'merge' | 'overwrite' = 'overwrite') {
     if (!db) throw new Error('Database not available');
 
@@ -920,6 +931,18 @@ export class TursoStorage implements IStorage {
       }
     }
 
+    if (data.invoices?.length) {
+      for (const invoice of data.invoices) {
+        await db.insert(projectInvoices).values(invoice).onConflictDoNothing();
+      }
+    }
+
+    if (data.prestazioni?.length) {
+      for (const prestazione of data.prestazioni) {
+        await db.insert(projectPrestazioni).values(prestazione).onConflictDoNothing();
+      }
+    }
+
     console.log('✅ All data imported to Turso');
   }
 
@@ -934,6 +957,7 @@ export class TursoStorage implements IStorage {
     await db.delete(fileRoutings);
     await db.delete(oneDriveMappings);
     await db.delete(projectInvoices);
+    await db.delete(projectPrestazioni);
     await db.delete(projects);
     await db.delete(clients);
     await db.delete(systemConfig);
