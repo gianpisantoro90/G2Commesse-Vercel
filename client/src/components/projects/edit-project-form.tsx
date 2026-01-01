@@ -42,8 +42,6 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       committenteFinale: project.committenteFinale || undefined,
       cig: (project as any).cig || undefined,
       numeroContratto: (project as any).numeroContratto || undefined,
-      dataInizioCommessa: (project as any).dataInizioCommessa || undefined,
-      dataFineCommessa: (project as any).dataFineCommessa || undefined,
       fsRoot: project.fsRoot || undefined,
       metadata: project.metadata || {},
     },
@@ -91,8 +89,6 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
         committenteFinale: project.committenteFinale || undefined,
         cig: (project as any).cig || undefined,
         numeroContratto: (project as any).numeroContratto || undefined,
-        dataInizioCommessa: (project as any).dataInizioCommessa || undefined,
-        dataFineCommessa: (project as any).dataFineCommessa || undefined,
         fsRoot: project.fsRoot || undefined,
         metadata: project.metadata || {},
       });
@@ -323,46 +319,6 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                           value={field.value || ""}
                           placeholder="Numero contratto/accordo"
                           data-testid="edit-project-numero-contratto"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mt-4">
-                <FormField
-                  control={form.control}
-                  name="dataInizioCommessa"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data Inizio</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
-                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-                          data-testid="edit-project-data-inizio"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="dataFineCommessa"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Data Fine</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="date"
-                          value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
-                          onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-                          data-testid="edit-project-data-fine"
                         />
                       </FormControl>
                       <FormMessage />
