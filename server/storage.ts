@@ -1224,6 +1224,35 @@ export class DatabaseStorage implements IStorage {
         console.log('✅ prestazione_id and tipo_fattura columns added');
       }
 
+      // CRITICAL Migration: Fix object column naming (oggetto_completo → object)
+      // This fixes production database compatibility issue
+      const oggettoCompletoExists = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_name = 'projects' AND column_name = 'oggetto_completo'
+        );
+      `);
+
+      if (oggettoCompletoExists.rows[0].exists) {
+        console.log('🔄 CRITICAL: Renaming oggetto_completo column to object...');
+        await client.query(`ALTER TABLE projects RENAME COLUMN oggetto_completo TO object`);
+        console.log('✅ Column renamed: oggetto_completo → object');
+      } else {
+        // Ensure object column exists
+        const objectExists = await client.query(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.columns
+            WHERE table_name = 'projects' AND column_name = 'object'
+          );
+        `);
+
+        if (!objectExists.rows[0].exists) {
+          console.log('🔄 Adding missing object column to projects table...');
+          await client.query(`ALTER TABLE projects ADD COLUMN object TEXT NOT NULL DEFAULT ''`);
+          console.log('✅ Object column added to projects table');
+        }
+      }
+
       client.release();
       console.log('✅ All migrations completed successfully');
     } catch (error) {
