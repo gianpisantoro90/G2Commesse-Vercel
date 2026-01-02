@@ -1248,7 +1248,8 @@ export class DatabaseStorage implements IStorage {
 
         if (!objectExists.rows[0].exists) {
           console.log('🔄 Adding missing object column to projects table...');
-          await client.query(`ALTER TABLE projects ADD COLUMN object TEXT NOT NULL DEFAULT ''`);
+          // Check if it's the specific case where we already added it via SQL but the migration didn't track it
+          await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS object TEXT NOT NULL DEFAULT ''`);
           console.log('✅ Object column added to projects table');
         }
       }
