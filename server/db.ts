@@ -217,9 +217,5 @@ async function runMigrations() {
   }
 }
 
-// Run migrations on startup
-if (pool) {
-  runMigrations();
-}
-
-export { pool, db };
+// Export migrations function so it can be awaited during initialization
+export { pool, db, runMigrations };
