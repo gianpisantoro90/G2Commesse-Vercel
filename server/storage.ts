@@ -1224,8 +1224,21 @@ export class DatabaseStorage implements IStorage {
         console.log('✅ prestazione_id and tipo_fattura columns added');
       }
 
-      // CRITICAL Migration: Fix object column naming (oggetto_completo → object)
-      // This fixes production database compatibility issue
+      // Ensure both object and oggetto_completo columns exist (schema expects both)
+      // object = abbreviated object name, oggetto_completo = full description for CRE
+      const objectExists = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns
+          WHERE table_name = 'projects' AND column_name = 'object'
+        );
+      `);
+
+      if (!objectExists.rows[0].exists) {
+        console.log('🔄 Adding missing object column to projects table...');
+        await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS object TEXT NOT NULL DEFAULT ''`);
+        console.log('✅ Object column added to projects table');
+      }
+
       const oggettoCompletoExists = await client.query(`
         SELECT EXISTS (
           SELECT FROM information_schema.columns
@@ -1233,25 +1246,10 @@ export class DatabaseStorage implements IStorage {
         );
       `);
 
-      if (oggettoCompletoExists.rows[0].exists) {
-        console.log('🔄 CRITICAL: Renaming oggetto_completo column to object...');
-        await client.query(`ALTER TABLE projects RENAME COLUMN oggetto_completo TO object`);
-        console.log('✅ Column renamed: oggetto_completo → object');
-      } else {
-        // Ensure object column exists
-        const objectExists = await client.query(`
-          SELECT EXISTS (
-            SELECT FROM information_schema.columns
-            WHERE table_name = 'projects' AND column_name = 'object'
-          );
-        `);
-
-        if (!objectExists.rows[0].exists) {
-          console.log('🔄 Adding missing object column to projects table...');
-          // Check if it's the specific case where we already added it via SQL but the migration didn't track it
-          await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS object TEXT NOT NULL DEFAULT ''`);
-          console.log('✅ Object column added to projects table');
-        }
+      if (!oggettoCompletoExists.rows[0].exists) {
+        console.log('🔄 Adding missing oggetto_completo column to projects table...');
+        await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS oggetto_completo TEXT`);
+        console.log('✅ oggetto_completo column added to projects table');
       }
 
       client.release();
