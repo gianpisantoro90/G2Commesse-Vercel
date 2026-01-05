@@ -2314,15 +2314,29 @@ export class DatabaseStorage implements IStorage {
 
     try {
       // 1. Users first (no dependencies)
+      // Note: Users are NOT deleted in clearAllData() to preserve authentication
+      // So we always use onConflict handling for users
       if (data.users && data.users.length > 0) {
         console.log(`📥 Importing ${data.users.length} users...`);
         const usersWithDates = this.convertTimestampsToDate(data.users, ['createdAt', 'updatedAt']);
-        if (mode === 'merge') {
-          for (const user of usersWithDates) {
+        for (const user of usersWithDates) {
+          if (mode === 'merge') {
             await db.insert(users).values(user).onConflictDoNothing();
+          } else {
+            // In overwrite mode, update existing users with backup data
+            await db.insert(users).values(user).onConflictDoUpdate({
+              target: users.id,
+              set: {
+                username: user.username,
+                email: user.email,
+                fullName: user.fullName,
+                passwordHash: user.passwordHash,
+                role: user.role,
+                active: user.active,
+                updatedAt: user.updatedAt
+              }
+            });
           }
-        } else {
-          await db.insert(users).values(usersWithDates);
         }
       }
 
