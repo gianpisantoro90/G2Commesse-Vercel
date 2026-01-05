@@ -1,0 +1,136 @@
+01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:92:21
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:92:21
+2026-01-05 17:10:55.11
+8a377dd4
+User
+❌ Errore durante importazione dati: TypeError: value.toISOString is not a function
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2026-01-05 17:10:55.11
+8a377dd4
+User
+❌ Error during import: TypeError: value.toISOString is not a function
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+[2026-01-05T16:10:55.115Z] ℹ️ INFO: ❌ POST /api/import - 500 {"method":"POST","path":"/api/import","statusCode":500,"duration":"2676ms"}
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at PgTimestamp.mapToDriverValue (file:///home/runner/workspace/node_modules/drizzle-orm/pg-core/columns/timestamp.js:34:18)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at SQL.buildQueryFromSourceParams (file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:73:32)
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:92:21
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:131:73
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at file:///home/runner/workspace/node_modules/drizzle-orm/sql/sql.js:95:21
+2026-01-05 17:10:55.11
+8a377dd4
+User
+Stack trace: TypeError: value.toISOString is not a function
+2026-01-05 17:10:55.11
+8a377dd4
+User
+at Array.map ()

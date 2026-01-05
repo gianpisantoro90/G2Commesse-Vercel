@@ -2329,12 +2329,13 @@ export class DatabaseStorage implements IStorage {
       // 2. Clients second (no dependencies)
       if (data.clients && data.clients.length > 0) {
         console.log(`📥 Importing ${data.clients.length} clients...`);
+        const clientsWithDates = this.convertTimestampsToDate(data.clients, ['createdAt']);
         if (mode === 'merge') {
-          for (const client of data.clients) {
+          for (const client of clientsWithDates) {
             await db.insert(clients).values(client).onConflictDoNothing();
           }
         } else {
-          await db.insert(clients).values(data.clients);
+          await db.insert(clients).values(clientsWithDates);
         }
       }
 
@@ -2354,7 +2355,7 @@ export class DatabaseStorage implements IStorage {
       // 4. Projects (depends on clients)
       if (data.projects && data.projects.length > 0) {
         console.log(`📥 Importing ${data.projects.length} projects...`);
-        const projectsWithDates = this.convertTimestampsToDate(data.projects, ['createdAt', 'dataFattura', 'dataPagamento']);
+        const projectsWithDates = this.convertTimestampsToDate(data.projects, ['createdAt', 'dataFattura', 'dataPagamento', 'dataInizioCommessa', 'dataFineCommessa', 'creDataArchiviazione']);
         if (mode === 'merge') {
           for (const project of projectsWithDates) {
             await db.insert(projects).values(project).onConflictDoNothing();
@@ -2419,7 +2420,7 @@ export class DatabaseStorage implements IStorage {
       // 9. Communications (depends on projects)
       if (data.communications && data.communications.length > 0) {
         console.log(`📥 Importing ${data.communications.length} communications...`);
-        const communicationsWithDates = this.convertTimestampsToDate(data.communications, ['createdAt', 'updatedAt', 'communicationDate']);
+        const communicationsWithDates = this.convertTimestampsToDate(data.communications, ['createdAt', 'updatedAt', 'communicationDate', 'importedAt']);
         if (mode === 'merge') {
           for (const communication of communicationsWithDates) {
             await db.insert(communications).values(communication).onConflictDoNothing();
@@ -2445,7 +2446,7 @@ export class DatabaseStorage implements IStorage {
       // 11. Invoices (depends on projects)
       if (data.invoices && data.invoices.length > 0) {
         console.log(`📥 Importing ${data.invoices.length} invoices...`);
-        const invoicesWithDates = this.convertTimestampsToDate(data.invoices, ['createdAt', 'updatedAt', 'dataEmissione', 'dataPagamento']);
+        const invoicesWithDates = this.convertTimestampsToDate(data.invoices, ['createdAt', 'updatedAt', 'dataEmissione', 'dataPagamento', 'scadenzaPagamento']);
         if (mode === 'merge') {
           for (const invoice of invoicesWithDates) {
             await db.insert(projectInvoices).values(invoice).onConflictDoNothing();
@@ -2458,7 +2459,7 @@ export class DatabaseStorage implements IStorage {
       // 12. Prestazioni (depends on projects)
       if (data.prestazioni && data.prestazioni.length > 0) {
         console.log(`📥 Importing ${data.prestazioni.length} prestazioni...`);
-        const prestazioniWithDates = this.convertTimestampsToDate(data.prestazioni, ['createdAt', 'updatedAt', 'dataFatturazione', 'dataPagamento']);
+        const prestazioniWithDates = this.convertTimestampsToDate(data.prestazioni, ['createdAt', 'updatedAt', 'dataInizio', 'dataCompletamento', 'dataFatturazione', 'dataPagamento']);
         if (mode === 'merge') {
           for (const prestazione of prestazioniWithDates) {
             await db.insert(projectPrestazioni).values(prestazione).onConflictDoNothing();
@@ -2471,7 +2472,7 @@ export class DatabaseStorage implements IStorage {
       // 13. SAL (depends on projects)
       if (data.sal && data.sal.length > 0) {
         console.log(`📥 Importing ${data.sal.length} SAL...`);
-        const salWithDates = this.convertTimestampsToDate(data.sal, ['createdAt', 'updatedAt', 'dataApprovazione']);
+        const salWithDates = this.convertTimestampsToDate(data.sal, ['createdAt', 'updatedAt', 'dataEmissione', 'dataApprovazione']);
         if (mode === 'merge') {
           for (const sal of salWithDates) {
             await db.insert(projectSAL).values(sal).onConflictDoNothing();
@@ -2510,7 +2511,7 @@ export class DatabaseStorage implements IStorage {
       // 16. Resources (depends on projects)
       if (data.resources && data.resources.length > 0) {
         console.log(`📥 Importing ${data.resources.length} resources...`);
-        const resourcesWithDates = this.convertTimestampsToDate(data.resources, ['createdAt', 'updatedAt']);
+        const resourcesWithDates = this.convertTimestampsToDate(data.resources, ['createdAt', 'updatedAt', 'dataInizio', 'dataFine']);
         if (mode === 'merge') {
           for (const resource of resourcesWithDates) {
             await db.insert(projectResources).values(resource).onConflictDoNothing();
