@@ -3789,7 +3789,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a prestazione
   app.patch("/api/prestazioni/:id", async (req, res) => {
     try {
-      const updated = await storage.updatePrestazione(req.params.id, req.body);
+      // Convert date strings to Date objects for Drizzle
+      const updateData = { ...req.body };
+      const dateFields = ['dataInizio', 'dataCompletamento', 'dataFatturazione', 'dataPagamento'];
+      for (const field of dateFields) {
+        if (updateData[field] !== undefined && updateData[field] !== null) {
+          updateData[field] = new Date(updateData[field]);
+        }
+      }
+
+      const updated = await storage.updatePrestazione(req.params.id, updateData);
       if (!updated) {
         return res.status(404).json({ message: "Prestazione non trovata" });
       }
