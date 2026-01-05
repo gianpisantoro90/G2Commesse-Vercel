@@ -2407,7 +2407,7 @@ export class DatabaseStorage implements IStorage {
       // 8. Tasks (depends on projects)
       if (data.tasks && data.tasks.length > 0) {
         console.log(`📥 Importing ${data.tasks.length} tasks...`);
-        const tasksWithDates = this.convertTimestampsToDate(data.tasks, ['createdAt', 'updatedAt', 'dueDate']);
+        const tasksWithDates = this.convertTimestampsToDate(data.tasks, ['createdAt', 'updatedAt', 'dueDate', 'completedAt']);
         if (mode === 'merge') {
           for (const task of tasksWithDates) {
             await db.insert(tasks).values(task).onConflictDoNothing();
@@ -2485,7 +2485,7 @@ export class DatabaseStorage implements IStorage {
       // 14. Changelog (depends on projects)
       if (data.changelog && data.changelog.length > 0) {
         console.log(`📥 Importing ${data.changelog.length} changelog entries...`);
-        const changelogWithDates = this.convertTimestampsToDate(data.changelog, ['timestamp']);
+        const changelogWithDates = this.convertTimestampsToDate(data.changelog, ['createdAt']);
         if (mode === 'merge') {
           for (const entry of changelogWithDates) {
             await db.insert(projectChangelog).values(entry).onConflictDoNothing();
