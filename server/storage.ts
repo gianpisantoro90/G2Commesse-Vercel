@@ -518,23 +518,23 @@ export class MemStorage implements IStorage {
   // Bulk operations
   async exportAllData() {
     return {
-      projects: Array.from(this.projects.values()),
-      clients: Array.from(this.clients.values()),
-      fileRoutings: Array.from(this.fileRoutings.values()),
-      systemConfig: Array.from(this.systemConfig.values()),
-      oneDriveMappings: Array.from(this.oneDriveMappings.values()),
-      filesIndex: Array.from(this.filesIndex.values()),
-      users: Array.from(this.users.values()),
-      tasks: Array.from(this.tasks.values()),
-      communications: Array.from(this.communications.values()),
-      deadlines: Array.from(this.deadlines.values()),
-      invoices: Array.from(this.invoices.values()),
-      prestazioni: Array.from(this.prestazioni.values()),
-      sal: Array.from(this.sal.values()),
-      changelog: Array.from(this.changelog.values()),
-      budget: Array.from(this.budget.values()),
-      resources: Array.from(this.resources.values()),
-      filters: Array.from(this.filters.values()),
+      projects: await db.select().from(projects),
+      clients: await db.select().from(clients),
+      fileRoutings: await db.select().from(fileRoutings),
+      systemConfig: await db.select().from(systemConfig),
+      oneDriveMappings: await db.select().from(oneDriveMappings),
+      filesIndex: await db.select().from(filesIndex),
+      users: await db.select().from(users),
+      tasks: await db.select().from(tasks),
+      communications: await db.select().from(communications),
+      deadlines: await db.select().from(projectDeadlines),
+      invoices: await db.select().from(projectInvoices),
+      prestazioni: await db.select().from(projectPrestazioni),
+      sal: await db.select().from(projectSAL),
+      changelog: await db.select().from(projectChangelog),
+      budget: await db.select().from(projectBudget),
+      resources: await db.select().from(projectResources),
+      filters: await db.select().from(savedFilters),
     };
   }
 
@@ -2968,22 +2968,36 @@ class FallbackStorage implements IStorage {
     users: User[],
     tasks: Task[],
     communications: Communication[],
-    deadlines: Deadline[]
+    deadlines: Deadline[],
+    invoices: ProjectInvoice[],
+    prestazioni: ProjectPrestazione[],
+    sal: ProjectSAL[],
+    changelog: ProjectChangelog[],
+    budget: ProjectBudget[],
+    resources: ProjectResource[],
+    filters: SavedFilter[]
   }> {
     return this.executeWithFallback(storage => storage.exportAllData());
   }
 
-  async importAllData(data: { 
-    projects?: Project[], 
-    clients?: Client[], 
-    fileRoutings?: FileRouting[], 
-    systemConfig?: SystemConfig[], 
-    oneDriveMappings?: OneDriveMapping[], 
+  async importAllData(data: {
+    projects?: Project[],
+    clients?: Client[],
+    fileRoutings?: FileRouting[],
+    systemConfig?: SystemConfig[],
+    oneDriveMappings?: OneDriveMapping[],
     filesIndex?: FilesIndex[],
     users?: User[],
     tasks?: Task[],
     communications?: Communication[],
-    deadlines?: Deadline[]
+    deadlines?: Deadline[],
+    invoices?: ProjectInvoice[],
+    prestazioni?: ProjectPrestazione[],
+    sal?: ProjectSAL[],
+    changelog?: ProjectChangelog[],
+    budget?: ProjectBudget[],
+    resources?: ProjectResource[],
+    filters?: SavedFilter[]
   }, mode?: 'merge' | 'overwrite'): Promise<void> {
     return this.executeWithFallback(storage => storage.importAllData(data, mode));
   }
