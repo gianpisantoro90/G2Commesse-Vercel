@@ -54,6 +54,8 @@ const transformInvoiceData = (data: any) => {
     dataPagamento: dataPagamento || null,
     note: data.note || null,
     salId: data.salId || null,
+    prestazioneId: data.prestazioneId || null, // Collegamento a prestazione (1:N)
+    tipoFattura: data.tipoFattura || 'unica', // Tipo fattura (acconto, sal, saldo, unica)
     ritenuta: data.ritenuta !== undefined ? Math.round(data.ritenuta * 100) : 0,
     scadenzaPagamento: scadenzaPagamento || null,
     attachmentPath: data.attachmentPath || null,
