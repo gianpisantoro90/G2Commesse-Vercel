@@ -508,7 +508,7 @@ export default function FatturazionePage() {
                     <span className="font-medium text-amber-800 dark:text-amber-200">
                       {stats.completateNonFatturate} completate da fatturare
                     </span>
-                    <Badge variant="secondary" className="bg-amber-100">
+                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">
                       {formatCurrency(stats.importoDaFatturare)}
                     </Badge>
                   </div>
@@ -519,7 +519,7 @@ export default function FatturazionePage() {
                     <span className="font-medium text-orange-800 dark:text-orange-200">
                       {stats.fatturateNonPagate} in attesa di pagamento
                     </span>
-                    <Badge variant="secondary" className="bg-orange-100">
+                    <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
                       {formatCurrency(stats.importoDaIncassare)}
                     </Badge>
                   </div>
