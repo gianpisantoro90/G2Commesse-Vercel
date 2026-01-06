@@ -342,7 +342,7 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Nessuna classificazione DM 143/2013 specificata. Aggiungi le classificazioni nella sezione Prestazioni del progetto.
+                    Nessuna classificazione DM 17/06/2016 specificata. Aggiungi le classificazioni nella sezione Prestazioni del progetto.
                   </AlertDescription>
                 </Alert>
               )}

@@ -58,7 +58,7 @@ export interface ParcellaResult {
 }
 
 // ============================================
-// CATEGORIE E ARTICOLAZIONI DM 143/2013
+// CATEGORIE E ARTICOLAZIONI DM 17/06/2016
 // ============================================
 
 export const CATEGORIE_DM2016 = {

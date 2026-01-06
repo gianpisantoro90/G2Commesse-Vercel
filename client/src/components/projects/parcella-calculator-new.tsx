@@ -120,7 +120,7 @@ export default function ParcellaCalculator() {
     if (!risultatoParcella || !risultatoFattura) return;
 
     const testo = `
-CALCOLO PARCELLA PROFESSIONALE - DM 143/2013
+CALCOLO PARCELLA PROFESSIONALE - DM 17/06/2016
 
 ${risultatoParcella.note.join('\n')}
 
