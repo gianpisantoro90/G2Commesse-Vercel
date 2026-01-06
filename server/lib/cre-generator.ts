@@ -837,7 +837,7 @@ export function checkCRECompleteness(data: CREData): {
     missing.push("Tipologia prestazioni");
   }
   if (!metadata.classificazioniDM2016 || metadata.classificazioniDM2016.length === 0) {
-    missing.push("Classificazioni DM 143/2013");
+    missing.push("Classificazioni DM 17/06/2016");
   } else {
     // Verifica che ogni classificazione abbia importoServizio
     const missingServizio = metadata.classificazioniDM2016.some(c => !c.importoServizio && c.importoServizio !== 0);

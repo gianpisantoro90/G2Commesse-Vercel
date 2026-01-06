@@ -116,7 +116,7 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
     }));
   };
 
-  // Handlers per classificazioni DM 143/2013
+  // Handlers per classificazioni DM 17/06/2016
   const handleAddClassificazione = () => {
     setFormData(prev => ({
       ...prev,
@@ -272,12 +272,12 @@ export default function PrestazioniModal({ project, isOpen, onClose }: Prestazio
             </div>
           )}
 
-          {/* Sezione Classificazioni DM 143/2013 - Multiple */}
+          {/* Sezione Classificazioni DM 17/06/2016 - Multiple */}
           <div className="space-y-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
             <div className="flex justify-between items-start">
               <div>
                 <Label className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Classificazioni DM 143/2013
+                  Classificazioni DM 17/06/2016
                 </Label>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Aggiungi una o più categorie con i rispettivi importi opere

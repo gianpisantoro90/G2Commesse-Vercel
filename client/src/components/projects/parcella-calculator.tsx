@@ -169,10 +169,10 @@ export default function ParcellaCalculator() {
     if (!calculationResult) return;
 
     const text = `
-CALCOLO PARCELLA PROFESSIONALE DM 143/2013
+CALCOLO PARCELLA PROFESSIONALE DM 17/06/2016
 
 Importo Opere: ${formatEuro(calculationResult.importoBase)}
-Classe DM 143: ${classeDM2016 || 'Non specificata'}
+Classe DM 17/06/2016: ${classeDM2016 || 'Non specificata'}
 Complessità: ${complessita.toUpperCase()}
 
 DETTAGLIO COMPENSI:
@@ -208,10 +208,10 @@ PROSPETTO FATTURA:
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Calculator className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            Calcolatore Parcella DM 143/2013
+            Calcolatore Parcella DM 17/06/2016
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Calcola automaticamente i compensi professionali secondo le tariffe DM 143/2013
+            Calcola automaticamente i compensi professionali secondo le tariffe DM 17/06/2016
           </p>
         </div>
         {currentStep === 'result' && (
@@ -270,7 +270,7 @@ PROSPETTO FATTURA:
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="classe-dm" className="text-gray-700 dark:text-gray-300">Classe DM 143/2013</Label>
+                  <Label htmlFor="classe-dm" className="text-gray-700 dark:text-gray-300">Classe DM 17/06/2016</Label>
                   <Button
                     type="button"
                     variant="ghost"
@@ -562,7 +562,7 @@ PROSPETTO FATTURA:
           <div className="text-sm text-amber-800 dark:text-amber-200">
             <p className="font-semibold mb-1">Nota Legale</p>
             <p>
-              Le percentuali utilizzate sono indicative e basate sul DM 143/2013.
+              Le percentuali utilizzate sono indicative e basate sul DM 17/06/2016.
               Per calcoli ufficiali consultare sempre la normativa vigente e verificare
               le tariffe professionali del proprio ordine. Il calcolatore non sostituisce
               la consulenza di un commercialista.
