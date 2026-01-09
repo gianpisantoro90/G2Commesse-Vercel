@@ -216,7 +216,7 @@ export class MemStorage implements IStorage {
       ...insertProject,
       id,
       clientId: clientId,
-      status: insertProject.status || "in_corso",
+      status: insertProject.status || "in corso",
       tipoRapporto: insertProject.tipoRapporto || "diretto",
       committenteFinale: insertProject.committenteFinale || null,
       createdAt: new Date(),

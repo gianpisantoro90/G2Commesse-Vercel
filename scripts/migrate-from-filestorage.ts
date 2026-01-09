@@ -95,7 +95,7 @@ async function migrateData() {
             object: project.object || project.description || '',
             year: project.year,
             template: project.template || 'LUNGO',
-            status: project.status || 'in_corso',
+            status: project.status || 'in corso',
             tipoRapporto: project.tipoRapporto || 'diretto',
             committenteFinale: project.committenteFinale || null,
             fsRoot: project.fsRoot || null,

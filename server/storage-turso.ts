@@ -105,7 +105,7 @@ export class TursoStorage implements IStorage {
       id,
       ...insertProject,
       clientId: clientId,
-      status: insertProject.status || "in_corso",
+      status: insertProject.status || "in corso",
       tipoRapporto: insertProject.tipoRapporto || "diretto",
       metadata: insertProject.metadata || {},
       createdAt: now,
