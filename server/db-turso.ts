@@ -125,7 +125,7 @@ export async function initializeDatabase() {
       object TEXT NOT NULL,
       year INTEGER NOT NULL,
       template TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'in_corso',
+      status TEXT NOT NULL DEFAULT 'in corso',
       tipo_rapporto TEXT NOT NULL DEFAULT 'diretto',
       committente_finale TEXT,
       fatturato INTEGER DEFAULT 0,

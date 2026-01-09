@@ -27,7 +27,7 @@ export const projects = pgTable("projects", {
   oggettoCompleto: text("oggetto_completo"), // Oggetto completo esteso (per CRE)
   year: integer("year").notNull(),
   template: text("template").notNull(), // 'LUNGO' or 'BREVE'
-  status: text("status").notNull().default("in_corso"), // 'in_corso', 'conclusa', 'sospesa'
+  status: text("status").notNull().default("in corso"), // 'in corso', 'conclusa', 'sospesa'
   tipoRapporto: text("tipo_rapporto").notNull().default("diretto"), // 'diretto', 'consulenza', 'subappalto', 'ati', 'partnership'
   committenteFinale: text("committente_finale"), // Nome proprietario/ente finale (opzionale)
 
@@ -235,6 +235,7 @@ export interface ProjectPrestazioni {
 
   // Retrocompatibilità: campi singoli (deprecati in favore di classificazioniDM2016)
   classeDM2016?: string; // Es: "E.22", "IA.03", "S.05" (TAVOLA Z-1) - DEPRECATED
+  classeDM143?: string; // Es: "S04" (vecchio DM 143/2013) - LEGACY
   importoOpere?: number; // Importo lavori base calcolo parcella - DEPRECATED (ora calcolato come somma classificazioni)
 
   importoServizio?: number; // Importo servizio professionale al netto
@@ -263,6 +264,7 @@ export const prestazioniSchema = z.object({
 
   // Retrocompatibilità: campi singoli (deprecati)
   classeDM2016: z.string().optional(),
+  classeDM143: z.string().optional(), // Vecchio DM 143/2013 - LEGACY
   importoOpere: z.number().min(0).optional(),
 
   importoServizio: z.number().min(0).optional(),
