@@ -78,7 +78,6 @@ Documentazione ufficiale dei campi e valori ammessi nel file di backup JSON espo
     {"codice": "S.04", "importo": 2800000, "importoServizio": 224000}
   ],
   "classeDM2016": "S.04",
-  "classeDM143": "S04",
   "importoOpere": 2800000,
   "importoServizio": 224000,
   "percentualeParcella": 8
@@ -91,7 +90,6 @@ Documentazione ufficiale dei campi e valori ammessi nel file di backup JSON espo
 | `livelloProgettazione` | string[] | `"pfte"`, `"definitivo"`, `"esecutivo"`, `"variante"` | Attivo |
 | `classificazioniDM2016` | object[] | Vedi sotto | Attivo |
 | `classeDM2016` | string | Es: "S.04", "E.22" | DEPRECATED |
-| `classeDM143` | string | Es: "S04" | LEGACY |
 | `importoOpere` | number | Centesimi | DEPRECATED |
 | `importoServizio` | number | Centesimi | Attivo |
 | `percentualeParcella` | number | 0-100 | Attivo |
