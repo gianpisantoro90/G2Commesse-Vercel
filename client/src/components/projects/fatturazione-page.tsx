@@ -43,6 +43,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus,
@@ -142,9 +143,9 @@ export default function FatturazionePage() {
     dateLabel: '',
   });
 
-  // Form state for new prestazione
+  // Form state for new prestazione (supports multiple types)
   const [formData, setFormData] = useState({
-    tipo: '' as typeof PRESTAZIONE_TIPI[number] | '',
+    tipiSelezionati: [] as typeof PRESTAZIONE_TIPI[number][],
     livelloProgettazione: '' as typeof LIVELLI_PROGETTAZIONE[number] | '',
     descrizione: '',
     importoPrevisto: 0,
@@ -262,8 +263,7 @@ export default function FatturazionePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
       queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
-      toast({ title: "Prestazione aggiunta", description: "La prestazione è stata creata con successo" });
-      resetForm();
+      // Toast is handled in handleSubmit for batch creation
     },
     onError: () => {
       toast({ title: "Errore", description: "Impossibile creare la prestazione", variant: "destructive" });
@@ -377,7 +377,7 @@ export default function FatturazionePage() {
 
   const resetForm = () => {
     setFormData({
-      tipo: '',
+      tipiSelezionati: [],
       livelloProgettazione: '',
       descrizione: '',
       importoPrevisto: 0,
@@ -387,22 +387,39 @@ export default function FatturazionePage() {
     setIsAddDialogOpen(false);
   };
 
-  const handleSubmit = () => {
-    if (!selectedProjectForAdd || !formData.tipo) {
-      toast({ title: "Errore", description: "Seleziona commessa e tipo prestazione", variant: "destructive" });
+  const handleSubmit = async () => {
+    if (!selectedProjectForAdd || formData.tipiSelezionati.length === 0) {
+      toast({ title: "Errore", description: "Seleziona commessa e almeno un tipo di prestazione", variant: "destructive" });
       return;
     }
 
-    createMutation.mutate({
-      projectId: selectedProjectForAdd,
-      prestazione: {
-        tipo: formData.tipo,
-        livelloProgettazione: formData.tipo === 'progettazione' ? formData.livelloProgettazione : null,
-        descrizione: formData.descrizione || null,
-        importoPrevisto: Math.round(formData.importoPrevisto * 100),
-        note: formData.note || null,
-      },
-    });
+    // Create prestazioni for each selected type
+    const promises = formData.tipiSelezionati.map(tipo =>
+      createMutation.mutateAsync({
+        projectId: selectedProjectForAdd,
+        prestazione: {
+          tipo,
+          livelloProgettazione: tipo === 'progettazione' ? formData.livelloProgettazione : null,
+          descrizione: formData.descrizione || null,
+          importoPrevisto: Math.round(formData.importoPrevisto * 100),
+          note: formData.note || null,
+        },
+      })
+    );
+
+    try {
+      await Promise.all(promises);
+      const count = formData.tipiSelezionati.length;
+      toast({
+        title: count > 1 ? `${count} prestazioni aggiunte` : "Prestazione aggiunta",
+        description: count > 1
+          ? `Sono state create ${count} prestazioni con successo`
+          : "La prestazione è stata creata con successo"
+      });
+      resetForm();
+    } catch (error) {
+      toast({ title: "Errore", description: "Si è verificato un errore nella creazione", variant: "destructive" });
+    }
   };
 
   const handleCreateInvoice = () => {
@@ -663,7 +680,7 @@ export default function FatturazionePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[120px]">Commessa</TableHead>
+                  <TableHead className="min-w-[180px]">Commessa</TableHead>
                   <TableHead className="min-w-[100px]">Prestazione</TableHead>
                   <TableHead className="min-w-[100px]">Stato</TableHead>
                   <TableHead className="min-w-[180px]">Date</TableHead>
@@ -690,9 +707,14 @@ export default function FatturazionePage() {
                       <TableRow key={prestazione.id}>
                         <TableCell>
                           <div className="font-medium">{prestazione.project?.code || '-'}</div>
-                          <div className="text-xs text-muted-foreground truncate max-w-[150px]">
+                          <div className="text-xs text-muted-foreground truncate max-w-[180px]">
                             {prestazione.project?.client}
                           </div>
+                          {prestazione.project?.object && (
+                            <div className="text-xs text-muted-foreground/70 truncate max-w-[180px] italic">
+                              {prestazione.project.object}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={`${config.color} whitespace-nowrap`}>
@@ -958,22 +980,45 @@ export default function FatturazionePage() {
             </div>
 
             <div className="grid gap-2">
-              <Label>Tipo Prestazione *</Label>
-              <Select value={formData.tipo} onValueChange={(v) => setFormData({ ...formData, tipo: v as any })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {PRESTAZIONE_TIPI.map(tipo => (
-                    <SelectItem key={tipo} value={tipo}>
-                      {PRESTAZIONE_CONFIG[tipo]?.icon} {PRESTAZIONE_CONFIG[tipo]?.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Tipi Prestazione * <span className="text-xs text-muted-foreground font-normal">(seleziona una o più)</span></Label>
+              <div className="grid grid-cols-2 gap-2 p-3 border rounded-md bg-muted/30">
+                {PRESTAZIONE_TIPI.map(tipo => (
+                  <div key={tipo} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`tipo-${tipo}`}
+                      checked={formData.tipiSelezionati.includes(tipo)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setFormData({
+                            ...formData,
+                            tipiSelezionati: [...formData.tipiSelezionati, tipo]
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            tipiSelezionati: formData.tipiSelezionati.filter(t => t !== tipo)
+                          });
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor={`tipo-${tipo}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex items-center gap-1"
+                    >
+                      <span>{PRESTAZIONE_CONFIG[tipo]?.icon}</span>
+                      <span>{PRESTAZIONE_CONFIG[tipo]?.label}</span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+              {formData.tipiSelezionati.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {formData.tipiSelezionati.length} tipo/i selezionato/i
+                </p>
+              )}
             </div>
 
-            {formData.tipo === 'progettazione' && (
+            {formData.tipiSelezionati.includes('progettazione') && (
               <div className="grid gap-2">
                 <Label>Livello Progettazione</Label>
                 <Select
