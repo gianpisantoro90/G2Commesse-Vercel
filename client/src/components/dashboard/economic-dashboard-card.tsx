@@ -185,7 +185,7 @@ export default function EconomicDashboardCard() {
                 </p>
                 <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400 mt-2">
                   <FileText className="h-3 w-3" />
-                  {prestazioniStats?.fatturate || 0} prestazioni fatturate
+                  {(prestazioniStats?.fatturate || 0) + (prestazioniStats?.pagate || 0)} prestazioni fatturate
                 </div>
               </div>
 
@@ -250,13 +250,13 @@ export default function EconomicDashboardCard() {
                   Tasso Incasso
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {prestazioniStats && prestazioniStats.totale > 0
-                    ? ((prestazioniStats.pagate / prestazioniStats.totale) * 100).toFixed(1)
+                  {prestazioniStats && prestazioniStats.importoTotaleFatturato > 0
+                    ? ((prestazioniStats.importoTotalePagato / prestazioniStats.importoTotaleFatturato) * 100).toFixed(1)
                     : 0}%
                 </p>
-                <Progress value={prestazioniStats && prestazioniStats.totale > 0 ? (prestazioniStats.pagate / prestazioniStats.totale) * 100 : 0} className="mt-3 h-2 [&>div]:bg-green-500" />
+                <Progress value={prestazioniStats && prestazioniStats.importoTotaleFatturato > 0 ? (prestazioniStats.importoTotalePagato / prestazioniStats.importoTotaleFatturato) * 100 : 0} className="mt-3 h-2 [&>div]:bg-green-500" />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  {prestazioniStats?.pagate || 0}/{prestazioniStats?.totale || 0} prestazioni
+                  {formatImporto(importoServiziIncassati)} su {formatImporto(totalImportoServizi)} fatturato
                 </p>
               </div>
             </div>

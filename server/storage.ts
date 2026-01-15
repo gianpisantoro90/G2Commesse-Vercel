@@ -2151,7 +2151,12 @@ export class DatabaseStorage implements IStorage {
         importoTotaleFatturato: all.reduce((sum, p) => sum + (p.importoFatturato || 0), 0),
         importoTotalePagato: all.reduce((sum, p) => sum + (p.importoPagato || 0), 0),
         importoDaFatturare: all.filter(p => p.stato === 'completata').reduce((sum, p) => sum + (p.importoPrevisto || 0), 0),
-        importoDaIncassare: all.filter(p => p.stato === 'fatturata').reduce((sum, p) => sum + (p.importoFatturato || 0), 0),
+        // importoDaIncassare = differenza tra fatturato e pagato per tutte le prestazioni
+        importoDaIncassare: all.reduce((sum, p) => {
+          const fatturato = p.importoFatturato || 0;
+          const pagato = p.importoPagato || 0;
+          return sum + Math.max(0, fatturato - pagato);
+        }, 0),
       };
     } catch (error) {
       console.error('Error getting prestazioni stats:', error);
