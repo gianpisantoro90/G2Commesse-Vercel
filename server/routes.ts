@@ -2063,8 +2063,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If sync was successful, create or update the mapping
       if (success) {
         try {
-          // const rootConfig = await serverOneDriveService.getRootFolderPath(); // Private method
-          const rootPath = '/G2_Progetti'; // Default root path
+          // Use default root folder path from constants
+          const rootPath = ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER;
           const folderPath = `${rootPath}/${projectCode}`;
 
           // Check if mapping already exists
@@ -2414,7 +2414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           config: {
             folderPath: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER,
             folderId: '',
-            folderName: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER.split('/').pop() || 'G2_Progetti',
+            folderName: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER.split('/').pop() || 'LAVORO_CORRENTE',
             lastUpdated: new Date().toISOString(),
             isDefault: true
           },
