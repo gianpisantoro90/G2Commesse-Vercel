@@ -3,9 +3,10 @@ import { useOneDriveSync } from "./use-onedrive-sync";
 
 export interface OneDriveArchiveConfig {
   folderPath: string;
-  folderId: string;
+  folderId?: string;
   folderName: string;
-  lastUpdated: string;
+  lastUpdated?: string;
+  isDefault?: boolean; // true se è il valore predefinito, non configurato dall'utente
 }
 
 const ONEDRIVE_ARCHIVE_CONFIG_KEY = ['onedrive-archive-folder'] as const;
@@ -72,12 +73,14 @@ export function useOneDriveArchiveConfig() {
   });
 
   const isConfigured = Boolean(archiveConfig && archiveConfig.folderPath);
+  const isDefaultConfig = Boolean(archiveConfig?.isDefault); // true se sta usando il valore predefinito
   const isConfiguring = setArchiveFolderMutation.isPending;
   const isResetting = resetArchiveFolderMutation.isPending;
 
   return {
     archiveConfig,
     isConfigured,
+    isDefaultConfig, // true se sta usando il valore predefinito
     isLoading,
     isConfiguring,
     isResetting,

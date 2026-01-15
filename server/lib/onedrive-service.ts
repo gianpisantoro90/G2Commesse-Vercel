@@ -1,6 +1,18 @@
 import { Client } from '@microsoft/microsoft-graph-client';
 import { getUncachableOneDriveClient } from './onedrive-client';
 
+// ============================================================================
+// CARTELLE PREDEFINITE ONEDRIVE
+// Queste sono le cartelle di default che vengono usate se non configurate diversamente
+// L'utente può modificarle tramite l'interfaccia, ma questi valori persistono come fallback
+// ============================================================================
+export const ONEDRIVE_DEFAULT_FOLDERS = {
+  // Cartella principale per i progetti attivi/in corso
+  ROOT_FOLDER: '/LAVORO_CORRENTE',
+  // Cartella per i progetti conclusi/archiviati
+  ARCHIVE_FOLDER: '/LAVORI_CONCLUSI',
+} as const;
+
 // Enhanced utility to read GraphError body content with better debugging
 async function readGraphErrorBody(error: any): Promise<{ body: string; bodyType: string; rawError: any }> {
   console.log('🔍 Reading GraphError body. Error properties:', {
@@ -305,7 +317,7 @@ class ServerOneDriveService {
     }
   }
 
-  async listFiles(folderPath = '/G2_Progetti'): Promise<OneDriveFile[]> {
+  async listFiles(folderPath = ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER): Promise<OneDriveFile[]> {
     try {
       const client = await this.getClient();
 
@@ -313,25 +325,25 @@ class ServerOneDriveService {
       if (!folderPath || typeof folderPath !== 'string') {
         throw new Error('Invalid folder path provided');
       }
-      
+
       // Check for problematic characters that cause Microsoft Graph API errors
       const problematicChars = ['%', '<', '>', '|', '*', '?', '"', ':', '\\'];
       const hasProblematicChars = problematicChars.some(char => folderPath.includes(char));
-      
+
       if (hasProblematicChars) {
         console.warn(`⚠️ Skipping folder with problematic characters: ${folderPath}`);
         return [];
       }
-      
+
       // Prevent path traversal attacks
       const sanitizedPath = folderPath.replace(/\.\./g, '').replace(/\/+/g, '/');
       if (sanitizedPath !== folderPath) {
         throw new Error('Invalid characters in folder path');
       }
 
-      // Only create G2_Progetti folder if we're accessing it specifically
-      if (sanitizedPath === '/G2_Progetti') {
-        await this.ensureG2ProjectsFolder();
+      // Ensure root folder exists if we're accessing it specifically
+      if (sanitizedPath === ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER) {
+        await this.ensureRootFolder(ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER);
       }
 
       let apiUrl;
@@ -378,10 +390,9 @@ class ServerOneDriveService {
     try {
       const client = await this.getClient();
 
-      // If no parent path provided, use configured root folder
+      // If no parent path provided, use configured root folder (or default)
       if (!parentPath) {
-        const rootConfig = await this.getRootFolderPath();
-        parentPath = rootConfig || '/G2_Progetti'; // fallback to legacy path
+        parentPath = await this.getRootFolderPath();
       }
 
       await this.ensureRootFolder(parentPath);
@@ -451,10 +462,9 @@ class ServerOneDriveService {
 
   async syncProjectFolder(projectCode: string, projectDescription: string): Promise<boolean> {
     try {
-      // Get configured root folder path
-      const rootConfig = await this.getRootFolderPath();
-      const rootPath = rootConfig || '/G2_Progetti'; // fallback to legacy path
-      
+      // Get configured root folder path (or default)
+      const rootPath = await this.getRootFolderPath();
+
       // Ensure root folder exists
       await this.ensureRootFolder(rootPath);
 
@@ -472,21 +482,45 @@ class ServerOneDriveService {
     }
   }
 
-  private async getRootFolderPath(): Promise<string | null> {
+  private async getRootFolderPath(): Promise<string> {
     try {
       // Import storage dynamically to avoid circular dependency
       const { storage } = await import('../storage');
       const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
-      
+
       if (rootConfig && rootConfig.value && (rootConfig.value as any).folderPath) {
         return (rootConfig.value as any).folderPath;
       }
-      
-      return null;
+
+      // Restituisce il valore di default se non configurato
+      return ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER;
     } catch (error) {
-      console.error('❌ Failed to get root folder path:', error);
-      return null;
+      console.error('❌ Failed to get root folder path, using default:', error);
+      return ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER;
     }
+  }
+
+  // Funzione pubblica per ottenere la cartella archivio con fallback al default
+  async getArchiveFolderPath(): Promise<string> {
+    try {
+      const { storage } = await import('../storage');
+      const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
+
+      if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
+        return (archiveConfig.value as any).folderPath;
+      }
+
+      // Restituisce il valore di default se non configurato
+      return ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER;
+    } catch (error) {
+      console.error('❌ Failed to get archive folder path, using default:', error);
+      return ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER;
+    }
+  }
+
+  // Funzione pubblica per ottenere la cartella root (espone getRootFolderPath)
+  async getDefaultRootFolderPath(): Promise<string> {
+    return this.getRootFolderPath();
   }
 
   private async ensureRootFolder(rootPath: string): Promise<void> {
@@ -506,7 +540,7 @@ class ServerOneDriveService {
         
         // Folder doesn't exist, create it
         console.log(`📁 Root folder does not exist, creating it: ${rootPath}`);
-        const folderName = rootPath.split('/').pop() || 'G2_Progetti';
+        const folderName = rootPath.split('/').pop() || ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER.split('/').pop();
         const parentPath = rootPath.substring(0, rootPath.lastIndexOf('/')) || '/';
         
         const client = await this.getClient();
@@ -535,50 +569,6 @@ class ServerOneDriveService {
     } catch (error) {
       console.error(`❌ Failed to ensure root folder (Server): ${rootPath}`, error);
       throw error;
-    }
-  }
-
-  private async ensureG2ProjectsFolder(): Promise<void> {
-    try {
-      const client = await this.getClient();
-
-      // Check if G2_Progetti folder exists
-      const checkUrl = '/me/drive/root:/G2_Progetti';
-      logGraphRequest('Check G2_Progetti Folder', checkUrl, 'GET');
-      
-      try {
-        const checkResponse = await client.api(checkUrl).get();
-        logGraphResponse('Check G2_Progetti Folder', checkResponse);
-        console.log('✅ G2_Progetti folder already exists (Server)');
-      } catch (checkError: any) {
-        logGraphResponse('Check G2_Progetti Folder', null, checkError);
-        
-        // Folder doesn't exist, create it
-        console.log('📁 G2_Progetti folder does not exist, creating it...');
-        const client = await this.getClient();
-        const folderData = {
-          name: 'G2_Progetti',
-          folder: {}
-        };
-
-        const createUrl = '/me/drive/root/children';
-        logGraphRequest('Create G2_Progetti Folder', createUrl, 'POST', folderData);
-        
-        try {
-          const createResponse = await client.api(createUrl).post(folderData);
-          logGraphResponse('Create G2_Progetti Folder', createResponse);
-          console.log('✅ Created G2_Progetti folder in OneDrive (Server)');
-        } catch (createError: any) {
-          logGraphResponse('Create G2_Progetti Folder', null, createError);
-          await handleGraphError(createError, 'Create G2_Progetti Folder', {
-            folderData,
-            createUrl,
-            operation: 'POST /me/drive/root/children'
-          });
-        }
-      }
-    } catch (outerError) {
-      console.error('❌ Failed in ensureG2ProjectsFolder (Server):', outerError);
     }
   }
 

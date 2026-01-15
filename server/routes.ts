@@ -4,7 +4,7 @@ import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema, aiConfigSchema, insertProjectInvoiceSchema, insertProjectPrestazioneSchema, updatePrestazioneStatoSchema, PRESTAZIONE_TIPI, PRESTAZIONE_STATI } from "@shared/schema";
 import bcrypt from "bcrypt";
-import serverOneDriveService from "./lib/onedrive-service";
+import serverOneDriveService, { ONEDRIVE_DEFAULT_FOLDERS } from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
 import { emailService } from "./lib/email-service";
 import { emailPoller } from "./lib/email-poller";
@@ -921,39 +921,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const folderNameToMove = mapping.oneDriveFolderName;
             console.log(`🔍 Found OneDrive folder to move:`, { path: folderPathToMove, name: folderNameToMove });
             
+            // Usa la configurazione salvata o il default
             const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
-            if (archiveConfig && archiveConfig.value && (archiveConfig.value as any).folderPath) {
-              const archivePath = (archiveConfig.value as any).folderPath;
-              console.log(`📁 Archive destination path: ${archivePath}`);
-              console.log(`🚀 [DEBUG] About to call moveProjectToArchive with:`, { folderPathToMove, archivePath });
-              try {
-                const moveResult = await serverOneDriveService.moveProjectToArchive(
-                  folderPathToMove, 
-                  archivePath,
-                  mapping.oneDriveFolderId || undefined,
-                  (archiveConfig.value as any).folderId || undefined
-                );
-                console.log(`🔄 [DEBUG] moveProjectToArchive returned:`, { moveResult });
-                if (moveResult.success) {
-                  console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
-                  
-                  // Update the mapping with the new path
-                  if (moveResult.newPath) {
-                    console.log(`📝 Updating mapping path to: ${moveResult.newPath}`);
-                    await storage.updateOneDriveMapping(project.code, {
-                      oneDriveFolderPath: moveResult.newPath
-                    });
-                    console.log(`✅ OneDrive mapping path updated successfully`);
-                  }
-                } else {
-                  console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
+            const archivePath = (archiveConfig?.value as any)?.folderPath || ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER;
+            const archiveFolderId = (archiveConfig?.value as any)?.folderId || undefined;
+
+            console.log(`📁 Archive destination path: ${archivePath} (default: ${!archiveConfig?.value})`);
+            console.log(`🚀 [DEBUG] About to call moveProjectToArchive with:`, { folderPathToMove, archivePath });
+            try {
+              const moveResult = await serverOneDriveService.moveProjectToArchive(
+                folderPathToMove,
+                archivePath,
+                mapping.oneDriveFolderId || undefined,
+                archiveFolderId
+              );
+              console.log(`🔄 [DEBUG] moveProjectToArchive returned:`, { moveResult });
+              if (moveResult.success) {
+                console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
+
+                // Update the mapping with the new path
+                if (moveResult.newPath) {
+                  console.log(`📝 Updating mapping path to: ${moveResult.newPath}`);
+                  await storage.updateOneDriveMapping(project.code, {
+                    oneDriveFolderPath: moveResult.newPath
+                  });
+                  console.log(`✅ OneDrive mapping path updated successfully`);
                 }
-              } catch (moveError) {
-                console.error(`❌ [DEBUG] Exception in moveProjectToArchive call:`, moveError);
-                throw moveError;
+              } else {
+                console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
               }
-            } else {
-              console.log(`ℹ️ No archive folder configured, skipping move`);
+            } catch (moveError) {
+              console.error(`❌ [DEBUG] Exception in moveProjectToArchive call:`, moveError);
+              throw moveError;
             }
           }
         } catch (archiveError: any) {
@@ -2064,8 +2063,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If sync was successful, create or update the mapping
       if (success) {
         try {
-          // const rootConfig = await serverOneDriveService.getRootFolderPath(); // Private method
-          const rootPath = '/G2_Progetti'; // Default root path
+          // Use default root folder path from constants
+          const rootPath = ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER;
           const folderPath = `${rootPath}/${projectCode}`;
 
           // Check if mapping already exists
@@ -2405,12 +2404,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastUpdated: rawConfigAny.lastUpdated || rawConfigAny.configuredAt || new Date().toISOString()
         };
         
-        res.json({ 
+        res.json({
           config: transformedConfig,
-          configured: true 
+          configured: true
         });
       } else {
-        res.json({ configured: false });
+        // Restituisce il valore di default invece di solo { configured: false }
+        res.json({
+          config: {
+            folderPath: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER,
+            folderId: '',
+            folderName: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER.split('/').pop() || 'LAVORO_CORRENTE',
+            lastUpdated: new Date().toISOString(),
+            isDefault: true
+          },
+          configured: false
+        });
       }
     } catch (error) {
       console.error('Get root folder failed:', error);
@@ -3226,7 +3235,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const config = await storage.getSystemConfig('onedrive_archive_folder');
       if (!config || !config.value) {
-        return res.status(404).json({ config: null });
+        // Restituisce il valore di default invece di 404
+        return res.json({
+          config: {
+            folderPath: ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER,
+            folderName: ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER.split('/').pop(),
+            isDefault: true
+          }
+        });
       }
       res.json({ config: config.value });
     } catch (error) {

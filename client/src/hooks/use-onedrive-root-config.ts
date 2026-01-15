@@ -7,6 +7,7 @@ export interface OneDriveRootConfig {
   folderId: string;
   folderName: string;
   lastUpdated: string;
+  isDefault?: boolean; // true se è il valore predefinito, non configurato dall'utente
 }
 
 // Query key for OneDrive root folder configuration
@@ -158,6 +159,7 @@ export function useOneDriveRootConfig() {
 
   // Derived state
   const isConfigured = Boolean(rootConfig && rootConfig.folderPath);
+  const isDefaultConfig = Boolean(rootConfig?.isDefault); // true se sta usando il valore predefinito
   const isConfiguring = setRootFolderMutation.isPending;
   const isResetting = resetRootFolderMutation.isPending;
 
@@ -171,21 +173,22 @@ export function useOneDriveRootConfig() {
     // Data
     rootConfig,
     isConfigured,
-    
+    isDefaultConfig, // true se sta usando il valore predefinito
+
     // Loading states
     isLoading,
     isConfiguring,
     isResetting,
-    
+
     // Error states
     error,
-    
+
     // Actions
     setRootFolder: setRootFolderMutation.mutate,
     resetRootFolder: resetRootFolderMutation.mutate,
     refetch,
     forceRefresh,
-    
+
     // Mutation objects (for more granular control)
     setRootFolderMutation,
     resetRootFolderMutation,
