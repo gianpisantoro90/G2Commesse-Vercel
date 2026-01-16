@@ -478,6 +478,19 @@ export const projectBudget = pgTable("project_budget", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Costi generici (consulenze, benzina, nolo, materiali, ecc.)
+export const projectCosts = pgTable("project_costs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  tipo: text("tipo").notNull(), // 'consulenza', 'benzina', 'nolo', 'materiali', 'rilievo', 'altro'
+  descrizione: text("descrizione"),
+  importo: integer("importo").default(0), // In centesimi
+  data: timestamp("data"), // Data del costo (opzionale)
+  fornitore: text("fornitore"), // Nome fornitore/azienda (opzionale)
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Assegnazione risorse/personale a commesse
 export const projectResources = pgTable("project_resources", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -589,6 +602,12 @@ export const insertProjectBudgetSchema = createInsertSchema(projectBudget).omit(
   updatedAt: true,
 });
 
+export const insertProjectCostSchema = createInsertSchema(projectCosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertProjectResourceSchema = createInsertSchema(projectResources).omit({
   id: true,
   createdAt: true,
@@ -629,6 +648,9 @@ export type ProjectChangelog = typeof projectChangelog.$inferSelect;
 
 export type InsertProjectBudget = z.infer<typeof insertProjectBudgetSchema>;
 export type ProjectBudget = typeof projectBudget.$inferSelect;
+
+export type InsertProjectCost = z.infer<typeof insertProjectCostSchema>;
+export type ProjectCost = typeof projectCosts.$inferSelect;
 
 export type InsertProjectResource = z.infer<typeof insertProjectResourceSchema>;
 export type ProjectResource = typeof projectResources.$inferSelect;

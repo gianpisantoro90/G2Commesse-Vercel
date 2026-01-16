@@ -4058,6 +4058,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============================================
+  // PROJECT COSTS API (costi generici)
+  // ============================================
+
+  // Get all project costs
+  app.get("/api/project-costs", async (req, res) => {
+    const costs = await storage.getAllProjectCosts();
+    res.json(costs);
+  });
+
+  // Create new project cost
+  app.post("/api/project-costs", async (req, res) => {
+    try {
+      const cost = await storage.createProjectCost(req.body);
+      res.json(cost);
+    } catch (error) {
+      console.error('Error creating project cost:', error);
+      res.status(500).json({ message: "Errore nella creazione del costo" });
+    }
+  });
+
+  // Update project cost
+  app.put("/api/project-costs/:id", async (req, res) => {
+    try {
+      const cost = await storage.updateProjectCost(req.params.id, req.body);
+      res.json(cost);
+    } catch (error) {
+      console.error('Error updating project cost:', error);
+      res.status(500).json({ message: "Errore nell'aggiornamento del costo" });
+    }
+  });
+
+  // Delete project cost
+  app.delete("/api/project-costs/:id", async (req, res) => {
+    try {
+      await storage.deleteProjectCost(req.params.id);
+      res.json({ message: "Costo eliminato con successo" });
+    } catch (error) {
+      console.error('Error deleting project cost:', error);
+      res.status(500).json({ message: "Errore nell'eliminazione del costo" });
+    }
+  });
+
+  // ============================================
   // ALL INVOICES API (for cost analysis)
   // ============================================
 
