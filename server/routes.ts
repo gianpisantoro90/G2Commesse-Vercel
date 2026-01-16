@@ -3982,5 +3982,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================
+  // PROJECT RESOURCES API
+  // ============================================
+
+  // Get all project resources
+  app.get("/api/project-resources", async (req, res) => {
+    const resources = await storage.getAllProjectResources();
+    res.json(resources);
+  });
+
+  // Create new project resource
+  app.post("/api/project-resources", async (req, res) => {
+    try {
+      const resource = await storage.createProjectResource(req.body);
+      res.json(resource);
+    } catch (error) {
+      console.error('Error creating project resource:', error);
+      res.status(500).json({ message: "Errore nella creazione della risorsa" });
+    }
+  });
+
+  // Update project resource
+  app.put("/api/project-resources/:id", async (req, res) => {
+    try {
+      const resource = await storage.updateProjectResource(req.params.id, req.body);
+      res.json(resource);
+    } catch (error) {
+      console.error('Error updating project resource:', error);
+      res.status(500).json({ message: "Errore nell'aggiornamento della risorsa" });
+    }
+  });
+
+  // Delete project resource
+  app.delete("/api/project-resources/:id", async (req, res) => {
+    try {
+      await storage.deleteProjectResource(req.params.id);
+      res.json({ message: "Risorsa eliminata con successo" });
+    } catch (error) {
+      console.error('Error deleting project resource:', error);
+      res.status(500).json({ message: "Errore nell'eliminazione della risorsa" });
+    }
+  });
+
+  // ============================================
+  // PROJECT BUDGETS API
+  // ============================================
+
+  // Get all project budgets
+  app.get("/api/project-budgets", async (req, res) => {
+    const budgets = await storage.getAllProjectBudgets();
+    res.json(budgets);
+  });
+
+  // Create or update project budget (upsert)
+  app.post("/api/project-budgets", async (req, res) => {
+    try {
+      const budget = await storage.upsertProjectBudget(req.body);
+      res.json(budget);
+    } catch (error) {
+      console.error('Error creating/updating project budget:', error);
+      res.status(500).json({ message: "Errore nel salvataggio del budget" });
+    }
+  });
+
+  // Update project budget
+  app.put("/api/project-budgets/:id", async (req, res) => {
+    try {
+      const budget = await storage.updateProjectBudget(req.params.id, req.body);
+      res.json(budget);
+    } catch (error) {
+      console.error('Error updating project budget:', error);
+      res.status(500).json({ message: "Errore nell'aggiornamento del budget" });
+    }
+  });
+
+  // ============================================
+  // ALL INVOICES API (for cost analysis)
+  // ============================================
+
+  // Get all invoices across all projects
+  app.get("/api/invoices", async (req, res) => {
+    const invoices = await storage.getAllInvoices();
+    res.json(invoices);
+  });
+
   return httpServer;
 }

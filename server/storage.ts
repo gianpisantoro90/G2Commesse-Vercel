@@ -105,6 +105,17 @@ export interface IStorage {
   recalculatePrestazioneImporti(prestazioneId: string): Promise<ProjectPrestazione | undefined>;
   fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }>;
 
+  // Project Resources
+  getAllProjectResources(): Promise<ProjectResource[]>;
+  createProjectResource(resource: InsertProjectResource): Promise<ProjectResource>;
+  updateProjectResource(id: string, updates: Partial<InsertProjectResource>): Promise<ProjectResource | undefined>;
+  deleteProjectResource(id: string): Promise<boolean>;
+
+  // Project Budgets
+  getAllProjectBudgets(): Promise<ProjectBudget[]>;
+  upsertProjectBudget(budget: InsertProjectBudget): Promise<ProjectBudget>;
+  updateProjectBudget(id: string, updates: Partial<InsertProjectBudget>): Promise<ProjectBudget | undefined>;
+
   // Bulk operations
   exportAllData(): Promise<{
     projects: Project[],
@@ -1089,6 +1100,89 @@ export class MemStorage implements IStorage {
     return updated;
   }
 
+  async fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }> {
+    return { fixed: 0, errors: 0 };
+  }
+
+  // Project Resources
+  async getAllProjectResources(): Promise<ProjectResource[]> {
+    return Array.from(this.resources.values());
+  }
+
+  async createProjectResource(resource: InsertProjectResource): Promise<ProjectResource> {
+    const id = randomUUID();
+    const newResource: ProjectResource = {
+      ...resource,
+      id,
+      oreAssegnate: resource.oreAssegnate || 0,
+      oreLavorate: resource.oreLavorate || 0,
+      costoOrario: resource.costoOrario || 0,
+      isResponsabile: resource.isResponsabile || false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.resources.set(id, newResource);
+    return newResource;
+  }
+
+  async updateProjectResource(id: string, updates: Partial<InsertProjectResource>): Promise<ProjectResource | undefined> {
+    const existing = this.resources.get(id);
+    if (!existing) return undefined;
+    const updated: ProjectResource = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.resources.set(id, updated);
+    return updated;
+  }
+
+  async deleteProjectResource(id: string): Promise<boolean> {
+    return this.resources.delete(id);
+  }
+
+  // Project Budgets
+  async getAllProjectBudgets(): Promise<ProjectBudget[]> {
+    return Array.from(this.budget.values());
+  }
+
+  async upsertProjectBudget(budgetData: InsertProjectBudget): Promise<ProjectBudget> {
+    // Check if budget already exists for this project
+    const existing = Array.from(this.budget.values()).find(b => b.projectId === budgetData.projectId);
+    if (existing) {
+      return this.updateProjectBudget(existing.id, budgetData) as Promise<ProjectBudget>;
+    }
+    const id = randomUUID();
+    const newBudget: ProjectBudget = {
+      ...budgetData,
+      id,
+      budgetOreTotale: budgetData.budgetOreTotale || 0,
+      oreConsuntivate: budgetData.oreConsuntivate || 0,
+      costiConsulenze: budgetData.costiConsulenze || 0,
+      costiRilievi: budgetData.costiRilievi || 0,
+      altriCosti: budgetData.altriCosti || 0,
+      costiTotali: budgetData.costiTotali || 0,
+      ricaviPrevisti: budgetData.ricaviPrevisti || 0,
+      ricaviEffettivi: budgetData.ricaviEffettivi || 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.budget.set(id, newBudget);
+    return newBudget;
+  }
+
+  async updateProjectBudget(id: string, updates: Partial<InsertProjectBudget>): Promise<ProjectBudget | undefined> {
+    const existing = this.budget.get(id);
+    if (!existing) return undefined;
+    const updated: ProjectBudget = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.budget.set(id, updated);
+    return updated;
+  }
+
   async clearAllData() {
     this.projects.clear();
     this.clients.clear();
@@ -2022,6 +2116,91 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Project Resources
+  async getAllProjectResources(): Promise<ProjectResource[]> {
+    try {
+      return await db.select().from(projectResources);
+    } catch (error) {
+      console.error('Error getting all project resources:', error);
+      return [];
+    }
+  }
+
+  async createProjectResource(resource: InsertProjectResource): Promise<ProjectResource> {
+    const [newResource] = await db.insert(projectResources).values({
+      ...resource,
+      id: randomUUID(),
+      oreAssegnate: resource.oreAssegnate || 0,
+      oreLavorate: resource.oreLavorate || 0,
+      costoOrario: resource.costoOrario || 0,
+      isResponsabile: resource.isResponsabile || false,
+    }).returning();
+    return newResource;
+  }
+
+  async updateProjectResource(id: string, updates: Partial<InsertProjectResource>): Promise<ProjectResource | undefined> {
+    try {
+      const [updated] = await db.update(projectResources)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(projectResources.id, id))
+        .returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating project resource:', error);
+      return undefined;
+    }
+  }
+
+  async deleteProjectResource(id: string): Promise<boolean> {
+    try {
+      await db.delete(projectResources).where(eq(projectResources.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting project resource:', error);
+      return false;
+    }
+  }
+
+  // Project Budgets
+  async getAllProjectBudgets(): Promise<ProjectBudget[]> {
+    try {
+      return await db.select().from(projectBudget);
+    } catch (error) {
+      console.error('Error getting all project budgets:', error);
+      return [];
+    }
+  }
+
+  async upsertProjectBudget(budgetData: InsertProjectBudget): Promise<ProjectBudget> {
+    // Check if budget already exists for this project
+    const [existing] = await db.select().from(projectBudget).where(eq(projectBudget.projectId, budgetData.projectId));
+    if (existing) {
+      const [updated] = await db.update(projectBudget)
+        .set({ ...budgetData, updatedAt: new Date() })
+        .where(eq(projectBudget.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [newBudget] = await db.insert(projectBudget).values({
+      ...budgetData,
+      id: randomUUID(),
+    }).returning();
+    return newBudget;
+  }
+
+  async updateProjectBudget(id: string, updates: Partial<InsertProjectBudget>): Promise<ProjectBudget | undefined> {
+    try {
+      const [updated] = await db.update(projectBudget)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(projectBudget.id, id))
+        .returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating project budget:', error);
+      return undefined;
+    }
+  }
+
   async getPrestazioniByProject(projectId: string): Promise<ProjectPrestazione[]> {
     try {
       return await db.select().from(projectPrestazioni).where(eq(projectPrestazioni.projectId, projectId));
@@ -2916,6 +3095,10 @@ class FallbackStorage implements IStorage {
   }
 
   // Invoice methods
+  async getAllInvoices(): Promise<ProjectInvoice[]> {
+    return this.executeWithFallback(storage => storage.getAllInvoices());
+  }
+
   async getInvoicesByProject(projectId: string): Promise<ProjectInvoice[]> {
     return this.executeWithFallback(storage => storage.getInvoicesByProject(projectId));
   }
@@ -2975,6 +3158,40 @@ class FallbackStorage implements IStorage {
 
   async recalculatePrestazioneImporti(prestazioneId: string): Promise<ProjectPrestazione | undefined> {
     return this.executeWithFallback(storage => storage.recalculatePrestazioneImporti(prestazioneId));
+  }
+
+  async fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }> {
+    return this.executeWithFallback(storage => storage.fixPrestazioniAmounts());
+  }
+
+  // Project Resources
+  async getAllProjectResources(): Promise<ProjectResource[]> {
+    return this.executeWithFallback(storage => storage.getAllProjectResources());
+  }
+
+  async createProjectResource(resource: InsertProjectResource): Promise<ProjectResource> {
+    return this.executeWithFallback(storage => storage.createProjectResource(resource));
+  }
+
+  async updateProjectResource(id: string, updates: Partial<InsertProjectResource>): Promise<ProjectResource | undefined> {
+    return this.executeWithFallback(storage => storage.updateProjectResource(id, updates));
+  }
+
+  async deleteProjectResource(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteProjectResource(id));
+  }
+
+  // Project Budgets
+  async getAllProjectBudgets(): Promise<ProjectBudget[]> {
+    return this.executeWithFallback(storage => storage.getAllProjectBudgets());
+  }
+
+  async upsertProjectBudget(budget: InsertProjectBudget): Promise<ProjectBudget> {
+    return this.executeWithFallback(storage => storage.upsertProjectBudget(budget));
+  }
+
+  async updateProjectBudget(id: string, updates: Partial<InsertProjectBudget>): Promise<ProjectBudget | undefined> {
+    return this.executeWithFallback(storage => storage.updateProjectBudget(id, updates));
   }
 
   async exportAllData(): Promise<{

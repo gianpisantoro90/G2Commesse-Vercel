@@ -15,8 +15,7 @@ import ClientsTable from "@/components/projects/clients-table";
 import ParcellaCalculator from "@/components/projects/parcella-calculator-new";
 import Scadenzario from "@/components/projects/scadenzario";
 import RegistroComunicazioni from "@/components/projects/registro-comunicazioni";
-import GestioneRisorse from "@/components/projects/gestione-risorse";
-import KpiDashboard from "@/components/projects/kpi-dashboard";
+import SezioneCosti from "@/components/projects/sezione-costi";
 import { CommunicationsReview } from "@/components/ai-review/communications-review";
 import { TasksReview } from "@/components/ai-review/tasks-review";
 import { DeadlinesReview } from "@/components/ai-review/deadlines-review";
@@ -141,20 +140,11 @@ export default function Dashboard() {
                       )}
                       {isAdmin && (
                         <TabsTrigger
-                          value="risorse"
+                          value="costi"
                           className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                          data-testid="tab-risorse"
+                          data-testid="tab-costi"
                         >
-                          👷 Risorse
-                        </TabsTrigger>
-                      )}
-                      {isAdmin && (
-                        <TabsTrigger
-                          value="kpi"
-                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                          data-testid="tab-kpi"
-                        >
-                          📊 KPI
+                          💰 Costi
                         </TabsTrigger>
                       )}
                       {isAdmin && (
@@ -197,14 +187,8 @@ export default function Dashboard() {
                   </TabsContent>
 
                   {isAdmin && (
-                    <TabsContent value="risorse" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                      <GestioneRisorse />
-                    </TabsContent>
-                  )}
-
-                  {isAdmin && (
-                    <TabsContent value="kpi" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                      <KpiDashboard />
+                    <TabsContent value="costi" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                      <SezioneCosti />
                     </TabsContent>
                   )}
 
