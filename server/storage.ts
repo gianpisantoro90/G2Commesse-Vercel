@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectSAL, type InsertProjectSAL, type ProjectChangelog, type InsertProjectChangelog, type ProjectBudget, type InsertProjectBudget, type ProjectResource, type InsertProjectResource, type SavedFilter, type InsertSavedFilter } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectSAL, projectChangelog, projectBudget, projectResources, savedFilters } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectSAL, type InsertProjectSAL, type ProjectChangelog, type InsertProjectChangelog, type ProjectBudget, type InsertProjectBudget, type ProjectCost, type InsertProjectCost, type ProjectResource, type InsertProjectResource, type SavedFilter, type InsertSavedFilter } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectSAL, projectChangelog, projectBudget, projectCosts, projectResources, savedFilters } from "@shared/schema";
 import { eq, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -116,6 +116,12 @@ export interface IStorage {
   upsertProjectBudget(budget: InsertProjectBudget): Promise<ProjectBudget>;
   updateProjectBudget(id: string, updates: Partial<InsertProjectBudget>): Promise<ProjectBudget | undefined>;
 
+  // Project Costs (costi generici)
+  getAllProjectCosts(): Promise<ProjectCost[]>;
+  createProjectCost(cost: InsertProjectCost): Promise<ProjectCost>;
+  updateProjectCost(id: string, updates: Partial<InsertProjectCost>): Promise<ProjectCost | undefined>;
+  deleteProjectCost(id: string): Promise<boolean>;
+
   // Bulk operations
   exportAllData(): Promise<{
     projects: Project[],
@@ -178,6 +184,7 @@ export class MemStorage implements IStorage {
   private sal: Map<string, ProjectSAL> = new Map();
   private changelog: Map<string, ProjectChangelog> = new Map();
   private budget: Map<string, ProjectBudget> = new Map();
+  private costs: Map<string, ProjectCost> = new Map();
   private resources: Map<string, ProjectResource> = new Map();
   private filters: Map<string, SavedFilter> = new Map();
 
@@ -1181,6 +1188,40 @@ export class MemStorage implements IStorage {
     };
     this.budget.set(id, updated);
     return updated;
+  }
+
+  // Project Costs (costi generici)
+  async getAllProjectCosts(): Promise<ProjectCost[]> {
+    return Array.from(this.costs.values());
+  }
+
+  async createProjectCost(cost: InsertProjectCost): Promise<ProjectCost> {
+    const id = randomUUID();
+    const newCost: ProjectCost = {
+      ...cost,
+      id,
+      importo: cost.importo || 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.costs.set(id, newCost);
+    return newCost;
+  }
+
+  async updateProjectCost(id: string, updates: Partial<InsertProjectCost>): Promise<ProjectCost | undefined> {
+    const existing = this.costs.get(id);
+    if (!existing) return undefined;
+    const updated: ProjectCost = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.costs.set(id, updated);
+    return updated;
+  }
+
+  async deleteProjectCost(id: string): Promise<boolean> {
+    return this.costs.delete(id);
   }
 
   async clearAllData() {
@@ -2201,6 +2242,48 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Project Costs (costi generici)
+  async getAllProjectCosts(): Promise<ProjectCost[]> {
+    try {
+      return await db.select().from(projectCosts);
+    } catch (error) {
+      console.error('Error getting all project costs:', error);
+      return [];
+    }
+  }
+
+  async createProjectCost(cost: InsertProjectCost): Promise<ProjectCost> {
+    const [newCost] = await db.insert(projectCosts).values({
+      ...cost,
+      id: randomUUID(),
+      importo: cost.importo || 0,
+    }).returning();
+    return newCost;
+  }
+
+  async updateProjectCost(id: string, updates: Partial<InsertProjectCost>): Promise<ProjectCost | undefined> {
+    try {
+      const [updated] = await db.update(projectCosts)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(projectCosts.id, id))
+        .returning();
+      return updated || undefined;
+    } catch (error) {
+      console.error('Error updating project cost:', error);
+      return undefined;
+    }
+  }
+
+  async deleteProjectCost(id: string): Promise<boolean> {
+    try {
+      await db.delete(projectCosts).where(eq(projectCosts.id, id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting project cost:', error);
+      return false;
+    }
+  }
+
   async getPrestazioniByProject(projectId: string): Promise<ProjectPrestazione[]> {
     try {
       return await db.select().from(projectPrestazioni).where(eq(projectPrestazioni.projectId, projectId));
@@ -3192,6 +3275,23 @@ class FallbackStorage implements IStorage {
 
   async updateProjectBudget(id: string, updates: Partial<InsertProjectBudget>): Promise<ProjectBudget | undefined> {
     return this.executeWithFallback(storage => storage.updateProjectBudget(id, updates));
+  }
+
+  // Project Costs (costi generici)
+  async getAllProjectCosts(): Promise<ProjectCost[]> {
+    return this.executeWithFallback(storage => storage.getAllProjectCosts());
+  }
+
+  async createProjectCost(cost: InsertProjectCost): Promise<ProjectCost> {
+    return this.executeWithFallback(storage => storage.createProjectCost(cost));
+  }
+
+  async updateProjectCost(id: string, updates: Partial<InsertProjectCost>): Promise<ProjectCost | undefined> {
+    return this.executeWithFallback(storage => storage.updateProjectCost(id, updates));
+  }
+
+  async deleteProjectCost(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteProjectCost(id));
   }
 
   async exportAllData(): Promise<{
