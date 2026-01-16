@@ -12,8 +12,14 @@ import { useToast } from "@/hooks/use-toast";
 import {
   TrendingUp, TrendingDown, Euro, Users, Clock, ChevronDown, ChevronUp,
   UserPlus, Edit, Trash2, ChevronLeft, ChevronRight, AlertTriangle,
-  PieChart as PieChartIcon, BarChart as BarChartIcon
+  PieChart as PieChartIcon, BarChart as BarChartIcon, Plus, Receipt
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { type Project, type ProjectPrestazioni, type ProjectBudget } from "@shared/schema";
 
@@ -59,8 +65,10 @@ export default function SezioneCosti() {
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [isResourceDialogOpen, setIsResourceDialogOpen] = useState(false);
   const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
+  const [isCostDialogOpen, setIsCostDialogOpen] = useState(false);
   const [editingResource, setEditingResource] = useState<ProjectResource | null>(null);
   const [selectedProjectForResource, setSelectedProjectForResource] = useState<string>("");
+  const [selectedProjectForCost, setSelectedProjectForCost] = useState<string>("");
   const [editingBudgetProjectId, setEditingBudgetProjectId] = useState<string | null>(null);
 
   // Pagination
@@ -288,8 +296,9 @@ export default function SezioneCosti() {
       const projectInvoices = invoices?.filter(i => i.projectId === project.id) || [];
 
       // Ricavi
+      // NOTA: importoServizio è in EURO, lo convertiamo in centesimi per coerenza
       const metadata = project.metadata as ProjectPrestazioni;
-      const ricaviPrevisti = metadata?.importoServizio || 0;
+      const ricaviPrevisti = (metadata?.importoServizio || 0) * 100;
       const ricaviFatturati = projectInvoices.reduce((sum, inv) => sum + inv.importoNetto, 0);
       const ricaviIncassati = projectInvoices
         .filter(inv => inv.stato === 'pagata')
@@ -440,13 +449,35 @@ export default function SezioneCosti() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Analisi Costi</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">Monitoraggio costi e margini per commessa</p>
         </div>
-        <Dialog open={isResourceDialogOpen} onOpenChange={setIsResourceDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => resetResourceForm()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Aggiungi
+              <ChevronDown className="w-4 h-4 ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => {
+              setSelectedProjectForCost("");
+              setBudgetFormData({ costiConsulenze: 0, costiRilievi: 0, altriCosti: 0 });
+              setIsCostDialogOpen(true);
+            }}>
+              <Receipt className="w-4 h-4 mr-2" />
+              Aggiungi Costo
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => {
+              resetResourceForm();
+              setIsResourceDialogOpen(true);
+            }}>
               <UserPlus className="w-4 h-4 mr-2" />
               Aggiungi Risorsa
-            </Button>
-          </DialogTrigger>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Dialog Aggiungi Risorsa */}
+        <Dialog open={isResourceDialogOpen} onOpenChange={setIsResourceDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingResource ? "Modifica Risorsa" : "Aggiungi Nuova Risorsa"}</DialogTitle>
@@ -590,6 +621,106 @@ export default function SezioneCosti() {
                 </Button>
                 <Button type="submit" disabled={saveResourceMutation.isPending}>
                   {saveResourceMutation.isPending ? "Salvataggio..." : "Salva"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Aggiungi Costo */}
+        <Dialog open={isCostDialogOpen} onOpenChange={setIsCostDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Aggiungi Costo Esterno</DialogTitle>
+              <DialogDescription>
+                Inserisci costi esterni (consulenze, rilievi, altri) per una commessa
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (!selectedProjectForCost) {
+                toast({
+                  title: "Errore",
+                  description: "Seleziona una commessa",
+                  variant: "destructive"
+                });
+                return;
+              }
+              saveBudgetMutation.mutate({
+                projectId: selectedProjectForCost,
+                data: {
+                  costiConsulenze: Math.round(budgetFormData.costiConsulenze * 100),
+                  costiRilievi: Math.round(budgetFormData.costiRilievi * 100),
+                  altriCosti: Math.round(budgetFormData.altriCosti * 100)
+                }
+              });
+              setIsCostDialogOpen(false);
+            }} className="space-y-4">
+              <div>
+                <Label htmlFor="projectCost">Commessa *</Label>
+                <Select
+                  value={selectedProjectForCost}
+                  onValueChange={(value) => {
+                    setSelectedProjectForCost(value);
+                    const budget = budgets?.find(b => b.projectId === value);
+                    setBudgetFormData({
+                      costiConsulenze: (budget?.costiConsulenze || 0) / 100,
+                      costiRilievi: (budget?.costiRilievi || 0) / 100,
+                      altriCosti: (budget?.altriCosti || 0) / 100
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona commessa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects?.map(project => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.code} - {project.object}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="costiConsulenzeNew">Consulenze (€)</Label>
+                <Input
+                  id="costiConsulenzeNew"
+                  type="number"
+                  step="0.01"
+                  value={budgetFormData.costiConsulenze}
+                  onChange={(e) => setBudgetFormData({ ...budgetFormData, costiConsulenze: parseFloat(e.target.value) || 0 })}
+                  min="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="costiRilieviNew">Rilievi (€)</Label>
+                <Input
+                  id="costiRilieviNew"
+                  type="number"
+                  step="0.01"
+                  value={budgetFormData.costiRilievi}
+                  onChange={(e) => setBudgetFormData({ ...budgetFormData, costiRilievi: parseFloat(e.target.value) || 0 })}
+                  min="0"
+                />
+              </div>
+              <div>
+                <Label htmlFor="altriCostiNew">Altri Costi (€)</Label>
+                <Input
+                  id="altriCostiNew"
+                  type="number"
+                  step="0.01"
+                  value={budgetFormData.altriCosti}
+                  onChange={(e) => setBudgetFormData({ ...budgetFormData, altriCosti: parseFloat(e.target.value) || 0 })}
+                  min="0"
+                />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsCostDialogOpen(false)}>
+                  Annulla
+                </Button>
+                <Button type="submit" disabled={saveBudgetMutation.isPending}>
+                  {saveBudgetMutation.isPending ? "Salvataggio..." : "Salva"}
                 </Button>
               </DialogFooter>
             </form>
