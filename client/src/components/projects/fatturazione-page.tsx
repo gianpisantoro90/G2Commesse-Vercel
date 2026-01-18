@@ -288,6 +288,52 @@ export default function FatturazionePage() {
     });
   }, [prestazioniWithProjects, searchTerm, statoFilter, tipoFilter, projectFilter]);
 
+  // === INVOICE STATISTICS AND PAGINATION ===
+
+  // Calculate invoice statistics
+  const invoiceStats = useMemo(() => {
+    const totale = allInvoices.length;
+    const emesse = allInvoices.filter(i => i.stato === 'emessa').length;
+    const pagate = allInvoices.filter(i => i.stato === 'pagata').length;
+    const scadute = allInvoices.filter(i => i.stato === 'scaduta').length;
+    const importoTotale = allInvoices.reduce((sum, i) => sum + i.importoTotale, 0);
+    const importoPagato = allInvoices.filter(i => i.stato === 'pagata').reduce((sum, i) => sum + i.importoTotale, 0);
+    const importoDaPagare = allInvoices.filter(i => i.stato !== 'pagata').reduce((sum, i) => sum + i.importoTotale, 0);
+
+    return {
+      totale,
+      emesse,
+      pagate,
+      scadute,
+      importoTotale,
+      importoPagato,
+      importoDaPagare,
+    };
+  }, [allInvoices]);
+
+  // Group invoices by project
+  const groupedInvoices = useMemo(() => {
+    return projects.map(project => {
+      const projectInvoices = allInvoices.filter(i => i.projectId === project.id);
+      const totaleFatturato = projectInvoices.reduce((sum, i) => sum + i.importoTotale, 0);
+      const totalePagato = projectInvoices.filter(i => i.stato === 'pagata').reduce((sum, i) => sum + i.importoTotale, 0);
+
+      return {
+        project,
+        invoices: projectInvoices,
+        totaleFatturato,
+        totalePagato,
+        totaleInSospeso: totaleFatturato - totalePagato
+      };
+    }).filter(group => group.invoices.length > 0);
+  }, [allInvoices, projects]);
+
+  // Pagination logic for "all invoices" view
+  const totalPages = Math.ceil(allInvoices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInvoices = allInvoices.slice(startIndex, endIndex);
+
   // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: { projectId: string; prestazione: any }) => {
@@ -415,6 +461,93 @@ export default function FatturazionePage() {
     },
   });
 
+  // === MUTATIONS FOR GLOBAL INVOICE MANAGEMENT ===
+
+  // Save standalone invoice (create or update)
+  const saveStandaloneInvoiceMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const projectId = data.projectId;
+      const url = editingStandaloneInvoice
+        ? `/api/projects/${projectId}/invoices/${editingStandaloneInvoice.id}`
+        : `/api/projects/${projectId}/invoices`;
+      const method = editingStandaloneInvoice ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include"
+      });
+
+      if (!res.ok) throw new Error("Errore nel salvataggio");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({
+        title: editingStandaloneInvoice ? "Fattura aggiornata" : "Fattura creata",
+        description: "La fattura è stata salvata con successo"
+      });
+      resetStandaloneInvoiceForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete invoice
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async ({ id, projectId }: { id: string, projectId: string }) => {
+      const res = await fetch(`/api/projects/${projectId}/invoices/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("Errore nell'eliminazione");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({
+        title: "Fattura eliminata",
+        description: "La fattura è stata rimossa con successo"
+      });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile eliminare la fattura", variant: "destructive" });
+    }
+  });
+
+  // Update invoice status
+  const updateInvoiceStatusMutation = useMutation({
+    mutationFn: async ({ id, projectId, stato, dataPagamento }: { id: string, projectId: string, stato: string, dataPagamento?: string }) => {
+      const res = await fetch(`/api/projects/${projectId}/invoices/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stato, dataPagamento }),
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("Errore nell'aggiornamento");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({
+        title: "Stato aggiornato",
+        description: "Lo stato della fattura è stato aggiornato"
+      });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile aggiornare lo stato", variant: "destructive" });
+    }
+  });
+
   const resetForm = () => {
     setFormData({
       tipiSelezionati: [],
@@ -527,6 +660,93 @@ export default function FatturazionePage() {
       return PRESTAZIONE_STATI[index + 1];
     }
     return null;
+  };
+
+  // === HANDLERS FOR GLOBAL INVOICE MANAGEMENT ===
+
+  const resetStandaloneInvoiceForm = () => {
+    setStandaloneInvoiceForm({
+      numeroFattura: "",
+      dataEmissione: new Date().toISOString().split('T')[0],
+      importoNetto: 0,
+      cassaPercentuale: 4,
+      aliquotaIVA: 22,
+      ritenuta: 0,
+      scadenzaPagamento: "",
+      note: ""
+    });
+    setSelectedProjectForInvoice("");
+    setEditingStandaloneInvoice(null);
+    setIsStandaloneInvoiceDialogOpen(false);
+  };
+
+  const calculateStandaloneInvoice = () => {
+    const netto = Math.round(standaloneInvoiceForm.importoNetto * 100); // Converti in centesimi
+    const cassa = Math.round((netto * standaloneInvoiceForm.cassaPercentuale) / 100);
+    const baseIva = netto + cassa;
+    const iva = Math.round((baseIva * standaloneInvoiceForm.aliquotaIVA) / 100);
+    const totale = baseIva + iva;
+    const ritenuta = Math.round(standaloneInvoiceForm.ritenuta * 100);
+
+    return {
+      importoNetto: netto,
+      cassaPrevidenziale: cassa,
+      importoIVA: iva,
+      importoTotale: totale,
+      ritenuta,
+      nettoPagare: totale - ritenuta
+    };
+  };
+
+  const handleStandaloneInvoiceSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedProjectForInvoice) {
+      toast({
+        title: "Errore",
+        description: "Seleziona una commessa",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const calculated = calculateStandaloneInvoice();
+
+    saveStandaloneInvoiceMutation.mutate({
+      projectId: selectedProjectForInvoice,
+      numeroFattura: standaloneInvoiceForm.numeroFattura,
+      dataEmissione: standaloneInvoiceForm.dataEmissione,
+      scadenzaPagamento: standaloneInvoiceForm.scadenzaPagamento || null,
+      aliquotaIVA: standaloneInvoiceForm.aliquotaIVA,
+      note: standaloneInvoiceForm.note,
+      ...calculated,
+      stato: 'emessa'
+    });
+  };
+
+  const handleEditStandaloneInvoice = (invoice: ProjectInvoice) => {
+    setEditingStandaloneInvoice(invoice);
+    setSelectedProjectForInvoice(invoice.projectId);
+    setStandaloneInvoiceForm({
+      numeroFattura: invoice.numeroFattura,
+      dataEmissione: invoice.dataEmissione.split('T')[0],
+      importoNetto: invoice.importoNetto / 100,
+      cassaPercentuale: invoice.cassaPrevidenziale ? (invoice.cassaPrevidenziale / invoice.importoNetto) * 100 : 4,
+      aliquotaIVA: invoice.aliquotaIVA,
+      ritenuta: invoice.ritenuta / 100,
+      scadenzaPagamento: invoice.scadenzaPagamento?.split('T')[0] || "",
+      note: invoice.note || ""
+    });
+    setIsStandaloneInvoiceDialogOpen(true);
+  };
+
+  const handleMarkAsPaid = (invoice: ProjectInvoice) => {
+    updateInvoiceStatusMutation.mutate({
+      id: invoice.id,
+      projectId: invoice.projectId,
+      stato: 'pagata',
+      dataPagamento: new Date().toISOString()
+    });
   };
 
   const formatCurrency = (cents: number | null | undefined) => {
