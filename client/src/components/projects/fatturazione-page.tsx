@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/command";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus,
@@ -57,12 +58,15 @@ import {
   Play,
   ArrowRight,
   Trash2,
+  Edit,
   Calendar,
   Download,
   Link as LinkIcon,
   ExternalLink,
   Check,
   ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -76,6 +80,7 @@ import {
 } from "@shared/schema";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 
 // Config per tipi prestazione
 const PRESTAZIONE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
@@ -104,6 +109,14 @@ const LIVELLO_CONFIG: Record<string, string> = {
   'esecutivo': 'Esecutivo',
   'variante': 'Variante',
 };
+
+// Config per stati fattura
+const STATI_FATTURA = [
+  { value: 'emessa', label: 'Emessa', icon: <FileText className="w-4 h-4" />, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+  { value: 'pagata', label: 'Pagata', icon: <CheckCircle className="w-4 h-4" />, color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' },
+  { value: 'parzialmente_pagata', label: 'Parzialmente Pagata', icon: <Clock className="w-4 h-4" />, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
+  { value: 'scaduta', label: 'Scaduta', icon: <AlertTriangle className="w-4 h-4" />, color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' }
+];
 
 interface PrestazioneWithProject extends ProjectPrestazione {
   project?: Project;
@@ -173,6 +186,28 @@ export default function FatturazionePage() {
     return { imponibile, cassa, baseIva, iva, totale };
   }, [invoiceFormData.imponibile, invoiceFormData.cassaPercentuale, invoiceFormData.ivaPercentuale]);
 
+  // Tab management
+  const [activeTab, setActiveTab] = useState<"prestazioni" | "registro">("prestazioni");
+
+  // Stato per gestione fatture globali (Registro Fatture)
+  const [isStandaloneInvoiceDialogOpen, setIsStandaloneInvoiceDialogOpen] = useState(false);
+  const [editingStandaloneInvoice, setEditingStandaloneInvoice] = useState<ProjectInvoice | null>(null);
+  const [selectedProjectForInvoice, setSelectedProjectForInvoice] = useState<string | null>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
+
+  // Form state for standalone invoice (global management)
+  const [standaloneInvoiceForm, setStandaloneInvoiceForm] = useState({
+    numeroFattura: "",
+    dataEmissione: new Date().toISOString().split('T')[0],
+    importoNetto: 0,
+    cassaPercentuale: 4,
+    aliquotaIVA: 22,
+    ritenuta: 0,
+    scadenzaPagamento: "",
+    note: ""
+  });
+
   // Fetch all data
   const { data: projects = [], isLoading: loadingProjects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -184,6 +219,11 @@ export default function FatturazionePage() {
 
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
+  });
+
+  // Fetch ALL invoices for global management
+  const { data: allInvoices = [], isLoading: loadingInvoices } = useQuery<ProjectInvoice[]>({
+    queryKey: ["/api/invoices"],
   });
 
   // Combine prestazioni with project info
