@@ -1767,10 +1767,274 @@ export default function FatturazionePage() {
           </Card>
         </div>
 
-        {/* TODO: Aggiungere tabs Tutte/Per Commessa/Da Incassare */}
-        <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
-          <p className="text-muted-foreground">Viste fatture (Tutte | Per Commessa | Da Incassare) in arrivo...</p>
-        </div>
+        {/* Viste Fatture */}
+        <Tabs defaultValue="tutte" className="w-full">
+          <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="tutte" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+              Tutte le Fatture
+            </TabsTrigger>
+            <TabsTrigger value="per-commessa" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+              Per Commessa
+            </TabsTrigger>
+            <TabsTrigger value="da-incassare" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+              Da Incassare
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Vista: Tutte le Fatture */}
+          <TabsContent value="tutte" className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                {loadingInvoices ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Caricamento...</p>
+                ) : allInvoices.length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura emessa</p>
+                ) : (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>N. Fattura</TableHead>
+                          <TableHead>Commessa</TableHead>
+                          <TableHead>Data</TableHead>
+                          <TableHead className="text-right">Importo</TableHead>
+                          <TableHead className="text-center">Stato</TableHead>
+                          <TableHead className="text-center">Azioni</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedInvoices.map(invoice => {
+                          const project = projects.find(p => p.id === invoice.projectId);
+                          const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
+
+                          return (
+                            <TableRow key={invoice.id}>
+                              <TableCell className="font-medium">{invoice.numeroFattura}</TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  <div className="font-medium">{project?.code}</div>
+                                  <div className="text-gray-500 dark:text-gray-400 truncate max-w-xs">{project?.object}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {formatCurrency(invoice.importoTotale)}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge className={statoConfig?.color}>
+                                  {statoConfig?.icon}
+                                  <span className="ml-1">{statoConfig?.label}</span>
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-center gap-2">
+                                  {invoice.stato !== 'pagata' && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleMarkAsPaid(invoice)}
+                                      title="Segna come pagata"
+                                    >
+                                      <CheckCircle className="w-4 h-4 text-green-600" />
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditStandaloneInvoice(invoice)}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (confirm("Sei sicuro di voler eliminare questa fattura?")) {
+                                        deleteInvoiceMutation.mutate({ id: invoice.id, projectId: invoice.projectId });
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-gray-700">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, allInvoices.length)}</strong> di <strong>{allInvoices.length}</strong> fatture
+                        </span>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Vista: Per Commessa */}
+          <TabsContent value="per-commessa" className="space-y-4">
+            {groupedInvoices.map(group => (
+              <Card key={group.project.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">{group.project.code}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{group.project.object}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Fatturato Totale</div>
+                      <div className="text-xl font-bold">
+                        {formatCurrency(group.totaleFatturato)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {group.invoices.map(invoice => {
+                      const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
+                      return (
+                        <div key={invoice.id} className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <div>
+                            <div className="font-semibold">{invoice.numeroFattura}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {format(new Date(invoice.dataEmissione), 'dd MMMM yyyy', { locale: it })}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <Badge className={statoConfig?.color}>
+                              {statoConfig?.label}
+                            </Badge>
+                            <div className="text-right">
+                              <div className="font-bold">
+                                {formatCurrency(invoice.importoTotale)}
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              {invoice.stato !== 'pagata' && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleMarkAsPaid(invoice)}
+                                >
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditStandaloneInvoice(invoice)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm("Sei sicuro di voler eliminare questa fattura?")) {
+                                    deleteInvoiceMutation.mutate({ id: invoice.id, projectId: invoice.projectId });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {groupedInvoices.length === 0 && (
+              <Card>
+                <CardContent className="p-8">
+                  <p className="text-center text-gray-500 dark:text-gray-400">Nessuna fattura emessa</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Vista: Da Incassare */}
+          <TabsContent value="da-incassare" className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                {allInvoices.filter(i => i.stato !== 'pagata').length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura da incassare</p>
+                ) : (
+                  <div className="space-y-3">
+                    {allInvoices.filter(i => i.stato !== 'pagata').map(invoice => {
+                      const project = projects.find(p => p.id === invoice.projectId);
+                      const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
+
+                      return (
+                        <div key={invoice.id} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className="font-semibold">{invoice.numeroFattura}</div>
+                              <Badge className={statoConfig?.color}>
+                                {statoConfig?.label}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {project?.code} - {project?.object}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Emessa: {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
+                              {invoice.scadenzaPagamento && (
+                                <> | Scadenza: {format(new Date(invoice.scadenzaPagamento), 'dd/MM/yyyy', { locale: it })}</>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="text-xl font-bold">
+                                {formatCurrency(invoice.importoTotale)}
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleMarkAsPaid(invoice)}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Segna Pagata
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </TabsContent>
     </Tabs>
   );
