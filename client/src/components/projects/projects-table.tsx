@@ -519,14 +519,14 @@ export default function ProjectsTable() {
             <Input
               placeholder={isMobile ? "Cerca..." : "Cerca per codice, cliente, città, oggetto..."}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
               data-testid="search-projects"
             />
             <span className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 text-lg">🔍</span>
           </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={handleFilterChange(setStatusFilter)}>
             <SelectTrigger className="w-[calc(50%-0.25rem)] sm:w-[180px]" data-testid="filter-status">
               <SelectValue placeholder="Stato" />
             </SelectTrigger>
@@ -538,7 +538,7 @@ export default function ProjectsTable() {
             </SelectContent>
           </Select>
 
-          <Select value={yearFilter} onValueChange={setYearFilter}>
+          <Select value={yearFilter} onValueChange={handleFilterChange(setYearFilter)}>
             <SelectTrigger className="w-[calc(50%-0.25rem)] sm:w-[150px]" data-testid="filter-year">
               <SelectValue placeholder="Anno" />
             </SelectTrigger>
@@ -552,7 +552,7 @@ export default function ProjectsTable() {
             </SelectContent>
           </Select>
 
-          <Select value={creFilter} onValueChange={setCreFilter}>
+          <Select value={creFilter} onValueChange={handleFilterChange(setCreFilter)}>
             <SelectTrigger className="w-[calc(50%-0.25rem)] sm:w-[150px]" data-testid="filter-cre">
               <SelectValue placeholder="CRE" />
             </SelectTrigger>
@@ -572,6 +572,7 @@ export default function ProjectsTable() {
                 setYearFilter("all");
                 setCreFilter("all");
                 setSearchTerm("");
+                setCurrentPage(1);
               }}
               className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               data-testid="clear-filters"
