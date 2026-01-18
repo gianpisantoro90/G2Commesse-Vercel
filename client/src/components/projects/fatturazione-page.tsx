@@ -197,6 +197,16 @@ export default function FatturazionePage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
 
+  // Filtri per Registro Fatture
+  const [invoiceSearchTerm, setInvoiceSearchTerm] = useState("");
+  const [invoiceStatoFilter, setInvoiceStatoFilter] = useState<string>("all");
+  const [invoiceProjectFilter, setInvoiceProjectFilter] = useState<string>("all");
+  const [invoiceYearFilter, setInvoiceYearFilter] = useState<string>("all");
+
+  // Paginazione per Prestazioni
+  const [prestazioniPage, setPrestazioniPage] = useState(1);
+  const [prestazioniItemsPerPage, setPrestazioniItemsPerPage] = useState<10 | 25 | 50>(10);
+
   // Form state for standalone invoice (global management)
   const [standaloneInvoiceForm, setStandaloneInvoiceForm] = useState({
     numeroFattura: "",
@@ -289,6 +299,12 @@ export default function FatturazionePage() {
     });
   }, [prestazioniWithProjects, searchTerm, statoFilter, tipoFilter, projectFilter]);
 
+  // Pagination logic for prestazioni
+  const prestazioniTotalPages = Math.ceil(filteredPrestazioni.length / prestazioniItemsPerPage);
+  const prestazioniStartIndex = (prestazioniPage - 1) * prestazioniItemsPerPage;
+  const prestazioniEndIndex = prestazioniStartIndex + prestazioniItemsPerPage;
+  const paginatedPrestazioni = filteredPrestazioni.slice(prestazioniStartIndex, prestazioniEndIndex);
+
   // === INVOICE STATISTICS AND PAGINATION ===
 
   // Calculate invoice statistics
@@ -312,10 +328,52 @@ export default function FatturazionePage() {
     };
   }, [allInvoices]);
 
-  // Group invoices by project
+  // Extract available years from invoices for filter
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    allInvoices.forEach(inv => {
+      if (inv.dataEmissione) {
+        const year = new Date(inv.dataEmissione).getFullYear();
+        years.add(year);
+      }
+    });
+    return Array.from(years).sort((a, b) => b - a); // Sort descending
+  }, [allInvoices]);
+
+  // Filter invoices
+  const filteredInvoices = useMemo(() => {
+    return allInvoices.filter(invoice => {
+      // Search filter
+      if (invoiceSearchTerm) {
+        const search = invoiceSearchTerm.toLowerCase();
+        const project = projects.find(p => p.id === invoice.projectId);
+        const matchNumero = invoice.numeroFattura?.toLowerCase().includes(search);
+        const matchProject = project?.code?.toLowerCase().includes(search) ||
+                            project?.client?.toLowerCase().includes(search) ||
+                            project?.object?.toLowerCase().includes(search);
+        if (!matchNumero && !matchProject) return false;
+      }
+
+      // Stato filter
+      if (invoiceStatoFilter !== 'all' && invoice.stato !== invoiceStatoFilter) return false;
+
+      // Project filter
+      if (invoiceProjectFilter !== 'all' && invoice.projectId !== invoiceProjectFilter) return false;
+
+      // Year filter
+      if (invoiceYearFilter !== 'all') {
+        const invoiceYear = new Date(invoice.dataEmissione).getFullYear();
+        if (invoiceYear.toString() !== invoiceYearFilter) return false;
+      }
+
+      return true;
+    });
+  }, [allInvoices, invoiceSearchTerm, invoiceStatoFilter, invoiceProjectFilter, invoiceYearFilter, projects]);
+
+  // Group invoices by project (using filtered invoices)
   const groupedInvoices = useMemo(() => {
     return projects.map(project => {
-      const projectInvoices = allInvoices.filter(i => i.projectId === project.id);
+      const projectInvoices = filteredInvoices.filter(i => i.projectId === project.id);
       const totaleFatturato = projectInvoices.reduce((sum, i) => sum + i.importoTotale, 0);
       const totalePagato = projectInvoices.filter(i => i.stato === 'pagata').reduce((sum, i) => sum + i.importoTotale, 0);
 
@@ -327,13 +385,13 @@ export default function FatturazionePage() {
         totaleInSospeso: totaleFatturato - totalePagato
       };
     }).filter(group => group.invoices.length > 0);
-  }, [allInvoices, projects]);
+  }, [filteredInvoices, projects]);
 
-  // Pagination logic for "all invoices" view
-  const totalPages = Math.ceil(allInvoices.length / itemsPerPage);
+  // Pagination logic for "all invoices" view (using filtered invoices)
+  const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedInvoices = allInvoices.slice(startIndex, endIndex);
+  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
 
   // Mutations
   const createMutation = useMutation({
@@ -972,7 +1030,7 @@ export default function FatturazionePage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPrestazioni.map((prestazione) => {
+                  paginatedPrestazioni.map((prestazione) => {
                     const config = PRESTAZIONE_CONFIG[prestazione.tipo] || { label: prestazione.tipo, color: 'bg-gray-100', icon: '📋' };
                     const statoConfig = STATO_CONFIG[prestazione.stato] || STATO_CONFIG['da_iniziare'];
                     const nextStato = getNextStato(prestazione.stato);
@@ -1178,6 +1236,59 @@ export default function FatturazionePage() {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Controls for Prestazioni */}
+          {filteredPrestazioni.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Mostra {prestazioniStartIndex + 1}-{Math.min(prestazioniEndIndex, filteredPrestazioni.length)} di {filteredPrestazioni.length} prestazioni
+                </span>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Elementi per pagina:</span>
+                  <Select
+                    value={prestazioniItemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setPrestazioniItemsPerPage(Number(value) as 10 | 25 | 50);
+                      setPrestazioniPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-[70px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPrestazioniPage(prev => Math.max(1, prev - 1))}
+                    disabled={prestazioniPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="text-sm">
+                    Pagina {prestazioniPage} di {prestazioniTotalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPrestazioniPage(prev => Math.min(prestazioniTotalPages, prev + 1))}
+                    disabled={prestazioniPage === prestazioniTotalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -1768,6 +1879,88 @@ export default function FatturazionePage() {
           </Card>
         </div>
 
+        {/* Filtri Fatture */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-wrap gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Cerca per n. fattura, commessa, cliente..."
+                    value={invoiceSearchTerm}
+                    onChange={(e) => {
+                      setInvoiceSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <Select
+                value={invoiceStatoFilter}
+                onValueChange={(value) => {
+                  setInvoiceStatoFilter(value);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Stato" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti gli stati</SelectItem>
+                  {STATI_FATTURA.map(stato => (
+                    <SelectItem key={stato.value} value={stato.value}>
+                      <div className="flex items-center gap-2">
+                        {stato.icon}
+                        <span>{stato.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={invoiceProjectFilter}
+                onValueChange={(value) => {
+                  setInvoiceProjectFilter(value);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Commessa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutte le commesse</SelectItem>
+                  {projects.map(project => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select
+                value={invoiceYearFilter}
+                onValueChange={(value) => {
+                  setInvoiceYearFilter(value);
+                  setCurrentPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Anno" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti gli anni</SelectItem>
+                  {availableYears.map(year => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Viste Fatture */}
         <Tabs defaultValue="tutte" className="w-full">
           <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
@@ -1788,8 +1981,12 @@ export default function FatturazionePage() {
               <CardContent className="p-6">
                 {loadingInvoices ? (
                   <p className="text-center text-gray-500 dark:text-gray-400 py-8">Caricamento...</p>
-                ) : allInvoices.length === 0 ? (
-                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura emessa</p>
+                ) : filteredInvoices.length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                    {allInvoices.length === 0
+                      ? "Nessuna fattura emessa. Clicca 'Nuova Fattura' per iniziare."
+                      : "Nessuna fattura corrisponde ai filtri selezionati."}
+                  </p>
                 ) : (
                   <>
                     <Table>
@@ -1976,7 +2173,11 @@ export default function FatturazionePage() {
             {groupedInvoices.length === 0 && (
               <Card>
                 <CardContent className="p-8">
-                  <p className="text-center text-gray-500 dark:text-gray-400">Nessuna fattura emessa</p>
+                  <p className="text-center text-gray-500 dark:text-gray-400">
+                    {allInvoices.length === 0
+                      ? "Nessuna fattura emessa. Clicca 'Nuova Fattura' per iniziare."
+                      : "Nessuna fattura corrisponde ai filtri selezionati."}
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -1986,11 +2187,15 @@ export default function FatturazionePage() {
           <TabsContent value="da-incassare" className="space-y-4">
             <Card>
               <CardContent className="p-6">
-                {allInvoices.filter(i => i.stato !== 'pagata').length === 0 ? (
-                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura da incassare</p>
+                {filteredInvoices.filter(i => i.stato !== 'pagata').length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">
+                    {allInvoices.filter(i => i.stato !== 'pagata').length === 0
+                      ? "Nessuna fattura da incassare. Tutte le fatture sono state pagate!"
+                      : "Nessuna fattura da incassare corrisponde ai filtri selezionati."}
+                  </p>
                 ) : (
                   <div className="space-y-3">
-                    {allInvoices.filter(i => i.stato !== 'pagata').map(invoice => {
+                    {filteredInvoices.filter(i => i.stato !== 'pagata').map(invoice => {
                       const project = projects.find(p => p.id === invoice.projectId);
                       const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
 
