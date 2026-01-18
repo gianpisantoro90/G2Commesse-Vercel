@@ -32,6 +32,7 @@ import OneDriveBrowser from "@/components/onedrive/onedrive-browser";
 import TodoPanel from "@/components/todo/TodoPanel";
 import PrestazioniStatsWidget from "@/components/dashboard/prestazioni-stats-widget";
 import FatturazionePage from "@/components/projects/fatturazione-page";
+import RequisitiTecnici from "@/components/projects/requisiti-tecnici";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Project } from "@shared/schema";
 
@@ -179,6 +180,15 @@ export default function Dashboard() {
                           📊 Fatturazione
                         </TabsTrigger>
                       )}
+                      {isAdmin && (
+                        <TabsTrigger
+                          value="requisiti"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          data-testid="tab-requisiti"
+                        >
+                          🏆 Requisiti
+                        </TabsTrigger>
+                      )}
                     </TabsList>
                   </div>
 
@@ -209,6 +219,12 @@ export default function Dashboard() {
                   {isAdmin && (
                     <TabsContent value="fatturazione" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                       <FatturazionePage />
+                    </TabsContent>
+                  )}
+
+                  {isAdmin && (
+                    <TabsContent value="requisiti" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                      <RequisitiTecnici />
                     </TabsContent>
                   )}
 
