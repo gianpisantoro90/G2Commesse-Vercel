@@ -771,7 +771,20 @@ export default function FatturazionePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "prestazioni" | "registro")} className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsTrigger value="prestazioni">
+          <FileText className="w-4 h-4 mr-2" />
+          Prestazioni
+        </TabsTrigger>
+        <TabsTrigger value="registro">
+          <Euro className="w-4 h-4 mr-2" />
+          Registro Fatture
+        </TabsTrigger>
+      </TabsList>
+
+      {/* TAB 1: PRESTAZIONI */}
+      <TabsContent value="prestazioni" className="space-y-6">
       {/* Header con Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Alert Card */}
@@ -1523,6 +1536,16 @@ export default function FatturazionePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </TabsContent>
+      {/* Fine tab Prestazioni */}
+
+      {/* TAB 2: REGISTRO FATTURE */}
+      <TabsContent value="registro" className="space-y-6">
+        {/* TODO: Aggiungere contenuto Registro Fatture */}
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Contenuto Registro Fatture in arrivo...</p>
+        </div>
+      </TabsContent>
+    </Tabs>
   );
 }
