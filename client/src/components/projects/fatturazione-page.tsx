@@ -2064,29 +2064,55 @@ export default function FatturazionePage() {
                       </TableBody>
                     </Table>
 
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-gray-700">
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
-                          Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, allInvoices.length)}</strong> di <strong>{allInvoices.length}</strong> fatture
-                        </span>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                            disabled={currentPage === 1}
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                            disabled={currentPage === totalPages}
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
+                    {/* Pagination Controls for Invoices */}
+                    {filteredInvoices.length > 0 && (
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t dark:border-gray-700">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            Mostra {startIndex + 1}-{Math.min(endIndex, filteredInvoices.length)} di {filteredInvoices.length} fatture
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Elementi per pagina:</span>
+                            <Select
+                              value={itemsPerPage.toString()}
+                              onValueChange={(value) => {
+                                setItemsPerPage(Number(value) as 10 | 25 | 50);
+                                setCurrentPage(1);
+                              }}
+                            >
+                              <SelectTrigger className="w-[70px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="10">10</SelectItem>
+                                <SelectItem value="25">25</SelectItem>
+                                <SelectItem value="50">50</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                              disabled={currentPage === 1}
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                            <span className="text-sm">
+                              Pagina {currentPage} di {totalPages}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                              disabled={currentPage === totalPages}
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     )}
