@@ -1541,9 +1541,235 @@ export default function FatturazionePage() {
 
       {/* TAB 2: REGISTRO FATTURE */}
       <TabsContent value="registro" className="space-y-6">
-        {/* TODO: Aggiungere contenuto Registro Fatture */}
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Contenuto Registro Fatture in arrivo...</p>
+        {/* Header con bottone Nuova Fattura */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Registro Fatture</h3>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Gestione globale di tutte le fatture</p>
+          </div>
+          <Dialog open={isStandaloneInvoiceDialogOpen} onOpenChange={setIsStandaloneInvoiceDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => resetStandaloneInvoiceForm()}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nuova Fattura
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingStandaloneInvoice ? "Modifica Fattura" : "Crea Nuova Fattura"}</DialogTitle>
+                <DialogDescription>
+                  Compila i dati della fattura per la commessa selezionata
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleStandaloneInvoiceSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="project">Commessa *</Label>
+                  <ProjectCombobox
+                    projects={projects}
+                    value={selectedProjectForInvoice}
+                    onValueChange={setSelectedProjectForInvoice}
+                    disabled={!!editingStandaloneInvoice}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="numeroFattura">Numero Fattura *</Label>
+                    <Input
+                      id="numeroFattura"
+                      value={standaloneInvoiceForm.numeroFattura}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, numeroFattura: e.target.value })}
+                      placeholder="es. 001/2025"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dataEmissione">Data Emissione *</Label>
+                    <Input
+                      id="dataEmissione"
+                      type="date"
+                      value={standaloneInvoiceForm.dataEmissione}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, dataEmissione: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="importoNetto">Imponibile (€) *</Label>
+                    <Input
+                      id="importoNetto"
+                      type="number"
+                      step="0.01"
+                      value={standaloneInvoiceForm.importoNetto}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, importoNetto: parseFloat(e.target.value) || 0 })}
+                      required
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cassaPercentuale">Cassa (%)</Label>
+                    <Input
+                      id="cassaPercentuale"
+                      type="number"
+                      step="0.1"
+                      value={standaloneInvoiceForm.cassaPercentuale}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, cassaPercentuale: parseFloat(e.target.value) || 0 })}
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="aliquotaIVA">IVA (%)</Label>
+                    <Input
+                      id="aliquotaIVA"
+                      type="number"
+                      value={standaloneInvoiceForm.aliquotaIVA}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, aliquotaIVA: parseInt(e.target.value) || 0 })}
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ritenuta">Ritenuta (€)</Label>
+                    <Input
+                      id="ritenuta"
+                      type="number"
+                      step="0.01"
+                      value={standaloneInvoiceForm.ritenuta}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, ritenuta: parseFloat(e.target.value) || 0 })}
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="scadenzaPagamento">Scadenza Pagamento</Label>
+                  <Input
+                    id="scadenzaPagamento"
+                    type="date"
+                    value={standaloneInvoiceForm.scadenzaPagamento}
+                    onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, scadenzaPagamento: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="note">Note</Label>
+                  <Textarea
+                    id="note"
+                    value={standaloneInvoiceForm.note}
+                    onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, note: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Riepilogo Calcoli */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
+                  <div className="font-semibold text-sm text-gray-700 dark:text-gray-300">Riepilogo Fattura</div>
+                  <div className="flex justify-between text-sm">
+                    <span>Imponibile:</span>
+                    <span>€{standaloneInvoiceForm.importoNetto.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Cassa {standaloneInvoiceForm.cassaPercentuale}% (Inarcassa):</span>
+                    <span>€{((standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-t pt-2">
+                    <span>Base IVA:</span>
+                    <span>€{(standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>IVA ({standaloneInvoiceForm.aliquotaIVA}%):</span>
+                    <span>€{(((standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100) * standaloneInvoiceForm.aliquotaIVA) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold border-t pt-2">
+                    <span>Totale con IVA:</span>
+                    <span>€{(standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100 + ((standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100) * standaloneInvoiceForm.aliquotaIVA) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-red-600">
+                    <span>Ritenuta d'Acconto:</span>
+                    <span>-€{standaloneInvoiceForm.ritenuta.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold border-t pt-2">
+                    <span>Netto a Pagare:</span>
+                    <span className="text-green-600">
+                      €{(standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100 + ((standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100) * standaloneInvoiceForm.aliquotaIVA) / 100 - standaloneInvoiceForm.ritenuta).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={resetStandaloneInvoiceForm}>
+                    Annulla
+                  </Button>
+                  <Button type="submit" disabled={saveStandaloneInvoiceMutation.isPending}>
+                    {saveStandaloneInvoiceMutation.isPending ? "Salvataggio..." : "Salva Fattura"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Statistiche Fatture */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Fatture Totali</p>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{invoiceStats.totale}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                    Emesse: {invoiceStats.emesse} | Pagate: {invoiceStats.pagate}
+                  </div>
+                </div>
+                <FileText className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Importo Totale</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatCurrency(invoiceStats.importoTotale)}
+                </div>
+                <Euro className="w-8 h-8 text-purple-500 dark:text-purple-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Incassato</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {formatCurrency(invoiceStats.importoPagato)}
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500 dark:text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Da Incassare</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  {formatCurrency(invoiceStats.importoDaPagare)}
+                </div>
+                <Clock className="w-8 h-8 text-orange-500 dark:text-orange-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* TODO: Aggiungere tabs Tutte/Per Commessa/Da Incassare */}
+        <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+          <p className="text-muted-foreground">Viste fatture (Tutte | Per Commessa | Da Incassare) in arrivo...</p>
         </div>
       </TabsContent>
     </Tabs>
