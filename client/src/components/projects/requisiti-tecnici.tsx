@@ -76,7 +76,7 @@ export default function RequisitiTecnici() {
     queryKey: ["/api/projects"],
   });
 
-  // Estrai tutte le classificazioni con i dati della commessa
+  // Estrai tutte le classificazioni con i dati della commessa (escludi importi zero)
   const tutteClassificazioni = useMemo(() => {
     const classificazioni: ClassificazioneConCommessa[] = [];
 
@@ -84,9 +84,13 @@ export default function RequisitiTecnici() {
       const metadata = project.metadata as ProjectPrestazioni | null;
       if (metadata?.classificazioniDM2016?.length) {
         metadata.classificazioniDM2016.forEach((classif) => {
+          // Escludi classificazioni con importo zero o non definito
+          const importo = classif.importo || 0;
+          if (importo <= 0) return;
+
           classificazioni.push({
             codice: classif.codice,
-            importo: classif.importo || 0,
+            importo: importo,
             importoServizio: classif.importoServizio || 0,
             projectId: project.id,
             projectCode: project.code,
