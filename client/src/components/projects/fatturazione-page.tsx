@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/command";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus,
@@ -57,12 +58,15 @@ import {
   Play,
   ArrowRight,
   Trash2,
+  Edit,
   Calendar,
   Download,
   Link as LinkIcon,
   ExternalLink,
   Check,
   ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -76,6 +80,7 @@ import {
 } from "@shared/schema";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 
 // Config per tipi prestazione
 const PRESTAZIONE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
@@ -104,6 +109,14 @@ const LIVELLO_CONFIG: Record<string, string> = {
   'esecutivo': 'Esecutivo',
   'variante': 'Variante',
 };
+
+// Config per stati fattura
+const STATI_FATTURA = [
+  { value: 'emessa', label: 'Emessa', icon: <FileText className="w-4 h-4" />, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+  { value: 'pagata', label: 'Pagata', icon: <CheckCircle className="w-4 h-4" />, color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' },
+  { value: 'parzialmente_pagata', label: 'Parzialmente Pagata', icon: <Clock className="w-4 h-4" />, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
+  { value: 'scaduta', label: 'Scaduta', icon: <AlertTriangle className="w-4 h-4" />, color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' }
+];
 
 interface PrestazioneWithProject extends ProjectPrestazione {
   project?: Project;
@@ -173,6 +186,28 @@ export default function FatturazionePage() {
     return { imponibile, cassa, baseIva, iva, totale };
   }, [invoiceFormData.imponibile, invoiceFormData.cassaPercentuale, invoiceFormData.ivaPercentuale]);
 
+  // Tab management
+  const [activeTab, setActiveTab] = useState<"prestazioni" | "registro">("prestazioni");
+
+  // Stato per gestione fatture globali (Registro Fatture)
+  const [isStandaloneInvoiceDialogOpen, setIsStandaloneInvoiceDialogOpen] = useState(false);
+  const [editingStandaloneInvoice, setEditingStandaloneInvoice] = useState<ProjectInvoice | null>(null);
+  const [selectedProjectForInvoice, setSelectedProjectForInvoice] = useState<string | null>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
+
+  // Form state for standalone invoice (global management)
+  const [standaloneInvoiceForm, setStandaloneInvoiceForm] = useState({
+    numeroFattura: "",
+    dataEmissione: new Date().toISOString().split('T')[0],
+    importoNetto: 0,
+    cassaPercentuale: 4,
+    aliquotaIVA: 22,
+    ritenuta: 0,
+    scadenzaPagamento: "",
+    note: ""
+  });
+
   // Fetch all data
   const { data: projects = [], isLoading: loadingProjects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
@@ -184,6 +219,11 @@ export default function FatturazionePage() {
 
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
+  });
+
+  // Fetch ALL invoices for global management
+  const { data: allInvoices = [], isLoading: loadingInvoices } = useQuery<ProjectInvoice[]>({
+    queryKey: ["/api/invoices"],
   });
 
   // Combine prestazioni with project info
@@ -247,6 +287,52 @@ export default function FatturazionePage() {
       return true;
     });
   }, [prestazioniWithProjects, searchTerm, statoFilter, tipoFilter, projectFilter]);
+
+  // === INVOICE STATISTICS AND PAGINATION ===
+
+  // Calculate invoice statistics
+  const invoiceStats = useMemo(() => {
+    const totale = allInvoices.length;
+    const emesse = allInvoices.filter(i => i.stato === 'emessa').length;
+    const pagate = allInvoices.filter(i => i.stato === 'pagata').length;
+    const scadute = allInvoices.filter(i => i.stato === 'scaduta').length;
+    const importoTotale = allInvoices.reduce((sum, i) => sum + i.importoTotale, 0);
+    const importoPagato = allInvoices.filter(i => i.stato === 'pagata').reduce((sum, i) => sum + i.importoTotale, 0);
+    const importoDaPagare = allInvoices.filter(i => i.stato !== 'pagata').reduce((sum, i) => sum + i.importoTotale, 0);
+
+    return {
+      totale,
+      emesse,
+      pagate,
+      scadute,
+      importoTotale,
+      importoPagato,
+      importoDaPagare,
+    };
+  }, [allInvoices]);
+
+  // Group invoices by project
+  const groupedInvoices = useMemo(() => {
+    return projects.map(project => {
+      const projectInvoices = allInvoices.filter(i => i.projectId === project.id);
+      const totaleFatturato = projectInvoices.reduce((sum, i) => sum + i.importoTotale, 0);
+      const totalePagato = projectInvoices.filter(i => i.stato === 'pagata').reduce((sum, i) => sum + i.importoTotale, 0);
+
+      return {
+        project,
+        invoices: projectInvoices,
+        totaleFatturato,
+        totalePagato,
+        totaleInSospeso: totaleFatturato - totalePagato
+      };
+    }).filter(group => group.invoices.length > 0);
+  }, [allInvoices, projects]);
+
+  // Pagination logic for "all invoices" view
+  const totalPages = Math.ceil(allInvoices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedInvoices = allInvoices.slice(startIndex, endIndex);
 
   // Mutations
   const createMutation = useMutation({
@@ -375,6 +461,93 @@ export default function FatturazionePage() {
     },
   });
 
+  // === MUTATIONS FOR GLOBAL INVOICE MANAGEMENT ===
+
+  // Save standalone invoice (create or update)
+  const saveStandaloneInvoiceMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const projectId = data.projectId;
+      const url = editingStandaloneInvoice
+        ? `/api/projects/${projectId}/invoices/${editingStandaloneInvoice.id}`
+        : `/api/projects/${projectId}/invoices`;
+      const method = editingStandaloneInvoice ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include"
+      });
+
+      if (!res.ok) throw new Error("Errore nel salvataggio");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({
+        title: editingStandaloneInvoice ? "Fattura aggiornata" : "Fattura creata",
+        description: "La fattura è stata salvata con successo"
+      });
+      resetStandaloneInvoiceForm();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Errore",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete invoice
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async ({ id, projectId }: { id: string, projectId: string }) => {
+      const res = await fetch(`/api/projects/${projectId}/invoices/${id}`, {
+        method: "DELETE",
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("Errore nell'eliminazione");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({
+        title: "Fattura eliminata",
+        description: "La fattura è stata rimossa con successo"
+      });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile eliminare la fattura", variant: "destructive" });
+    }
+  });
+
+  // Update invoice status
+  const updateInvoiceStatusMutation = useMutation({
+    mutationFn: async ({ id, projectId, stato, dataPagamento }: { id: string, projectId: string, stato: string, dataPagamento?: string }) => {
+      const res = await fetch(`/api/projects/${projectId}/invoices/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stato, dataPagamento }),
+        credentials: "include"
+      });
+      if (!res.ok) throw new Error("Errore nell'aggiornamento");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({
+        title: "Stato aggiornato",
+        description: "Lo stato della fattura è stato aggiornato"
+      });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile aggiornare lo stato", variant: "destructive" });
+    }
+  });
+
   const resetForm = () => {
     setFormData({
       tipiSelezionati: [],
@@ -489,6 +662,93 @@ export default function FatturazionePage() {
     return null;
   };
 
+  // === HANDLERS FOR GLOBAL INVOICE MANAGEMENT ===
+
+  const resetStandaloneInvoiceForm = () => {
+    setStandaloneInvoiceForm({
+      numeroFattura: "",
+      dataEmissione: new Date().toISOString().split('T')[0],
+      importoNetto: 0,
+      cassaPercentuale: 4,
+      aliquotaIVA: 22,
+      ritenuta: 0,
+      scadenzaPagamento: "",
+      note: ""
+    });
+    setSelectedProjectForInvoice("");
+    setEditingStandaloneInvoice(null);
+    setIsStandaloneInvoiceDialogOpen(false);
+  };
+
+  const calculateStandaloneInvoice = () => {
+    const netto = Math.round(standaloneInvoiceForm.importoNetto * 100); // Converti in centesimi
+    const cassa = Math.round((netto * standaloneInvoiceForm.cassaPercentuale) / 100);
+    const baseIva = netto + cassa;
+    const iva = Math.round((baseIva * standaloneInvoiceForm.aliquotaIVA) / 100);
+    const totale = baseIva + iva;
+    const ritenuta = Math.round(standaloneInvoiceForm.ritenuta * 100);
+
+    return {
+      importoNetto: netto,
+      cassaPrevidenziale: cassa,
+      importoIVA: iva,
+      importoTotale: totale,
+      ritenuta,
+      nettoPagare: totale - ritenuta
+    };
+  };
+
+  const handleStandaloneInvoiceSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedProjectForInvoice) {
+      toast({
+        title: "Errore",
+        description: "Seleziona una commessa",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const calculated = calculateStandaloneInvoice();
+
+    saveStandaloneInvoiceMutation.mutate({
+      projectId: selectedProjectForInvoice,
+      numeroFattura: standaloneInvoiceForm.numeroFattura,
+      dataEmissione: standaloneInvoiceForm.dataEmissione,
+      scadenzaPagamento: standaloneInvoiceForm.scadenzaPagamento || null,
+      aliquotaIVA: standaloneInvoiceForm.aliquotaIVA,
+      note: standaloneInvoiceForm.note,
+      ...calculated,
+      stato: 'emessa'
+    });
+  };
+
+  const handleEditStandaloneInvoice = (invoice: ProjectInvoice) => {
+    setEditingStandaloneInvoice(invoice);
+    setSelectedProjectForInvoice(invoice.projectId);
+    setStandaloneInvoiceForm({
+      numeroFattura: invoice.numeroFattura,
+      dataEmissione: invoice.dataEmissione.split('T')[0],
+      importoNetto: invoice.importoNetto / 100,
+      cassaPercentuale: invoice.cassaPrevidenziale ? (invoice.cassaPrevidenziale / invoice.importoNetto) * 100 : 4,
+      aliquotaIVA: invoice.aliquotaIVA,
+      ritenuta: invoice.ritenuta / 100,
+      scadenzaPagamento: invoice.scadenzaPagamento?.split('T')[0] || "",
+      note: invoice.note || ""
+    });
+    setIsStandaloneInvoiceDialogOpen(true);
+  };
+
+  const handleMarkAsPaid = (invoice: ProjectInvoice) => {
+    updateInvoiceStatusMutation.mutate({
+      id: invoice.id,
+      projectId: invoice.projectId,
+      stato: 'pagata',
+      dataPagamento: new Date().toISOString()
+    });
+  };
+
   const formatCurrency = (cents: number | null | undefined) => {
     if (!cents) return "€ 0,00";
     return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(cents / 100);
@@ -511,7 +771,20 @@ export default function FatturazionePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "prestazioni" | "registro")} className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsTrigger value="prestazioni">
+          <FileText className="w-4 h-4 mr-2" />
+          Prestazioni
+        </TabsTrigger>
+        <TabsTrigger value="registro">
+          <Euro className="w-4 h-4 mr-2" />
+          Registro Fatture
+        </TabsTrigger>
+      </TabsList>
+
+      {/* TAB 1: PRESTAZIONI */}
+      <TabsContent value="prestazioni" className="space-y-6">
       {/* Header con Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Alert Card */}
@@ -1263,6 +1536,506 @@ export default function FatturazionePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </TabsContent>
+      {/* Fine tab Prestazioni */}
+
+      {/* TAB 2: REGISTRO FATTURE */}
+      <TabsContent value="registro" className="space-y-6">
+        {/* Header con bottone Nuova Fattura */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Registro Fatture</h3>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Gestione globale di tutte le fatture</p>
+          </div>
+          <Dialog open={isStandaloneInvoiceDialogOpen} onOpenChange={setIsStandaloneInvoiceDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => resetStandaloneInvoiceForm()}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nuova Fattura
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingStandaloneInvoice ? "Modifica Fattura" : "Crea Nuova Fattura"}</DialogTitle>
+                <DialogDescription>
+                  Compila i dati della fattura per la commessa selezionata
+                </DialogDescription>
+              </DialogHeader>
+
+              <form onSubmit={handleStandaloneInvoiceSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="project">Commessa *</Label>
+                  <ProjectCombobox
+                    projects={projects}
+                    value={selectedProjectForInvoice}
+                    onValueChange={setSelectedProjectForInvoice}
+                    disabled={!!editingStandaloneInvoice}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="numeroFattura">Numero Fattura *</Label>
+                    <Input
+                      id="numeroFattura"
+                      value={standaloneInvoiceForm.numeroFattura}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, numeroFattura: e.target.value })}
+                      placeholder="es. 001/2025"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dataEmissione">Data Emissione *</Label>
+                    <Input
+                      id="dataEmissione"
+                      type="date"
+                      value={standaloneInvoiceForm.dataEmissione}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, dataEmissione: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-4">
+                  <div>
+                    <Label htmlFor="importoNetto">Imponibile (€) *</Label>
+                    <Input
+                      id="importoNetto"
+                      type="number"
+                      step="0.01"
+                      value={standaloneInvoiceForm.importoNetto}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, importoNetto: parseFloat(e.target.value) || 0 })}
+                      required
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cassaPercentuale">Cassa (%)</Label>
+                    <Input
+                      id="cassaPercentuale"
+                      type="number"
+                      step="0.1"
+                      value={standaloneInvoiceForm.cassaPercentuale}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, cassaPercentuale: parseFloat(e.target.value) || 0 })}
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="aliquotaIVA">IVA (%)</Label>
+                    <Input
+                      id="aliquotaIVA"
+                      type="number"
+                      value={standaloneInvoiceForm.aliquotaIVA}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, aliquotaIVA: parseInt(e.target.value) || 0 })}
+                      min="0"
+                      max="100"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ritenuta">Ritenuta (€)</Label>
+                    <Input
+                      id="ritenuta"
+                      type="number"
+                      step="0.01"
+                      value={standaloneInvoiceForm.ritenuta}
+                      onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, ritenuta: parseFloat(e.target.value) || 0 })}
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="scadenzaPagamento">Scadenza Pagamento</Label>
+                  <Input
+                    id="scadenzaPagamento"
+                    type="date"
+                    value={standaloneInvoiceForm.scadenzaPagamento}
+                    onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, scadenzaPagamento: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="note">Note</Label>
+                  <Textarea
+                    id="note"
+                    value={standaloneInvoiceForm.note}
+                    onChange={(e) => setStandaloneInvoiceForm({ ...standaloneInvoiceForm, note: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Riepilogo Calcoli */}
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-2">
+                  <div className="font-semibold text-sm text-gray-700 dark:text-gray-300">Riepilogo Fattura</div>
+                  <div className="flex justify-between text-sm">
+                    <span>Imponibile:</span>
+                    <span>€{standaloneInvoiceForm.importoNetto.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Cassa {standaloneInvoiceForm.cassaPercentuale}% (Inarcassa):</span>
+                    <span>€{((standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm border-t pt-2">
+                    <span>Base IVA:</span>
+                    <span>€{(standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>IVA ({standaloneInvoiceForm.aliquotaIVA}%):</span>
+                    <span>€{(((standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100) * standaloneInvoiceForm.aliquotaIVA) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-semibold border-t pt-2">
+                    <span>Totale con IVA:</span>
+                    <span>€{(standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100 + ((standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100) * standaloneInvoiceForm.aliquotaIVA) / 100).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-red-600">
+                    <span>Ritenuta d'Acconto:</span>
+                    <span>-€{standaloneInvoiceForm.ritenuta.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold border-t pt-2">
+                    <span>Netto a Pagare:</span>
+                    <span className="text-green-600">
+                      €{(standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100 + ((standaloneInvoiceForm.importoNetto + (standaloneInvoiceForm.importoNetto * standaloneInvoiceForm.cassaPercentuale) / 100) * standaloneInvoiceForm.aliquotaIVA) / 100 - standaloneInvoiceForm.ritenuta).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={resetStandaloneInvoiceForm}>
+                    Annulla
+                  </Button>
+                  <Button type="submit" disabled={saveStandaloneInvoiceMutation.isPending}>
+                    {saveStandaloneInvoiceMutation.isPending ? "Salvataggio..." : "Salva Fattura"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Statistiche Fatture */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Fatture Totali</p>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{invoiceStats.totale}</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                    Emesse: {invoiceStats.emesse} | Pagate: {invoiceStats.pagate}
+                  </div>
+                </div>
+                <FileText className="w-8 h-8 text-blue-500 dark:text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Importo Totale</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatCurrency(invoiceStats.importoTotale)}
+                </div>
+                <Euro className="w-8 h-8 text-purple-500 dark:text-purple-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Incassato</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {formatCurrency(invoiceStats.importoPagato)}
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500 dark:text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-4">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Da Incassare</p>
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                  {formatCurrency(invoiceStats.importoDaPagare)}
+                </div>
+                <Clock className="w-8 h-8 text-orange-500 dark:text-orange-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Viste Fatture */}
+        <Tabs defaultValue="tutte" className="w-full">
+          <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="tutte" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+              Tutte le Fatture
+            </TabsTrigger>
+            <TabsTrigger value="per-commessa" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+              Per Commessa
+            </TabsTrigger>
+            <TabsTrigger value="da-incassare" className="flex-1 min-w-[100px] text-xs sm:text-sm">
+              Da Incassare
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Vista: Tutte le Fatture */}
+          <TabsContent value="tutte" className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                {loadingInvoices ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Caricamento...</p>
+                ) : allInvoices.length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura emessa</p>
+                ) : (
+                  <>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>N. Fattura</TableHead>
+                          <TableHead>Commessa</TableHead>
+                          <TableHead>Data</TableHead>
+                          <TableHead className="text-right">Importo</TableHead>
+                          <TableHead className="text-center">Stato</TableHead>
+                          <TableHead className="text-center">Azioni</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {paginatedInvoices.map(invoice => {
+                          const project = projects.find(p => p.id === invoice.projectId);
+                          const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
+
+                          return (
+                            <TableRow key={invoice.id}>
+                              <TableCell className="font-medium">{invoice.numeroFattura}</TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  <div className="font-medium">{project?.code}</div>
+                                  <div className="text-gray-500 dark:text-gray-400 truncate max-w-xs">{project?.object}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-sm">
+                                {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {formatCurrency(invoice.importoTotale)}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Badge className={statoConfig?.color}>
+                                  {statoConfig?.icon}
+                                  <span className="ml-1">{statoConfig?.label}</span>
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-center gap-2">
+                                  {invoice.stato !== 'pagata' && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleMarkAsPaid(invoice)}
+                                      title="Segna come pagata"
+                                    >
+                                      <CheckCircle className="w-4 h-4 text-green-600" />
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleEditStandaloneInvoice(invoice)}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      if (confirm("Sei sicuro di voler eliminare questa fattura?")) {
+                                        deleteInvoiceMutation.mutate({ id: invoice.id, projectId: invoice.projectId });
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 className="w-4 h-4 text-red-500" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-gray-700">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, allInvoices.length)}</strong> di <strong>{allInvoices.length}</strong> fatture
+                        </span>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Vista: Per Commessa */}
+          <TabsContent value="per-commessa" className="space-y-4">
+            {groupedInvoices.map(group => (
+              <Card key={group.project.id}>
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-lg font-semibold">{group.project.code}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{group.project.object}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Fatturato Totale</div>
+                      <div className="text-xl font-bold">
+                        {formatCurrency(group.totaleFatturato)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {group.invoices.map(invoice => {
+                      const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
+                      return (
+                        <div key={invoice.id} className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <div>
+                            <div className="font-semibold">{invoice.numeroFattura}</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                              {format(new Date(invoice.dataEmissione), 'dd MMMM yyyy', { locale: it })}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <Badge className={statoConfig?.color}>
+                              {statoConfig?.label}
+                            </Badge>
+                            <div className="text-right">
+                              <div className="font-bold">
+                                {formatCurrency(invoice.importoTotale)}
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              {invoice.stato !== 'pagata' && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleMarkAsPaid(invoice)}
+                                >
+                                  <CheckCircle className="w-4 h-4 text-green-600" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditStandaloneInvoice(invoice)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (confirm("Sei sicuro di voler eliminare questa fattura?")) {
+                                    deleteInvoiceMutation.mutate({ id: invoice.id, projectId: invoice.projectId });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {groupedInvoices.length === 0 && (
+              <Card>
+                <CardContent className="p-8">
+                  <p className="text-center text-gray-500 dark:text-gray-400">Nessuna fattura emessa</p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Vista: Da Incassare */}
+          <TabsContent value="da-incassare" className="space-y-4">
+            <Card>
+              <CardContent className="p-6">
+                {allInvoices.filter(i => i.stato !== 'pagata').length === 0 ? (
+                  <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura da incassare</p>
+                ) : (
+                  <div className="space-y-3">
+                    {allInvoices.filter(i => i.stato !== 'pagata').map(invoice => {
+                      const project = projects.find(p => p.id === invoice.projectId);
+                      const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
+
+                      return (
+                        <div key={invoice.id} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className="font-semibold">{invoice.numeroFattura}</div>
+                              <Badge className={statoConfig?.color}>
+                                {statoConfig?.label}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                              {project?.code} - {project?.object}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Emessa: {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
+                              {invoice.scadenzaPagamento && (
+                                <> | Scadenza: {format(new Date(invoice.scadenzaPagamento), 'dd/MM/yyyy', { locale: it })}</>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className="text-xl font-bold">
+                                {formatCurrency(invoice.importoTotale)}
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleMarkAsPaid(invoice)}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Segna Pagata
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </TabsContent>
+    </Tabs>
   );
 }
