@@ -860,10 +860,10 @@ export class MemStorage implements IStorage {
       project.dataPagamento = null;
       project.importoPagato = 0;
     } else {
-      // Calcola totali dalle fatture
-      const importoTotaleFatturato = invoices.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+      // Calcola totali dalle fatture (use importoTotale = amount actually on the invoice including IVA)
+      const importoTotaleFatturato = invoices.reduce((sum, inv) => sum + (inv.importoTotale || 0), 0);
       const fatturePagate = invoices.filter(inv => inv.stato === 'pagata');
-      const importoTotalePagato = fatturePagate.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+      const importoTotalePagato = fatturePagate.reduce((sum, inv) => sum + (inv.importoTotale || 0), 0);
       const tuttePagate = invoices.length > 0 && invoices.every(inv => inv.stato === 'pagata');
 
       // Prima fattura per riferimento
@@ -1077,11 +1077,11 @@ export class MemStorage implements IStorage {
     // Get all invoices linked to this prestazione
     const invoices = await this.getInvoicesByPrestazione(prestazioneId);
 
-    // Calculate totals from invoices
-    const importoFatturato = invoices.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+    // Calculate totals from invoices (use importoTotale = amount actually on the invoice including IVA)
+    const importoFatturato = invoices.reduce((sum, inv) => sum + (inv.importoTotale || 0), 0);
     const importoPagato = invoices
       .filter(inv => inv.stato === 'pagata')
-      .reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+      .reduce((sum, inv) => sum + (inv.importoTotale || 0), 0);
 
     // Determine state based on amounts
     let stato = existing.stato;
@@ -2014,10 +2014,10 @@ export class DatabaseStorage implements IStorage {
           importoPagato: 0,
         }).where(eq(projects.id, projectId));
       } else {
-        // Calcola totali dalle fatture
-        const importoTotaleFatturato = invoicesList.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+        // Calcola totali dalle fatture (use importoTotale = amount actually on the invoice including IVA)
+        const importoTotaleFatturato = invoicesList.reduce((sum, inv) => sum + (inv.importoTotale || 0), 0);
         const fatturePagate = invoicesList.filter(inv => inv.stato === 'pagata');
-        const importoTotalePagato = fatturePagate.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+        const importoTotalePagato = fatturePagate.reduce((sum, inv) => sum + (inv.importoTotale || 0), 0);
         const tuttePagate = invoicesList.length > 0 && invoicesList.every(inv => inv.stato === 'pagata');
 
         // Prima fattura per riferimento
@@ -2457,11 +2457,11 @@ export class DatabaseStorage implements IStorage {
       // Get all invoices linked to this prestazione
       const invoices = await this.getInvoicesByPrestazione(prestazioneId);
 
-      // Calculate totals from invoices
-      const importoFatturato = invoices.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+      // Calculate totals from invoices (use importoTotale = amount actually on the invoice including IVA)
+      const importoFatturato = invoices.reduce((sum, inv) => sum + (inv.importoTotale || 0), 0);
       const importoPagato = invoices
         .filter(inv => inv.stato === 'pagata')
-        .reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
+        .reduce((sum, inv) => sum + (inv.importoTotale || 0), 0);
 
       // Determine state based on amounts
       let stato = existing.stato;
