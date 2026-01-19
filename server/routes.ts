@@ -66,7 +66,8 @@ const transformInvoiceData = (data: any) => {
 };
 
 // Schema per trasformare i dati delle fatture dal frontend (decimali) al database (centesimi)
-const invoiceInputSchema = z.object({
+// Base schema without transform (used for PATCH with .partial())
+const invoiceInputSchemaBase = z.object({
   numeroFattura: z.string().optional(),
   dataEmissione: z.any().optional(),
   importoNetto: z.number().optional(),
@@ -81,7 +82,10 @@ const invoiceInputSchema = z.object({
   ritenuta: z.number().optional(),
   scadenzaPagamento: z.any().optional().nullable(),
   attachmentPath: z.string().optional().nullable(),
-}).transform(transformInvoiceData);
+});
+
+// Schema with transform (used for POST)
+const invoiceInputSchema = invoiceInputSchemaBase.transform(transformInvoiceData);
 
 // Security: Rate limiter for login endpoint
 const loginLimiter = rateLimit({
@@ -3319,7 +3323,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get existing invoice to check prestazioneId
       const existingInvoice = await storage.getInvoice(req.params.invoiceId);
 
-      const validatedData = invoiceInputSchema.partial().parse(req.body);
+      // Use base schema with partial() then apply transform
+      const validatedData = invoiceInputSchemaBase.partial().transform(transformInvoiceData).parse(req.body);
       const updated = await storage.updateInvoice(req.params.invoiceId, validatedData);
       if (!updated) {
         return res.status(404).json({ message: "Fattura non trovata" });
