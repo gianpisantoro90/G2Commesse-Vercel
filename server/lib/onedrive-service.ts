@@ -13,6 +13,65 @@ export const ONEDRIVE_DEFAULT_FOLDERS = {
   ARCHIVE_FOLDER: '/LAVORI_CONCLUSI',
 } as const;
 
+// ============================================================================
+// STRUTTURE TEMPLATE CARTELLE COMMESSE
+// Strutture complete con tutte le sottocartelle per i template LUNGO e BREVE
+// ============================================================================
+interface FolderStructure {
+  [folderName: string]: FolderStructure | Record<string, never>;
+}
+
+// Template LUNGO - Progetti complessi (struttura completa con sottocartelle)
+const TEMPLATE_LUNGO: FolderStructure = {
+  "1_CONSEGNA": {},
+  "2_PERMIT": {},
+  "3_PROGETTO": {
+    "ARC": {},
+    "CME": {},
+    "CRONO_CAPITOLATI_MANUT": {},
+    "IE": {},
+    "IM": {},
+    "IS": {},
+    "REL": {},
+    "SIC": {},
+    "STR": {},
+    "X_RIF": {},
+  },
+  "4_MATERIALE_RICEVUTO": {},
+  "5_CANTIERE": {
+    "0_PSC_FE": {},
+    "IMPRESA": {
+      "CONTRATTO": {},
+      "CONTROLLI": {},
+      "DOCUMENTI": {},
+    },
+  },
+  "6_VERBALI_NOTIFICHE_COMUNICAZIONI": {
+    "COMUNICAZIONI": {},
+    "NP": {},
+    "ODS": {},
+    "VERBALI": {},
+  },
+  "7_SOPRALLUOGHI": {},
+  "8_VARIANTI": {},
+  "9_PARCELLA": {},
+  "10_INCARICO": {},
+};
+
+// Template BREVE - Progetti semplici (senza sottocartelle)
+const TEMPLATE_BREVE: FolderStructure = {
+  "CONSEGNA": {},
+  "ELABORAZIONI": {},
+  "MATERIALE_RICEVUTO": {},
+  "SOPRALLUOGHI": {},
+};
+
+// Mappa dei template disponibili
+const PROJECT_TEMPLATES: Record<string, FolderStructure> = {
+  LUNGO: TEMPLATE_LUNGO,
+  BREVE: TEMPLATE_BREVE,
+};
+
 // Enhanced utility to read GraphError body content with better debugging
 async function readGraphErrorBody(error: any): Promise<{ body: string; bodyType: string; rawError: any }> {
   console.log('🔍 Reading GraphError body. Error properties:', {
@@ -1178,97 +1237,98 @@ class ServerOneDriveService {
 
   private async copyTemplateStructure(projectPath: string, template: string): Promise<void> {
     console.log(`🔄 Creating ${template} template structure at: ${projectPath}`);
-    
-    // Create basic folder structure based on template type
-    const client = await this.getClient();
-    const errors: string[] = [];
-    
-    if (template === 'LUNGO') {
-      const lungoFolders = [
-        '1_CONSEGNA', '2_PERMIT', '3_PROGETTO', '4_MATERIALE_RICEVUTO',
-        '5_CANTIERE', '6_VERBALI_NOTIFICHE_COMUNICAZIONI', '7_SOPRALLUOGHI',
-        '8_VARIANTI', '9_PARCELLA', '10_INCARICO'
-      ];
-      
-      console.log(`📁 Creating ${lungoFolders.length} LUNGO template folders...`);
-      
-      for (const folderName of lungoFolders) {
-        const folderData = { name: folderName, folder: {} };
-        const apiPath = `/me/drive/root:${projectPath}:/children`;
-        
-        logGraphRequest('Create Template Folder (LUNGO)', apiPath, 'POST', folderData);
-        
-        try {
-          const response = await client
-            .api(apiPath)
-            .post(folderData);
-            
-          console.log(`✅ Successfully created template folder: ${folderName}`, {
-            id: response.id,
-            name: response.name,
-            webUrl: response.webUrl
-          });
-        } catch (error: any) {
-          try {
-            await handleGraphError(error, `Create Template Folder (LUNGO) - ${folderName}`, {
-              projectPath,
-              folderName,
-              template: 'LUNGO',
-              apiPath
-            });
-          } catch (handledError: any) {
-            const errorMsg = `Failed to create folder ${folderName}: ${handledError.message}`;
-            console.error(`❌ ${errorMsg}`);
-            errors.push(errorMsg);
-          }
-        }
-      }
-    } else if (template === 'BREVE') {
-      const breveFolders = ['CONSEGNA', 'ELABORAZIONI', 'MATERIALE_RICEVUTO', 'SOPRALLUOGHI'];
-      
-      console.log(`📁 Creating ${breveFolders.length} BREVE template folders...`);
-      
-      for (const folderName of breveFolders) {
-        const folderData = { name: folderName, folder: {} };
-        const apiPath = `/me/drive/root:${projectPath}:/children`;
-        
-        logGraphRequest('Create Template Folder (BREVE)', apiPath, 'POST', folderData);
-        
-        try {
-          const response = await client
-            .api(apiPath)
-            .post(folderData);
-            
-          console.log(`✅ Successfully created template folder: ${folderName}`, {
-            id: response.id,
-            name: response.name,
-            webUrl: response.webUrl
-          });
-        } catch (error: any) {
-          try {
-            await handleGraphError(error, `Create Template Folder (BREVE) - ${folderName}`, {
-              projectPath,
-              folderName,
-              template: 'BREVE',
-              apiPath
-            });
-          } catch (handledError: any) {
-            const errorMsg = `Failed to create folder ${folderName}: ${handledError.message}`;
-            console.error(`❌ ${errorMsg}`);
-            errors.push(errorMsg);
-          }
-        }
-      }
-    } else {
+
+    // Get template structure
+    const templateStructure = PROJECT_TEMPLATES[template];
+    if (!templateStructure) {
       throw new Error(`Unknown template type: ${template}`);
     }
-    
+
+    const client = await this.getClient();
+    const errors: string[] = [];
+
+    // Recursive function to create folders and subfolders
+    const createFoldersRecursively = async (
+      structure: FolderStructure,
+      parentPath: string,
+      depth: number = 0
+    ): Promise<void> => {
+      const indent = '  '.repeat(depth);
+
+      for (const [folderName, subStructure] of Object.entries(structure)) {
+        const folderData = { name: folderName, folder: {} };
+        const apiPath = `/me/drive/root:${parentPath}:/children`;
+        const currentFolderPath = `${parentPath}/${folderName}`;
+
+        logGraphRequest(`Create Template Folder (${template})`, apiPath, 'POST', folderData);
+
+        try {
+          const response = await client
+            .api(apiPath)
+            .post(folderData);
+
+          console.log(`${indent}✅ Created folder: ${folderName}`, {
+            id: response.id,
+            name: response.name,
+            path: currentFolderPath
+          });
+
+          // Recursively create subfolders if they exist
+          if (subStructure && Object.keys(subStructure).length > 0) {
+            console.log(`${indent}📂 Creating ${Object.keys(subStructure).length} subfolders in ${folderName}...`);
+            await createFoldersRecursively(subStructure as FolderStructure, currentFolderPath, depth + 1);
+          }
+        } catch (error: any) {
+          // Check if folder already exists (nameAlreadyExists error)
+          const errorCode = error.code || error.body?.error?.code;
+          if (errorCode === 'nameAlreadyExists') {
+            console.log(`${indent}📁 Folder already exists: ${folderName}, continuing with subfolders...`);
+            // Still try to create subfolders even if parent exists
+            if (subStructure && Object.keys(subStructure).length > 0) {
+              await createFoldersRecursively(subStructure as FolderStructure, currentFolderPath, depth + 1);
+            }
+          } else {
+            try {
+              await handleGraphError(error, `Create Template Folder (${template}) - ${folderName}`, {
+                projectPath: parentPath,
+                folderName,
+                template,
+                apiPath
+              });
+            } catch (handledError: any) {
+              const errorMsg = `Failed to create folder ${currentFolderPath}: ${handledError.message}`;
+              console.error(`${indent}❌ ${errorMsg}`);
+              errors.push(errorMsg);
+            }
+          }
+        }
+      }
+    };
+
+    // Count total folders to create
+    const countFolders = (struct: FolderStructure): number => {
+      let count = 0;
+      for (const [, subStruct] of Object.entries(struct)) {
+        count++;
+        if (subStruct && Object.keys(subStruct).length > 0) {
+          count += countFolders(subStruct as FolderStructure);
+        }
+      }
+      return count;
+    };
+
+    const totalFolders = countFolders(templateStructure);
+    console.log(`📁 Creating ${totalFolders} folders for ${template} template (including subfolders)...`);
+
+    // Start recursive creation
+    await createFoldersRecursively(templateStructure, projectPath);
+
     if (errors.length > 0) {
       console.warn(`⚠️  Template structure partially failed. Errors:`, errors);
       throw new Error(`Template structure creation failed: ${errors.join(', ')}`);
     }
-    
-    console.log(`✅ Successfully created all ${template} template folders`);
+
+    console.log(`✅ Successfully created all ${totalFolders} ${template} template folders`);
   }
 
   async uploadFile(fileBuffer: Buffer, fileName: string, targetPath: string): Promise<OneDriveUploadResult> {
