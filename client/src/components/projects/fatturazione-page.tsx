@@ -188,9 +188,6 @@ export default function FatturazionePage() {
     return { imponibile, cassa, baseIva, iva, totale };
   }, [invoiceFormData.imponibile, invoiceFormData.cassaPercentuale, invoiceFormData.ivaPercentuale]);
 
-  // Tab management
-  const [activeTab, setActiveTab] = useState<"prestazioni" | "registro">("prestazioni");
-
   // Stato per gestione fatture globali (Registro Fatture)
   const [isStandaloneInvoiceDialogOpen, setIsStandaloneInvoiceDialogOpen] = useState(false);
   const [editingStandaloneInvoice, setEditingStandaloneInvoice] = useState<ProjectInvoice | null>(null);
@@ -831,21 +828,42 @@ export default function FatturazionePage() {
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "prestazioni" | "registro")} className="space-y-6">
-      <TabsList className="grid w-full grid-cols-2 max-w-md">
-        <TabsTrigger value="prestazioni">
-          <FileText className="w-4 h-4 mr-2" />
-          Prestazioni
-        </TabsTrigger>
-        <TabsTrigger value="registro">
-          <Euro className="w-4 h-4 mr-2" />
-          Registro Fatture
-        </TabsTrigger>
-      </TabsList>
+    <div className="space-y-6">
+      {/* HEADER PRINCIPALE */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Euro className="w-7 h-7" />
+            Gestione Fatturazione
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Prestazioni, fatture e incassi in un'unica vista
+          </p>
+        </div>
+      </div>
 
-      {/* TAB 1: PRESTAZIONI */}
-      <TabsContent value="prestazioni" className="space-y-6">
-      {/* Header con Stats */}
+      {/* SEZIONE 1: BILLING ALERTS - Dashboard Alert */}
+      <BillingAlerts
+        maxAlerts={5}
+        showStats={true}
+        compact={false}
+      />
+
+      {/* SEZIONE 2: PRESTAZIONI */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Prestazioni
+              </CardTitle>
+              <CardDescription>Stato avanzamento e fatturazione delle prestazioni</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+      {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Alert Card */}
         {(stats.completateNonFatturate > 0 || stats.fatturateNonPagate > 0) && (
@@ -1649,25 +1667,22 @@ export default function FatturazionePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </TabsContent>
-      {/* Fine tab Prestazioni */}
+        </CardContent>
+      </Card>
+      {/* Fine sezione Prestazioni */}
 
-      {/* TAB 2: REGISTRO FATTURE */}
-      <TabsContent value="registro" className="space-y-6">
-        {/* Billing Alerts Section */}
-        <BillingAlerts
-          maxAlerts={5}
-          showStats={true}
-          compact={false}
-        />
-
-        {/* Header con bottone Nuova Fattura */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Registro Fatture</h3>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Gestione globale di tutte le fatture</p>
-          </div>
-          <Dialog open={isStandaloneInvoiceDialogOpen} onOpenChange={setIsStandaloneInvoiceDialogOpen}>
+      {/* SEZIONE 3: REGISTRO FATTURE */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Euro className="w-5 h-5" />
+                Registro Fatture
+              </CardTitle>
+              <CardDescription>Gestione globale di tutte le fatture emesse</CardDescription>
+            </div>
+            <Dialog open={isStandaloneInvoiceDialogOpen} onOpenChange={setIsStandaloneInvoiceDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={() => resetStandaloneInvoiceForm()}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -1831,8 +1846,9 @@ export default function FatturazionePage() {
               </form>
             </DialogContent>
           </Dialog>
-        </div>
-
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
         {/* Statistiche Fatture */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
@@ -2275,7 +2291,8 @@ export default function FatturazionePage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </TabsContent>
-    </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
