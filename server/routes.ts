@@ -2395,10 +2395,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/onedrive/root-folder", async (req, res) => {
     try {
       const systemConfig = await storage.getSystemConfig('onedrive_root_folder');
-      
+
       if (systemConfig && systemConfig.value) {
         const rawConfig = systemConfig.value;
-        
+
         // Transform the data to match frontend interface format
         const rawConfigAny = rawConfig as any;
         const transformedConfig = {
@@ -2407,22 +2407,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           folderName: rawConfigAny.folderName || (rawConfigAny.folderPath || rawConfigAny.path || '').split('/').pop() || 'Root',
           lastUpdated: rawConfigAny.lastUpdated || rawConfigAny.configuredAt || new Date().toISOString()
         };
-        
+
         res.json({
           config: transformedConfig,
           configured: true
         });
       } else {
-        // Restituisce il valore di default invece di solo { configured: false }
+        // Salva automaticamente la configurazione di default nel database
+        // Questo garantisce che LAVORO_CORRENTE sia sempre la cartella di default
+        const defaultConfig = {
+          folderPath: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER,
+          folderId: '',
+          folderName: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER.split('/').pop() || 'LAVORO_CORRENTE',
+          lastUpdated: new Date().toISOString()
+        };
+
+        // Salva il default nel database
+        await storage.setSystemConfig('onedrive_root_folder', defaultConfig);
+        console.log('📁 Default OneDrive root folder configured automatically:', ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER);
+
         res.json({
-          config: {
-            folderPath: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER,
-            folderId: '',
-            folderName: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER.split('/').pop() || 'LAVORO_CORRENTE',
-            lastUpdated: new Date().toISOString(),
-            isDefault: true
-          },
-          configured: false
+          config: defaultConfig,
+          configured: true
         });
       }
     } catch (error) {
