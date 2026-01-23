@@ -82,6 +82,7 @@ import {
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
+import { BillingAlerts } from "./billing-alerts";
 
 // Config per tipi prestazione
 const PRESTAZIONE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
@@ -1653,6 +1654,13 @@ export default function FatturazionePage() {
 
       {/* TAB 2: REGISTRO FATTURE */}
       <TabsContent value="registro" className="space-y-6">
+        {/* Billing Alerts Section */}
+        <BillingAlerts
+          maxAlerts={5}
+          showStats={true}
+          compact={false}
+        />
+
         {/* Header con bottone Nuova Fattura */}
         <div className="flex items-center justify-between">
           <div>

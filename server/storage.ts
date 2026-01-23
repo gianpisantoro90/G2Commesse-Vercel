@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectSAL, type InsertProjectSAL, type ProjectChangelog, type InsertProjectChangelog, type ProjectBudget, type InsertProjectBudget, type ProjectCost, type InsertProjectCost, type ProjectResource, type InsertProjectResource, type SavedFilter, type InsertSavedFilter } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectSAL, projectChangelog, projectBudget, projectCosts, projectResources, savedFilters } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectSAL, type InsertProjectSAL, type ProjectChangelog, type InsertProjectChangelog, type ProjectBudget, type InsertProjectBudget, type ProjectCost, type InsertProjectCost, type ProjectResource, type InsertProjectResource, type SavedFilter, type InsertSavedFilter, type BillingAlert, type InsertBillingAlert, type BillingConfig as BillingConfigType } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectSAL, projectChangelog, projectBudget, projectCosts, projectResources, savedFilters, billingAlerts, billingConfig } from "@shared/schema";
 import { eq, sql, or } from "drizzle-orm";
 import { randomUUID } from "crypto";
 
@@ -163,6 +163,19 @@ export interface IStorage {
   }, mode?: 'merge' | 'overwrite'): Promise<void>;
   clearAllData(): Promise<void>;
 
+  // Billing Alerts
+  getBillingAlerts(projectId?: string): Promise<BillingAlert[]>;
+  getActiveBillingAlerts(): Promise<BillingAlert[]>;
+  createBillingAlert(alert: InsertBillingAlert): Promise<BillingAlert>;
+  updateBillingAlert(id: string, updates: Partial<BillingAlert>): Promise<BillingAlert | undefined>;
+  resolveBillingAlert(id: string): Promise<void>;
+  dismissBillingAlert(id: string, userId: string): Promise<void>;
+  deleteBillingAlert(id: string): Promise<boolean>;
+
+  // Billing Config
+  getBillingConfig(): Promise<Record<string, number>>;
+  setBillingConfig(key: string, value: number): Promise<void>;
+
   // Connection and migrations (optional - only implemented by database storages)
   testConnection?(): Promise<boolean>;
   runMigrations?(): Promise<void>;
@@ -187,6 +200,14 @@ export class MemStorage implements IStorage {
   private costs: Map<string, ProjectCost> = new Map();
   private resources: Map<string, ProjectResource> = new Map();
   private filters: Map<string, SavedFilter> = new Map();
+  private billingAlertsMap: Map<string, BillingAlert> = new Map();
+  private billingConfigMap: Map<string, number> = new Map([
+    ['alert_completata_giorni', 15],
+    ['alert_scadenza_fattura_giorni', 30],
+    ['alert_pagamento_giorni', 60],
+    ['auto_sync_prestazioni', 1],
+    ['auto_data_inizio', 1],
+  ]);
 
   // Projects
   async getProject(id: string): Promise<Project | undefined> {
@@ -1222,6 +1243,89 @@ export class MemStorage implements IStorage {
 
   async deleteProjectCost(id: string): Promise<boolean> {
     return this.costs.delete(id);
+  }
+
+  // Billing Alerts
+  async getBillingAlerts(projectId?: string): Promise<BillingAlert[]> {
+    const all = Array.from(this.billingAlertsMap.values());
+    if (projectId) {
+      return all.filter(a => a.projectId === projectId);
+    }
+    return all;
+  }
+
+  async getActiveBillingAlerts(): Promise<BillingAlert[]> {
+    return Array.from(this.billingAlertsMap.values()).filter(
+      a => !a.resolvedAt && !a.dismissedAt
+    );
+  }
+
+  async createBillingAlert(alert: InsertBillingAlert): Promise<BillingAlert> {
+    const id = randomUUID();
+    const newAlert: BillingAlert = {
+      ...alert,
+      id,
+      prestazioneId: alert.prestazioneId || null,
+      invoiceId: alert.invoiceId || null,
+      daysOverdue: alert.daysOverdue || 0,
+      priority: alert.priority || 'medium',
+      message: alert.message || null,
+      dismissedAt: null,
+      dismissedBy: null,
+      resolvedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.billingAlertsMap.set(id, newAlert);
+    return newAlert;
+  }
+
+  async updateBillingAlert(id: string, updates: Partial<BillingAlert>): Promise<BillingAlert | undefined> {
+    const existing = this.billingAlertsMap.get(id);
+    if (!existing) return undefined;
+    const updated: BillingAlert = {
+      ...existing,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.billingAlertsMap.set(id, updated);
+    return updated;
+  }
+
+  async resolveBillingAlert(id: string): Promise<void> {
+    const existing = this.billingAlertsMap.get(id);
+    if (existing) {
+      existing.resolvedAt = new Date();
+      existing.updatedAt = new Date();
+      this.billingAlertsMap.set(id, existing);
+    }
+  }
+
+  async dismissBillingAlert(id: string, userId: string): Promise<void> {
+    const existing = this.billingAlertsMap.get(id);
+    if (existing) {
+      existing.dismissedAt = new Date();
+      existing.dismissedBy = userId;
+      existing.updatedAt = new Date();
+      this.billingAlertsMap.set(id, existing);
+    }
+  }
+
+  async deleteBillingAlert(id: string): Promise<boolean> {
+    return this.billingAlertsMap.delete(id);
+  }
+
+  // Billing Config
+  async getBillingConfig(): Promise<Record<string, number>> {
+    const config: Record<string, number> = {};
+    this.billingConfigMap.forEach((value, key) => {
+      config[key] = value;
+    });
+    return config;
+  }
+
+  async setBillingConfig(key: string, value: number): Promise<void> {
+    this.billingConfigMap.set(key, value);
   }
 
   async clearAllData() {
@@ -2822,6 +2926,74 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Billing Alerts
+  async getBillingAlerts(projectId?: string): Promise<BillingAlert[]> {
+    if (projectId) {
+      return db.select().from(billingAlerts).where(eq(billingAlerts.projectId, projectId));
+    }
+    return db.select().from(billingAlerts);
+  }
+
+  async getActiveBillingAlerts(): Promise<BillingAlert[]> {
+    return db.select().from(billingAlerts)
+      .where(sql`${billingAlerts.resolvedAt} IS NULL AND ${billingAlerts.dismissedAt} IS NULL`);
+  }
+
+  async createBillingAlert(alert: InsertBillingAlert): Promise<BillingAlert> {
+    const [newAlert] = await db.insert(billingAlerts).values(alert).returning();
+    return newAlert;
+  }
+
+  async updateBillingAlert(id: string, updates: Partial<BillingAlert>): Promise<BillingAlert | undefined> {
+    const [updated] = await db.update(billingAlerts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(billingAlerts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async resolveBillingAlert(id: string): Promise<void> {
+    await db.update(billingAlerts)
+      .set({ resolvedAt: new Date(), updatedAt: new Date() })
+      .where(eq(billingAlerts.id, id));
+  }
+
+  async dismissBillingAlert(id: string, userId: string): Promise<void> {
+    await db.update(billingAlerts)
+      .set({ dismissedAt: new Date(), dismissedBy: userId, updatedAt: new Date() })
+      .where(eq(billingAlerts.id, id));
+  }
+
+  async deleteBillingAlert(id: string): Promise<boolean> {
+    const result = await db.delete(billingAlerts).where(eq(billingAlerts.id, id));
+    return true;
+  }
+
+  // Billing Config
+  async getBillingConfig(): Promise<Record<string, number>> {
+    const configs = await db.select().from(billingConfig);
+    const result: Record<string, number> = {};
+    for (const c of configs) {
+      result[c.settingKey] = c.settingValue;
+    }
+    // Default values if not in DB
+    if (!result['alert_completata_giorni']) result['alert_completata_giorni'] = 15;
+    if (!result['alert_scadenza_fattura_giorni']) result['alert_scadenza_fattura_giorni'] = 30;
+    if (!result['alert_pagamento_giorni']) result['alert_pagamento_giorni'] = 60;
+    if (!result['auto_sync_prestazioni']) result['auto_sync_prestazioni'] = 1;
+    if (!result['auto_data_inizio']) result['auto_data_inizio'] = 1;
+    return result;
+  }
+
+  async setBillingConfig(key: string, value: number): Promise<void> {
+    await db.insert(billingConfig)
+      .values({ settingKey: key, settingValue: value })
+      .onConflictDoUpdate({
+        target: billingConfig.settingKey,
+        set: { settingValue: value, updatedAt: new Date() }
+      });
+  }
+
   async clearAllData() {
     await db.delete(tasks);
     await db.delete(projectDeadlines);
@@ -3336,6 +3508,44 @@ class FallbackStorage implements IStorage {
     filters?: SavedFilter[]
   }, mode?: 'merge' | 'overwrite'): Promise<void> {
     return this.executeWithFallback(storage => storage.importAllData(data, mode));
+  }
+
+  // Billing Alerts
+  async getBillingAlerts(projectId?: string): Promise<BillingAlert[]> {
+    return this.executeWithFallback(storage => storage.getBillingAlerts(projectId));
+  }
+
+  async getActiveBillingAlerts(): Promise<BillingAlert[]> {
+    return this.executeWithFallback(storage => storage.getActiveBillingAlerts());
+  }
+
+  async createBillingAlert(alert: InsertBillingAlert): Promise<BillingAlert> {
+    return this.executeWithFallback(storage => storage.createBillingAlert(alert));
+  }
+
+  async updateBillingAlert(id: string, updates: Partial<BillingAlert>): Promise<BillingAlert | undefined> {
+    return this.executeWithFallback(storage => storage.updateBillingAlert(id, updates));
+  }
+
+  async resolveBillingAlert(id: string): Promise<void> {
+    return this.executeWithFallback(storage => storage.resolveBillingAlert(id));
+  }
+
+  async dismissBillingAlert(id: string, userId: string): Promise<void> {
+    return this.executeWithFallback(storage => storage.dismissBillingAlert(id, userId));
+  }
+
+  async deleteBillingAlert(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteBillingAlert(id));
+  }
+
+  // Billing Config
+  async getBillingConfig(): Promise<Record<string, number>> {
+    return this.executeWithFallback(storage => storage.getBillingConfig());
+  }
+
+  async setBillingConfig(key: string, value: number): Promise<void> {
+    return this.executeWithFallback(storage => storage.setBillingConfig(key, value));
   }
 
   async clearAllData(): Promise<void> {

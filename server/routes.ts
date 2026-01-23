@@ -6,6 +6,7 @@ import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, inser
 import bcrypt from "bcrypt";
 import serverOneDriveService, { ONEDRIVE_DEFAULT_FOLDERS } from "./lib/onedrive-service";
 import { notificationService } from "./lib/notification-service";
+import { billingAutomationService } from "./lib/billing-automation";
 import { emailService } from "./lib/email-service";
 import { emailPoller } from "./lib/email-poller";
 import { logger } from "./lib/logger";
@@ -154,6 +155,10 @@ const scanFilesSchema = z.object({
 export async function registerRoutes(app: Express): Promise<Server> {
   // Wait for storage to be fully initialized before registering routes
   await storagePromise;
+
+  // Initialize Billing Automation Service
+  billingAutomationService.initialize(storage as any);
+  console.log('💰 Billing Automation Service initialized');
 
   // Auto-reset all projects to "in corso" on startup (for deployment sync) - only in dev
   if (process.env.NODE_ENV !== 'production') {
@@ -857,15 +862,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects", async (req, res) => {
     try {
       const validatedData = insertProjectSchema.parse(req.body);
-      
+
       // Check if code already exists
       const existing = await storage.getProjectByCode(validatedData.code);
       if (existing) {
         return res.status(400).json({ message: "Codice commessa già esistente" });
       }
-      
+
       const project = await storage.createProject(validatedData);
-      res.status(201).json(project);
+
+      // AUTO: Imposta data inizio commessa automaticamente
+      await billingAutomationService.setAutoDataInizio(project.id);
+
+      // Restituisci il progetto aggiornato
+      const updatedProject = await storage.getProject(project.id);
+      res.status(201).json(updatedProject || project);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Dati non validi", errors: error.errors });
@@ -1077,13 +1088,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Errore nell'aggiornamento delle prestazioni" });
       }
 
+      // BILLING AUTOMATION: Sincronizza prestazioni da metadata verso tabella project_prestazioni
+      try {
+        const syncResult = await billingAutomationService.syncPrestazioniFromMetadata(
+          req.params.id,
+          updatedMetadata
+        );
+        console.log(`🔄 Sync prestazioni result:`, syncResult);
+      } catch (syncError) {
+        console.error(`⚠️ Error syncing prestazioni (non-blocking):`, syncError);
+        // Non blocchiamo l'operazione principale se la sync fallisce
+      }
+
       console.log(`✅ Successfully updated prestazioni for project: ${existingProject.code}`);
       console.log(`📊 New prestazioni:`, validatedPrestazioni.prestazioni);
       if (importoOpereCalcolato !== undefined) {
         console.log(`💰 Sincronizzato importoOpere: ${importoOpereCalcolato}`);
       }
 
-      res.json(updatedProject);
+      // Restituisci il progetto aggiornato (con eventuali date aggiornate)
+      const finalProject = await storage.getProject(req.params.id);
+      res.json(finalProject || updatedProject);
     } catch (error) {
       if (error instanceof z.ZodError) {
         console.error(`❌ Validation error for prestazioni:`, error.errors);
@@ -3314,6 +3339,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.recalculatePrestazioneImporti(validatedData.prestazioneId);
       }
 
+      // BILLING AUTOMATION: Trigger quando fattura viene creata
+      try {
+        await billingAutomationService.onInvoiceCreated(invoice);
+      } catch (billingError) {
+        console.error('⚠️ Billing automation error (non-blocking):', billingError);
+      }
+
       res.status(201).json(invoice);
     } catch (error) {
       console.error('Error creating invoice:', error);
@@ -3343,6 +3375,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const prestazioneId of prestazioneIds) {
         await storage.recalculatePrestazioneImporti(prestazioneId);
+      }
+
+      // BILLING AUTOMATION: Trigger quando fattura diventa "pagata"
+      try {
+        if (existingInvoice?.stato !== 'pagata' && updated.stato === 'pagata') {
+          await billingAutomationService.onInvoicePaid(req.params.invoiceId);
+        }
+      } catch (billingError) {
+        console.error('⚠️ Billing automation error (non-blocking):', billingError);
       }
 
       res.json(updated);
@@ -3375,6 +3416,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting invoice:', error);
       res.status(500).json({ message: "Errore nell'eliminazione della fattura" });
+    }
+  });
+
+  // ============================================
+  // BILLING ALERTS API
+  // ============================================
+
+  // Get all billing alerts (optionally filtered by projectId)
+  app.get("/api/billing-alerts", async (req, res) => {
+    try {
+      const projectId = req.query.projectId as string | undefined;
+      const activeOnly = req.query.active === 'true';
+
+      let alerts;
+      if (activeOnly) {
+        alerts = await storage.getActiveBillingAlerts();
+        if (projectId) {
+          alerts = alerts.filter(a => a.projectId === projectId);
+        }
+      } else {
+        alerts = await storage.getBillingAlerts(projectId);
+      }
+
+      // Arricchisci gli alert con informazioni sul progetto
+      const enrichedAlerts = await Promise.all(alerts.map(async (alert) => {
+        const project = await storage.getProject(alert.projectId);
+        let prestazione = null;
+        let invoice = null;
+
+        if (alert.prestazioneId) {
+          prestazione = await storage.getPrestazione(alert.prestazioneId);
+        }
+        if (alert.invoiceId) {
+          invoice = await storage.getInvoice(alert.invoiceId);
+        }
+
+        return {
+          ...alert,
+          project: project ? {
+            id: project.id,
+            code: project.code,
+            client: project.client,
+            object: project.object,
+          } : null,
+          prestazione: prestazione ? {
+            id: prestazione.id,
+            tipo: prestazione.tipo,
+            livelloProgettazione: prestazione.livelloProgettazione,
+            stato: prestazione.stato,
+          } : null,
+          invoice: invoice ? {
+            id: invoice.id,
+            numeroFattura: invoice.numeroFattura,
+            importoTotale: invoice.importoTotale,
+            stato: invoice.stato,
+          } : null,
+        };
+      }));
+
+      res.json(enrichedAlerts);
+    } catch (error) {
+      console.error('Error fetching billing alerts:', error);
+      res.status(500).json({ message: "Errore nel recupero degli alert di fatturazione" });
+    }
+  });
+
+  // Get billing alert stats
+  app.get("/api/billing-alerts/stats", async (req, res) => {
+    try {
+      const stats = await billingAutomationService.getAlertStats();
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching billing alert stats:', error);
+      res.status(500).json({ message: "Errore nel recupero delle statistiche alert" });
+    }
+  });
+
+  // Dismiss a billing alert
+  app.post("/api/billing-alerts/:id/dismiss", async (req, res) => {
+    try {
+      const userId = req.body.userId || 'admin'; // TODO: use authenticated user
+      await storage.dismissBillingAlert(req.params.id, userId);
+      res.json({ message: "Alert ignorato con successo" });
+    } catch (error) {
+      console.error('Error dismissing billing alert:', error);
+      res.status(500).json({ message: "Errore nell'ignorare l'alert" });
+    }
+  });
+
+  // Resolve a billing alert (usually called automatically)
+  app.post("/api/billing-alerts/:id/resolve", async (req, res) => {
+    try {
+      await storage.resolveBillingAlert(req.params.id);
+      res.json({ message: "Alert risolto con successo" });
+    } catch (error) {
+      console.error('Error resolving billing alert:', error);
+      res.status(500).json({ message: "Errore nella risoluzione dell'alert" });
+    }
+  });
+
+  // Delete a billing alert
+  app.delete("/api/billing-alerts/:id", async (req, res) => {
+    try {
+      await storage.deleteBillingAlert(req.params.id);
+      res.json({ message: "Alert eliminato con successo" });
+    } catch (error) {
+      console.error('Error deleting billing alert:', error);
+      res.status(500).json({ message: "Errore nell'eliminazione dell'alert" });
+    }
+  });
+
+  // Get billing config
+  app.get("/api/billing-config", async (req, res) => {
+    try {
+      const config = await storage.getBillingConfig();
+      res.json(config);
+    } catch (error) {
+      console.error('Error fetching billing config:', error);
+      res.status(500).json({ message: "Errore nel recupero della configurazione" });
+    }
+  });
+
+  // Update billing config
+  app.put("/api/billing-config/:key", async (req, res) => {
+    try {
+      const { value } = req.body;
+      if (typeof value !== 'number') {
+        return res.status(400).json({ message: "Il valore deve essere un numero" });
+      }
+      await storage.setBillingConfig(req.params.key, value);
+      res.json({ message: "Configurazione aggiornata con successo" });
+    } catch (error) {
+      console.error('Error updating billing config:', error);
+      res.status(500).json({ message: "Errore nell'aggiornamento della configurazione" });
+    }
+  });
+
+  // Trigger manual check of billing alerts
+  app.post("/api/billing-alerts/check", async (req, res) => {
+    try {
+      await billingAutomationService.checkAllAlerts();
+      res.json({ message: "Controllo alert eseguito con successo" });
+    } catch (error) {
+      console.error('Error checking billing alerts:', error);
+      res.status(500).json({ message: "Errore nel controllo degli alert" });
     }
   });
 
