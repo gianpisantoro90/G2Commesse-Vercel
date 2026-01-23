@@ -83,6 +83,7 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
 import { BillingAlerts } from "./billing-alerts";
+import { BillingConfig } from "./billing-config";
 
 // Config per tipi prestazione
 const PRESTAZIONE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
@@ -843,11 +844,14 @@ export default function FatturazionePage() {
       </div>
 
       {/* SEZIONE 1: BILLING ALERTS - Dashboard Alert */}
-      <BillingAlerts
-        maxAlerts={5}
-        showStats={true}
-        compact={false}
-      />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <BillingAlerts
+          maxAlerts={5}
+          showStats={true}
+          compact={false}
+        />
+        <BillingConfig />
+      </div>
 
       {/* SEZIONE 2: PRESTAZIONI */}
       <Card>
