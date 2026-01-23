@@ -9,7 +9,6 @@ import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
 import EmailCheckerCard from "@/components/dashboard/email-checker-card";
 import NewProjectForm from "@/components/projects/new-project-form";
-import FolderStructureCard from "@/components/projects/folder-structure-card";
 import ProjectsTable from "@/components/projects/projects-table";
 import ClientsTable from "@/components/projects/clients-table";
 import ParcellaCalculator from "@/components/projects/parcella-calculator-new";
@@ -230,12 +229,9 @@ export default function Dashboard() {
 
                   {isAdmin && (
                     <TabsContent value="nuova" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                      <div className="max-w-2xl mx-auto space-y-6">
+                      <div className="max-w-2xl mx-auto">
                         <NewProjectForm
                           onProjectSaved={setPendingProject}
-                        />
-                        <FolderStructureCard
-                          pendingProject={pendingProject}
                         />
                       </div>
                     </TabsContent>
