@@ -1,3 +1,17 @@
+/**
+ * @deprecated Questo componente è stato sostituito dal nuovo sistema di fatturazione unificato.
+ * Usare invece:
+ * - fatturazione-page.tsx per la gestione completa delle fatture
+ * - billing-alerts.tsx per visualizzare gli alert di fatturazione
+ *
+ * Il nuovo sistema include:
+ * - Sincronizzazione automatica tra prestazioni e fatture
+ * - Sistema di alert automatici per prestazioni da fatturare e fatture scadute
+ * - Integrazione con il billing automation service
+ *
+ * Questo file verrà rimosso in una futura versione.
+ */
+
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {

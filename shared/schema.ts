@@ -49,6 +49,9 @@ export const projects = pgTable("projects", {
   importoPagato: integer("importo_pagato").default(0), // In centesimi di euro
   noteFatturazione: text("note_fatturazione"), // Note su fatturazione/pagamento
 
+  // Nuovo: Stato di fatturazione unificato (calcolato automaticamente)
+  billingStatus: text("billing_status").default("da_fatturare"), // 'da_fatturare', 'parzialmente_fatturato', 'fatturato', 'parzialmente_pagato', 'pagato'
+
   createdAt: timestamp("created_at").defaultNow(),
   fsRoot: text("fs_root"),
   metadata: jsonb("metadata").default({}),
@@ -665,6 +668,85 @@ export type Task = typeof tasks.$inferSelect;
 export type InsertProjectPrestazione = z.infer<typeof insertProjectPrestazioneSchema>;
 export type ProjectPrestazione = typeof projectPrestazioni.$inferSelect;
 export type UpdatePrestazioneStato = z.infer<typeof updatePrestazioneStatoSchema>;
+
+// ============================================
+// BILLING AUTOMATION - ALERT E CONFIGURAZIONE
+// ============================================
+
+// Stati di fatturazione del progetto
+export const BILLING_STATUS = ['da_fatturare', 'parzialmente_fatturato', 'fatturato', 'parzialmente_pagato', 'pagato'] as const;
+export type BillingStatus = typeof BILLING_STATUS[number];
+
+// Tipi di alert di fatturazione
+export const BILLING_ALERT_TYPES = ['completata_non_fatturata', 'fattura_scaduta', 'pagamento_ritardo'] as const;
+export type BillingAlertType = typeof BILLING_ALERT_TYPES[number];
+
+// Tabella Alert di Fatturazione
+export const billingAlerts = pgTable("billing_alerts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  prestazioneId: text("prestazione_id").references(() => projectPrestazioni.id, { onDelete: "cascade" }),
+  invoiceId: text("invoice_id").references(() => projectInvoices.id, { onDelete: "cascade" }),
+  alertType: text("alert_type").notNull(), // 'completata_non_fatturata', 'fattura_scaduta', 'pagamento_ritardo'
+  daysOverdue: integer("days_overdue").default(0), // Giorni di ritardo
+  priority: text("priority").default("medium"), // 'low', 'medium', 'high', 'urgent'
+  message: text("message"), // Messaggio descrittivo
+  dismissedAt: timestamp("dismissed_at"), // Se l'utente ignora l'alert
+  dismissedBy: text("dismissed_by"), // ID utente che ha ignorato
+  resolvedAt: timestamp("resolved_at"), // Quando viene risolto automaticamente
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tabella Configurazione Fatturazione
+export const billingConfig = pgTable("billing_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  settingKey: text("setting_key").notNull().unique(),
+  settingValue: integer("setting_value").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas per billing
+export const insertBillingAlertSchema = createInsertSchema(billingAlerts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBillingConfigSchema = createInsertSchema(billingConfig).omit({
+  id: true,
+  updatedAt: true,
+});
+
+// Types per billing
+export type InsertBillingAlert = z.infer<typeof insertBillingAlertSchema>;
+export type BillingAlert = typeof billingAlerts.$inferSelect;
+
+export type InsertBillingConfig = z.infer<typeof insertBillingConfigSchema>;
+export type BillingConfig = typeof billingConfig.$inferSelect;
+
+// Helper interface per alert con info progetto
+export interface BillingAlertWithDetails extends BillingAlert {
+  project?: {
+    id: string;
+    code: string;
+    client: string;
+    object: string;
+  };
+  prestazione?: {
+    id: string;
+    tipo: string;
+    livelloProgettazione?: string;
+    stato: string;
+  };
+  invoice?: {
+    id: string;
+    numeroFattura: string;
+    importoTotale: number;
+    stato: string;
+  };
+}
 
 // Helper type per prestazione con info progetto (per dashboard)
 export interface PrestazioneWithProject extends ProjectPrestazione {
