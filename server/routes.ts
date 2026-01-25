@@ -783,18 +783,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Generate code request body:', req.body);
       const { year, client, city } = req.body;
-      
+
       if (!year || !client || !city) {
         console.log('Missing required fields - year:', year, 'client:', client, 'city:', city);
         return res.status(400).json({ message: "Anno, cliente e città sono obbligatori" });
       }
-      
-      // Generate safe acronyms from text
+
+      // Generate safe acronyms from text (fallback)
       const generateSafeAcronym = (text: string): string => {
         return (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
       };
-      
-      const clientSigla = generateSafeAcronym(client);
+
+      // Cerca il cliente nell'archivio per usare la sigla registrata
+      let clientSigla: string;
+      const allClients = await storage.getAllClients();
+      const matchedClient = allClients.find(c =>
+        c.name.toLowerCase() === client.toLowerCase() ||
+        c.sigla.toLowerCase() === client.toLowerCase()
+      );
+
+      if (matchedClient && matchedClient.sigla) {
+        // Usa la sigla del cliente dall'archivio (primi 3 caratteri)
+        clientSigla = matchedClient.sigla.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
+        console.log('Using client sigla from archive:', matchedClient.sigla, '-> code:', clientSigla);
+      } else {
+        // Fallback: genera acronimo dal nome
+        clientSigla = generateSafeAcronym(client);
+        console.log('Client not found in archive, generated sigla from name:', clientSigla);
+      }
+
       const citySigla = generateSafeAcronym(city);
       console.log('Generated siglas - client:', clientSigla, 'city:', citySigla);
       

@@ -28,7 +28,6 @@ import { apiRequest } from "@/lib/queryClient";
 import { type Project, type OneDriveMapping, type ProjectMetadata, type Communication, type Deadline, type ProjectPrestazione } from "@shared/schema";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
-import PrestazioniModal from "./prestazioni-modal";
 import CREGenerator from "./cre-generator";
 import {
   renderPrestazioneBadge,
@@ -54,7 +53,6 @@ export default function ProjectsTable() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [creFilter, setCreFilter] = useState<string>("all"); // 'all', 'archiviato', 'non_archiviato'
-  const [selectedProjectForPrestazioni, setSelectedProjectForPrestazioni] = useState<Project | null>(null);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   // Pagination state
@@ -316,15 +314,6 @@ export default function ProjectsTable() {
       deleteProjectMutation.mutate(projectToDelete.id);
       setProjectToDelete(null);
     }
-  };
-
-  // Handler for opening prestazioni modal
-  const handleOpenPrestazioniModal = (project: Project) => {
-    setSelectedProjectForPrestazioni(project);
-  };
-
-  const handleClosePrestazioniModal = () => {
-    setSelectedProjectForPrestazioni(null);
   };
 
   // Communication helper function
@@ -626,12 +615,6 @@ export default function ProjectsTable() {
                         <EditProjectForm project={project}>
                           <Button size="sm" variant="ghost" className="h-8 w-8 p-0">✏️</Button>
                         </EditProjectForm>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => handleOpenPrestazioniModal(project)}
-                        >🏗️</Button>
                         <CREGenerator project={project}>
                           <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Genera CRE">📜</Button>
                         </CREGenerator>
@@ -1198,16 +1181,6 @@ export default function ProjectsTable() {
                             ✏️
                           </Button>
                         </EditProjectForm>
-                        <Button
-                          size="default"
-                          variant="ghost"
-                          onClick={() => handleOpenPrestazioniModal(project)}
-                          className="min-w-[44px] min-h-[44px] p-3 text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900 rounded-lg transition-colors"
-                          title="Dettagli Prestazioni"
-                          data-testid={`prestazioni-details-${project.id}`}
-                        >
-                          🏗️
-                        </Button>
                         <CREGenerator project={project}>
                           <Button
                             size="default"
@@ -1318,15 +1291,6 @@ export default function ProjectsTable() {
             </div>
           </div>
         </>
-      )}
-      
-      {/* Prestazioni Modal */}
-      {selectedProjectForPrestazioni && (
-        <PrestazioniModal
-          project={selectedProjectForPrestazioni}
-          isOpen={true}
-          onClose={handleClosePrestazioniModal}
-        />
       )}
 
       {/* Delete Confirmation Dialog */}
