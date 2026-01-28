@@ -3581,6 +3581,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Batch sync all prestazioni from metadata to table
+  app.post("/api/billing/sync-prestazioni", async (req, res) => {
+    try {
+      console.log('🔄 Starting batch sync of prestazioni from metadata...');
+      const result = await billingAutomationService.syncAllProjectsPrestazioni();
+      console.log('✅ Batch sync completed:', result);
+      res.json({
+        message: "Sincronizzazione completata",
+        ...result
+      });
+    } catch (error) {
+      console.error('Error in batch sync prestazioni:', error);
+      res.status(500).json({ message: "Errore nella sincronizzazione" });
+    }
+  });
+
   // ============================================
   // CRE (CERTIFICAZIONE DI BUONA ESECUZIONE) API
   // ============================================

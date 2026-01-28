@@ -250,6 +250,59 @@ class BillingAutomationService {
   }
 
   /**
+   * BATCH SYNC: Sincronizza tutte le prestazioni di tutti i progetti
+   * Utile per fix di progetti esistenti
+   */
+  async syncAllProjectsPrestazioni(): Promise<{
+    totalProjects: number;
+    synced: number;
+    created: number;
+    errors: string[];
+  }> {
+    if (!this.storage) throw new Error('Storage not initialized');
+
+    const result = { totalProjects: 0, synced: 0, created: 0, errors: [] as string[] };
+
+    try {
+      const allProjects = await this.storage.getAllProjects();
+      result.totalProjects = allProjects.length;
+
+      logger.info(`[BillingAutomation] Starting batch sync for ${allProjects.length} projects`);
+
+      for (const project of allProjects) {
+        try {
+          const metadata = project.metadata as ProjectMetadata;
+          if (metadata?.prestazioni && metadata.prestazioni.length > 0) {
+            const syncResult = await this.syncPrestazioniFromMetadata(project.id, metadata);
+            result.created += syncResult.created;
+            if (syncResult.created > 0 || syncResult.removed > 0) {
+              result.synced++;
+            }
+            if (syncResult.errors.length > 0) {
+              result.errors.push(...syncResult.errors.map(e => `${project.code}: ${e}`));
+            }
+          }
+        } catch (err) {
+          result.errors.push(`${project.code}: ${err}`);
+        }
+      }
+
+      logger.info(`[BillingAutomation] Batch sync completed`, {
+        totalProjects: result.totalProjects,
+        synced: result.synced,
+        created: result.created,
+        errors: result.errors.length
+      });
+
+      return result;
+    } catch (error) {
+      logger.error('[BillingAutomation] Error in batch sync', { error });
+      result.errors.push(`Errore generale batch: ${error}`);
+      return result;
+    }
+  }
+
+  /**
    * Aggiorna le date del progetto basandosi sulle prestazioni
    */
   async updateProjectDatesFromPrestazioni(projectId: string): Promise<void> {

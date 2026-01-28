@@ -822,9 +822,9 @@ export default function BillingFlow() {
                     if (v === "none") {
                       setSelectedPrestazione(null);
                     } else {
-                      const proj = projectsWithBilling.find(p => p.id === selectedProject.id);
-                      const prest = proj?.prestazioni.find(pr => pr.id === v);
-                      setSelectedPrestazione(prest || null);
+                      // Cerca nelle prestazioni globali filtrate per projectId
+                      const prest = allPrestazioni.find(pr => pr.id === v && pr.projectId === selectedProject.id);
+                      setSelectedPrestazione(prest ? { ...prest, invoices: [] } : null);
                       if (prest && !editingInvoice) {
                         setInvoiceForm(prev => ({
                           ...prev,
@@ -839,9 +839,9 @@ export default function BillingFlow() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Nessuna (fattura diretta)</SelectItem>
-                    {projectsWithBilling
-                      .find(p => p.id === selectedProject.id)
-                      ?.prestazioni.map((prest) => (
+                    {allPrestazioni
+                      .filter(p => p.projectId === selectedProject.id)
+                      .map((prest) => (
                         <SelectItem key={prest.id} value={prest.id}>
                           {PRESTAZIONE_CONFIG[prest.tipo]?.label || prest.tipo}
                           {prest.livelloProgettazione && ` - ${prest.livelloProgettazione.toUpperCase()}`}
@@ -850,6 +850,11 @@ export default function BillingFlow() {
                       ))}
                   </SelectContent>
                 </Select>
+                {allPrestazioni.filter(p => p.projectId === selectedProject.id).length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Nessuna prestazione trovata. Verifica le prestazioni nella scheda commessa.
+                  </p>
+                )}
               </div>
             )}
 
