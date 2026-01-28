@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Mail, Loader2, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/layout/header";
 import TabNavigation from "@/components/layout/tab-navigation";
 import { useAuth } from "@/hooks/useAuth";
@@ -7,7 +10,6 @@ import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
-import EmailCheckerCard from "@/components/dashboard/email-checker-card";
 import NewProjectForm from "@/components/projects/new-project-form";
 import ProjectsTable from "@/components/projects/projects-table";
 import ClientsTable from "@/components/projects/clients-table";
@@ -37,6 +39,7 @@ import { type Project } from "@shared/schema";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const isAdmin = user?.role === 'admin';
 
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -46,9 +49,42 @@ export default function Dashboard() {
     vista: "tabella"
   });
   const [pendingProject, setPendingProject] = useState(null);
+  const [isCheckingEmails, setIsCheckingEmails] = useState(false);
 
   // Routing state
   const [bulkRenameResults, setBulkRenameResults] = useState<Array<{original: string, renamed: string}> | null>(null);
+
+  // Email check handler for AI Review section
+  const handleCheckEmails = async () => {
+    setIsCheckingEmails(true);
+    try {
+      const response = await fetch("/api/emails/check-now", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Errore nel controllo email");
+      }
+
+      const data = await response.json();
+      toast({
+        title: "Controllo Completato",
+        description: data.message,
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Errore nel controllo email",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingEmails(false);
+    }
+  };
 
   const handleSubTabChange = (mainTab: string, subTab: string) => {
     setActiveSubTab(prev => ({ ...prev, [mainTab]: subTab }));
@@ -97,9 +133,8 @@ export default function Dashboard() {
                 <RecentProjectsTable />
 
                 {/* Row 5 - System Status */}
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid gap-6 lg:grid-cols-1">
                   <OneDriveStatusCard />
-                  <EmailCheckerCard />
                 </div>
               </div>
             )}
@@ -249,6 +284,44 @@ export default function Dashboard() {
             {/* Revisione AI Panel (Admin only) */}
             {activeTab === "revisione-ai" && isAdmin && (
               <div className="space-y-6" data-testid="revisione-ai-panel">
+                {/* Header con controllo email */}
+                <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          Controllo Email
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Verifica manualmente nuove email da analizzare con AI
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleCheckEmails}
+                      disabled={isCheckingEmails}
+                      className="gap-2 w-full sm:w-auto"
+                      variant="default"
+                      data-testid="button-check-emails"
+                    >
+                      {isCheckingEmails ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Controllo in corso...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4" />
+                          Controlla Email Adesso
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
                 <Tabs defaultValue="communications" className="w-full">
                   <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
                     <TabsTrigger value="communications" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">

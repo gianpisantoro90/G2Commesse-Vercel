@@ -20,6 +20,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Mail,
   Calendar,
@@ -30,7 +32,9 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Search,
+  FolderOpen
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -43,6 +47,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+interface Project {
+  id: number;
+  code: string;
+  client: string;
+  object: string;
+  status: string;
+}
 
 interface Communication {
   id: string;
@@ -85,6 +97,8 @@ export function CommunicationsReview() {
   const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [projectSearch, setProjectSearch] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   // Fetch communications that need review
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
@@ -93,6 +107,62 @@ export function CommunicationsReview() {
       const response = await fetch("/api/communications/pending-review");
       if (!response.ok) throw new Error("Failed to fetch pending communications");
       return response.json();
+    },
+  });
+
+  // Fetch projects for manual assignment
+  const { data: projects = [] } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
+    queryFn: async () => {
+      const response = await fetch("/api/projects");
+      if (!response.ok) throw new Error("Failed to fetch projects");
+      return response.json();
+    },
+  });
+
+  // Filter projects based on search
+  const filteredProjects = projects
+    .filter((p) => p.status !== "completato" && p.status !== "annullato")
+    .filter((p) => {
+      if (!projectSearch) return true;
+      const search = projectSearch.toLowerCase();
+      return (
+        p.code.toLowerCase().includes(search) ||
+        p.client.toLowerCase().includes(search) ||
+        p.object.toLowerCase().includes(search)
+      );
+    })
+    .slice(0, 20); // Limit to 20 results for performance
+
+  // Mutation to manually assign a project
+  const assignProjectMutation = useMutation({
+    mutationFn: async ({ communicationId, projectId }: { communicationId: string; projectId: string }) => {
+      const response = await fetch(`/api/communications/${communicationId}/select-project`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ projectId }),
+      });
+      if (!response.ok) throw new Error("Failed to assign project");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/communications/pending-review"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      setSelectedComm(null);
+      setProjectSearch("");
+      setSelectedProjectId(null);
+      toast({
+        title: "Comunicazione assegnata",
+        description: "La comunicazione è stata collegata alla commessa selezionata",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile assegnare la comunicazione alla commessa",
+        variant: "destructive",
+      });
     },
   });
 
@@ -270,7 +340,11 @@ export function CommunicationsReview() {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => setSelectedComm(comm)}
+                      onClick={() => {
+                        setProjectSearch("");
+                        setSelectedProjectId(null);
+                        setSelectedComm(comm);
+                      }}
                       data-testid={`button-review-${comm.id}`}
                     >
                       Revisiona
@@ -380,7 +454,11 @@ export function CommunicationsReview() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedComm(comm)}
+                          onClick={() => {
+                            setProjectSearch("");
+                            setSelectedProjectId(null);
+                            setSelectedComm(comm);
+                          }}
                           data-testid={`button-review-${comm.id}`}
                         >
                           Revisiona
@@ -435,12 +513,14 @@ export function CommunicationsReview() {
       )}
 
       {/* Communication Detail Dialog */}
-      <Dialog 
-        open={!!selectedComm} 
+      <Dialog
+        open={!!selectedComm}
         onOpenChange={(open) => {
           // Prevent closing while dismiss mutation is pending
-          if (!open && !dismissMutation.isPending) {
+          if (!open && !dismissMutation.isPending && !assignProjectMutation.isPending) {
             setSelectedComm(null);
+            setProjectSearch("");
+            setSelectedProjectId(null);
           }
         }}
       >
@@ -524,22 +604,113 @@ export function CommunicationsReview() {
                 />
               </div>
             ) : (
-              <div className="text-center p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg space-y-3">
-                <AlertCircle className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mx-auto" />
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  Nessun progetto suggerito dall'AI per questa comunicazione
-                </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => selectedComm && handleDismiss(selectedComm.id)}
-                  disabled={dismissMutation.isPending}
-                  data-testid="button-dismiss-no-match"
-                  className="mt-2"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Ignora questa comunicazione
-                </Button>
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                    <span className="font-medium text-yellow-800 dark:text-yellow-200">
+                      Nessun progetto suggerito dall'AI
+                    </span>
+                  </div>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Puoi assegnare manualmente questa comunicazione a una commessa esistente.
+                  </p>
+                </div>
+
+                {/* Manual project selection */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <FolderOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <h4 className="font-semibold text-gray-900 dark:text-white">Assegna a Commessa</h4>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Cerca per codice, cliente o oggetto..."
+                      value={projectSearch}
+                      onChange={(e) => setProjectSearch(e.target.value)}
+                      className="pl-10"
+                      data-testid="input-project-search"
+                    />
+                  </div>
+
+                  <ScrollArea className="h-[200px] rounded-md border">
+                    <div className="p-2 space-y-1">
+                      {filteredProjects.length === 0 ? (
+                        <div className="text-center py-4 text-sm text-muted-foreground">
+                          {projectSearch ? "Nessuna commessa trovata" : "Inizia a digitare per cercare..."}
+                        </div>
+                      ) : (
+                        filteredProjects.map((project) => (
+                          <div
+                            key={project.id}
+                            onClick={() => setSelectedProjectId(project.id.toString())}
+                            className={`p-3 rounded-lg cursor-pointer transition-all ${
+                              selectedProjectId === project.id.toString()
+                                ? "bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-500"
+                                : "hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent"
+                            }`}
+                            data-testid={`project-option-${project.id}`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="font-mono text-xs shrink-0">
+                                    {project.code}
+                                  </Badge>
+                                  {selectedProjectId === project.id.toString() && (
+                                    <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
+                                  )}
+                                </div>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white mt-1 truncate">
+                                  {project.client}
+                                </p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                  {project.object}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      onClick={() => {
+                        if (selectedComm && selectedProjectId) {
+                          assignProjectMutation.mutate({
+                            communicationId: selectedComm.id,
+                            projectId: selectedProjectId,
+                          });
+                        }
+                      }}
+                      disabled={!selectedProjectId || assignProjectMutation.isPending}
+                      className="flex-1"
+                      data-testid="button-assign-project"
+                    >
+                      {assignProjectMutation.isPending ? (
+                        "Assegnazione..."
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          Assegna a Commessa
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => selectedComm && handleDismiss(selectedComm.id)}
+                      disabled={dismissMutation.isPending}
+                      data-testid="button-dismiss-no-match"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Ignora
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
