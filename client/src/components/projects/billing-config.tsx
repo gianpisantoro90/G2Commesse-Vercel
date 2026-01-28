@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Settings, Save, RefreshCw } from "lucide-react";
+import { Settings, Save, RefreshCw, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BillingConfigData {
@@ -77,6 +77,28 @@ export function BillingConfig() {
       setHasChanges(false);
     }
   };
+
+  // Sync prestazioni mutation
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/billing/sync-prestazioni', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Errore nella sincronizzazione');
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({
+        title: "Sincronizzazione completata",
+        description: `Creati ${data.created} nuovi record in ${data.synced} progetti`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile sincronizzare le prestazioni", variant: "destructive" });
+    },
+  });
 
   if (isLoading) {
     return (
@@ -230,6 +252,25 @@ export function BillingConfig() {
                 checked={localConfig.auto_data_inizio === 1}
                 onCheckedChange={(checked) => handleChange('auto_data_inizio', checked ? 1 : 0)}
               />
+            </div>
+
+            {/* Sync manuale */}
+            <div className="flex items-center justify-between pt-2 border-t">
+              <div className="space-y-0.5">
+                <Label>Sincronizza prestazioni</Label>
+                <p className="text-xs text-gray-500">
+                  Forza la sincronizzazione delle prestazioni da metadata per tutti i progetti
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => syncMutation.mutate()}
+                disabled={syncMutation.isPending}
+              >
+                <Database className="h-4 w-4 mr-1" />
+                {syncMutation.isPending ? "Sincronizzando..." : "Sincronizza ora"}
+              </Button>
             </div>
           </div>
         </div>
