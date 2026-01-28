@@ -40,6 +40,7 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -52,6 +53,7 @@ import {
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { BillingConfig } from "./billing-config";
+import { ProjectCombobox } from "@/components/ui/project-combobox";
 
 // ============================================
 // CONFIGURAZIONI
@@ -365,6 +367,23 @@ export default function BillingFlow() {
     },
   });
 
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async ({ id, projectId }: { id: string; projectId: string }) => {
+      const res = await fetch(`/api/projects/${projectId}/invoices/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Errore nell'eliminazione");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      toast({ title: "Fattura eliminata" });
+      closeInvoiceDialog();
+    },
+  });
+
   // Helpers
   const formatCurrency = (cents: number) => {
     return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(cents / 100);
@@ -416,6 +435,24 @@ export default function BillingFlow() {
       });
     }
 
+    setIsInvoiceDialogOpen(true);
+  };
+
+  const openNewInvoiceDialog = () => {
+    setSelectedProject(null);
+    setSelectedPrestazione(null);
+    setEditingInvoice(null);
+    setInvoiceForm({
+      numeroFattura: "",
+      dataEmissione: new Date().toISOString().split("T")[0],
+      imponibile: 0,
+      cassaPercentuale: 4,
+      ivaPercentuale: 22,
+      ritenuta: 0,
+      scadenzaPagamento: "",
+      tipoFattura: "unica",
+      note: "",
+    });
     setIsInvoiceDialogOpen(true);
   };
 
@@ -496,7 +533,7 @@ export default function BillingFlow() {
             <Settings className="w-4 h-4 mr-1" />
             Config
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={openNewInvoiceDialog}>
             <Plus className="w-4 h-4 mr-1" />
             Nuova Fattura
           </Button>
@@ -716,16 +753,38 @@ export default function BillingFlow() {
               {editingInvoice ? "Modifica Fattura" : "Nuova Fattura"}
             </DialogTitle>
             <DialogDescription>
-              {selectedProject?.code} - {selectedProject?.client}
-              {selectedPrestazione && (
-                <span className="ml-2">
-                  | {PRESTAZIONE_CONFIG[selectedPrestazione.tipo]?.label || selectedPrestazione.tipo}
-                </span>
+              {selectedProject ? (
+                <>
+                  {selectedProject.code} - {selectedProject.client}
+                  {selectedPrestazione && (
+                    <span className="ml-2">
+                      | {PRESTAZIONE_CONFIG[selectedPrestazione.tipo]?.label || selectedPrestazione.tipo}
+                    </span>
+                  )}
+                </>
+              ) : (
+                "Seleziona una commessa per la fattura"
               )}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4">
+            {/* Selezione commessa se non preselezionata */}
+            {!selectedProject && (
+              <div>
+                <Label>Commessa *</Label>
+                <ProjectCombobox
+                  projects={projects}
+                  value={selectedProject?.id}
+                  onValueChange={(projectId) => {
+                    const project = projects.find(p => p.id === projectId);
+                    setSelectedProject(project || null);
+                  }}
+                  placeholder="Seleziona commessa..."
+                />
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Numero Fattura *</Label>
@@ -844,13 +903,37 @@ export default function BillingFlow() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={closeInvoiceDialog}>
-              Annulla
-            </Button>
-            <Button onClick={handleSaveInvoice} disabled={createInvoiceMutation.isPending || updateInvoiceMutation.isPending}>
-              {editingInvoice ? "Salva Modifiche" : "Crea Fattura"}
-            </Button>
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <div>
+              {editingInvoice && selectedProject && (
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (confirm("Sei sicuro di voler eliminare questa fattura?")) {
+                      deleteInvoiceMutation.mutate({
+                        id: editingInvoice.id,
+                        projectId: selectedProject.id
+                      });
+                    }
+                  }}
+                  disabled={deleteInvoiceMutation.isPending}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Elimina
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={closeInvoiceDialog}>
+                Annulla
+              </Button>
+              <Button
+                onClick={handleSaveInvoice}
+                disabled={!selectedProject || createInvoiceMutation.isPending || updateInvoiceMutation.isPending}
+              >
+                {editingInvoice ? "Salva Modifiche" : "Crea Fattura"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
