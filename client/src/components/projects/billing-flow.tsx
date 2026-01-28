@@ -395,6 +395,26 @@ export default function BillingFlow() {
     },
   });
 
+  const deletePrestazioneMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/prestazioni/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Errore nell'eliminazione");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      toast({ title: "Prestazione eliminata" });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile eliminare la prestazione", variant: "destructive" });
+    },
+  });
+
   // Helpers
   const formatCurrency = (cents: number) => {
     return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(cents / 100);
@@ -700,6 +720,9 @@ export default function BillingFlow() {
               }}
               onChangeStato={(prestazione, stato, data) => {
                 updateStatoMutation.mutate({ id: prestazione.id, stato, data });
+              }}
+              onDeletePrestazione={(prestazione) => {
+                deletePrestazioneMutation.mutate(prestazione.id);
               }}
               onCreateInvoice={(prestazione) => openInvoiceDialog(project, prestazione)}
               onEditInvoice={(invoice, prestazione) => openInvoiceDialog(project, prestazione, invoice)}
@@ -1023,6 +1046,7 @@ interface ProjectBillingCardProps {
   onAdvanceStato: (prestazione: PrestazioneWithInvoices) => void;
   onRegressStato: (prestazione: PrestazioneWithInvoices) => void;
   onChangeStato: (prestazione: PrestazioneWithInvoices, stato: string, data?: string) => void;
+  onDeletePrestazione: (prestazione: PrestazioneWithInvoices) => void;
   onCreateInvoice: (prestazione?: PrestazioneWithInvoices) => void;
   onEditInvoice: (invoice: ProjectInvoice, prestazione?: PrestazioneWithInvoices) => void;
   onMarkAsPaid: (invoice: ProjectInvoice) => void;
@@ -1036,6 +1060,7 @@ function ProjectBillingCard({
   onAdvanceStato,
   onRegressStato,
   onChangeStato,
+  onDeletePrestazione,
   onCreateInvoice,
   onEditInvoice,
   onMarkAsPaid,
@@ -1099,6 +1124,7 @@ function ProjectBillingCard({
             onAdvanceStato={() => onAdvanceStato(prestazione)}
             onRegressStato={() => onRegressStato(prestazione)}
             onChangeStato={(stato, data) => onChangeStato(prestazione, stato, data)}
+            onDelete={() => onDeletePrestazione(prestazione)}
             onCreateInvoice={() => onCreateInvoice(prestazione)}
             onEditInvoice={(invoice) => onEditInvoice(invoice, prestazione)}
             onMarkAsPaid={onMarkAsPaid}
@@ -1135,6 +1161,7 @@ interface PrestazioneRowProps {
   onAdvanceStato: () => void;
   onRegressStato: () => void;
   onChangeStato: (stato: string, data?: string) => void;
+  onDelete: () => void;
   onCreateInvoice: () => void;
   onEditInvoice: (invoice: ProjectInvoice) => void;
   onMarkAsPaid: (invoice: ProjectInvoice) => void;
@@ -1149,6 +1176,7 @@ function PrestazioneRow({
   onAdvanceStato,
   onRegressStato,
   onChangeStato,
+  onDelete,
   onCreateInvoice,
   onEditInvoice,
   onMarkAsPaid,
@@ -1192,9 +1220,23 @@ function PrestazioneRow({
     )}>
       {/* Prestazione Info */}
       <div className="col-span-2">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 group">
           <div className={cn("w-2 h-2 rounded-full", config.color)} />
           <span className="font-medium text-gray-900 dark:text-white">{config.label}</span>
+          {/* Delete button - visible on hover */}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              if (confirm(`Eliminare la prestazione "${config.label}"?\n\nATTENZIONE: Verranno eliminate anche le fatture collegate.`)) {
+                onDelete();
+              }
+            }}
+            className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-700 hover:bg-red-50"
+            title="Elimina prestazione"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
         </div>
         {prestazione.livelloProgettazione && (
           <span className="text-xs text-gray-500 ml-4">{prestazione.livelloProgettazione.toUpperCase()}</span>
