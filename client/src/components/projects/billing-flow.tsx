@@ -220,7 +220,18 @@ export default function BillingFlow() {
           },
         };
       })
-      .filter((p) => p.prestazioni.length > 0 || p.directInvoices.length > 0);
+      .filter((p) => p.prestazioni.length > 0 || p.directInvoices.length > 0)
+      // Ordine cronologico inverso (più recenti prima)
+      .sort((a, b) => {
+        // Prima per anno (DESC)
+        if ((b.year || 0) !== (a.year || 0)) {
+          return (b.year || 0) - (a.year || 0);
+        }
+        // Poi per codice (DESC per numeri)
+        const codeA = a.code || "";
+        const codeB = b.code || "";
+        return codeB.localeCompare(codeA, undefined, { numeric: true });
+      });
   }, [projects, allPrestazioni, allInvoices]);
 
   // Global stats
@@ -295,11 +306,11 @@ export default function BillingFlow() {
 
   // Mutations
   const updateStatoMutation = useMutation({
-    mutationFn: async ({ id, stato }: { id: string; stato: string }) => {
+    mutationFn: async ({ id, stato, data }: { id: string; stato: string; data?: string }) => {
       const res = await fetch(`/api/prestazioni/${id}/stato`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stato, data: new Date().toISOString() }),
+        body: JSON.stringify({ stato, data: data || new Date().toISOString() }),
         credentials: "include",
       });
       if (!res.ok) throw new Error("Errore nell'aggiornamento");
@@ -498,6 +509,12 @@ export default function BillingFlow() {
     return idx < order.length - 1 ? order[idx + 1] : null;
   };
 
+  const getPrevStato = (current: string): string | null => {
+    const order = ["da_iniziare", "in_corso", "completata", "fatturata", "pagata"];
+    const idx = order.indexOf(current);
+    return idx > 0 ? order[idx - 1] : null;
+  };
+
   const getDaysSince = (date: Date | string | null): number => {
     if (!date) return 0;
     return Math.floor((new Date().getTime() - new Date(date).getTime()) / (1000 * 60 * 60 * 24));
@@ -675,6 +692,15 @@ export default function BillingFlow() {
                   updateStatoMutation.mutate({ id: prestazione.id, stato: next });
                 }
               }}
+              onRegressStato={(prestazione) => {
+                const prev = getPrevStato(prestazione.stato);
+                if (prev) {
+                  updateStatoMutation.mutate({ id: prestazione.id, stato: prev });
+                }
+              }}
+              onChangeStato={(prestazione, stato, data) => {
+                updateStatoMutation.mutate({ id: prestazione.id, stato, data });
+              }}
               onCreateInvoice={(prestazione) => openInvoiceDialog(project, prestazione)}
               onEditInvoice={(invoice, prestazione) => openInvoiceDialog(project, prestazione, invoice)}
               onMarkAsPaid={(invoice) => markAsPaidMutation.mutate({ id: invoice.id, projectId: project.id })}
@@ -779,9 +805,51 @@ export default function BillingFlow() {
                   onValueChange={(projectId) => {
                     const project = projects.find(p => p.id === projectId);
                     setSelectedProject(project || null);
+                    setSelectedPrestazione(null);
                   }}
                   placeholder="Seleziona commessa..."
                 />
+              </div>
+            )}
+
+            {/* Selezione prestazione (opzionale) */}
+            {selectedProject && (
+              <div>
+                <Label>Prestazione (opzionale)</Label>
+                <Select
+                  value={selectedPrestazione?.id || "none"}
+                  onValueChange={(v) => {
+                    if (v === "none") {
+                      setSelectedPrestazione(null);
+                    } else {
+                      const proj = projectsWithBilling.find(p => p.id === selectedProject.id);
+                      const prest = proj?.prestazioni.find(pr => pr.id === v);
+                      setSelectedPrestazione(prest || null);
+                      if (prest && !editingInvoice) {
+                        setInvoiceForm(prev => ({
+                          ...prev,
+                          imponibile: (prest.importoPrevisto || 0) / 100
+                        }));
+                      }
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Nessuna prestazione (fattura diretta)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nessuna (fattura diretta)</SelectItem>
+                    {projectsWithBilling
+                      .find(p => p.id === selectedProject.id)
+                      ?.prestazioni.map((prest) => (
+                        <SelectItem key={prest.id} value={prest.id}>
+                          {PRESTAZIONE_CONFIG[prest.tipo]?.label || prest.tipo}
+                          {prest.livelloProgettazione && ` - ${prest.livelloProgettazione.toUpperCase()}`}
+                          {prest.importoPrevisto && ` (€${(prest.importoPrevisto / 100).toLocaleString('it-IT')})`}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
@@ -948,6 +1016,8 @@ export default function BillingFlow() {
 interface ProjectBillingCardProps {
   project: ProjectWithBilling;
   onAdvanceStato: (prestazione: PrestazioneWithInvoices) => void;
+  onRegressStato: (prestazione: PrestazioneWithInvoices) => void;
+  onChangeStato: (prestazione: PrestazioneWithInvoices, stato: string, data?: string) => void;
   onCreateInvoice: (prestazione?: PrestazioneWithInvoices) => void;
   onEditInvoice: (invoice: ProjectInvoice, prestazione?: PrestazioneWithInvoices) => void;
   onMarkAsPaid: (invoice: ProjectInvoice) => void;
@@ -959,6 +1029,8 @@ interface ProjectBillingCardProps {
 function ProjectBillingCard({
   project,
   onAdvanceStato,
+  onRegressStato,
+  onChangeStato,
   onCreateInvoice,
   onEditInvoice,
   onMarkAsPaid,
@@ -1020,6 +1092,8 @@ function ProjectBillingCard({
             prestazione={prestazione}
             project={project}
             onAdvanceStato={() => onAdvanceStato(prestazione)}
+            onRegressStato={() => onRegressStato(prestazione)}
+            onChangeStato={(stato, data) => onChangeStato(prestazione, stato, data)}
             onCreateInvoice={() => onCreateInvoice(prestazione)}
             onEditInvoice={(invoice) => onEditInvoice(invoice, prestazione)}
             onMarkAsPaid={onMarkAsPaid}
@@ -1054,6 +1128,8 @@ interface PrestazioneRowProps {
   prestazione: PrestazioneWithInvoices;
   project: ProjectWithBilling;
   onAdvanceStato: () => void;
+  onRegressStato: () => void;
+  onChangeStato: (stato: string, data?: string) => void;
   onCreateInvoice: () => void;
   onEditInvoice: (invoice: ProjectInvoice) => void;
   onMarkAsPaid: (invoice: ProjectInvoice) => void;
@@ -1066,6 +1142,8 @@ function PrestazioneRow({
   prestazione,
   project,
   onAdvanceStato,
+  onRegressStato,
+  onChangeStato,
   onCreateInvoice,
   onEditInvoice,
   onMarkAsPaid,
@@ -1073,11 +1151,34 @@ function PrestazioneRow({
   formatDate,
   getDaysSince,
 }: PrestazioneRowProps) {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [targetStato, setTargetStato] = useState<string | null>(null);
+  const [statoDate, setStatoDate] = useState(new Date().toISOString().split("T")[0]);
+
   const config = PRESTAZIONE_CONFIG[prestazione.tipo] || { label: prestazione.tipo, color: "bg-gray-500" };
   const statoConfig = STATO_CONFIG[prestazione.stato] || STATO_CONFIG.da_iniziare;
 
   const isCompletedLongAgo = prestazione.stato === "completata" && getDaysSince(prestazione.dataCompletamento) >= 15;
   const needsInvoice = prestazione.stato === "completata" && prestazione.invoices.length === 0;
+
+  const stages = ["da_iniziare", "in_corso", "completata", "fatturata", "pagata"];
+  const currentIndex = stages.indexOf(prestazione.stato);
+  const canGoBack = currentIndex > 0;
+  const canGoForward = currentIndex < stages.length - 1 && prestazione.stato !== "fatturata" && prestazione.stato !== "pagata";
+
+  const handleStatoChange = (newStato: string) => {
+    setTargetStato(newStato);
+    setStatoDate(new Date().toISOString().split("T")[0]);
+    setShowDatePicker(true);
+  };
+
+  const confirmStatoChange = () => {
+    if (targetStato) {
+      onChangeStato(targetStato, statoDate);
+      setShowDatePicker(false);
+      setTargetStato(null);
+    }
+  };
 
   return (
     <div className={cn(
@@ -1096,16 +1197,44 @@ function PrestazioneRow({
         <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           {formatCurrency(prestazione.importoPrevisto || 0)}
         </div>
+        {/* Date info */}
+        <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+          {prestazione.dataInizio && <div>Inizio: {formatDate(prestazione.dataInizio)}</div>}
+          {prestazione.dataCompletamento && <div>Fine: {formatDate(prestazione.dataCompletamento)}</div>}
+        </div>
       </div>
 
       {/* Workflow Timeline */}
       <div className="col-span-4">
         <WorkflowTimeline stato={prestazione.stato} />
 
-        <div className="mt-2 flex items-center gap-2">
-          <Badge className={cn("text-xs", statoConfig.bgColor, statoConfig.color)}>
-            {statoConfig.label}
-          </Badge>
+        <div className="mt-2 flex items-center gap-2 flex-wrap">
+          {/* Controlli navigazione stato */}
+          <div className="flex items-center gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleStatoChange(stages[currentIndex - 1])}
+              disabled={!canGoBack}
+              className="h-6 w-6 p-0"
+              title="Stato precedente"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Badge className={cn("text-xs", statoConfig.bgColor, statoConfig.color)}>
+              {statoConfig.label}
+            </Badge>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleStatoChange(stages[currentIndex + 1])}
+              disabled={!canGoForward}
+              className="h-6 w-6 p-0"
+              title="Stato successivo"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
 
           {isCompletedLongAgo && (
             <span className="text-xs text-amber-600 dark:text-amber-400">
@@ -1113,23 +1242,35 @@ function PrestazioneRow({
             </span>
           )}
 
-          {/* Action button */}
-          {prestazione.stato === "da_iniziare" && (
-            <Button size="sm" variant="outline" onClick={onAdvanceStato} className="h-6 text-xs">
-              <Play className="w-3 h-3 mr-1" /> Avvia
-            </Button>
-          )}
-          {prestazione.stato === "in_corso" && (
-            <Button size="sm" variant="outline" onClick={onAdvanceStato} className="h-6 text-xs">
-              <CheckCircle className="w-3 h-3 mr-1" /> Completa
-            </Button>
-          )}
           {needsInvoice && (
             <Button size="sm" variant="default" onClick={onCreateInvoice} className="h-6 text-xs">
               <Plus className="w-3 h-3 mr-1" /> Fattura
             </Button>
           )}
         </div>
+
+        {/* Date picker dialog for stato change */}
+        {showDatePicker && targetStato && (
+          <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded border">
+            <div className="text-xs font-medium mb-1">
+              Cambia a: {STATO_CONFIG[targetStato]?.label}
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                type="date"
+                value={statoDate}
+                onChange={(e) => setStatoDate(e.target.value)}
+                className="h-7 text-xs"
+              />
+              <Button size="sm" onClick={confirmStatoChange} className="h-7 text-xs">
+                Conferma
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowDatePicker(false)} className="h-7 text-xs">
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
+          </div>
+        )}
 
         {isCompletedLongAgo && needsInvoice && (
           <div className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
