@@ -300,14 +300,28 @@ PROGETTI DISPONIBILI:
 ${projects.map(p => `ID: ${p.id} | Codice: ${p.code} | Cliente: ${p.client} | Oggetto: ${p.object}`).join('\n')}
 
 FILTRO SPAM/NEWSLETTER (PRIORITARIO):
+CONTESTO: Applicazione per studio di ingegneria/architettura. Solo email professionali rilevanti.
+
 SCARTA IMMEDIATAMENTE email se:
-1. Contiene "unsubscribe", "newsletter", "marketing", "promotional" (caso insensitive)
-2. Email da domain marketing (mailchimp.com, sendgrid.com, brevo.com, campaign-archive, etc.)
-3. Subject contiene: "newsletter", "weekly digest", "promotional", "special offer", "discount", "promo"
-4. Corpo contiene link di unsubscribe o "This is an automated message"
-5. From name contiene: "Newsletter", "Alerts", "Notifications", "Marketing", "Promotions", "Ads"
-6. Email da sistemi automatici: Amazon, eBay, Aliexpress, Facebook, Google Ads, Spotify, PayPal promotionals, Booking, Agoda
-7. Tono e contenuto: pubblicità pura senza relazione tecnica al progetto
+1. Newsletter/digest: contiene "unsubscribe", "newsletter", "digest", "disiscrivi", "cancella iscrizione"
+2. Marketing platforms: mailchimp, sendgrid, brevo, sendinblue, hubspot, constantcontact, klaviyo
+3. E-commerce: Amazon, eBay, Aliexpress, Alibaba, Wish, Shein, Temu, Zalando, ordini, spedizioni
+4. Social media: LinkedIn notifiche, Facebook, Instagram, Twitter/X, TikTok (non messaggi diretti personali)
+5. Streaming/entertainment: Netflix, Spotify, Disney+, Apple Music, YouTube, Twitch
+6. Travel/booking non professionale: Booking.com, Expedia, Ryanair, easyJet, Hotels.com, Airbnb (offerte/promo)
+7. Promozioni/offerte: sconti, coupon, "offerta speciale", "promo", "% off", "gratis", "flash sale"
+8. Notifiche automatiche: "this is an automated message", "noreply", "do not reply"
+9. Finance bulk: PayPal promo, crypto news, investimenti, trading signals
+10. News/media generica: substack, medium, giornali, blog non tecnici
+
+EMAIL LEGITTIME (NON scartare):
+- Clienti, committenti, enti pubblici (Comune, Regione, Genio Civile, ASL, VVF)
+- Colleghi professionisti, studi associati, consulenti tecnici
+- Fornitori materiali/servizi per cantiere
+- Imprese edili, ditte, artigiani
+- Pratiche edilizie, depositi, autorizzazioni, permessi
+- Sopralluoghi, collaudi, verifiche tecniche
+- Fatture, preventivi, offerte professionali
 
 SE EMAIL È SPAM/NEWSLETTER:
 - projectMatches: []
@@ -642,30 +656,204 @@ export async function dispatchToProvider(
 }
 
 /**
- * Quick AI spam/newsletter filter - returns true if email should be skipped
+ * Pattern-based spam/newsletter pre-filter - checks common spam patterns without using AI
+ * Returns true if email matches known spam/newsletter patterns
+ */
+function isSpamByPattern(email: ParsedEmail): { isSpam: boolean; reason?: string } {
+  const senderEmail = email.from.email.toLowerCase();
+  const senderName = (email.from.name || '').toLowerCase();
+  const subject = email.subject.toLowerCase();
+  const body = email.bodyText.toLowerCase();
+
+  // Known spam/newsletter sender domains
+  const spamDomains = [
+    // Marketing platforms
+    'mailchimp.com', 'sendgrid.net', 'brevo.com', 'sendinblue.com', 'hubspot.com',
+    'mailgun.com', 'campaign-archive.com', 'list-manage.com', 'constantcontact.com',
+    'klaviyo.com', 'mailerlite.com', 'getresponse.com', 'activecampaign.com',
+    // E-commerce & retail
+    'amazon.com', 'amazon.it', 'amazon.de', 'amazon.fr', 'amazon.es',
+    'ebay.com', 'ebay.it', 'aliexpress.com', 'alibaba.com', 'wish.com',
+    'shein.com', 'temu.com', 'zalando.it', 'asos.com', 'hm.com',
+    // Social media
+    'facebookmail.com', 'linkedin.com', 'twitter.com', 'x.com', 'instagram.com',
+    'tiktok.com', 'pinterest.com', 'reddit.com', 'quora.com',
+    // Streaming & entertainment
+    'netflix.com', 'spotify.com', 'disneyplus.com', 'primevideo.com',
+    'apple.com', 'itunes.com', 'youtube.com', 'twitch.tv',
+    // Travel & booking
+    'booking.com', 'expedia.com', 'trivago.com', 'hotels.com', 'airbnb.com',
+    'ryanair.com', 'easyjet.com', 'vueling.com', 'trenitalia.it', 'italotreno.it',
+    'edreams.it', 'skyscanner.com', 'kayak.com',
+    // Finance promotions
+    'paypal-communication.com', 'intl.paypal.com',
+    // News & media
+    'substack.com', 'medium.com', 'ghost.io',
+    // Coupon & deals
+    'groupon.com', 'groupon.it', 'dfrdi.it', 'sconti.com'
+  ];
+
+  // Check sender domain
+  for (const domain of spamDomains) {
+    if (senderEmail.includes(domain)) {
+      return { isSpam: true, reason: `Sender domain: ${domain}` };
+    }
+  }
+
+  // Known spam sender patterns in email
+  const spamSenderPatterns = [
+    /noreply@/, /no-reply@/, /donotreply@/, /newsletter@/, /news@/,
+    /marketing@/, /promo@/, /promotions@/, /offers@/, /deals@/,
+    /notifications?@/, /alerts?@/, /info@.*shop/, /shop@/,
+    /support@amazon/, /auto-confirm@amazon/, /store-news@/,
+    /updates@/, /digest@/
+  ];
+
+  for (const pattern of spamSenderPatterns) {
+    if (pattern.test(senderEmail)) {
+      return { isSpam: true, reason: `Sender pattern: ${pattern}` };
+    }
+  }
+
+  // Subject line spam patterns
+  const spamSubjectPatterns = [
+    // Newsletter/digest patterns
+    /newsletter/i, /weekly digest/i, /daily digest/i, /monthly digest/i,
+    /la tua newsletter/i, /your weekly/i, /weekly update/i,
+    // Promotional patterns
+    /\bpromo\b/i, /\bpromozione\b/i, /promotional/i, /special offer/i,
+    /offerta speciale/i, /sconto/i, /discount/i, /\bsale\b/i, /\bsaldi\b/i,
+    /\bcoupon\b/i, /codice sconto/i, /% off/i, /% di sconto/i,
+    /black friday/i, /cyber monday/i, /flash sale/i,
+    /gratis/i, /free shipping/i, /spedizione gratuita/i,
+    // Amazon specific
+    /il tuo ordine amazon/i, /your amazon order/i, /amazon prime/i,
+    /consegna.*amazon/i, /amazon.*delivery/i, /kindle/i,
+    /amazon.*wishlist/i, /lista desideri/i,
+    // Social/notification patterns
+    /hai .* nuov[oi] (messaggi?|notifiche?|follower|connession)/i,
+    /you have .* new (message|notification|follower|connection)/i,
+    /someone (viewed|liked|commented|shared)/i,
+    /qualcuno (ha visto|ha messo|ha commentato|ha condiviso)/i,
+    /new comment on/i, /nuovo commento/i,
+    /linkedin.*invit/i, /facebook.*notif/i,
+    // Subscription/account patterns
+    /unsubscribe/i, /disiscrivi/i, /cancella iscrizione/i,
+    /manage.*subscription/i, /gestisci.*iscrizione/i,
+    /conferma.*email/i, /verify.*email/i, /email verification/i,
+    // Travel/booking patterns
+    /prenota (ora|adesso|subito)/i, /book now/i, /last minute/i,
+    /volo.*€/i, /hotel.*€/i, /flight.*\$/i,
+    // Generic promotional
+    /limited time/i, /tempo limitato/i, /solo per te/i, /just for you/i,
+    /non perder/i, /don't miss/i, /act now/i, /agisci ora/i,
+    /exclusive/i, /esclusiv/i, /vip/i, /premium offer/i
+  ];
+
+  for (const pattern of spamSubjectPatterns) {
+    if (pattern.test(subject)) {
+      return { isSpam: true, reason: `Subject pattern: ${pattern}` };
+    }
+  }
+
+  // Body content spam patterns
+  const spamBodyPatterns = [
+    /unsubscribe|disiscrivi|cancella.*iscrizione/i,
+    /click here to unsubscribe/i, /clicca qui per disiscriverti/i,
+    /you.*receiving this.*subscribed/i, /ricevi questa.*iscritto/i,
+    /this is an automated message/i, /messaggio automatico/i,
+    /do not reply to this email/i, /non rispondere a questa email/i,
+    /view.*browser|visualizza.*browser/i,
+    /add us to your address book/i, /aggiungici alla rubrica/i,
+    /update your preferences/i, /aggiorna le tue preferenze/i,
+    /privacy policy.*terms/i,
+    /sent to .* because you (signed up|subscribed|registered)/i,
+    /inviato a .* perch[eé] (ti sei iscritto|hai sottoscritto|sei registrato)/i
+  ];
+
+  let spamBodyCount = 0;
+  for (const pattern of spamBodyPatterns) {
+    if (pattern.test(body)) {
+      spamBodyCount++;
+    }
+  }
+
+  // If 2+ body spam patterns match, it's likely spam
+  if (spamBodyCount >= 2) {
+    return { isSpam: true, reason: `Multiple body patterns matched: ${spamBodyCount}` };
+  }
+
+  // Check sender name for spam indicators
+  const spamSenderNames = [
+    /newsletter/i, /noreply/i, /no-reply/i, /marketing/i,
+    /promotions?/i, /offers?/i, /deals?/i, /notifications?/i,
+    /amazon/i, /ebay/i, /aliexpress/i, /linkedin/i, /facebook/i,
+    /instagram/i, /twitter/i, /spotify/i, /netflix/i, /booking/i
+  ];
+
+  for (const pattern of spamSenderNames) {
+    if (pattern.test(senderName)) {
+      return { isSpam: true, reason: `Sender name pattern: ${pattern}` };
+    }
+  }
+
+  return { isSpam: false };
+}
+
+/**
+ * Quick spam/newsletter filter - uses pattern matching first, then AI for uncertain cases
+ * Returns true if email should be skipped
  */
 export async function isSpamOrNewsletter(
   email: ParsedEmail,
   config: AIConfig
 ): Promise<boolean> {
   try {
+    // First, try pattern-based detection (faster, no API call)
+    const patternResult = isSpamByPattern(email);
+    if (patternResult.isSpam) {
+      logger.info('Email filtered by pattern', {
+        subject: email.subject.substring(0, 50),
+        from: email.from.email,
+        reason: patternResult.reason,
+      });
+      return true;
+    }
+
+    // If patterns don't match, use AI for more nuanced classification
     const spamCheckPrompt = `Analizza BREVEMENTE questa email e rispondi SOLO con "SPAM", "NEWSLETTER", o "LEGITTIMA".
 
+CONTESTO: Questa è un'applicazione per uno studio di ingegneria/architettura. Le email legittime sono:
+- Comunicazioni da clienti, enti pubblici, committenti
+- Email relative a progetti tecnici, cantieri, pratiche edilizie
+- Corrispondenza professionale con colleghi, fornitori, consulenti
+
 Soggetto: ${email.subject}
-Mittente: ${email.from.name || email.from.email}
-Corpo (primi 300 caratteri): ${email.bodyText.substring(0, 300)}
+Mittente: ${email.from.name || email.from.email} <${email.from.email}>
+Corpo (primi 500 caratteri): ${email.bodyText.substring(0, 500)}
 
-Rispondi SOLO con una di queste tre parole:
-- SPAM: email pubblicitaria, phishing, o marketing non richiesto
-- NEWSLETTER: newsletter, avvisi automatici, o comunicazioni bulk
-- LEGITTIMA: email da considerare per l'importazione
+SCARTA (SPAM/NEWSLETTER) se:
+- Pubblicità, promozioni, offerte commerciali generiche
+- Newsletter, digest, notifiche automatiche di servizi
+- Social media notifications (LinkedIn, Facebook, ecc.)
+- E-commerce (Amazon, eBay, ordini, spedizioni)
+- Servizi streaming, viaggi, prenotazioni non professionali
+- Email massive/bulk, marketing automation
+- Notifiche di app/servizi non professionali
 
-Risposta:`;
+LEGITTIMA se:
+- Riguarda progetti tecnici, lavori, cantieri
+- Da clienti, enti, PA, professionisti del settore
+- Contiene riferimenti a pratiche, commesse, sopralluoghi
+- Comunicazioni su scadenze, depositi, permessi
+- Email personali/dirette da persone reali su lavoro
+
+Rispondi SOLO con una parola: SPAM, NEWSLETTER, o LEGITTIMA`;
 
     const response = await dispatchToProvider(spamCheckPrompt, config);
     const classification = response.trim().toUpperCase();
-    
-    logger.info('Email spam classification', {
+
+    logger.info('Email spam classification by AI', {
       subject: email.subject.substring(0, 50),
       classification,
       from: email.from.email,
