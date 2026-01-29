@@ -113,7 +113,7 @@ interface BillingAlertsProps {
   maxAlerts?: number;
   showStats?: boolean;
   compact?: boolean;
-  onNavigate?: (projectId: string, tab: string) => void;
+  onNavigate?: (projectId: string, tab: string, searchTerm?: string) => void;
 }
 
 export function BillingAlerts({
@@ -189,8 +189,9 @@ export function BillingAlerts({
   const hasMoreAlerts = alerts.length > maxAlerts;
 
   const handleAction = (alert: BillingAlert) => {
-    if (onNavigate) {
-      onNavigate(alert.projectId, 'fatturazione');
+    if (onNavigate && alert.project?.code) {
+      // Naviga alla fatturazione con il codice commessa come filtro di ricerca
+      onNavigate(alert.projectId, 'fatturazione', alert.project.code);
     }
   };
 
@@ -285,7 +286,9 @@ export function BillingAlerts({
               return (
                 <div
                   key={alert.id}
-                  className={`p-3 rounded-lg border ${config.bgColor} ${config.borderColor}`}
+                  className={`p-3 rounded-lg border ${config.bgColor} ${config.borderColor} cursor-pointer hover:shadow-md transition-shadow`}
+                  onClick={() => handleAction(alert)}
+                  title={`Clicca per vedere ${alert.project?.code || 'la commessa'}`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
@@ -297,6 +300,9 @@ export function BillingAlerts({
                           <span className="font-medium text-gray-900 dark:text-white">
                             {alert.project?.code || 'N/A'}
                           </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {alert.project?.client}
+                          </span>
                           <Badge className={priorityConfig.color} variant="outline">
                             {alert.daysOverdue}gg
                           </Badge>
@@ -304,19 +310,31 @@ export function BillingAlerts({
 
                         <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
                           {alert.prestazione && (
-                            <span>
-                              {PRESTAZIONE_LABELS[alert.prestazione.tipo] || alert.prestazione.tipo}
-                              {alert.prestazione.livelloProgettazione && ` (${alert.prestazione.livelloProgettazione})`}
+                            <span className="inline-flex items-center gap-1">
+                              <span className="font-medium">
+                                {PRESTAZIONE_LABELS[alert.prestazione.tipo] || alert.prestazione.tipo}
+                              </span>
+                              {alert.prestazione.livelloProgettazione && (
+                                <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                                  {alert.prestazione.livelloProgettazione.toUpperCase()}
+                                </span>
+                              )}
+                              <span className="text-xs text-gray-400">
+                                • {config.label}
+                              </span>
                             </span>
                           )}
                           {alert.invoice && (
-                            <span>
-                              Fattura {alert.invoice.numeroFattura} -
-                              <span className="font-medium ml-1">
+                            <span className="inline-flex items-center gap-1">
+                              <span className="font-medium">Fatt. {alert.invoice.numeroFattura}</span>
+                              <span className="font-medium text-gray-900 dark:text-white">
                                 {(alert.invoice.importoTotale / 100).toLocaleString('it-IT', {
                                   style: 'currency',
                                   currency: 'EUR'
                                 })}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                • {config.label}
                               </span>
                             </span>
                           )}
@@ -335,17 +353,23 @@ export function BillingAlerts({
                         variant="ghost"
                         size="sm"
                         className={config.color}
-                        onClick={() => handleAction(alert)}
-                        title={config.actionLabel}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAction(alert);
+                        }}
+                        title={`Vai a ${config.actionLabel}`}
                       >
-                        <ActionIcon className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => dismissMutation.mutate(alert.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dismissMutation.mutate(alert.id);
+                        }}
                         disabled={dismissMutation.isPending}
-                        title="Ignora"
+                        title="Ignora questo alert"
                       >
                         <X className="h-4 w-4" />
                       </Button>
