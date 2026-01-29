@@ -499,21 +499,20 @@ export default function BillingFlow() {
 
     const totals = calculateInvoiceTotals();
 
+    // Invio valori in EURO (il server converte in centesimi)
     const invoiceData = {
       projectId: selectedProject.id,
       prestazioneId: selectedPrestazione?.id || null,
       numeroFattura: invoiceForm.numeroFattura,
       dataEmissione: invoiceForm.dataEmissione,
       scadenzaPagamento: invoiceForm.scadenzaPagamento || null,
-      importoNetto: totals.imponibile,
-      cassaPrevidenziale: totals.cassa,
-      importoIVA: totals.iva,
-      importoTotale: totals.totale,
+      importoNetto: invoiceForm.imponibile, // Euro, non centesimi
+      cassaPercentuale: invoiceForm.cassaPercentuale, // Percentuale cassa
       aliquotaIVA: invoiceForm.ivaPercentuale,
-      ritenuta: totals.ritenuta,
+      ritenuta: invoiceForm.ritenuta, // Euro, non centesimi
       tipoFattura: invoiceForm.tipoFattura,
       note: invoiceForm.note,
-      stato: "emessa",
+      stato: editingInvoice?.stato || "emessa",
     };
 
     if (editingInvoice) {

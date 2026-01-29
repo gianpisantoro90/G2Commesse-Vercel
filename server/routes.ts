@@ -36,10 +36,11 @@ const transformInvoiceData = (data: any) => {
   let cassaPrevidenziale = 0;
   let importoIVA = 0;
   let importoTotale = 0;
-  
+
   if (data.importoNetto !== undefined) {
     const nettoInCentesimi = Math.round(data.importoNetto * 100);
-    cassaPrevidenziale = Math.round(nettoInCentesimi * 0.04); // 4% Inarcassa
+    const cassaPercentuale = data.cassaPercentuale ?? 4; // Default 4% Inarcassa
+    cassaPrevidenziale = Math.round(nettoInCentesimi * (cassaPercentuale / 100));
     const aliquota = data.aliquotaIVA || 22;
     importoIVA = Math.round((nettoInCentesimi + cassaPrevidenziale) * (aliquota / 100)); // IVA su netto+cassa
     importoTotale = nettoInCentesimi + cassaPrevidenziale + importoIVA;
