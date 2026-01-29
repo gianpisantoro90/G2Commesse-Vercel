@@ -130,6 +130,7 @@ export default function BillingFlow() {
   const [editingInvoice, setEditingInvoice] = useState<ProjectInvoice | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showAlertDetails, setShowAlertDetails] = useState(false);
 
   // Invoice form
   const [invoiceForm, setInvoiceForm] = useState({
@@ -253,6 +254,92 @@ export default function BillingFlow() {
 
     return { ...totals, percentualeIncassato, totalAlerts };
   }, [projectsWithBilling]);
+
+  // Dettagli degli alert - lista specifica prestazioni e fatture con problemi
+  const alertDetails = useMemo(() => {
+    const now = new Date();
+    const details: Array<{
+      type: 'da_fatturare' | 'scaduta' | 'ritardo';
+      projectId: string;
+      projectCode: string;
+      projectClient: string;
+      prestazioneId?: string;
+      prestazioneTipo?: string;
+      prestazionelivello?: string;
+      invoiceId?: string;
+      invoiceNumero?: string;
+      invoiceImporto?: number;
+      daysOverdue: number;
+      importoPrevisto?: number;
+    }> = [];
+
+    projectsWithBilling.forEach((project) => {
+      // Prestazioni da fatturare (completate da più di 15 giorni senza fattura)
+      project.prestazioni.forEach((prest) => {
+        if (prest.stato === "completata" && prest.dataCompletamento) {
+          const daysSinceCompletion = Math.floor(
+            (now.getTime() - new Date(prest.dataCompletamento).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (daysSinceCompletion >= 15) {
+            details.push({
+              type: 'da_fatturare',
+              projectId: project.id,
+              projectCode: project.code || '',
+              projectClient: project.client || '',
+              prestazioneId: prest.id,
+              prestazioneTipo: prest.tipo,
+              prestazionelivello: prest.livelloProgettazione || undefined,
+              daysOverdue: daysSinceCompletion,
+              importoPrevisto: prest.importoPrevisto || 0,
+            });
+          }
+        }
+      });
+
+      // Fatture scadute
+      allInvoices
+        .filter((inv) => inv.projectId === project.id && inv.stato === "scaduta")
+        .forEach((invoice) => {
+          const daysSinceExpiry = invoice.scadenzaPagamento
+            ? Math.floor((now.getTime() - new Date(invoice.scadenzaPagamento).getTime()) / (1000 * 60 * 60 * 24))
+            : 0;
+          details.push({
+            type: 'scaduta',
+            projectId: project.id,
+            projectCode: project.code || '',
+            projectClient: project.client || '',
+            invoiceId: invoice.id,
+            invoiceNumero: invoice.numeroFattura,
+            invoiceImporto: invoice.importoTotale,
+            daysOverdue: daysSinceExpiry,
+          });
+        });
+
+      // Pagamenti in ritardo (emesse da più di 60 giorni, non pagate)
+      allInvoices
+        .filter((inv) => inv.projectId === project.id && inv.stato !== "pagata" && inv.stato !== "scaduta")
+        .forEach((invoice) => {
+          const daysSinceEmission = Math.floor(
+            (now.getTime() - new Date(invoice.dataEmissione).getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (daysSinceEmission >= 60) {
+            details.push({
+              type: 'ritardo',
+              projectId: project.id,
+              projectCode: project.code || '',
+              projectClient: project.client || '',
+              invoiceId: invoice.id,
+              invoiceNumero: invoice.numeroFattura,
+              invoiceImporto: invoice.importoTotale,
+              daysOverdue: daysSinceEmission,
+            });
+          }
+        });
+    });
+
+    // Ordina per gravità (più giorni di ritardo prima)
+    return details.sort((a, b) => b.daysOverdue - a.daysOverdue);
+  }, [projectsWithBilling, allInvoices]);
 
   // Filter projects
   const filteredProjects = useMemo(() => {
@@ -629,23 +716,155 @@ export default function BillingFlow() {
             </div>
           </div>
 
-          {/* Alert breakdown */}
+          {/* Alert breakdown - cliccabile per mostrare dettagli */}
           {globalStats.totalAlerts > 0 && (
-            <div className="flex gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              {globalStats.prestazioniDaFatturare > 0 && (
-                <span className="text-sm text-amber-600 dark:text-amber-400">
-                  {globalStats.prestazioniDaFatturare} da fatturare
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-wrap gap-2 items-center">
+                {globalStats.prestazioniDaFatturare > 0 && (
+                  <Button
+                    variant={showAlertDetails ? "default" : "ghost"}
+                    size="sm"
+                    className={cn(
+                      "h-auto py-1 px-2",
+                      !showAlertDetails && "text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                    )}
+                    onClick={() => setShowAlertDetails(!showAlertDetails)}
+                  >
+                    <FileText className="w-3 h-3 mr-1" />
+                    {globalStats.prestazioniDaFatturare} da fatturare
+                  </Button>
+                )}
+                {globalStats.fattureScadute > 0 && (
+                  <Button
+                    variant={showAlertDetails ? "default" : "ghost"}
+                    size="sm"
+                    className={cn(
+                      "h-auto py-1 px-2",
+                      !showAlertDetails && "text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30"
+                    )}
+                    onClick={() => setShowAlertDetails(!showAlertDetails)}
+                  >
+                    <AlertTriangle className="w-3 h-3 mr-1" />
+                    {globalStats.fattureScadute} scadute
+                  </Button>
+                )}
+                {globalStats.pagamentiInRitardo > 0 && (
+                  <Button
+                    variant={showAlertDetails ? "default" : "ghost"}
+                    size="sm"
+                    className={cn(
+                      "h-auto py-1 px-2",
+                      !showAlertDetails && "text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/30"
+                    )}
+                    onClick={() => setShowAlertDetails(!showAlertDetails)}
+                  >
+                    <Clock className="w-3 h-3 mr-1" />
+                    {globalStats.pagamentiInRitardo} in ritardo
+                  </Button>
+                )}
+                <span className="text-xs text-gray-500 ml-2">
+                  {showAlertDetails ? "Clicca per chiudere" : "Clicca per dettagli"}
                 </span>
-              )}
-              {globalStats.fattureScadute > 0 && (
-                <span className="text-sm text-red-600 dark:text-red-400">
-                  {globalStats.fattureScadute} scadute
-                </span>
-              )}
-              {globalStats.pagamentiInRitardo > 0 && (
-                <span className="text-sm text-orange-600 dark:text-orange-400">
-                  {globalStats.pagamentiInRitardo} in ritardo
-                </span>
+              </div>
+
+              {/* Lista dettagliata degli alert */}
+              {showAlertDetails && alertDetails.length > 0 && (
+                <div className="mt-4 space-y-2 max-h-80 overflow-y-auto">
+                  {alertDetails.map((alert, idx) => {
+                    const typeConfig = {
+                      da_fatturare: {
+                        icon: FileText,
+                        label: "Da fatturare",
+                        color: "text-amber-600 dark:text-amber-400",
+                        bgColor: "bg-amber-50 dark:bg-amber-900/20",
+                        borderColor: "border-amber-200 dark:border-amber-800",
+                      },
+                      scaduta: {
+                        icon: AlertTriangle,
+                        label: "Fattura scaduta",
+                        color: "text-red-600 dark:text-red-400",
+                        bgColor: "bg-red-50 dark:bg-red-900/20",
+                        borderColor: "border-red-200 dark:border-red-800",
+                      },
+                      ritardo: {
+                        icon: Clock,
+                        label: "Pagamento in ritardo",
+                        color: "text-orange-600 dark:text-orange-400",
+                        bgColor: "bg-orange-50 dark:bg-orange-900/20",
+                        borderColor: "border-orange-200 dark:border-orange-800",
+                      },
+                    }[alert.type];
+                    const Icon = typeConfig.icon;
+                    const prestazioneLabel = alert.prestazioneTipo
+                      ? PRESTAZIONE_CONFIG[alert.prestazioneTipo]?.label || alert.prestazioneTipo
+                      : null;
+
+                    return (
+                      <div
+                        key={`${alert.type}-${alert.projectId}-${alert.prestazioneId || alert.invoiceId}-${idx}`}
+                        className={cn(
+                          "p-2 rounded-lg border cursor-pointer hover:shadow-md transition-shadow",
+                          typeConfig.bgColor,
+                          typeConfig.borderColor
+                        )}
+                        onClick={() => {
+                          handleSearchChange(alert.projectCode);
+                          setShowAlertDetails(false);
+                        }}
+                        title={`Clicca per cercare ${alert.projectCode}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <Icon className={cn("w-4 h-4 shrink-0", typeConfig.color)} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-gray-900 dark:text-white">
+                                  {alert.projectCode}
+                                </span>
+                                <span className="text-xs text-gray-500 truncate">
+                                  {alert.projectClient}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                                {alert.type === 'da_fatturare' && prestazioneLabel && (
+                                  <span>
+                                    <span className="font-medium">{prestazioneLabel}</span>
+                                    {alert.prestazionelivello && (
+                                      <span className="ml-1 bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                                        {alert.prestazionelivello.toUpperCase()}
+                                      </span>
+                                    )}
+                                    {alert.importoPrevisto && alert.importoPrevisto > 0 && (
+                                      <span className="ml-1 text-gray-500">
+                                        ({formatCurrency(alert.importoPrevisto)})
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                                {(alert.type === 'scaduta' || alert.type === 'ritardo') && alert.invoiceNumero && (
+                                  <span>
+                                    <span className="font-medium">Fatt. {alert.invoiceNumero}</span>
+                                    {alert.invoiceImporto && (
+                                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                                        {formatCurrency(alert.invoiceImporto)}
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Badge variant="outline" className={typeConfig.color}>
+                              {alert.daysOverdue}gg
+                            </Badge>
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}
