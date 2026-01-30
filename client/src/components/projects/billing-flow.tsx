@@ -137,6 +137,8 @@ export default function BillingFlow() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showAlertDetails, setShowAlertDetails] = useState(false);
   const [showStatusDetails, setShowStatusDetails] = useState<string | null>(null);
+  const [showInvoiceManager, setShowInvoiceManager] = useState(false);
+  const [invoiceFilter, setInvoiceFilter] = useState<string>("all");
 
   // Invoice form
   const [invoiceForm, setInvoiceForm] = useState({
@@ -404,6 +406,32 @@ export default function BillingFlow() {
 
     return stats;
   }, [projectsWithBilling]);
+
+  // Tutte le fatture con info progetto (per gestione fatture)
+  const allInvoicesWithProject = useMemo(() => {
+    return allInvoices.map(invoice => {
+      const project = projects.find(p => p.id === invoice.projectId);
+      const prestazione = allPrestazioni.find(p => p.id === invoice.prestazioneId);
+      return {
+        ...invoice,
+        project,
+        prestazione,
+        isOrphan: invoice.prestazioneId && !prestazione, // Ha prestazioneId ma prestazione non esiste
+      };
+    }).sort((a, b) => new Date(b.dataEmissione).getTime() - new Date(a.dataEmissione).getTime());
+  }, [allInvoices, projects, allPrestazioni]);
+
+  // Fatture filtrate per la gestione
+  const filteredInvoices = useMemo(() => {
+    return allInvoicesWithProject.filter(inv => {
+      if (invoiceFilter === "all") return true;
+      if (invoiceFilter === "orphan") return inv.isOrphan || !inv.prestazioneId;
+      if (invoiceFilter === "emessa") return inv.stato === "emessa";
+      if (invoiceFilter === "pagata") return inv.stato === "pagata";
+      if (invoiceFilter === "scaduta") return inv.stato === "scaduta";
+      return true;
+    });
+  }, [allInvoicesWithProject, invoiceFilter]);
 
   // Filter projects
   const filteredProjects = useMemo(() => {
@@ -1255,6 +1283,221 @@ export default function BillingFlow() {
                       Nessuna prestazione in questo stato
                     </div>
                   )
+                )}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* GESTIONE FATTURE */}
+      <Card>
+        <CardContent className="pt-4">
+          <div
+            className="flex items-center justify-between cursor-pointer"
+            onClick={() => setShowInvoiceManager(!showInvoiceManager)}
+          >
+            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <Euro className="w-4 h-4" />
+              Gestione Fatture
+              <Badge variant="outline" className="ml-2">
+                {allInvoices.length} totali
+              </Badge>
+              {allInvoicesWithProject.filter(i => i.isOrphan).length > 0 && (
+                <Badge variant="destructive" className="ml-1">
+                  {allInvoicesWithProject.filter(i => i.isOrphan).length} orfane
+                </Badge>
+              )}
+            </h3>
+            <Button variant="ghost" size="sm">
+              {showInvoiceManager ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+
+          {showInvoiceManager && (
+            <div className="mt-4">
+              {/* Filtri fatture */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                <Button
+                  variant={invoiceFilter === "all" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setInvoiceFilter("all")}
+                >
+                  Tutte ({allInvoices.length})
+                </Button>
+                <Button
+                  variant={invoiceFilter === "orphan" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setInvoiceFilter("orphan")}
+                  className={allInvoicesWithProject.filter(i => i.isOrphan || !i.prestazioneId).length > 0 ? "border-amber-500" : ""}
+                >
+                  Senza prestazione ({allInvoicesWithProject.filter(i => i.isOrphan || !i.prestazioneId).length})
+                </Button>
+                <Button
+                  variant={invoiceFilter === "emessa" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setInvoiceFilter("emessa")}
+                >
+                  Emesse ({allInvoices.filter(i => i.stato === "emessa").length})
+                </Button>
+                <Button
+                  variant={invoiceFilter === "scaduta" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setInvoiceFilter("scaduta")}
+                  className={allInvoices.filter(i => i.stato === "scaduta").length > 0 ? "border-red-500" : ""}
+                >
+                  Scadute ({allInvoices.filter(i => i.stato === "scaduta").length})
+                </Button>
+                <Button
+                  variant={invoiceFilter === "pagata" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setInvoiceFilter("pagata")}
+                >
+                  Pagate ({allInvoices.filter(i => i.stato === "pagata").length})
+                </Button>
+              </div>
+
+              {/* Lista fatture */}
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {filteredInvoices.length === 0 ? (
+                  <div className="text-sm text-gray-500 italic text-center py-4">
+                    Nessuna fattura trovata
+                  </div>
+                ) : (
+                  filteredInvoices.map((invoice) => {
+                    const statoConfig = INVOICE_STATO_CONFIG[invoice.stato] || INVOICE_STATO_CONFIG.emessa;
+                    const prestLabel = invoice.prestazione
+                      ? PRESTAZIONE_CONFIG[invoice.prestazione.tipo]?.label || invoice.prestazione.tipo
+                      : null;
+
+                    return (
+                      <div
+                        key={invoice.id}
+                        className={cn(
+                          "p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow",
+                          invoice.isOrphan
+                            ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                            : statoConfig.bgColor,
+                          invoice.stato === "scaduta" && "border-red-300 dark:border-red-700"
+                        )}
+                        onClick={() => {
+                          const project = projects.find(p => p.id === invoice.projectId);
+                          if (project) {
+                            openInvoiceDialog(project, invoice.prestazione ? { ...invoice.prestazione, invoices: [] } : undefined, invoice);
+                          }
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {invoice.numeroFattura}
+                              </span>
+                              <Badge className={cn("text-xs", statoConfig.color, statoConfig.bgColor)}>
+                                {invoice.stato === "pagata" && <CheckCircle className="w-3 h-3 mr-1" />}
+                                {invoice.stato === "scaduta" && <AlertTriangle className="w-3 h-3 mr-1" />}
+                                {statoConfig.label}
+                              </Badge>
+                              {invoice.isOrphan && (
+                                <Badge variant="destructive" className="text-xs">
+                                  <AlertTriangle className="w-3 h-3 mr-1" />
+                                  Orfana
+                                </Badge>
+                              )}
+                              {!invoice.prestazioneId && !invoice.isOrphan && (
+                                <Badge variant="outline" className="text-xs">
+                                  Diretta
+                                </Badge>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-1 text-sm">
+                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                                {invoice.project?.code || "N/A"}
+                              </span>
+                              <span className="text-gray-500">
+                                {invoice.project?.client}
+                              </span>
+                            </div>
+
+                            {invoice.project?.object && (
+                              <div className="text-xs text-gray-500 truncate mt-0.5" title={invoice.project.object}>
+                                {invoice.project.object}
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                              <span>Emessa: {formatDate(invoice.dataEmissione)}</span>
+                              {invoice.stato === "pagata" && invoice.dataPagamento && (
+                                <span className="text-green-600">Pagata: {formatDate(invoice.dataPagamento)}</span>
+                              )}
+                              {prestLabel && (
+                                <span className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                                  {prestLabel}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <div className="font-bold text-gray-900 dark:text-white">
+                              {formatCurrency(invoice.importoTotale)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Netto: {formatCurrency(invoice.importoNetto)}
+                            </div>
+                            <div className="flex gap-1 mt-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const project = projects.find(p => p.id === invoice.projectId);
+                                  if (project) {
+                                    openInvoiceDialog(project, invoice.prestazione ? { ...invoice.prestazione, invoices: [] } : undefined, invoice);
+                                  }
+                                }}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              {invoice.stato !== "pagata" && (
+                                <Button
+                                  size="sm"
+                                  variant="default"
+                                  className="h-7 text-xs px-2"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsPaidMutation.mutate({ id: invoice.id, projectId: invoice.projectId });
+                                  }}
+                                >
+                                  <Euro className="w-3 h-3 mr-1" />
+                                  Incassa
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (confirm(`Eliminare la fattura ${invoice.numeroFattura}?`)) {
+                                    deleteInvoiceMutation.mutate({ id: invoice.id, projectId: invoice.projectId });
+                                  }
+                                }}
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
