@@ -25,21 +25,26 @@ import { useToast } from "@/hooks/use-toast";
 import {
   AlertTriangle,
   CheckCircle,
+  CheckCircle2,
+  Circle,
   Clock,
   Euro,
   FileText,
+  Loader2,
+  Pause,
   Play,
   Plus,
   Search,
   Settings,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Edit,
   Download,
   Send,
   X,
   RefreshCw,
   ChevronLeft,
-  ChevronRight,
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -131,6 +136,7 @@ export default function BillingFlow() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showAlertDetails, setShowAlertDetails] = useState(false);
+  const [showStatusDetails, setShowStatusDetails] = useState<string | null>(null);
 
   // Invoice form
   const [invoiceForm, setInvoiceForm] = useState({
@@ -340,6 +346,58 @@ export default function BillingFlow() {
     // Ordina per gravità (più giorni di ritardo prima)
     return details.sort((a, b) => b.daysOverdue - a.daysOverdue);
   }, [projectsWithBilling, allInvoices]);
+
+  // Riepilogo prestazioni per stato
+  const prestazioniByStatus = useMemo(() => {
+    const stats = {
+      da_iniziare: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number }> },
+      in_corso: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number }> },
+      completata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number; dataCompletamento?: string; hasInvoice: boolean }> },
+      fatturata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number }> },
+      pagata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number }> },
+    };
+
+    projectsWithBilling.forEach((project) => {
+      project.prestazioni.forEach((prest) => {
+        const stato = prest.stato as keyof typeof stats;
+        if (stats[stato]) {
+          stats[stato].count++;
+          stats[stato].importo += prest.importoPrevisto || 0;
+
+          if (stato === 'completata') {
+            stats.completata.items.push({
+              projectCode: project.code || '',
+              projectClient: project.client || '',
+              tipo: prest.tipo,
+              livello: prest.livelloProgettazione || undefined,
+              importo: prest.importoPrevisto || 0,
+              dataCompletamento: prest.dataCompletamento ? new Date(prest.dataCompletamento).toISOString() : undefined,
+              hasInvoice: prest.invoices.length > 0,
+            });
+          } else {
+            stats[stato].items.push({
+              projectCode: project.code || '',
+              projectClient: project.client || '',
+              tipo: prest.tipo,
+              livello: prest.livelloProgettazione || undefined,
+              importo: prest.importoPrevisto || 0,
+            });
+          }
+        }
+      });
+    });
+
+    // Ordina completate: prima quelle senza fattura, poi per data completamento
+    stats.completata.items.sort((a, b) => {
+      if (a.hasInvoice !== b.hasInvoice) return a.hasInvoice ? 1 : -1;
+      if (a.dataCompletamento && b.dataCompletamento) {
+        return new Date(a.dataCompletamento).getTime() - new Date(b.dataCompletamento).getTime();
+      }
+      return 0;
+    });
+
+    return stats;
+  }, [projectsWithBilling]);
 
   // Filter projects
   const filteredProjects = useMemo(() => {
@@ -866,6 +924,318 @@ export default function BillingFlow() {
                   })}
                 </div>
               )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* RIEPILOGO PRESTAZIONI PER STATO */}
+      <Card>
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Riepilogo Prestazioni
+            </h3>
+            <span className="text-sm text-gray-500">
+              {allPrestazioni.length} prestazioni totali
+            </span>
+          </div>
+
+          {/* Barra visiva stati */}
+          <div className="flex h-3 rounded-full overflow-hidden mb-4">
+            {prestazioniByStatus.da_iniziare.count > 0 && (
+              <div
+                className="bg-gray-400 transition-all"
+                style={{ width: `${(prestazioniByStatus.da_iniziare.count / allPrestazioni.length) * 100}%` }}
+                title={`Da iniziare: ${prestazioniByStatus.da_iniziare.count}`}
+              />
+            )}
+            {prestazioniByStatus.in_corso.count > 0 && (
+              <div
+                className="bg-blue-500 transition-all"
+                style={{ width: `${(prestazioniByStatus.in_corso.count / allPrestazioni.length) * 100}%` }}
+                title={`In corso: ${prestazioniByStatus.in_corso.count}`}
+              />
+            )}
+            {prestazioniByStatus.completata.count > 0 && (
+              <div
+                className="bg-amber-500 transition-all"
+                style={{ width: `${(prestazioniByStatus.completata.count / allPrestazioni.length) * 100}%` }}
+                title={`Completate: ${prestazioniByStatus.completata.count}`}
+              />
+            )}
+            {prestazioniByStatus.fatturata.count > 0 && (
+              <div
+                className="bg-purple-500 transition-all"
+                style={{ width: `${(prestazioniByStatus.fatturata.count / allPrestazioni.length) * 100}%` }}
+                title={`Fatturate: ${prestazioniByStatus.fatturata.count}`}
+              />
+            )}
+            {prestazioniByStatus.pagata.count > 0 && (
+              <div
+                className="bg-green-500 transition-all"
+                style={{ width: `${(prestazioniByStatus.pagata.count / allPrestazioni.length) * 100}%` }}
+                title={`Pagate: ${prestazioniByStatus.pagata.count}`}
+              />
+            )}
+          </div>
+
+          {/* Cards per stato */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {/* Da iniziare */}
+            <div
+              className={cn(
+                "p-3 rounded-lg border cursor-pointer transition-all",
+                showStatusDetails === 'da_iniziare'
+                  ? "bg-gray-100 dark:bg-gray-800 border-gray-400 ring-2 ring-gray-400"
+                  : "bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 hover:border-gray-400"
+              )}
+              onClick={() => setShowStatusDetails(showStatusDetails === 'da_iniziare' ? null : 'da_iniziare')}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Circle className="w-4 h-4 text-gray-500" />
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Da iniziare</span>
+              </div>
+              <div className="text-xl font-bold text-gray-900 dark:text-white">
+                {prestazioniByStatus.da_iniziare.count}
+              </div>
+              <div className="text-xs text-gray-500">
+                {formatCurrency(prestazioniByStatus.da_iniziare.importo)}
+              </div>
+            </div>
+
+            {/* In corso */}
+            <div
+              className={cn(
+                "p-3 rounded-lg border cursor-pointer transition-all",
+                showStatusDetails === 'in_corso'
+                  ? "bg-blue-100 dark:bg-blue-900/30 border-blue-400 ring-2 ring-blue-400"
+                  : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:border-blue-400"
+              )}
+              onClick={() => setShowStatusDetails(showStatusDetails === 'in_corso' ? null : 'in_corso')}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Loader2 className="w-4 h-4 text-blue-500" />
+                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">In corso</span>
+              </div>
+              <div className="text-xl font-bold text-blue-700 dark:text-blue-300">
+                {prestazioniByStatus.in_corso.count}
+              </div>
+              <div className="text-xs text-blue-600 dark:text-blue-400">
+                {formatCurrency(prestazioniByStatus.in_corso.importo)}
+              </div>
+            </div>
+
+            {/* Completate - con evidenza per quelle senza fattura */}
+            <div
+              className={cn(
+                "p-3 rounded-lg border cursor-pointer transition-all relative",
+                showStatusDetails === 'completata'
+                  ? "bg-amber-100 dark:bg-amber-900/30 border-amber-400 ring-2 ring-amber-400"
+                  : "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 hover:border-amber-400"
+              )}
+              onClick={() => setShowStatusDetails(showStatusDetails === 'completata' ? null : 'completata')}
+            >
+              {prestazioniByStatus.completata.items.filter(i => !i.hasInvoice).length > 0 && (
+                <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-3 h-3 text-white" />
+                </div>
+              )}
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle className="w-4 h-4 text-amber-500" />
+                <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Completate</span>
+              </div>
+              <div className="text-xl font-bold text-amber-700 dark:text-amber-300">
+                {prestazioniByStatus.completata.count}
+              </div>
+              <div className="text-xs text-amber-600 dark:text-amber-400">
+                {formatCurrency(prestazioniByStatus.completata.importo)}
+              </div>
+              {prestazioniByStatus.completata.items.filter(i => !i.hasInvoice).length > 0 && (
+                <div className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">
+                  {prestazioniByStatus.completata.items.filter(i => !i.hasInvoice).length} senza fattura!
+                </div>
+              )}
+            </div>
+
+            {/* Fatturate */}
+            <div
+              className={cn(
+                "p-3 rounded-lg border cursor-pointer transition-all",
+                showStatusDetails === 'fatturata'
+                  ? "bg-purple-100 dark:bg-purple-900/30 border-purple-400 ring-2 ring-purple-400"
+                  : "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 hover:border-purple-400"
+              )}
+              onClick={() => setShowStatusDetails(showStatusDetails === 'fatturata' ? null : 'fatturata')}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <FileText className="w-4 h-4 text-purple-500" />
+                <span className="text-xs font-medium text-purple-600 dark:text-purple-400">Fatturate</span>
+              </div>
+              <div className="text-xl font-bold text-purple-700 dark:text-purple-300">
+                {prestazioniByStatus.fatturata.count}
+              </div>
+              <div className="text-xs text-purple-600 dark:text-purple-400">
+                {formatCurrency(prestazioniByStatus.fatturata.importo)}
+              </div>
+            </div>
+
+            {/* Pagate */}
+            <div
+              className={cn(
+                "p-3 rounded-lg border cursor-pointer transition-all",
+                showStatusDetails === 'pagata'
+                  ? "bg-green-100 dark:bg-green-900/30 border-green-400 ring-2 ring-green-400"
+                  : "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 hover:border-green-400"
+              )}
+              onClick={() => setShowStatusDetails(showStatusDetails === 'pagata' ? null : 'pagata')}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <span className="text-xs font-medium text-green-600 dark:text-green-400">Pagate</span>
+              </div>
+              <div className="text-xl font-bold text-green-700 dark:text-green-300">
+                {prestazioniByStatus.pagata.count}
+              </div>
+              <div className="text-xs text-green-600 dark:text-green-400">
+                {formatCurrency(prestazioniByStatus.pagata.importo)}
+              </div>
+            </div>
+          </div>
+
+          {/* Dettagli stato selezionato */}
+          {showStatusDetails && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-white">
+                  Dettaglio: {STATO_CONFIG[showStatusDetails]?.label || showStatusDetails}
+                </h4>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowStatusDetails(null)}
+                  className="h-6 w-6 p-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {showStatusDetails === 'completata' ? (
+                  // Vista speciale per completate - mostra se hanno fattura
+                  prestazioniByStatus.completata.items.length > 0 ? (
+                    prestazioniByStatus.completata.items.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className={cn(
+                          "p-2 rounded-lg border cursor-pointer hover:shadow-md transition-shadow",
+                          item.hasInvoice
+                            ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
+                            : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+                        )}
+                        onClick={() => {
+                          handleSearchChange(item.projectCode);
+                          setShowStatusDetails(null);
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {item.hasInvoice ? (
+                              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                            ) : (
+                              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-gray-900 dark:text-white">
+                                  {item.projectCode}
+                                </span>
+                                <span className="text-xs text-gray-500 truncate">
+                                  {item.projectClient}
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                                <span className="font-medium">
+                                  {PRESTAZIONE_CONFIG[item.tipo]?.label || item.tipo}
+                                </span>
+                                {item.livello && (
+                                  <span className="ml-1 bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                                    {item.livello.toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-medium">
+                              {formatCurrency(item.importo)}
+                            </span>
+                            <Badge
+                              variant={item.hasInvoice ? "default" : "destructive"}
+                              className="text-xs"
+                            >
+                              {item.hasInvoice ? "Fatturata" : "Da fatturare"}
+                            </Badge>
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500 italic text-center py-4">
+                      Nessuna prestazione completata
+                    </div>
+                  )
+                ) : (
+                  // Vista standard per altri stati
+                  (prestazioniByStatus[showStatusDetails as keyof typeof prestazioniByStatus]?.items || []).length > 0 ? (
+                    (prestazioniByStatus[showStatusDetails as keyof typeof prestazioniByStatus]?.items || []).map((item: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="p-2 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => {
+                          handleSearchChange(item.projectCode);
+                          setShowStatusDetails(null);
+                        }}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {item.projectCode}
+                              </span>
+                              <span className="text-xs text-gray-500 truncate">
+                                {item.projectClient}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                              <span className="font-medium">
+                                {PRESTAZIONE_CONFIG[item.tipo]?.label || item.tipo}
+                              </span>
+                              {item.livello && (
+                                <span className="ml-1 bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                                  {item.livello.toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-medium">
+                              {formatCurrency(item.importo)}
+                            </span>
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500 italic text-center py-4">
+                      Nessuna prestazione in questo stato
+                    </div>
+                  )
+                )}
+              </div>
             </div>
           )}
         </CardContent>
