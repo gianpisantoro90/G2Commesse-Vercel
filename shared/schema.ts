@@ -384,7 +384,7 @@ export const projectInvoices = pgTable("project_invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   salId: text("sal_id").references(() => projectSAL.id), // Opzionale: collegamento a SAL
-  prestazioneId: text("prestazione_id"), // Collegamento a prestazione (1:N - una prestazione può avere più fatture)
+  prestazioneId: text("prestazione_id").references(() => projectPrestazioni.id, { onDelete: "cascade" }), // Collegamento a prestazione - cascade delete
   tipoFattura: text("tipo_fattura").default("unica"), // 'acconto', 'sal', 'saldo', 'unica'
   numeroFattura: text("numero_fattura").notNull(),
   dataEmissione: timestamp("data_emissione").notNull(),
