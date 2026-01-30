@@ -8,9 +8,9 @@ export default function TabNavigation({ activeTab, onTabChange, isAdmin = true }
   const allTabs = [
     { id: "dashboard", label: "Dashboard", emoji: "🏠", adminOnly: false },
     { id: "todo", label: "To Do", emoji: "✅", adminOnly: false },
+    { id: "fatturazione", label: "Fatturazione", emoji: "📊", adminOnly: true },
     { id: "gestione", label: "Gestione", emoji: "📁", adminOnly: false },
     { id: "revisione-ai", label: "Revisione AI", emoji: "🧠", adminOnly: true },
-    { id: "routing", label: "Auto-Routing", emoji: "🤖", adminOnly: true },
     { id: "onedrive", label: "OneDrive Browser", emoji: "☁️", adminOnly: true },
     { id: "sistema", label: "Sistema", emoji: "⚙️", adminOnly: true },
   ];

@@ -20,9 +20,6 @@ import SezioneCosti from "@/components/projects/sezione-costi";
 import { CommunicationsReview } from "@/components/ai-review/communications-review";
 import { TasksReview } from "@/components/ai-review/tasks-review";
 import { DeadlinesReview } from "@/components/ai-review/deadlines-review";
-import BulkRenameForm from "@/components/routing/bulk-rename-form";
-import BulkRenameResults from "@/components/routing/bulk-rename-results";
-import OneDriveAutoRouting from "@/components/routing/onedrive-auto-routing";
 import StoragePanel from "@/components/system/storage-panel";
 import AiConfigPanelUnified from "@/components/system/ai-config-panel-unified";
 import FolderConfigPanel from "@/components/system/folder-config-panel";
@@ -50,9 +47,6 @@ export default function Dashboard() {
   });
   const [pendingProject, setPendingProject] = useState(null);
   const [isCheckingEmails, setIsCheckingEmails] = useState(false);
-
-  // Routing state
-  const [bulkRenameResults, setBulkRenameResults] = useState<Array<{original: string, renamed: string}> | null>(null);
 
   // Email check handler for AI Review section
   const handleCheckEmails = async () => {
@@ -88,15 +82,6 @@ export default function Dashboard() {
 
   const handleSubTabChange = (mainTab: string, subTab: string) => {
     setActiveSubTab(prev => ({ ...prev, [mainTab]: subTab }));
-  };
-  
-
-  const handleBulkRenameComplete = (results: Array<{original: string, renamed: string}>) => {
-    setBulkRenameResults(results);
-  };
-
-  const handleClearBulkRename = () => {
-    setBulkRenameResults(null);
   };
 
   return (
@@ -207,15 +192,6 @@ export default function Dashboard() {
                       </TabsTrigger>
                       {isAdmin && (
                         <TabsTrigger
-                          value="fatturazione"
-                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                          data-testid="tab-fatturazione"
-                        >
-                          📊 Fatturazione
-                        </TabsTrigger>
-                      )}
-                      {isAdmin && (
-                        <TabsTrigger
                           value="requisiti"
                           className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                           data-testid="tab-requisiti"
@@ -249,12 +225,6 @@ export default function Dashboard() {
                   <TabsContent value="comunicazioni" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <RegistroComunicazioni />
                   </TabsContent>
-
-                  {isAdmin && (
-                    <TabsContent value="fatturazione" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                      <FatturazionePage />
-                    </TabsContent>
-                  )}
 
                   {isAdmin && (
                     <TabsContent value="requisiti" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
@@ -353,29 +323,10 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Auto-Routing Panel (Admin only) */}
-            {activeTab === "routing" && isAdmin && (
-              <div className="max-w-6xl mx-auto space-y-6" data-testid="routing-panel">
-                <div className="grid gap-6 lg:grid-cols-1">
-                  {/* New OneDrive Auto-Routing System */}
-                  <OneDriveAutoRouting />
-                  
-                  {/* Bulk Rename Tool */}
-                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">🔄 Rinomina File in Massa</h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      Strumento per rinominare file in massa con pattern personalizzati.
-                    </p>
-                    <BulkRenameForm onRenameComplete={handleBulkRenameComplete} />
-                  </div>
-                </div>
-                
-                {bulkRenameResults && (
-                  <BulkRenameResults 
-                    results={bulkRenameResults}
-                    onClear={handleClearBulkRename}
-                  />
-                )}
+            {/* Fatturazione Panel (Admin only) */}
+            {activeTab === "fatturazione" && isAdmin && (
+              <div data-testid="fatturazione-panel">
+                <FatturazionePage />
               </div>
             )}
 
