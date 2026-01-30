@@ -133,15 +133,6 @@ export default function Dashboard() {
                 <Tabs value={activeSubTab.gestione} onValueChange={(value) => handleSubTabChange("gestione", value)}>
                   <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                     <TabsList className="flex w-full bg-transparent border-0 p-0 min-w-max">
-                      {isAdmin && (
-                        <TabsTrigger
-                          value="nuova"
-                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                          data-testid="tab-nuova"
-                        >
-                          ➕ Nuova
-                        </TabsTrigger>
-                      )}
                       <TabsTrigger
                         value="progetti"
                         className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
@@ -151,6 +142,15 @@ export default function Dashboard() {
                       </TabsTrigger>
                       {isAdmin && (
                         <TabsTrigger
+                          value="nuova"
+                          className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                          data-testid="tab-nuova"
+                        >
+                          ➕ Nuova
+                        </TabsTrigger>
+                      )}
+                      {isAdmin && (
+                        <TabsTrigger
                           value="clienti"
                           className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                           data-testid="tab-clienti"
@@ -158,6 +158,13 @@ export default function Dashboard() {
                           👥 Clienti
                         </TabsTrigger>
                       )}
+                      <TabsTrigger
+                        value="comunicazioni"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                        data-testid="tab-comunicazioni"
+                      >
+                        💬 Comun.
+                      </TabsTrigger>
                       {isAdmin && (
                         <TabsTrigger
                           value="costi"
@@ -176,20 +183,6 @@ export default function Dashboard() {
                           💰 Calc. Parcella
                         </TabsTrigger>
                       )}
-                      <TabsTrigger
-                        value="scadenzario"
-                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                        data-testid="tab-scadenzario"
-                      >
-                        📅 Scadenze
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="comunicazioni"
-                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm sm:text-base font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
-                        data-testid="tab-comunicazioni"
-                      >
-                        💬 Comun.
-                      </TabsTrigger>
                       {isAdmin && (
                         <TabsTrigger
                           value="requisiti"
@@ -217,10 +210,6 @@ export default function Dashboard() {
                       <ParcellaCalculator />
                     </TabsContent>
                   )}
-
-                  <TabsContent value="scadenzario" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
-                    <Scadenzario />
-                  </TabsContent>
 
                   <TabsContent value="comunicazioni" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <RegistroComunicazioni />
@@ -323,17 +312,17 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* Scadenze Panel (All users) */}
+            {activeTab === "scadenze" && (
+              <div data-testid="scadenze-panel">
+                <Scadenzario />
+              </div>
+            )}
+
             {/* Fatturazione Panel (Admin only) */}
             {activeTab === "fatturazione" && isAdmin && (
               <div data-testid="fatturazione-panel">
                 <FatturazionePage />
-              </div>
-            )}
-
-            {/* OneDrive Browser Panel (Admin only) */}
-            {activeTab === "onedrive" && isAdmin && (
-              <div data-testid="onedrive-browser-panel">
-                <OneDriveBrowser />
               </div>
             )}
 
@@ -362,14 +351,21 @@ export default function Dashboard() {
                         className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-ai"
                       >
-                        🤖 Configurazione AI
+                        🤖 Config AI
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="onedrive-browser"
+                        className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
+                        data-testid="tab-onedrive-browser"
+                      >
+                        ☁️ OneDrive Browser
                       </TabsTrigger>
                       <TabsTrigger
                         value="onedrive"
                         className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4 text-sm font-semibold border-b-2 border-transparent data-[state=active]:border-secondary data-[state=active]:text-secondary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors rounded-none whitespace-nowrap"
                         data-testid="tab-onedrive"
                       >
-                        ☁️ OneDrive Config
+                        ⚙️ OneDrive Config
                       </TabsTrigger>
                     </TabsList>
                   </div>
@@ -385,8 +381,11 @@ export default function Dashboard() {
                   <TabsContent value="ai" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <AiConfigPanelUnified />
                   </TabsContent>
-                  
-                  
+
+                  <TabsContent value="onedrive-browser" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
+                    <OneDriveBrowser />
+                  </TabsContent>
+
                   <TabsContent value="onedrive" className="bg-white dark:bg-gray-900 rounded-b-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 mt-0">
                     <div className="space-y-8">
                       {/* Sezione Cartelle */}
