@@ -269,6 +269,7 @@ export default function BillingFlow() {
       projectId: string;
       projectCode: string;
       projectClient: string;
+      projectObject: string;
       prestazioneId?: string;
       prestazioneTipo?: string;
       prestazionelivello?: string;
@@ -292,6 +293,7 @@ export default function BillingFlow() {
               projectId: project.id,
               projectCode: project.code || '',
               projectClient: project.client || '',
+              projectObject: project.object || '',
               prestazioneId: prest.id,
               prestazioneTipo: prest.tipo,
               prestazionelivello: prest.livelloProgettazione || undefined,
@@ -314,6 +316,7 @@ export default function BillingFlow() {
             projectId: project.id,
             projectCode: project.code || '',
             projectClient: project.client || '',
+            projectObject: project.object || '',
             invoiceId: invoice.id,
             invoiceNumero: invoice.numeroFattura,
             invoiceImporto: invoice.importoTotale,
@@ -334,6 +337,7 @@ export default function BillingFlow() {
               projectId: project.id,
               projectCode: project.code || '',
               projectClient: project.client || '',
+              projectObject: project.object || '',
               invoiceId: invoice.id,
               invoiceNumero: invoice.numeroFattura,
               invoiceImporto: invoice.importoTotale,
@@ -350,11 +354,11 @@ export default function BillingFlow() {
   // Riepilogo prestazioni per stato
   const prestazioniByStatus = useMemo(() => {
     const stats = {
-      da_iniziare: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number }> },
-      in_corso: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number }> },
-      completata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number; dataCompletamento?: string; hasInvoice: boolean }> },
-      fatturata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number }> },
-      pagata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; tipo: string; livello?: string; importo: number }> },
+      da_iniziare: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; projectObject: string; tipo: string; livello?: string; importo: number }> },
+      in_corso: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; projectObject: string; tipo: string; livello?: string; importo: number }> },
+      completata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; projectObject: string; tipo: string; livello?: string; importo: number; dataCompletamento?: string; hasInvoice: boolean }> },
+      fatturata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; projectObject: string; tipo: string; livello?: string; importo: number }> },
+      pagata: { count: 0, importo: 0, items: [] as Array<{ projectCode: string; projectClient: string; projectObject: string; tipo: string; livello?: string; importo: number }> },
     };
 
     projectsWithBilling.forEach((project) => {
@@ -368,6 +372,7 @@ export default function BillingFlow() {
             stats.completata.items.push({
               projectCode: project.code || '',
               projectClient: project.client || '',
+              projectObject: project.object || '',
               tipo: prest.tipo,
               livello: prest.livelloProgettazione || undefined,
               importo: prest.importoPrevisto || 0,
@@ -378,6 +383,7 @@ export default function BillingFlow() {
             stats[stato].items.push({
               projectCode: project.code || '',
               projectClient: project.client || '',
+              projectObject: project.object || '',
               tipo: prest.tipo,
               livello: prest.livelloProgettazione || undefined,
               importo: prest.importoPrevisto || 0,
@@ -879,11 +885,16 @@ export default function BillingFlow() {
                                 <span className="font-medium text-gray-900 dark:text-white">
                                   {alert.projectCode}
                                 </span>
-                                <span className="text-xs text-gray-500 truncate">
+                                <span className="text-xs text-gray-500">
                                   {alert.projectClient}
                                 </span>
                               </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                              {alert.projectObject && (
+                                <div className="text-xs text-gray-600 dark:text-gray-400 truncate" title={alert.projectObject}>
+                                  {alert.projectObject}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-500 mt-0.5">
                                 {alert.type === 'da_fatturare' && prestazioneLabel && (
                                   <span>
                                     <span className="font-medium">{prestazioneLabel}</span>
@@ -1151,11 +1162,16 @@ export default function BillingFlow() {
                                 <span className="font-medium text-gray-900 dark:text-white">
                                   {item.projectCode}
                                 </span>
-                                <span className="text-xs text-gray-500 truncate">
+                                <span className="text-xs text-gray-500">
                                   {item.projectClient}
                                 </span>
                               </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                              {item.projectObject && (
+                                <div className="text-xs text-gray-600 dark:text-gray-400 truncate" title={item.projectObject}>
+                                  {item.projectObject}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-500 mt-0.5">
                                 <span className="font-medium">
                                   {PRESTAZIONE_CONFIG[item.tipo]?.label || item.tipo}
                                 </span>
@@ -1205,11 +1221,16 @@ export default function BillingFlow() {
                               <span className="font-medium text-gray-900 dark:text-white">
                                 {item.projectCode}
                               </span>
-                              <span className="text-xs text-gray-500 truncate">
+                              <span className="text-xs text-gray-500">
                                 {item.projectClient}
                               </span>
                             </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            {item.projectObject && (
+                              <div className="text-xs text-gray-600 dark:text-gray-400 truncate" title={item.projectObject}>
+                                {item.projectObject}
+                              </div>
+                            )}
+                            <div className="text-xs text-gray-500 mt-0.5">
                               <span className="font-medium">
                                 {PRESTAZIONE_CONFIG[item.tipo]?.label || item.tipo}
                               </span>
