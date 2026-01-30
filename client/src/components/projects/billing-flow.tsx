@@ -1687,22 +1687,23 @@ function ProjectBillingCard({
       hasAlerts ? "border-amber-500/50" : "border-gray-200 dark:border-gray-700"
     )}>
       {/* Header Commessa */}
-      <div className="bg-gray-50 dark:bg-gray-800/50 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-gray-500" />
-            <span className="font-bold text-gray-900 dark:text-white">{project.code}</span>
+      <div className="bg-gray-50 dark:bg-gray-800/50 px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-gray-500" />
+              <span className="font-bold text-gray-900 dark:text-white">{project.code}</span>
+            </div>
+            <span className="text-gray-600 dark:text-gray-400">{project.client}</span>
+            {hasAlerts && (
+              <Badge variant="destructive" className="text-xs">
+                <AlertTriangle className="w-3 h-3 mr-1" />
+                Alert
+              </Badge>
+            )}
           </div>
-          <span className="text-gray-600 dark:text-gray-400">{project.client}</span>
-          {hasAlerts && (
-            <Badge variant="destructive" className="text-xs">
-              <AlertTriangle className="w-3 h-3 mr-1" />
-              Alert
-            </Badge>
-          )}
-        </div>
 
-        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm">
           <span>
             Budget: <strong>{formatCurrency(project.totals.budget)}</strong>
           </span>
@@ -1722,6 +1723,12 @@ function ProjectBillingCard({
           </div>
         </div>
       </div>
+      {project.object && (
+        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate" title={project.object}>
+          {project.object}
+        </div>
+      )}
+    </div>
 
       {/* Prestazioni */}
       <div className="divide-y divide-gray-100 dark:divide-gray-800">
