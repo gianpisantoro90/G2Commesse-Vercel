@@ -931,7 +931,7 @@ export default function BillingFlow() {
                                         {alert.prestazionelivello.toUpperCase()}
                                       </span>
                                     )}
-                                    {alert.importoPrevisto && alert.importoPrevisto > 0 && (
+                                    {alert.importoPrevisto > 0 && (
                                       <span className="ml-1 text-gray-500">
                                         ({formatCurrency(alert.importoPrevisto)})
                                       </span>
@@ -941,7 +941,7 @@ export default function BillingFlow() {
                                 {(alert.type === 'scaduta' || alert.type === 'ritardo') && alert.invoiceNumero && (
                                   <span>
                                     <span className="font-medium">Fatt. {alert.invoiceNumero}</span>
-                                    {alert.invoiceImporto && (
+                                    {alert.invoiceImporto > 0 && (
                                       <span className="ml-1 font-medium text-gray-900 dark:text-white">
                                         {formatCurrency(alert.invoiceImporto)}
                                       </span>
@@ -1720,7 +1720,7 @@ export default function BillingFlow() {
                         <SelectItem key={prest.id} value={prest.id}>
                           {PRESTAZIONE_CONFIG[prest.tipo]?.label || prest.tipo}
                           {prest.livelloProgettazione && ` - ${prest.livelloProgettazione.toUpperCase()}`}
-                          {prest.importoPrevisto && ` (€${(prest.importoPrevisto / 100).toLocaleString('it-IT')})`}
+                          {prest.importoPrevisto > 0 && ` (€${(prest.importoPrevisto / 100).toLocaleString('it-IT')})`}
                         </SelectItem>
                       ))}
                   </SelectContent>
