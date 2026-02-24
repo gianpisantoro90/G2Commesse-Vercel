@@ -25,6 +25,19 @@
   --ring: hsl(182, 89%, 53%);
   --success: hsl(142, 71%, 45%);
   --warning: hsl(25, 95%, 53%);
+  /* Semantic status backgrounds */
+  --success-bg: hsl(142, 71%, 97%);
+  --success-border: hsl(142, 71%, 85%);
+  --success-text: hsl(142, 71%, 35%);
+  --warning-bg: hsl(25, 95%, 95%);
+  --warning-border: hsl(25, 95%, 80%);
+  --warning-text: hsl(25, 95%, 35%);
+  --info-bg: hsl(217, 91%, 97%);
+  --info-border: hsl(217, 91%, 85%);
+  --info-text: hsl(217, 91%, 40%);
+  --error-bg: hsl(0, 74%, 97%);
+  --error-border: hsl(0, 74%, 85%);
+  --error-text: hsl(0, 74%, 40%);
   --g2-primary: hsl(182, 52%, 23%);
   --g2-secondary: hsl(0, 74%, 49%);
   --g2-accent: hsl(248, 39%, 98%);
@@ -48,7 +61,8 @@
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Ubuntu', 'Cantarell', 'Noto Sans', 'Helvetica', 'Arial', sans-serif;
   --font-serif: 'Georgia', serif;
   --font-mono: 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
-  --radius: 1.4rem;
+  /* Standardized border radius: 8px base */
+  --radius: 0.5rem;
 }
 
 .dark {
@@ -63,7 +77,8 @@
   --secondary: hsl(0, 74%, 49%);
   --secondary-foreground: hsl(0, 0%, 100%);
   --muted: hsl(0, 0%, 9%);
-  --muted-foreground: hsl(210, 3%, 46%);
+  /* WCAG AA compliant: increased from 46% to 65% for 7:1 contrast ratio */
+  --muted-foreground: hsl(210, 3%, 65%);
   --accent: hsl(206, 30%, 18%);
   --accent-foreground: hsl(160, 84%, 39%);
   --destructive: hsl(0, 74%, 49%);
@@ -71,6 +86,19 @@
   --border: hsl(210, 10%, 25%);
   --input: hsl(208, 15%, 25%);
   --ring: hsl(160, 84%, 39%);
+  /* Semantic status backgrounds - dark mode */
+  --success-bg: hsl(142, 71%, 10%);
+  --success-border: hsl(142, 71%, 25%);
+  --success-text: hsl(142, 71%, 65%);
+  --warning-bg: hsl(25, 95%, 10%);
+  --warning-border: hsl(25, 95%, 25%);
+  --warning-text: hsl(25, 95%, 65%);
+  --info-bg: hsl(217, 91%, 10%);
+  --info-border: hsl(217, 91%, 25%);
+  --info-text: hsl(217, 91%, 65%);
+  --error-bg: hsl(0, 74%, 10%);
+  --error-border: hsl(0, 74%, 25%);
+  --error-text: hsl(0, 74%, 65%);
 }
 
 @layer base {
@@ -99,19 +127,44 @@
   }
   
   .card-g2 {
-    @apply bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800 p-6 transition-shadow duration-200 hover:shadow-xl;
+    @apply bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-100 dark:border-gray-800 p-6 transition-shadow duration-200 hover:shadow-xl;
   }
-  
+
   .button-g2-primary {
-    @apply bg-primary text-white py-3 px-6 rounded-xl font-semibold hover:opacity-90 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    @apply bg-primary text-white py-3 px-6 rounded-lg font-semibold hover:opacity-90 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
 
   .button-g2-secondary {
-    @apply border-2 border-primary text-primary py-3 px-6 rounded-xl font-semibold hover:bg-primary hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
+    @apply border-2 border-primary text-primary py-3 px-6 rounded-lg font-semibold hover:bg-primary hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2;
   }
-  
+
   .input-g2 {
-    @apply w-full px-4 py-3 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-colors;
+    @apply w-full px-4 py-3 border border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-white rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-colors;
+  }
+
+  /* Semantic status cards */
+  .status-card-success {
+    background-color: var(--success-bg);
+    border-color: var(--success-border);
+    color: var(--success-text);
+  }
+
+  .status-card-warning {
+    background-color: var(--warning-bg);
+    border-color: var(--warning-border);
+    color: var(--warning-text);
+  }
+
+  .status-card-info {
+    background-color: var(--info-bg);
+    border-color: var(--info-border);
+    color: var(--info-text);
+  }
+
+  .status-card-error {
+    background-color: var(--error-bg);
+    border-color: var(--error-border);
+    color: var(--error-text);
   }
 }
 

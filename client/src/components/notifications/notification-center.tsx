@@ -49,15 +49,20 @@ export function NotificationCenter() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative"
+          aria-label={unreadCount > 0 ? `Notifiche (${unreadCount} non lette)` : "Notifiche"}
+        >
+          <Bell className="h-5 w-5" aria-hidden="true" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold">
+            <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-semibold" aria-hidden="true">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
           {!connected && (
-            <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-gray-400" />
+            <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-gray-400" aria-label="Disconnesso" />
           )}
         </Button>
       </DropdownMenuTrigger>

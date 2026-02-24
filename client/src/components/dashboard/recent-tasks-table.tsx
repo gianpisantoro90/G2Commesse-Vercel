@@ -67,8 +67,8 @@ export default function RecentTasksTable() {
         </div>
       ) : (
         <>
-          {/* Desktop: Table */}
-          <div className="hidden md:block overflow-x-auto">
+          {/* Desktop/Tablet: Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
@@ -109,8 +109,8 @@ export default function RecentTasksTable() {
             </table>
           </div>
 
-          {/* Mobile: Cards */}
-          <div className="md:hidden space-y-2">
+          {/* Mobile/Tablet: Cards */}
+          <div className="lg:hidden space-y-3">
             {recentTasks.map((task) => (
               <div key={task.id} className="w-full bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3 overflow-hidden">
                 <div className="flex flex-col gap-1 min-w-0">

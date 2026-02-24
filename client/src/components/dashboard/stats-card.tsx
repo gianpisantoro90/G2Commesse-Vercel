@@ -24,7 +24,7 @@ export default function StatsCard() {
     return (
       <div className="card-g2" data-testid="stats-card-loading">
         <Skeleton className="h-6 w-32 mb-4" />
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="text-center">
               <Skeleton className="h-4 w-24 mx-auto mb-2" />
@@ -45,35 +45,35 @@ export default function StatsCard() {
     <div className="card-g2" data-testid="stats-card">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stato Archivio</h3>
       <div className="grid grid-cols-1 gap-3 mb-6">
-        <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+        <div className="flex items-center justify-between p-3 status-card-success border rounded-lg">
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">Commesse In Corso</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Attività in corso</div>
+            <div className="text-sm font-medium">Commesse In Corso</div>
+            <div className="text-xs opacity-75">Attività in corso</div>
           </div>
-          <div className="text-3xl font-bold text-green-600 dark:text-green-400" data-testid="stat-projects-active">
+          <div className="text-3xl font-bold" data-testid="stat-projects-active">
             {projectsInCorso}
           </div>
         </div>
-        <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+        <div className="flex items-center justify-between p-3 status-card-warning border rounded-lg">
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">Commesse Sospese</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">In sospensione</div>
+            <div className="text-sm font-medium">Commesse Sospese</div>
+            <div className="text-xs opacity-75">In sospensione</div>
           </div>
-          <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400" data-testid="stat-projects-suspended">
+          <div className="text-3xl font-bold" data-testid="stat-projects-suspended">
             {projectsSospese}
           </div>
         </div>
-        <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="flex items-center justify-between p-3 status-card-info border rounded-lg">
           <div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">Commesse Concluse</div>
-            <div className="text-xs text-gray-600 dark:text-gray-400">Completate</div>
+            <div className="text-sm font-medium">Commesse Concluse</div>
+            <div className="text-xs opacity-75">Completate</div>
           </div>
-          <div className="text-3xl font-bold text-blue-600 dark:text-blue-400" data-testid="stat-projects-completed">
+          <div className="text-3xl font-bold" data-testid="stat-projects-completed">
             {projectsConcluse}
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
           <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Clienti Totali</div>
           <div className="text-2xl font-bold text-primary" data-testid="stat-clients">

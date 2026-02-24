@@ -97,8 +97,8 @@ export default function RecentProjectsTable() {
         </div>
       ) : (
         <>
-          {/* Desktop: Table */}
-          <div className="hidden md:block overflow-x-auto">
+          {/* Desktop/Tablet: Table */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
@@ -137,8 +137,8 @@ export default function RecentProjectsTable() {
             </table>
           </div>
 
-          {/* Mobile: Cards */}
-          <div className="md:hidden space-y-3">
+          {/* Mobile/Tablet: Cards */}
+          <div className="lg:hidden space-y-3">
             {recentProjects.map((project) => (
               <div key={project.id} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">

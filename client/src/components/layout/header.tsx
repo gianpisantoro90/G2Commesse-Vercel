@@ -61,8 +61,9 @@ export default function Header() {
               onClick={handleLogout}
               className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3"
               data-testid="button-logout"
+              aria-label="Esci dall'applicazione"
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className="h-4 w-4" aria-hidden="true" />
               <span className="hidden sm:inline">Esci</span>
             </Button>
           </div>
