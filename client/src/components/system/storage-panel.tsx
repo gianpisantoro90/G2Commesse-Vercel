@@ -69,8 +69,27 @@ export default function StoragePanel() {
 
         // Add mode to the request payload
         const payload = { ...data, mode };
+        const jsonString = JSON.stringify(payload);
 
-        await apiRequest("POST", "/api/import", payload);
+        // Compress with gzip to stay under Vercel's 4.5MB infrastructure limit
+        const encoder = new TextEncoder();
+        const stream = new Blob([encoder.encode(jsonString)]).stream();
+        const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
+        const compressedBlob = await new Response(compressedStream).blob();
+
+        const res = await fetch("/api/import", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Encoding": "gzip",
+          },
+          body: compressedBlob,
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          throw new Error(`Import failed: ${res.status}`);
+        }
 
         const modeText = mode === 'merge' ? 'uniti' : 'sovrascritti';
         toast({

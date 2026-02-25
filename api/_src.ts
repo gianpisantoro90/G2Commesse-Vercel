@@ -16,12 +16,10 @@ function getApp() {
   return appPromise;
 }
 
-// Increase body size limit for Pro plan (default 4.5MB is too small for data import)
+// Disable Vercel's body parser — Express handles parsing + gzip decompression
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
+    bodyParser: false,
   },
 };
 

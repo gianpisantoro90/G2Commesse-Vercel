@@ -68,11 +68,42 @@ export async function createApp() {
     legacyHeaders: false,
   });
 
-  // Vercel's bodyParser may have already parsed the body (sizeLimit: 50mb in config)
-  // Only parse if body hasn't been parsed yet
+  // Decompress gzip requests (used by import to stay under Vercel's 4.5MB limit)
+  app.use(async (req: Request, res: Response, next: NextFunction) => {
+    if (req.headers['content-encoding'] === 'gzip') {
+      try {
+        const { createGunzip } = await import('zlib');
+        const chunks: Buffer[] = [];
+        const gunzip = createGunzip();
+
+        req.pipe(gunzip);
+        gunzip.on('data', (chunk: Buffer) => chunks.push(chunk));
+        gunzip.on('end', () => {
+          const decompressed = Buffer.concat(chunks).toString('utf-8');
+          try {
+            req.body = JSON.parse(decompressed);
+          } catch {
+            req.body = decompressed;
+          }
+          delete req.headers['content-encoding'];
+          next();
+        });
+        gunzip.on('error', (err: Error) => {
+          console.error('Gzip decompression error:', err);
+          res.status(400).json({ error: 'Invalid gzip data' });
+        });
+        return;
+      } catch (err) {
+        console.error('Gzip setup error:', err);
+      }
+    }
+    next();
+  });
+
+  // Parse JSON body (skip if Vercel's bodyParser already parsed it)
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
-      return next(); // Already parsed by Vercel
+      return next();
     }
     express.json({ limit: '50mb' })(req, res, next);
   });
