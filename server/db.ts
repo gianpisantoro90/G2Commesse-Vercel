@@ -1,10 +1,9 @@
 import 'dotenv/config';
-import { Pool, neonConfig, neon } from '@neondatabase/serverless';
-import { drizzle as drizzleWs } from 'drizzle-orm/neon-serverless';
-import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
+import pg from 'pg';
+import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Detect Vercel serverless environment
+// For local dev, optionally use @neondatabase/serverless with WebSocket
 const isVercel = !!process.env.VERCEL;
 
 // Build DATABASE_URL from components if not available directly
@@ -19,7 +18,7 @@ function getDatabaseUrl(): string | null {
   if (PGHOST && PGDATABASE && PGUSER && PGPASSWORD) {
     const port = PGPORT || '5432';
     const constructedUrl = `postgresql://${PGUSER}:${PGPASSWORD}@${PGHOST}:${port}/${PGDATABASE}?sslmode=require`;
-    console.log('🔧 Constructed DATABASE_URL from components (PGHOST, PGDATABASE, PGUSER, PGPASSWORD, PGPORT)');
+    console.log('🔧 Constructed DATABASE_URL from components');
     return constructedUrl;
   }
 
@@ -29,48 +28,28 @@ function getDatabaseUrl(): string | null {
 
 const databaseUrl = getDatabaseUrl();
 
-let pool: Pool | null = null;
+let pool: pg.Pool | null = null;
 let db: any = null;
-
-console.log('🔍 DB Init: isVercel=' + isVercel + ', hasDatabaseUrl=' + !!databaseUrl);
 
 if (!databaseUrl) {
   console.warn('⚠️ No database URL available, application will use memory storage');
-} else if (isVercel) {
-  // Vercel serverless: use Neon HTTP driver (avoids ws ErrorEvent bug)
-  console.log('🗄️ Connecting to database via HTTP (Vercel serverless)...');
-  try {
-    const sql = neon(databaseUrl);
-    db = drizzleHttp({ client: sql, schema });
-    console.log('✅ Neon HTTP database connection established, db is:', typeof db, db ? 'non-null' : 'NULL');
-  } catch (error) {
-    console.error('❌ Failed to create database connection:', error);
-    db = null;
-  }
 } else {
-  // Local dev: use WebSocket Pool for persistent connections
-  console.log('🗄️ Connecting to database via WebSocket (local dev)...');
-
-  if (databaseUrl.includes('neon.tech')) {
-    // Dynamic import ws only in local dev to avoid bundling issues
-    try {
-      const ws = require('ws');
-      neonConfig.webSocketConstructor = ws;
-      console.log('📡 Configured Neon WebSocket for local dev');
-    } catch {
-      console.warn('⚠️ ws package not available, WebSocket not configured');
-    }
-  }
+  // Use standard pg Pool (TCP) for both Vercel and local dev
+  // This avoids the @neondatabase/serverless WebSocket ErrorEvent crash
+  // and the Neon HTTP driver tagged-template incompatibility
+  const mode = isVercel ? 'Vercel serverless' : 'local dev';
+  console.log(`🗄️ Connecting to database via TCP Pool (${mode})...`);
 
   try {
-    pool = new Pool({
+    pool = new pg.Pool({
       connectionString: databaseUrl,
-      max: 5,
-      idleTimeoutMillis: 60000,
+      max: isVercel ? 2 : 5,
+      idleTimeoutMillis: isVercel ? 10000 : 60000,
       connectionTimeoutMillis: 10000,
+      ssl: databaseUrl.includes('neon.tech') ? { rejectUnauthorized: false } : undefined,
     });
-    db = drizzleWs({ client: pool, schema });
-    console.log('✅ Neon WebSocket database connection established');
+    db = drizzlePg({ client: pool, schema });
+    console.log(`✅ Database connection established (${mode})`);
   } catch (error) {
     console.error('❌ Failed to create database connection:', error);
     pool = null;
@@ -80,16 +59,6 @@ if (!databaseUrl) {
 
 // Auto-migration for project_prestazioni table
 async function runMigrations() {
-  if (!pool && db && isVercel) {
-    // On Vercel (HTTP mode), run migrations via db.execute
-    try {
-      await runMigrationsViaExecute();
-    } catch (error) {
-      console.error('❌ Migration error (HTTP mode):', error);
-    }
-    return;
-  }
-
   if (!pool) return;
 
   try {
@@ -223,57 +192,6 @@ async function runMigrations() {
   } catch (error) {
     console.error('❌ Migration error:', error);
   }
-}
-
-// Lightweight migration for Vercel HTTP mode (no pool.connect needed)
-async function runMigrationsViaExecute() {
-  const { sql } = await import('drizzle-orm');
-
-  const result = await db.execute(sql`
-    SELECT EXISTS (
-      SELECT FROM information_schema.tables
-      WHERE table_name = 'project_prestazioni'
-    )
-  `);
-
-  if (!result.rows?.[0]?.exists) {
-    console.log('🔄 Creating project_prestazioni table (HTTP mode)...');
-    await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS project_prestazioni (
-        id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-        tipo TEXT NOT NULL,
-        livello_progettazione TEXT,
-        descrizione TEXT,
-        stato TEXT NOT NULL DEFAULT 'da_iniziare',
-        data_inizio TIMESTAMP,
-        data_completamento TIMESTAMP,
-        data_fatturazione TIMESTAMP,
-        data_pagamento TIMESTAMP,
-        importo_previsto INTEGER DEFAULT 0,
-        importo_fatturato INTEGER DEFAULT 0,
-        importo_pagato INTEGER DEFAULT 0,
-        note TEXT,
-        created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
-      )
-    `);
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_prestazioni_project ON project_prestazioni(project_id)`);
-    await db.execute(sql`CREATE INDEX IF NOT EXISTS idx_prestazioni_stato ON project_prestazioni(stato)`);
-    console.log('✅ project_prestazioni table created (HTTP mode)');
-  }
-
-  // Ensure all columns exist (IF NOT EXISTS is idempotent)
-  await db.execute(sql`ALTER TABLE project_invoices ADD COLUMN IF NOT EXISTS prestazione_id TEXT`);
-  await db.execute(sql`ALTER TABLE project_invoices ADD COLUMN IF NOT EXISTS tipo_fattura TEXT DEFAULT 'unica'`);
-  await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cig TEXT`);
-  await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS numero_contratto TEXT`);
-  await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_inizio_commessa TIMESTAMP`);
-  await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_fine_commessa TIMESTAMP`);
-  await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cre_archiviato BOOLEAN DEFAULT false`);
-  await db.execute(sql`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cre_data_archiviazione TIMESTAMP`);
-
-  console.log('✅ Migrations completed (HTTP mode)');
 }
 
 export { pool, db, runMigrations };
