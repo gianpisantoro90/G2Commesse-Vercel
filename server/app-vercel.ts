@@ -90,11 +90,28 @@ export async function createApp() {
     ssl: { rejectUnauthorized: false },
   });
 
+  // Ensure sessions table exists before starting the store
+  try {
+    const client = await sessionPool.connect();
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS "user_sessions" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE
+      );
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "user_sessions" ("expire");
+    `);
+    client.release();
+    console.log('✅ Session table ready');
+  } catch (err) {
+    console.error('⚠️ Could not ensure session table:', err);
+  }
+
   app.use(session({
     store: new PgStore({
       pool: sessionPool,
       tableName: 'user_sessions',
-      createTableIfMissing: true,
       pruneSessionInterval: 60 * 15, // Prune expired sessions every 15 min
     }),
     secret: sessionSecret,
