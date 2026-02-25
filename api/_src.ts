@@ -16,6 +16,13 @@ function getApp() {
   return appPromise;
 }
 
+// Increase body size limit (default 4.5MB is too small for data import)
+export const config = {
+  api: {
+    bodyParser: false, // Let Express handle body parsing with its own 50mb limit
+  },
+};
+
 // Vercel serverless handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const app = await getApp();
