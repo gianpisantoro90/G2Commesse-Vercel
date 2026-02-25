@@ -5,6 +5,8 @@
 
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import pgSimple from "connect-pg-simple";
+import pg from "pg";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
@@ -72,24 +74,40 @@ export async function createApp() {
   // Request logging
   app.use(requestLogger);
 
-  // Session configuration for Vercel (stateless - using cookies only)
+  // Session configuration for Vercel (persistent store in Neon PostgreSQL)
   if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
     throw new Error('SESSION_SECRET environment variable must be set and at least 32 characters long');
   }
   const sessionSecret = process.env.SESSION_SECRET;
 
+  // PostgreSQL session store (uses standard pg Pool over TCP, not WebSocket)
+  const PgStore = pgSimple(session);
+  const sessionPool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 2,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    ssl: { rejectUnauthorized: false },
+  });
+
   app.use(session({
+    store: new PgStore({
+      pool: sessionPool,
+      tableName: 'user_sessions',
+      createTableIfMissing: true,
+      pruneSessionInterval: 60 * 15, // Prune expired sessions every 15 min
+    }),
     secret: sessionSecret,
     name: 'sessionId',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       httpOnly: true,
-      maxAge: 1000 * 60 * 30, // 30 minutes
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+      maxAge: 1000 * 60 * 60 * 8, // 8 hours (longer for serverless)
+      sameSite: 'lax', // 'lax' needed for cross-domain Vercel preview URLs
     },
-    rolling: true
+    rolling: true,
   }));
 
   // Apply rate limiting to API routes

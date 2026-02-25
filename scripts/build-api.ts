@@ -23,6 +23,7 @@ async function build() {
         'bcrypt',           // Native C++ module - use bcryptjs instead
         '@libsql/client',   // Has complex internals that don't bundle well
         'ws',               // Only used in local dev, not needed on Vercel
+        'pg-native',        // Optional native pg binding - not available on Vercel
       ],
       banner: {
         js: `
