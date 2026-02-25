@@ -2816,7 +2816,9 @@ export async function registerRoutes(app: Express): Promise<void> {
             result = await client.api(`/drives/${driveId}/items/${fileId}`).patch(updatePayload);
           } else {
             // Fallback to default drive
-            result = await client.api(`/me/drive/items/${fileId}`).patch(updatePayload);
+            const userId = process.env.MICROSOFT_USER_ID;
+            const driveBase = userId ? `/users/${userId}/drive` : '/me/drive';
+            result = await client.api(`${driveBase}/items/${fileId}`).patch(updatePayload);
           }
           
           if (result && result.name === newName) {

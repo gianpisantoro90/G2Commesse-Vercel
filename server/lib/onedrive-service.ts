@@ -342,6 +342,19 @@ export interface OneDriveUploadResult {
 class ServerOneDriveService {
   private client: Client | null = null;
 
+  /**
+   * Returns the base path for drive API calls.
+   * With client_credentials (app-only), /me is not available.
+   * Uses /users/{MICROSOFT_USER_ID}/drive instead.
+   */
+  private get driveBase(): string {
+    const userId = process.env.MICROSOFT_USER_ID;
+    if (!userId) {
+      throw new Error('MICROSOFT_USER_ID environment variable is required for OneDrive integration. Set it to the email or ID of the OneDrive user.');
+    }
+    return `/users/${userId}/drive`;
+  }
+
   async getClient(): Promise<Client> {
     this.client = await getUncachableOneDriveClient();
     return this.client;
@@ -350,9 +363,9 @@ class ServerOneDriveService {
   async testConnection(): Promise<boolean> {
     try {
       const client = await this.getClient();
-      
-      // Test by getting user profile
-      await client.api('/me').get();
+
+      // Test by getting the drive root (works with app-only auth)
+      await client.api(`${this.driveBase}/root`).get();
       console.log('✅ OneDrive connection test successful (Server)');
       return true;
     } catch (error) {
@@ -364,8 +377,10 @@ class ServerOneDriveService {
   async getUserInfo(): Promise<{ name: string; email: string } | null> {
     try {
       const client = await this.getClient();
+      const userId = process.env.MICROSOFT_USER_ID;
+      if (!userId) return null;
 
-      const user = await client.api('/me').get();
+      const user = await client.api(`/users/${userId}`).get();
       return {
         name: user.displayName || 'Unknown User',
         email: user.mail || user.userPrincipalName || 'No email'
@@ -408,10 +423,10 @@ class ServerOneDriveService {
       let apiUrl;
       if (sanitizedPath === '/' || sanitizedPath === '') {
         // Root directory
-        apiUrl = '/me/drive/root/children';
+        apiUrl = `${this.driveBase}/root/children`;
       } else {
         // Specific folder path - already sanitized
-        apiUrl = `/me/drive/root:${sanitizedPath}:/children`;
+        apiUrl = `${this.driveBase}/root:${sanitizedPath}:/children`;
       }
 
       logGraphRequest('List Files', apiUrl, 'GET');
@@ -425,7 +440,7 @@ class ServerOneDriveService {
         await handleGraphError(apiError, 'List Files', {
           folderPath: sanitizedPath,
           apiUrl,
-          operation: 'GET /me/drive/root:path:/children'
+          operation: 'GET drive/root:path:/children'
         });
       }
 
@@ -457,7 +472,7 @@ class ServerOneDriveService {
       await this.ensureRootFolder(parentPath);
 
       // FIRST: Check if folder already exists before trying to create it
-      const checkUrl = `/me/drive/root:${parentPath}/${folderName}`;
+      const checkUrl = `${this.driveBase}/root:${parentPath}/${folderName}`;
       logGraphRequest('Check Folder Exists', checkUrl, 'GET');
       
       try {
@@ -473,7 +488,7 @@ class ServerOneDriveService {
             folderName,
             parentPath,
             checkUrl,
-            operation: 'GET /me/drive/root:path'
+            operation: 'GET drive/root:path'
           });
           return false;
         }
@@ -487,7 +502,7 @@ class ServerOneDriveService {
         folder: {}
       };
 
-      const apiUrl = `/me/drive/root:${parentPath}:/children`;
+      const apiUrl = `${this.driveBase}/root:${parentPath}:/children`;
       logGraphRequest('Create Folder', apiUrl, 'POST', folderData);
 
       try {
@@ -509,7 +524,7 @@ class ServerOneDriveService {
           parentPath,
           folderData,
           apiUrl,
-          operation: 'POST /me/drive/root:parentPath:/children'
+          operation: 'POST drive/root:parentPath:/children'
         });
         return false;
       }
@@ -587,7 +602,7 @@ class ServerOneDriveService {
       const client = await this.getClient();
       
       // Check if root folder exists
-      const checkUrl = `/me/drive/root:${rootPath}`;
+      const checkUrl = `${this.driveBase}/root:${rootPath}`;
       logGraphRequest('Check Root Folder', checkUrl, 'GET');
       
       try {
@@ -608,7 +623,7 @@ class ServerOneDriveService {
           folder: {}
         };
 
-        const createUrl = parentPath === '/' ? '/me/drive/root/children' : `/me/drive/root:${parentPath}:/children`;
+        const createUrl = parentPath === '/' ? `${this.driveBase}/root/children` : `${this.driveBase}/root:${parentPath}:/children`;
         logGraphRequest('Create Root Folder', createUrl, 'POST', folderData);
         
         try {
@@ -646,7 +661,7 @@ class ServerOneDriveService {
       }
 
       const response = await client
-        .api(`/me/drive/items/${fileId}/content`)
+        .api(`${this.driveBase}/items/${fileId}/content`)
         .get();
 
       return response;
@@ -661,7 +676,7 @@ class ServerOneDriveService {
       const client = await this.getClient();
       
       // Get root folders first
-      const response = await client.api('/me/drive/root/children').get();
+      const response = await client.api(`${this.driveBase}/root/children`).get();
       
       return response.value
         .filter((item: any) => !!item.folder)
@@ -696,7 +711,7 @@ class ServerOneDriveService {
       
       // Use proper parameter encoding to prevent injection
       const response = await client
-        .api('/me/drive/root/search(q=@q)')
+        .api(`${this.driveBase}/root/search(q=@q)`)
         .query({ '@q': query.trim() })
         .get();
 
@@ -731,15 +746,15 @@ class ServerOneDriveService {
       }
       
       // Get file info first
-      const fileInfo = await client.api(`/me/drive/items/${fileId}`).get();
+      const fileInfo = await client.api(`${this.driveBase}/items/${fileId}`).get();
       const mimeType = fileInfo.file?.mimeType || '';
-      
+
       // Only try to get text content for text files
       if (!mimeType.startsWith('text/') && !mimeType.includes('json') && !mimeType.includes('xml')) {
         return null;
       }
-      
-      const content = await client.api(`/me/drive/items/${fileId}/content`).get();
+
+      const content = await client.api(`${this.driveBase}/items/${fileId}/content`).get();
       return content.toString('utf-8');
     } catch (error) {
       console.error('❌ Failed to get file content (Server):', error);
@@ -760,7 +775,7 @@ class ServerOneDriveService {
       
       // Validate OneDrive folder exists by getting its info
       const client = await this.getClient();
-      await client.api(`/me/drive/items/${oneDriveFolderId}`).get();
+      await client.api(`${this.driveBase}/items/${oneDriveFolderId}`).get();
       
       console.log(`🔗 Linking project ${projectCode} to OneDrive folder ${oneDriveFolderId}`);
       return true;
@@ -786,13 +801,13 @@ class ServerOneDriveService {
         if (sanitizedPath !== folderIdOrPath) {
           throw new Error('Invalid characters in folder path');
         }
-        await client.api(`/me/drive/root:${sanitizedPath}`).get();
+        await client.api(`${this.driveBase}/root:${sanitizedPath}`).get();
       } else {
         // It's an ID
         if (!/^[a-zA-Z0-9!\-_\.~]+$/.test(folderIdOrPath)) {
           throw new Error('Folder ID contains invalid characters');
         }
-        await client.api(`/me/drive/items/${folderIdOrPath}`).get();
+        await client.api(`${this.driveBase}/items/${folderIdOrPath}`).get();
       }
       
       console.log('✅ OneDrive folder validation successful:', folderIdOrPath);
@@ -863,7 +878,7 @@ class ServerOneDriveService {
         folder: {}
       };
       
-      const apiPath = `/me/drive/root:${sanitizedRootPath}:/children`;
+      const apiPath = `${this.driveBase}/root:${sanitizedRootPath}:/children`;
       logGraphRequest('Create Project Folder', apiPath, 'POST', projectFolderData);
       
       let projectFolder;
@@ -944,7 +959,7 @@ class ServerOneDriveService {
     while (true) {
       try {
         // Check if file exists in target folder
-        const existingFiles = await client.api(`/me/drive/items/${targetFolderId}/children`).get();
+        const existingFiles = await client.api(`${this.driveBase}/items/${targetFolderId}/children`).get();
         const conflict = existingFiles.value.find((item: any) => item.name === finalFileName);
         
         if (!conflict) {
@@ -1031,7 +1046,7 @@ class ServerOneDriveService {
         };
         
         console.log(`🔄 Renaming file to: ${newFileName}`);
-        const updatedFile = await client.api(`/me/drive/items/${fileId}`).patch(updateData);
+        const updatedFile = await client.api(`${this.driveBase}/items/${fileId}`).patch(updateData);
         
         console.log(`✅ File renamed successfully:`, {
           id: updatedFile.id,
@@ -1058,30 +1073,30 @@ class ServerOneDriveService {
         }
         
         try {
-          const targetFolder = await client.api(`/me/drive/root:${sanitizedPath}`).get();
+          const targetFolder = await client.api(`${this.driveBase}/root:${sanitizedPath}`).get();
           targetFolderId = targetFolder.id;
           targetPath = sanitizedPath;
         } catch (error: any) {
           if (error.statusCode === 404) {
             console.log(`📁 Target folder not found: ${sanitizedPath}. Attempting to create it...`);
-            
+
             // Try to create the folder structure
             const pathParts = sanitizedPath.split('/').filter(p => p.length > 0);
             let currentPath = '';
             let currentFolderId = 'root';
-            
+
             for (const part of pathParts) {
               currentPath += '/' + part;
-              
+
               try {
                 // Try to get the folder first
-                const existingFolder = await client.api(`/me/drive/root:${currentPath}`).get();
+                const existingFolder = await client.api(`${this.driveBase}/root:${currentPath}`).get();
                 currentFolderId = existingFolder.id;
               } catch (folderError: any) {
                 if (folderError.statusCode === 404) {
                   // Folder doesn't exist, create it
                   console.log(`📁 Creating folder: ${currentPath}`);
-                  const newFolder = await client.api(`/me/drive/items/${currentFolderId}/children`).post({
+                  const newFolder = await client.api(`${this.driveBase}/items/${currentFolderId}/children`).post({
                     name: part,
                     folder: {},
                     '@microsoft.graph.conflictBehavior': 'replace'
@@ -1107,7 +1122,7 @@ class ServerOneDriveService {
           throw new Error('Target folder ID contains invalid characters');
         }
         
-        const targetFolder = await client.api(`/me/drive/items/${targetFolderIdOrPath}`).get();
+        const targetFolder = await client.api(`${this.driveBase}/items/${targetFolderIdOrPath}`).get();
         targetFolderId = targetFolder.id;
         targetPath = targetFolder.parentReference?.path?.replace('/drive/root:', '') + '/' + targetFolder.name || '/';
       }
@@ -1128,12 +1143,12 @@ class ServerOneDriveService {
         console.log(`🏷️ File will be renamed during move: ${newFileName} → ${finalFileName}`);
       } else {
         // Get current filename for path construction
-        const currentFile = await client.api(`/me/drive/items/${fileId}`).get();
+        const currentFile = await client.api(`${this.driveBase}/items/${fileId}`).get();
         finalFileName = currentFile.name;
       }
-      
+
       const movedFile = await client
-        .api(`/me/drive/items/${fileId}`)
+        .api(`${this.driveBase}/items/${fileId}`)
         .patch(moveData);
       
       console.log('✅ Moved OneDrive file:', movedFile.name);
@@ -1156,9 +1171,9 @@ class ServerOneDriveService {
       // Get items in current folder
       let apiUrl: string;
       if (folderPath === '/' || folderPath === '') {
-        apiUrl = '/me/drive/root/children';
+        apiUrl = `${this.driveBase}/root/children`;
       } else {
-        apiUrl = `/me/drive/root:${folderPath}:/children`;
+        apiUrl = `${this.driveBase}/root:${folderPath}:/children`;
       }
       
       logGraphRequest('Scan Folder Recursive', apiUrl, 'GET');
@@ -1224,7 +1239,7 @@ class ServerOneDriveService {
           currentDepth,
           maxDepth,
           includeSubfolders,
-          operation: 'GET /me/drive/root:path:/children'
+          operation: 'GET drive/root:path:/children'
         }).catch(() => {
           // Ignore handleGraphError failures to prevent cascading errors
         });
@@ -1257,7 +1272,7 @@ class ServerOneDriveService {
 
       for (const [folderName, subStructure] of Object.entries(structure)) {
         const folderData = { name: folderName, folder: {} };
-        const apiPath = `/me/drive/root:${parentPath}:/children`;
+        const apiPath = `${this.driveBase}/root:${parentPath}:/children`;
         const currentFolderPath = `${parentPath}/${folderName}`;
 
         logGraphRequest(`Create Template Folder (${template})`, apiPath, 'POST', folderData);
@@ -1359,7 +1374,7 @@ class ServerOneDriveService {
       
       // Construct the upload path
       const uploadPath = `${targetPath}/${sanitizedFileName}`.replace(/\/+/g, '/');
-      const apiPath = `/me/drive/root:${uploadPath}:/content`;
+      const apiPath = `${this.driveBase}/root:${uploadPath}:/content`;
       
       console.log(`📤 Uploading file: ${sanitizedFileName} to ${targetPath}`);
       console.log(`🔗 API Path: ${apiPath}`);
@@ -1407,10 +1422,10 @@ class ServerOneDriveService {
       }
       
       console.log(`🔍 Extracting folder ID from path: ${folderPath}`);
-      console.log(`📍 Using API URL: /me/drive/root:${sanitizedPath}`);
-      
+      console.log(`📍 Using API URL: ${this.driveBase}/root:${sanitizedPath}`);
+
       // Get folder info using the path
-      const folderInfo = await client.api(`/me/drive/root:${sanitizedPath}`).get();
+      const folderInfo = await client.api(`${this.driveBase}/root:${sanitizedPath}`).get();
       
       console.log(`✅ Got folder ID: ${folderInfo.id} for path: ${folderPath}`, {
         id: folderInfo.id,
@@ -1444,19 +1459,19 @@ class ServerOneDriveService {
       if (projectFolderId) {
         try {
           console.log(`📍 Using provided project folder ID: ${projectFolderId}`);
-          sourceItem = await client.api(`/me/drive/items/${projectFolderId}`).get();
+          sourceItem = await client.api(`${this.driveBase}/items/${projectFolderId}`).get();
           console.log(`✅ Found source folder by ID:`, { id: sourceItem.id, name: sourceItem.name });
         } catch (error: any) {
           console.warn(`⚠️ Failed to get source by ID, falling back to path lookup`);
           const sourceId = await this.getFolderIdFromPath(folderFullPath);
           if (!sourceId) throw new Error(`Could not find folder: ${folderFullPath}`);
-          sourceItem = await client.api(`/me/drive/items/${sourceId}`).get();
+          sourceItem = await client.api(`${this.driveBase}/items/${sourceId}`).get();
         }
       } else {
         console.log(`📍 Extracting folder ID from path: ${folderFullPath}`);
         const sourceId = await this.getFolderIdFromPath(folderFullPath);
         if (!sourceId) throw new Error(`Could not find folder: ${folderFullPath}`);
-        sourceItem = await client.api(`/me/drive/items/${sourceId}`).get();
+        sourceItem = await client.api(`${this.driveBase}/items/${sourceId}`).get();
         console.log(`✅ Found source folder by path:`, { id: sourceItem.id, name: sourceItem.name });
       }
       
@@ -1464,25 +1479,25 @@ class ServerOneDriveService {
       if (archiveFolderId) {
         try {
           console.log(`📁 Using provided archive folder ID: ${archiveFolderId}`);
-          archiveFolder = await client.api(`/me/drive/items/${archiveFolderId}`).get();
+          archiveFolder = await client.api(`${this.driveBase}/items/${archiveFolderId}`).get();
           console.log(`✅ Found archive folder by ID:`, { id: archiveFolder.id, name: archiveFolder.name });
         } catch (error: any) {
           console.warn(`⚠️ Failed to get archive by ID, falling back to path lookup`);
           const archiveId = await this.getFolderIdFromPath(archivePath);
           if (!archiveId) throw new Error(`Could not find archive folder: ${archivePath}`);
-          archiveFolder = await client.api(`/me/drive/items/${archiveId}`).get();
+          archiveFolder = await client.api(`${this.driveBase}/items/${archiveId}`).get();
         }
       } else {
         console.log(`📁 Extracting archive folder ID from path: ${archivePath}`);
         const archiveId = await this.getFolderIdFromPath(archivePath);
         if (!archiveId) throw new Error(`Could not find archive folder: ${archivePath}`);
-        archiveFolder = await client.api(`/me/drive/items/${archiveId}`).get();
+        archiveFolder = await client.api(`${this.driveBase}/items/${archiveId}`).get();
         console.log(`✅ Found archive folder by path:`, { id: archiveFolder.id, name: archiveFolder.name });
       }
       
       // Move the item
       const moveData = { parentReference: { id: archiveFolder.id } };
-      const moveUrl = `/me/drive/items/${sourceItem.id}`;
+      const moveUrl = `${this.driveBase}/items/${sourceItem.id}`;
       console.log(`🚚 Moving folder to archive:`, { moveUrl, sourceId: sourceItem.id, archiveId: archiveFolder.id });
       logGraphRequest('Move Folder to Archive', moveUrl, 'PATCH', moveData);
       
