@@ -53,10 +53,9 @@ if (!databaseUrl) {
 } else {
   console.log('🗄️ Connecting to database...');
   console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
-  console.log('🔍 REPLIT_DEPLOYMENT:', process.env.REPLIT_DEPLOYMENT || 'not set');
   
   try {
-    // OPTIMIZED: Reduced pool size for Replit (5 connections instead of 10, with longer idle timeout)
+    // Optimized pool size for serverless (5 connections, longer idle timeout)
     pool = new Pool({
       connectionString: databaseUrl,
       max: 5,

@@ -15,11 +15,7 @@ nul
 # Local data
 data/
 
-# Replit specific
-.replit
-replit.nix
-.config/
-.upm/
-.cache/
+# Vercel
+.vercel/
 
 # Note: api/index.js is committed as placeholder, overwritten during Vercel build

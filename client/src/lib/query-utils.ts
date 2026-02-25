@@ -18,7 +18,7 @@ export const QUERY_DEFAULTS = {
     refetchInterval: false, // No polling
     retry: 2,
   },
-  // OPTIMIZED: Rarely changing data (clients, system config) - increased cache for Replit
+  // Rarely changing data (clients, system config) - longer cache
   static: {
     staleTime: 30 * 60 * 1000, // 30 minutes (was 10 min)
     gcTime: 2 * 60 * 60 * 1000, // 2 hours (was 1 hour)

@@ -23,7 +23,12 @@ class NotificationService {
   private clientTimeouts: Map<WebSocket, NodeJS.Timeout> = new Map(); // Track inactivity timeouts
   private readonly INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
-  initialize(server: Server) {
+  initialize(server?: Server) {
+    if (!server) {
+      logger.info('Notification service initialized without WebSocket (serverless mode)');
+      return;
+    }
+
     this.wss = new WebSocketServer({
       server,
       path: '/ws/notifications'

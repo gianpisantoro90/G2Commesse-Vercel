@@ -3,16 +3,9 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { VitePWA } from 'vite-plugin-pwa';
 
-// Conditionally load Replit plugins only when in Replit environment
-const isReplit = process.env.REPL_ID !== undefined;
-
 export default defineConfig({
   plugins: [
     react(),
-    // Only add Replit plugin in Replit environment
-    ...(isReplit ? [
-      // Dynamic import for Replit plugin (only loaded when needed)
-    ] : []),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
@@ -109,9 +102,9 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    // OPTIMIZED: Disable sourcemaps in production to reduce bundle size on Replit
+    // Disable sourcemaps in production to reduce bundle size
     sourcemap: false,
-    // Additional optimizations for Replit
+    // Build optimizations
     minify: 'esbuild',
     target: 'es2020',
     rollupOptions: {

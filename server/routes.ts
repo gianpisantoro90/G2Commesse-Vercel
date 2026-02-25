@@ -1,5 +1,4 @@
 import type { Express, Request, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
 import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema, aiConfigSchema, insertProjectInvoiceSchema, insertProjectPrestazioneSchema, updatePrestazioneStatoSchema, PRESTAZIONE_TIPI, PRESTAZIONE_STATI } from "@shared/schema";
@@ -153,7 +152,7 @@ const scanFilesSchema = z.object({
   message: "Either folderPath or projectCode must be provided"
 });
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   // Wait for storage to be fully initialized before registering routes
   await storagePromise;
 
@@ -3111,12 +3110,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         instructions: {
           title: "Configura OneDrive",
           steps: [
-            "1. Vai nelle impostazioni del progetto Replit",
-            "2. Nella sezione 'Integrations', cerca e attiva 'OneDrive'", 
-            "3. Autorizza l'accesso al tuo account Microsoft quando richiesto",
+            "1. Registra un'app su Azure AD (portal.azure.com > App Registrations)",
+            "2. Configura i permessi Application: Files.ReadWrite.All, Sites.ReadWrite.All",
+            "3. Imposta MICROSOFT_CLIENT_ID, MICROSOFT_CLIENT_SECRET, MICROSOFT_TENANT_ID nelle variabili d'ambiente",
             "4. Torna qui e clicca 'Ricarica Dati' per verificare la connessione"
           ],
-          setupUrl: `${process.env.REPL_SLUG ? `https://replit.com/@${process.env.REPL_OWNER}/${process.env.REPL_SLUG}` : ''}/settings/integrations`,
+          setupUrl: "https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade",
           note: "L'integrazione OneDrive permette di sincronizzare automaticamente i tuoi progetti con il cloud storage Microsoft."
         }
       });
@@ -3262,26 +3261,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-
-  const httpServer = createServer(app);
-
-  // Initialize WebSocket notification service
-  notificationService.initialize(httpServer);
-
-  // OPTIMIZED: Schedule periodic checks for notifications (every 15 minutes to reduce compute units on Replit)
-  setInterval(() => {
-    notificationService.checkDeadlines(storage);
-    notificationService.checkInvoices(storage);
-    notificationService.checkBudgets(storage);
-    notificationService.clearOldNotifications();
-  }, 15 * 60 * 1000); // 15 minutes (was 5 min)
-
-  // Run initial check after 10 seconds
-  setTimeout(() => {
-    notificationService.checkDeadlines(storage);
-    notificationService.checkInvoices(storage);
-    notificationService.checkBudgets(storage);
-  }, 10000);
 
   // OneDrive Archive Folder Configuration
   app.get("/api/onedrive/archive-folder", async (req, res) => {
@@ -4341,5 +4320,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(invoices);
   });
 
-  return httpServer;
 }

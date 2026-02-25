@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import { createServer } from "http";
 import session from "express-session";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -8,11 +9,12 @@ import { errorHandler } from "./middleware/error-handler";
 import { logger, requestLogger } from "./lib/logger";
 import { emailService } from "./lib/email-service";
 import { emailPoller } from "./lib/email-poller";
+import { notificationService } from "./lib/notification-service";
 import { storage, storagePromise } from "./storage";
 
 const app = express();
 
-// Configure trust proxy for Replit's reverse proxy
+// Configure trust proxy for reverse proxy (Vercel/Nginx)
 app.set('trust proxy', 1);
 
 // Security: Validate required environment variables
@@ -28,7 +30,7 @@ logger.info('Starting G2 Gestione Commesse server', {
 });
 
 // Security: Apply helmet middleware for security headers
-// In development, disable CSP to allow Replit Preview to work
+// In development, disable CSP for local preview
 if (process.env.NODE_ENV === 'production') {
   app.use(helmet({
     contentSecurityPolicy: {
@@ -39,17 +41,15 @@ if (process.env.NODE_ENV === 'production') {
         fontSrc: ["'self'", "https://fonts.gstatic.com", "https://fonts.googleapis.com", "data:"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         connectSrc: [
-          "'self'", 
-          "wss:", 
-          "ws:", 
-          "https:", 
-          "https://api.anthropic.com", 
-          "https://api.deepseek.com", 
-          "https://graph.microsoft.com", 
-          "https://connectors.replit.com",
-          "https://fonts.googleapis.com",
-          "https://*.replit.dev",
-          "https://*.replit.app"
+          "'self'",
+          "wss:",
+          "ws:",
+          "https:",
+          "https://api.anthropic.com",
+          "https://api.deepseek.com",
+          "https://graph.microsoft.com",
+          "https://login.microsoftonline.com",
+          "https://fonts.googleapis.com"
         ],
         frameSrc: ["'self'"],
         objectSrc: ["'none'"],
@@ -65,14 +65,14 @@ if (process.env.NODE_ENV === 'production') {
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
   }));
 } else {
-  // Development: minimal helmet config to allow Replit Preview
+  // Development: minimal helmet config for preview
   app.use(helmet({
-    contentSecurityPolicy: false, // Disable CSP in development
-    hsts: false, // Disable HSTS in development
-    frameguard: false, // Disable X-Frame-Options to allow Replit Preview iframe
-    crossOriginEmbedderPolicy: false, // Allow embedding
-    crossOriginOpenerPolicy: false, // Allow embedding
-    crossOriginResourcePolicy: false, // Allow embedding
+    contentSecurityPolicy: false,
+    hsts: false,
+    frameguard: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false,
   }));
 }
 
@@ -101,7 +101,7 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production', // HTTPS only in production
     httpOnly: true, // Prevent XSS
     maxAge: 1000 * 60 * 30, // 30 minutes
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax' // Less restrictive in dev for Replit Preview
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
   },
   rolling: true // Extend session on each request
 }));
@@ -150,7 +150,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  await registerRoutes(app);
+  const server = createServer(app);
 
   // Wait for storage to be ready
   await storagePromise;
@@ -170,6 +171,24 @@ app.use((req, res, next) => {
 
   // Initialize email poller for automatic email checking (IMAP)
   emailPoller.initialize(storage);
+
+  // Initialize WebSocket notification service
+  notificationService.initialize(server);
+
+  // Schedule periodic notification checks (every 15 minutes)
+  setInterval(() => {
+    notificationService.checkDeadlines(storage);
+    notificationService.checkInvoices(storage);
+    notificationService.checkBudgets(storage);
+    notificationService.clearOldNotifications();
+  }, 15 * 60 * 1000);
+
+  // Run initial notification check after 10 seconds
+  setTimeout(() => {
+    notificationService.checkDeadlines(storage);
+    notificationService.checkInvoices(storage);
+    notificationService.checkBudgets(storage);
+  }, 10000);
 
   // Use centralized error handler (must be after routes)
   app.use(errorHandler);
@@ -209,9 +228,8 @@ app.use((req, res, next) => {
     host: "0.0.0.0",
     reusePort: process.platform !== 'win32', // reusePort not supported on Windows
   }, () => {
-    // Use Replit domain if available, otherwise fallback to localhost
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
       : `http://localhost:${port}`;
     
     logger.info(`Server started successfully on port ${port}`, {

@@ -345,7 +345,7 @@ export function useDBHealth() {
   useEffect(() => {
     checkHealth();
     
-    // OPTIMIZED: Check health every 15 minutes (was 5 min, reduced for Replit compute savings)
+    // Check health every 15 minutes
     const interval = setInterval(checkHealth, 15 * 60 * 1000);
     return () => clearInterval(interval);
   }, [checkHealth]);

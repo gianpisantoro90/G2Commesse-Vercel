@@ -1,6 +1,6 @@
 /**
  * Express App for Vercel Serverless Deployment
- * Configured for zero-cost Turso + Vercel deployment
+ * Configured for Neon PostgreSQL + Vercel deployment
  */
 
 import express, { type Request, Response, NextFunction } from "express";
@@ -12,10 +12,7 @@ import { registerRoutes } from "./routes";
 import { errorHandler } from "./middleware/error-handler";
 import { logger, requestLogger } from "./lib/logger";
 
-// Determine which storage to use based on environment
-const usesTurso = !!process.env.TURSO_DATABASE_URL;
-
-export function createApp() {
+export async function createApp() {
   const app = express();
 
   // Trust proxy for Vercel
@@ -40,12 +37,11 @@ export function createApp() {
         imgSrc: ["'self'", "data:", "https:", "blob:"],
         connectSrc: [
           "'self'",
-          "wss:",
-          "ws:",
           "https:",
           "https://api.anthropic.com",
           "https://api.deepseek.com",
           "https://graph.microsoft.com",
+          "https://login.microsoftonline.com",
           "https://fonts.googleapis.com",
         ],
         frameSrc: ["'self'"],
@@ -77,7 +73,10 @@ export function createApp() {
   app.use(requestLogger);
 
   // Session configuration for Vercel (stateless - using cookies only)
-  const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-change-in-production';
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET.length < 32) {
+    throw new Error('SESSION_SECRET environment variable must be set and at least 32 characters long');
+  }
+  const sessionSecret = process.env.SESSION_SECRET;
 
   app.use(session({
     secret: sessionSecret,
@@ -88,7 +87,7 @@ export function createApp() {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 1000 * 60 * 30, // 30 minutes
-      sameSite: 'lax'
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
     },
     rolling: true
   }));
@@ -133,60 +132,70 @@ export function createApp() {
     next();
   });
 
-  // Register API routes
-  registerRoutes(app);
+  // Vercel Cron Job endpoints (protected by CRON_SECRET)
+  function verifyCronSecret(authHeader: string | undefined): boolean {
+    const secret = process.env.CRON_SECRET;
+    if (!secret || !authHeader) return false;
+    return authHeader === `Bearer ${secret}`;
+  }
 
-  // Error handler
-  app.use(errorHandler);
+  app.get('/api/cron/notifications', async (req, res) => {
+    if (!verifyCronSecret(req.headers['authorization'] as string | undefined)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
-  // Health check endpoint
+    try {
+      const { notificationService } = await import('./lib/notification-service');
+      const { storage, storagePromise } = await import('./storage');
+      await storagePromise;
+
+      await notificationService.checkDeadlines(storage);
+      await notificationService.checkInvoices(storage);
+      await notificationService.checkBudgets(storage);
+      notificationService.clearOldNotifications();
+
+      res.json({ success: true, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Cron notification check failed:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/cron/billing', async (req, res) => {
+    if (!verifyCronSecret(req.headers['authorization'] as string | undefined)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const { billingAutomationService } = await import('./lib/billing-automation');
+      const { storage, storagePromise } = await import('./storage');
+      await storagePromise;
+
+      billingAutomationService.initialize(storage as any);
+      await billingAutomationService.checkAllAlerts();
+
+      res.json({ success: true, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error('Cron billing check failed:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Health check endpoint (before auth middleware in registerRoutes)
   app.get('/api/health', (req, res) => {
     res.json({
       status: 'ok',
       timestamp: new Date().toISOString(),
-      storage: usesTurso ? 'turso' : 'memory',
+      storage: 'neon',
       env: process.env.NODE_ENV
     });
   });
 
-  // Debug endpoint (temporary - remove after fixing)
-  app.get('/api/debug', async (req, res) => {
-    try {
-      // Direct libsql query - bypass storage layer
-      const { createClient } = await import('@libsql/client');
+  // Register API routes
+  await registerRoutes(app);
 
-      const url = process.env.TURSO_DATABASE_URL || '';
-      const authToken = process.env.TURSO_AUTH_TOKEN || '';
-
-      const client = createClient({ url, authToken });
-      const result = await client.execute('SELECT username, email, role, active FROM users');
-
-      res.json({
-        method: 'direct_libsql',
-        turso_url: url.substring(0, 60) + '...',
-        token_length: authToken.length,
-        users_count: result.rows.length,
-        users: result.rows
-      });
-    } catch (error: any) {
-      res.status(500).json({
-        error: error.message,
-        turso_url: process.env.TURSO_DATABASE_URL?.substring(0, 60),
-        token_set: !!process.env.TURSO_AUTH_TOKEN,
-      });
-    }
-  });
+  // Error handler
+  app.use(errorHandler);
 
   return app;
-}
-
-// For local development
-if (process.env.NODE_ENV !== 'production' && require.main === module) {
-  const app = createApp();
-  const port = parseInt(process.env.PORT || '5000', 10);
-
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`🚀 Server running on http://localhost:${port}`);
-    console.log(`📦 Storage: ${usesTurso ? 'Turso' : 'Memory/File'}`);
-  });
 }
