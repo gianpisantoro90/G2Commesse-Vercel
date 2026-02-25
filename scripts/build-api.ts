@@ -20,7 +20,8 @@ async function build() {
       external: [
         // Native modules and complex packages - loaded from node_modules at runtime
         'better-sqlite3',
-        '@libsql/client',  // Has complex internals that don't bundle well
+        'bcrypt',           // Native C++ module - use bcryptjs instead
+        '@libsql/client',   // Has complex internals that don't bundle well
       ],
       banner: {
         js: `
