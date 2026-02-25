@@ -3050,9 +3050,12 @@ async function initializeStorage(): Promise<IStorage> {
   // 2. Try Neon/PostgreSQL if DATABASE_URL is set
   if (process.env.DATABASE_URL) {
     console.log('🔷 PostgreSQL configuration detected, attempting connection...');
+    console.log('🔍 db imported value is:', typeof db, db ? 'non-null' : 'NULL');
+    console.log('🔍 pool imported value is:', typeof pool, pool ? 'non-null' : 'NULL');
     const dbStorage = new DatabaseStorage();
     try {
       const isConnected = await dbStorage.testConnection();
+      console.log('🔍 testConnection result:', isConnected);
       if (isConnected) {
         // Run migrations BEFORE returning storage to ensure schema is up to date
         console.log('🔄 Running database migrations...');

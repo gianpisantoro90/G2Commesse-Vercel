@@ -32,6 +32,8 @@ const databaseUrl = getDatabaseUrl();
 let pool: Pool | null = null;
 let db: any = null;
 
+console.log('🔍 DB Init: isVercel=' + isVercel + ', hasDatabaseUrl=' + !!databaseUrl);
+
 if (!databaseUrl) {
   console.warn('⚠️ No database URL available, application will use memory storage');
 } else if (isVercel) {
@@ -40,7 +42,7 @@ if (!databaseUrl) {
   try {
     const sql = neon(databaseUrl);
     db = drizzleHttp({ client: sql, schema });
-    console.log('✅ Neon HTTP database connection established');
+    console.log('✅ Neon HTTP database connection established, db is:', typeof db, db ? 'non-null' : 'NULL');
   } catch (error) {
     console.error('❌ Failed to create database connection:', error);
     db = null;
