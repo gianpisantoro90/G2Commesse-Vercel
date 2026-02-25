@@ -16,10 +16,12 @@ function getApp() {
   return appPromise;
 }
 
-// Increase body size limit (default 4.5MB is too small for data import)
+// Increase body size limit for Pro plan (default 4.5MB is too small for data import)
 export const config = {
   api: {
-    bodyParser: false, // Let Express handle body parsing with its own 50mb limit
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
   },
 };
 

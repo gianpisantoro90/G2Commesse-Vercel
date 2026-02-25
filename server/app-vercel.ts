@@ -68,7 +68,14 @@ export async function createApp() {
     legacyHeaders: false,
   });
 
-  app.use(express.json({ limit: '50mb' }));
+  // Vercel's bodyParser may have already parsed the body (sizeLimit: 50mb in config)
+  // Only parse if body hasn't been parsed yet
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
+      return next(); // Already parsed by Vercel
+    }
+    express.json({ limit: '50mb' })(req, res, next);
+  });
   app.use(express.urlencoded({ extended: false, limit: '50mb' }));
 
   // Request logging
