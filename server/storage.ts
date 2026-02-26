@@ -1351,24 +1351,30 @@ export class MemStorage implements IStorage {
 
 // DatabaseStorage implementation
 export class DatabaseStorage implements IStorage {
-  // Test database connection - uses raw SQL to avoid schema dependency issues
+  // Test database connection with retry for Neon cold starts (wake-up can take seconds)
   async testConnection(): Promise<boolean> {
-    try {
-      // Use raw SQL query to test connection without depending on schema columns
-      // This prevents failures when new columns are added to schema but not yet migrated
-      if (pool) {
-        const client = await pool.connect();
-        await client.query('SELECT 1');
-        client.release();
-      } else {
-        // Fallback: use db.execute with raw SQL
-        await db.execute(sql`SELECT 1`);
+    const maxRetries = 3;
+    const delays = [0, 2000, 4000]; // immediate, 2s, 4s
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+        }
+        if (pool) {
+          const client = await pool.connect();
+          await client.query('SELECT 1');
+          client.release();
+        } else {
+          await db.execute(sql`SELECT 1`);
+        }
+        return true;
+      } catch (error) {
+        console.error(`🔥 Database connection attempt ${attempt + 1}/${maxRetries} failed:`, error);
+        if (attempt === maxRetries - 1) return false;
       }
-      return true;
-    } catch (error) {
-      console.error('🔥 Database connection test failed:', error);
-      return false;
     }
+    return false;
   }
 
   // Run database migrations to ensure schema is up to date
