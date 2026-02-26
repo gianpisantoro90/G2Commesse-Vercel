@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Mail, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -54,7 +54,27 @@ export default function Dashboard() {
   const { toast } = useToast();
   const isAdmin = user?.role === 'admin';
 
-  const [activeTab, setActiveTab] = useState("dashboard");
+  // Hash-based tab routing: reads initial tab from URL hash, syncs on change
+  const validTabs = ["dashboard", "gestione", "todo", "scadenze", "fatturazione", "revisione-ai", "sistema"];
+  const getTabFromHash = useCallback(() => {
+    const hash = window.location.hash.slice(1); // remove #
+    return validTabs.includes(hash) ? hash : "dashboard";
+  }, []);
+
+  const [activeTab, setActiveTabState] = useState(getTabFromHash);
+
+  const setActiveTab = useCallback((tab: string) => {
+    setActiveTabState(tab);
+    window.location.hash = tab === "dashboard" ? "" : tab;
+  }, []);
+
+  // Listen for browser back/forward navigation
+  useEffect(() => {
+    const handleHashChange = () => setActiveTabState(getTabFromHash());
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [getTabFromHash]);
+
   const [activeSubTab, setActiveSubTab] = useState({
     gestione: "progetti",
     sistema: "users",
@@ -114,7 +134,7 @@ export default function Dashboard() {
           <div className="animate-fade-in">
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
-              <div className="space-y-6" data-testid="dashboard-panel">
+              <div className="space-y-6" id="tabpanel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" data-testid="dashboard-panel">
                 {isAdmin && <EconomicDashboardCard />}
                 {isAdmin && (
                   <div className="grid gap-6 lg:grid-cols-2">
@@ -132,14 +152,16 @@ export default function Dashboard() {
 
             {/* To Do Panel */}
             {activeTab === "todo" && (
-              <Suspense fallback={<TabFallback />}>
-                <TodoPanel />
-              </Suspense>
+              <div id="tabpanel-todo" role="tabpanel" aria-labelledby="tab-todo">
+                <Suspense fallback={<TabFallback />}>
+                  <TodoPanel />
+                </Suspense>
+              </div>
             )}
 
             {/* Management Panel */}
             {activeTab === "gestione" && (
-              <div data-testid="management-panel">
+              <div id="tabpanel-gestione" role="tabpanel" aria-labelledby="tab-gestione" data-testid="management-panel">
                 <Tabs value={activeSubTab.gestione} onValueChange={(value) => handleSubTabChange("gestione", value)}>
                   <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                     <TabsList className="flex w-full bg-transparent border-0 p-0 min-w-max">
@@ -226,7 +248,7 @@ export default function Dashboard() {
 
             {/* Revisione AI Panel (Admin only) */}
             {activeTab === "revisione-ai" && isAdmin && (
-              <div className="space-y-6" data-testid="revisione-ai-panel">
+              <div className="space-y-6" id="tabpanel-revisione-ai" role="tabpanel" aria-labelledby="tab-revisione-ai" data-testid="revisione-ai-panel">
                 <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
@@ -297,7 +319,7 @@ export default function Dashboard() {
 
             {/* Scadenze Panel (All users) */}
             {activeTab === "scadenze" && (
-              <div data-testid="scadenze-panel">
+              <div id="tabpanel-scadenze" role="tabpanel" aria-labelledby="tab-scadenze" data-testid="scadenze-panel">
                 <Suspense fallback={<TabFallback />}>
                   <Scadenzario />
                 </Suspense>
@@ -306,7 +328,7 @@ export default function Dashboard() {
 
             {/* Fatturazione Panel (Admin only) */}
             {activeTab === "fatturazione" && isAdmin && (
-              <div data-testid="fatturazione-panel">
+              <div id="tabpanel-fatturazione" role="tabpanel" aria-labelledby="tab-fatturazione" data-testid="fatturazione-panel">
                 <Suspense fallback={<TabFallback />}>
                   <FatturazionePage />
                 </Suspense>
@@ -315,7 +337,7 @@ export default function Dashboard() {
 
             {/* System Panel (Admin only) */}
             {activeTab === "sistema" && isAdmin && (
-              <div data-testid="system-panel">
+              <div id="tabpanel-sistema" role="tabpanel" aria-labelledby="tab-sistema" data-testid="system-panel">
                 <Tabs value={activeSubTab.sistema} onValueChange={(value) => handleSubTabChange("sistema", value)}>
                   <div className="bg-white dark:bg-gray-900 rounded-t-2xl border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
                     <TabsList className="flex w-full bg-transparent border-0 p-0 min-w-max">

@@ -614,26 +614,28 @@ export default function ProjectsTable() {
                       </div>
                       <div className="flex gap-1">
                         <EditProjectForm project={project}>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">✏️</Button>
+                          <Button size="sm" variant="ghost" className="h-10 w-10 p-0" aria-label="Modifica commessa">✏️</Button>
                         </EditProjectForm>
                         <CREGenerator project={project}>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" title="Genera CRE">📜</Button>
+                          <Button size="sm" variant="ghost" className="h-10 w-10 p-0" title="Genera CRE" aria-label="Genera CRE">📜</Button>
                         </CREGenerator>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className={`h-8 w-8 p-0 ${project.creArchiviato ? 'text-green-600' : 'text-gray-400'}`}
+                          className={`h-10 w-10 p-0 ${project.creArchiviato ? 'text-green-600' : 'text-gray-400'}`}
                           onClick={() => handleToggleCRE(project)}
                           disabled={toggleCREMutation.isPending}
                           title={project.creArchiviato ? 'CRE archiviato - clicca per rimuovere' : 'Segna CRE come archiviato'}
+                          aria-label={project.creArchiviato ? 'CRE archiviato - clicca per rimuovere' : 'Archivia CRE'}
                         >
                           {project.creArchiviato ? '✓' : '○'}
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8 w-8 p-0 text-red-600"
+                          className="h-10 w-10 p-0 text-red-600"
                           onClick={() => handleDeleteProject(project)}
+                          aria-label="Elimina commessa"
                         >🗑️</Button>
                       </div>
                     </div>
@@ -1177,6 +1179,7 @@ export default function ProjectsTable() {
                             variant="ghost"
                             className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900 rounded-lg transition-colors"
                             title="Modifica"
+                            aria-label="Modifica commessa"
                             data-testid={`edit-project-${project.id}`}
                           >
                             ✏️
@@ -1188,6 +1191,7 @@ export default function ProjectsTable() {
                             variant="ghost"
                             className="min-w-[44px] min-h-[44px] p-3 text-amber-600 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-900 rounded-lg transition-colors"
                             title="Genera CRE"
+                            aria-label="Genera CRE"
                             data-testid={`cre-generator-${project.id}`}
                           >
                             📜
@@ -1206,6 +1210,7 @@ export default function ProjectsTable() {
                           title={project.creArchiviato
                             ? `CRE archiviato il ${project.creDataArchiviazione ? new Date(project.creDataArchiviazione).toLocaleDateString('it-IT') : ''} - clicca per rimuovere`
                             : 'Segna CRE come archiviato'}
+                          aria-label={project.creArchiviato ? 'CRE archiviato - clicca per rimuovere' : 'Archivia CRE'}
                           data-testid={`cre-archivio-${project.id}`}
                         >
                           {project.creArchiviato ? '✓' : '○'}
@@ -1217,6 +1222,7 @@ export default function ProjectsTable() {
                           disabled={deleteProjectMutation.isPending}
                           className="min-w-[44px] min-h-[44px] p-3 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900 rounded-lg transition-colors"
                           title="Elimina"
+                          aria-label="Elimina commessa"
                           data-testid={`delete-project-${project.id}`}
                         >
                           🗑️

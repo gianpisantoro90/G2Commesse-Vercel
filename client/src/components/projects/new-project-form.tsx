@@ -292,7 +292,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
   };
 
   const handleNavigateToOneDriveSettings = () => {
-    window.location.href = '/#sistema';
+    window.location.hash = 'sistema';
   };
 
   const onSubmitWithOneDrive = (data: FormData) => {

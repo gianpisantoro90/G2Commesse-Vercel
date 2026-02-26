@@ -274,7 +274,7 @@ export default function FolderConfigPanel() {
           </p>
           <Button
             variant="outline"
-            onClick={() => window.location.href = '/#sistema'}
+            onClick={() => window.location.hash = 'sistema'}
             data-testid="button-goto-settings"
           >
             Vai alle Impostazioni
