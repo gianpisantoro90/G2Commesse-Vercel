@@ -1821,10 +1821,12 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.get("/api/onedrive/files", async (req, res) => {
     try {
-      const folderPath = req.query.path as string || '/';
+      // Use only the URL query parameter; ignore Vercel rewrite capture params
+      const rawPath = req.query.path;
+      const folderPath = (typeof rawPath === 'string' && rawPath.startsWith('/')) ? rawPath : '/';
 
       // Input validation
-      if (typeof folderPath !== 'string' || folderPath.length > 500) {
+      if (folderPath.length > 500) {
         return res.status(400).json({ error: 'Invalid folder path parameter' });
       }
 
@@ -2074,13 +2076,15 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Extended OneDrive API for full navigation
   app.get("/api/onedrive/browse", async (req, res) => {
     try {
-      const folderPath = req.query.path as string || '/';
-      
+      // Use only the URL query parameter; ignore Vercel rewrite capture params
+      const rawPath = req.query.path;
+      const folderPath = (typeof rawPath === 'string' && rawPath.startsWith('/')) ? rawPath : '/';
+
       // Input validation
-      if (typeof folderPath !== 'string' || folderPath.length > 500) {
+      if (folderPath.length > 500) {
         return res.status(400).json({ error: 'Invalid folder path parameter' });
       }
-      
+
       const files = await serverOneDriveService.listFiles(folderPath as any);
       res.json(files);
     } catch (error: any) {
