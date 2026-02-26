@@ -41,7 +41,7 @@ export default function OneDriveSyncStatsCard() {
         }
         return { totalFiles: 0, indexedFiles: 0, lastIndexed: null };
       } catch (error) {
-        console.warn('Files index stats not available:', error);
+        // Files index stats not available
         return { totalFiles: 0, indexedFiles: 0, lastIndexed: null };
       }
     },

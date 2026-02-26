@@ -128,8 +128,8 @@ export const oneDriveRetry = createRetryWrapper({
   initialDelayMs: 1000,
   maxDelayMs: 5000,
   timeoutMs: 60000, // OneDrive can be slow for large files
-  onRetry: (attempt, error) => {
-    console.warn(`🔄 OneDrive retry attempt ${attempt}:`, error?.message || error);
+  onRetry: (_attempt, _error) => {
+    // OneDrive retry - logging handled by retry wrapper
   },
 });
 
@@ -138,7 +138,7 @@ export const claudeApiRetry = createRetryWrapper({
   initialDelayMs: 2000,
   maxDelayMs: 8000,
   timeoutMs: 120000, // AI responses can take time
-  onRetry: (attempt, error) => {
-    console.warn(`🔄 Claude API retry attempt ${attempt}:`, error?.message || error);
+  onRetry: (_attempt, _error) => {
+    // Claude API retry - logging handled by retry wrapper
   },
 });

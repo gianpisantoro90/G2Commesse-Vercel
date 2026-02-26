@@ -55,7 +55,7 @@ async function getAccessToken(): Promise<string> {
     expires_at: Date.now() + (data.expires_in * 1000),
   };
 
-  console.log('✅ Microsoft Graph access token retrieved successfully');
+
   return data.access_token;
 }
 

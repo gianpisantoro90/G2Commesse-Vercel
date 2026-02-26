@@ -158,7 +158,6 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   // Initialize Billing Automation Service
   billingAutomationService.initialize(storage as any);
-  console.log('💰 Billing Automation Service initialized');
 
   // Authentication routes
   // Security: Apply rate limiting to login endpoint
@@ -176,9 +175,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // Security: Minimal logging (only in development, no credentials)
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('🔐 Login attempt at:', new Date().toISOString());
-      }
 
       // Try to authenticate against database first
       const user = await storage.getUserByUsername(username);
@@ -274,11 +270,8 @@ export async function registerRoutes(app: Express): Promise<void> {
    */
   app.post("/api/email/webhook", async (req, res) => {
     try {
-      console.log('📧 Email webhook received');
-
       // Parse email from SendGrid webhook
       const parsedEmail = emailService.parseSendGridWebhook(req.body);
-      console.log(`✉️ Email parsed: From ${parsedEmail.from.email}, Subject: ${parsedEmail.subject}`);
 
       // Get all projects for AI matching
       const projects = await storage.getAllProjects();
@@ -302,7 +295,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       );
 
       const bestMatchCode = analysis.projectMatches?.[0]?.projectCode || 'No match';
-      console.log(`🤖 AI Analysis complete: ${bestMatchCode} (confidence: ${analysis.confidence})`);
 
       // Store email for manual review (no auto-import)
       const communication = await storage.createCommunication({
@@ -329,7 +321,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         importedAt: new Date(),
       });
 
-      console.log(`✅ Email saved for manual review: ${communication.id} with ${analysis.projectMatches?.length || 0} project suggestions`);
 
       res.json({
         success: true,
@@ -358,9 +349,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Admin endpoint to reset all projects to "in corso" status (POST only, admin protected)
   app.post("/api/admin/reset-all-projects-to-in-corso", requireAdmin, async (req, res) => {
     try {
-      console.log('🔄 [RESET] Starting reset of all projects to "in corso" status...');
       const allProjects = await storage.getAllProjects();
-      console.log(`📊 [RESET] Found ${allProjects.length} total projects`);
 
       let updatedCount = 0;
       let sospesaCount = 0;
@@ -375,8 +364,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         }
       }
 
-      const message = `✅ Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
-      console.log(message);
+      const message = `Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
       res.json({ message, updatedCount, sospesaCount, totalProjects: allProjects.length });
     } catch (error) {
       console.error('❌ [RESET] Error resetting projects:', error);
@@ -696,11 +684,9 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Generate project code
   app.post("/api/generate-code", async (req, res) => {
     try {
-      console.log('Generate code request body:', req.body);
       const { year, client, city } = req.body;
 
       if (!year || !client || !city) {
-        console.log('Missing required fields - year:', year, 'client:', client, 'city:', city);
         return res.status(400).json({ message: "Anno, cliente e città sono obbligatori" });
       }
 
@@ -720,27 +706,21 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (matchedClient && matchedClient.sigla) {
         // Usa la sigla del cliente dall'archivio (primi 3 caratteri)
         clientSigla = matchedClient.sigla.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
-        console.log('Using client sigla from archive:', matchedClient.sigla, '-> code:', clientSigla);
       } else {
         // Fallback: genera acronimo dal nome
         clientSigla = generateSafeAcronym(client);
-        console.log('Client not found in archive, generated sigla from name:', clientSigla);
       }
 
       const citySigla = generateSafeAcronym(city);
-      console.log('Generated siglas - client:', clientSigla, 'city:', citySigla);
-      
+
       // Get current year as 2-digit string
       const yearStr = year.toString().slice(-2).padStart(2, '0');
-      console.log('Year string:', yearStr, 'from year:', year);
-      
+
       // Create pattern: YY + CLIENT(3) + CITY(3) + NNN
       const prefix = `${yearStr}${clientSigla}${citySigla}`;
-      console.log('Generated prefix:', prefix);
-      
+
       // Find highest existing code for this pattern
       const allProjects = await storage.getAllProjects();
-      console.log('Total projects found:', allProjects.length);
       
       const existingCodes = allProjects
         .map(p => p.code)
@@ -751,13 +731,11 @@ export async function registerRoutes(app: Express): Promise<void> {
         })
         .filter(num => !isNaN(num));
       
-      console.log('Existing codes for pattern', `${prefix}*:`, existingCodes);
       
       const nextNumber = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
       const paddedNumber = nextNumber.toString().padStart(2, '0');
       const newCode = `${prefix}${paddedNumber}`;
       
-      console.log('Generated new code:', newCode);
       res.json({ code: newCode });
     } catch (error) {
       console.error('Code generation error:', error);
@@ -820,9 +798,6 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Support both PUT and PATCH for updates
   const updateProjectHandler = async (req: Request, res: Response) => {
     try {
-      console.log('📝 PATCH/PUT request for project:', req.params.id);
-      console.log('📝 Request body:', JSON.stringify(req.body, null, 2));
-
       // Get the original project to check for status change
       const originalProject = await storage.getProject(req.params.id);
       if (!originalProject) {
@@ -839,16 +814,12 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       const validatedData = insertProjectSchema.partial().parse(bodyWithDates);
-      console.log('✅ Data validated successfully');
-      
+
       const project = await storage.updateProject(req.params.id, validatedData);
 
       if (!project) {
-        console.log('❌ Project not found:', req.params.id);
         return res.status(404).json({ message: "Commessa non trovata" });
       }
-
-      console.log('✅ Project updated successfully:', project.code);
 
       // Handle OneDrive folder move if status changed to conclusa or sospesa
       const oldStatus = originalProject.status;
@@ -856,54 +827,32 @@ export async function registerRoutes(app: Express): Promise<void> {
       const statusChanged = oldStatus !== newStatus && (newStatus === 'conclusa' || newStatus === 'sospesa');
       
       if (statusChanged) {
-        console.log(`📁 Status change detected: ${oldStatus} → ${newStatus}, attempting archive move`);
         try {
           // Retrieve the OneDrive mapping to get the actual folder path
           const mapping = await storage.getOneDriveMapping(project.code);
-          if (!mapping) {
-            console.log(`ℹ️ No OneDrive mapping found for project ${project.code}, skipping archive move`);
-          } else {
+          if (mapping) {
             // Use the complete folder path from the mapping (contains the correct root path + folder name)
             const folderPathToMove = mapping.oneDriveFolderPath;
-            const folderNameToMove = mapping.oneDriveFolderName;
-            console.log(`🔍 Found OneDrive folder to move:`, { path: folderPathToMove, name: folderNameToMove });
-            
+
             // Usa la configurazione salvata o il default
             const archiveConfig = await storage.getSystemConfig('onedrive_archive_folder');
             const archivePath = (archiveConfig?.value as any)?.folderPath || ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER;
             const archiveFolderId = (archiveConfig?.value as any)?.folderId || undefined;
 
-            console.log(`📁 Archive destination path: ${archivePath} (default: ${!archiveConfig?.value})`);
-            console.log(`🚀 [DEBUG] About to call moveProjectToArchive with:`, { folderPathToMove, archivePath });
-            try {
-              const moveResult = await serverOneDriveService.moveProjectToArchive(
-                folderPathToMove,
-                archivePath,
-                mapping.oneDriveFolderId || undefined,
-                archiveFolderId
-              );
-              console.log(`🔄 [DEBUG] moveProjectToArchive returned:`, { moveResult });
-              if (moveResult.success) {
-                console.log(`✅ Project ${project.code} (folder: ${folderNameToMove}) moved to archive`);
-
-                // Update the mapping with the new path
-                if (moveResult.newPath) {
-                  console.log(`📝 Updating mapping path to: ${moveResult.newPath}`);
-                  await storage.updateOneDriveMapping(project.code, {
-                    oneDriveFolderPath: moveResult.newPath
-                  });
-                  console.log(`✅ OneDrive mapping path updated successfully`);
-                }
-              } else {
-                console.warn(`⚠️ Failed to move project to archive, but update succeeded`);
-              }
-            } catch (moveError) {
-              console.error(`❌ [DEBUG] Exception in moveProjectToArchive call:`, moveError);
-              throw moveError;
+            const moveResult = await serverOneDriveService.moveProjectToArchive(
+              folderPathToMove,
+              archivePath,
+              mapping.oneDriveFolderId || undefined,
+              archiveFolderId
+            );
+            if (moveResult.success && moveResult.newPath) {
+              await storage.updateOneDriveMapping(project.code, {
+                oneDriveFolderPath: moveResult.newPath
+              });
             }
           }
         } catch (archiveError: any) {
-          console.warn(`⚠️ Archive move error (non-critical):`, archiveError.message);
+          // Archive move error (non-critical) - project update still succeeded
         }
       }
 
@@ -925,47 +874,33 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.delete("/api/projects/:id", async (req, res) => {
     try {
-      console.log(`🗑️ Attempting to delete project: ${req.params.id}`);
-      
       // First get project details before deletion
       const project = await storage.getProject(req.params.id);
       if (!project) {
-        console.log(`❌ Project not found: ${req.params.id}`);
         return res.status(404).json({ message: "Commessa non trovata" });
       }
-      
-      console.log(`✅ Found project to delete: ${project.code}`);
 
       // Step 1: Delete any file routings associated with the project (must be done first due to FK constraint)
       try {
-        const fileRoutingsDeleted = await storage.deleteFileRoutingsByProject(req.params.id);
-        if (fileRoutingsDeleted) {
-          console.log(`🗑️ Deleted file routings for project: ${project.code}`);
-        } else {
-          console.log(`ℹ️ No file routings found for project: ${project.code}`);
-        }
+        await storage.deleteFileRoutingsByProject(req.params.id);
       } catch (routingError) {
-        console.warn(`⚠️ Could not delete file routings for project ${project.code}:`, routingError);
+        // Continue with other deletions even if file routing deletion fails
         // Continue with other deletions even if file routing deletion fails
       }
 
       // Step 2: Delete any associated OneDrive mapping (must be done before project deletion due to FK constraint)
       try {
         await storage.deleteOneDriveMapping(project.code);
-        console.log(`🗑️ Deleted OneDrive mapping for project: ${project.code}`);
       } catch (mappingError) {
-        console.warn(`⚠️ Could not delete OneDrive mapping for project ${project.code}:`, mappingError);
+        // Continue with project deletion even if mapping deletion fails
         // Continue with project deletion even if mapping deletion fails
       }
 
       // Step 3: Now delete the project (safe after dependencies are removed)
       const deleted = await storage.deleteProject(req.params.id);
       if (!deleted) {
-        console.log(`❌ Failed to delete project: ${req.params.id}`);
         return res.status(404).json({ message: "Commessa non trovata" });
       }
-      
-      console.log(`✅ Successfully deleted project: ${project.code}`);
 
       res.json({ message: "Commessa eliminata con successo" });
     } catch (error) {
@@ -977,7 +912,6 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Project prestazioni endpoint
   app.put("/api/projects/:id/prestazioni", async (req, res) => {
     try {
-      console.log(`🏗️ Updating prestazioni for project: ${req.params.id}`);
 
       // Validate prestazioni data
       const validatedPrestazioni = prestazioniSchema.parse(req.body);
@@ -1026,16 +960,9 @@ export async function registerRoutes(app: Express): Promise<void> {
           req.params.id,
           updatedMetadata
         );
-        console.log(`🔄 Sync prestazioni result:`, syncResult);
       } catch (syncError) {
         console.error(`⚠️ Error syncing prestazioni (non-blocking):`, syncError);
         // Non blocchiamo l'operazione principale se la sync fallisce
-      }
-
-      console.log(`✅ Successfully updated prestazioni for project: ${existingProject.code}`);
-      console.log(`📊 New prestazioni:`, validatedPrestazioni.prestazioni);
-      if (importoOpereCalcolato !== undefined) {
-        console.log(`💰 Sincronizzato importoOpere: ${importoOpereCalcolato}`);
       }
 
       // Restituisci il progetto aggiornato (con eventuali date aggiornate)
@@ -1922,8 +1849,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ error: 'Project code is required' });
       }
 
-      console.log(`🔍 Searching for existing OneDrive folder for project: ${projectCode}`);
-
       // Get root folder configuration
       const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
 
@@ -1937,7 +1862,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       const rootPath = (rootConfig.value as any).folderPath;
-      console.log(`📁 Using configured root path: ${rootPath}`);
 
       // Search for folder matching project code in root path
       try {
@@ -1948,13 +1872,11 @@ export async function registerRoutes(app: Express): Promise<void> {
         );
 
         if (matchingFolder) {
-          console.log(`✅ Found existing folder: ${matchingFolder.name}`);
 
           // Create or update mapping
           const existingMapping = await storage.getOneDriveMapping(projectCode);
 
           if (existingMapping) {
-            console.log(`🔄 Updating existing mapping for project: ${projectCode}`);
           } else {
             await storage.createOneDriveMapping({
               projectCode,
@@ -1962,7 +1884,6 @@ export async function registerRoutes(app: Express): Promise<void> {
               oneDriveFolderPath: `${rootPath}/${matchingFolder.name}`,
               oneDriveFolderName: matchingFolder.name,
             });
-            console.log(`✅ Created OneDrive mapping for project: ${projectCode} -> ${matchingFolder.name}`);
           }
 
           return res.json({
@@ -1972,7 +1893,6 @@ export async function registerRoutes(app: Express): Promise<void> {
             folderName: matchingFolder.name
           });
         } else {
-          console.log(`ℹ️ No existing folder found for project: ${projectCode}`);
           return res.json({
             found: false,
             mapped: false,
@@ -2023,10 +1943,9 @@ export async function registerRoutes(app: Express): Promise<void> {
               // syncStatus: 'synced',
               // lastSyncAt: new Date()
             });
-            console.log(`✅ Created OneDrive mapping for project: ${projectCode}`);
           }
         } catch (mappingError) {
-          console.warn(`⚠️ Could not create OneDrive mapping for project ${projectCode}:`, mappingError);
+          // Don't fail the sync operation if mapping creation fails
           // Don't fail the sync operation if mapping creation fails
         }
       }
@@ -2083,13 +2002,9 @@ export async function registerRoutes(app: Express): Promise<void> {
       // Automatically extract the folder ID from the path (same system used for project creation)
       let folderId = validatedData.oneDriveFolderId;
       if (!folderId && validatedData.oneDriveFolderPath) {
-        console.log(`🔍 Extracting folder ID from path: ${validatedData.oneDriveFolderPath}`);
         folderId = await serverOneDriveService.getFolderIdFromPath(validatedData.oneDriveFolderPath) ?? '';
         if (folderId) {
-          console.log(`✅ Got folder ID: ${folderId}`);
           validatedData.oneDriveFolderId = folderId;
-        } else {
-          console.warn(`⚠️ Could not extract folder ID from path`);
         }
       }
 
@@ -2272,12 +2187,10 @@ export async function registerRoutes(app: Express): Promise<void> {
         // If mapping exists, delete it first to replace with new one
         if (existingMapping) {
           await storage.deleteOneDriveMapping(projectCode);
-          console.log('🔄 Updated existing OneDrive mapping for project:', projectCode);
         }
         
         // Save new mapping to database
         const mapping = await storage.createOneDriveMapping(validatedData);
-        console.log('✅ Created OneDrive mapping:', mapping.id);
         res.json({ 
           success: true, 
           mapping,
@@ -2320,7 +2233,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       
       const config = await storage.setSystemConfig('onedrive_root_folder', configData);
 
-      console.log('✅ OneDrive root folder configured:', folderPath);
       res.json({ success: true, config: { ...config, value: configData } });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -2363,7 +2275,6 @@ export async function registerRoutes(app: Express): Promise<void> {
 
         // Salva il default nel database
         await storage.setSystemConfig('onedrive_root_folder', defaultConfig);
-        console.log('📁 Default OneDrive root folder configured automatically:', ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER);
 
         res.json({
           config: defaultConfig,
@@ -2394,11 +2305,8 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.post("/api/onedrive/create-project-folder", async (req, res) => {
     try {
-      console.log('🚀 Starting OneDrive project folder creation...');
       const validatedData = createProjectFolderSchema.parse(req.body);
       const { projectCode, template } = validatedData;
-      
-      console.log(`📋 Request details: projectCode=${projectCode}, template=${template}`);
 
       // Get root folder configuration
       const rootConfig = await storage.getSystemConfig('onedrive_root_folder');
@@ -2411,10 +2319,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       const rootPath = (rootConfig.value as any).folderPath;
-      console.log(`📁 Using root path: ${rootPath}`);
-
-      // Create project folder with template
-      console.log(`🔄 Creating project folder: ${rootPath}/${projectCode} with ${template} template`);
       const folderInfo = await serverOneDriveService.createProjectWithTemplate(
         rootPath, 
         projectCode, 
@@ -2423,8 +2327,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       );
 
       if (folderInfo) {
-        console.log(`✅ OneDrive folder created successfully: ${folderInfo.path}`);
-        
         // Save OneDrive mapping
         const mapping = await storage.createOneDriveMapping({
           projectCode,
@@ -2433,7 +2335,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           oneDriveFolderPath: folderInfo.path
         });
 
-        console.log('📝 OneDrive mapping saved to database:', folderInfo.path);
         res.json({ 
           success: true, 
           folder: folderInfo, 
@@ -2543,14 +2444,12 @@ export async function registerRoutes(app: Express): Promise<void> {
           });
         }
         targetPath = mapping.oneDriveFolderPath;
-        console.log(`🔍 Resolved project ${projectCode} to OneDrive path: ${targetPath}`);
       } else if (!targetPath) {
         return res.status(400).json({ 
           error: 'Either folderPath or projectCode must be provided' 
         });
       }
 
-      console.log(`📁 Scanning OneDrive folder: ${targetPath} (includeSubfolders: ${includeSubfolders})`);
 
       // Scan OneDrive folder
       const files = await serverOneDriveService.scanFolderRecursive(targetPath, {
@@ -2581,7 +2480,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         }
       }
 
-      console.log(`✅ Scanned and indexed ${indexed.length} files from ${targetPath}${projectCode ? ` (project: ${projectCode})` : ''}`);
       res.json({ 
         success: true, 
         scanned: files.length, 
@@ -2617,7 +2515,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           parentFolderId: result.parentFolderId
         });
 
-        console.log('✅ Moved OneDrive file:', result.name);
         res.json({ success: true, file: result, updated });
       } else {
         res.status(400).json({ error: 'Failed to move file on OneDrive' });
@@ -2641,7 +2538,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ error: 'Too many operations. Maximum 100 files per request.' });
       }
 
-      console.log(`🔄 Starting bulk rename operation for ${operations.length} files`);
 
       const results = [];
       let successCount = 0;
@@ -2665,8 +2561,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           const client = await serverOneDriveService.getClient();
           const originalName = operation.originalName || `file_${fileId.substring(0, 8)}`;
           const driveId = operation.driveId;
-          
-          console.log(`🔄 Direct rename attempt: ${originalName} → ${newName} (Drive: ${driveId?.substring(0, 8) || 'default'}...)`);
           
           // Use proper drive-scoped API endpoint
           const updatePayload = { name: newName };
@@ -2695,7 +2589,6 @@ export async function registerRoutes(app: Express): Promise<void> {
               success: true
             });
             successCount++;
-            console.log(`✅ Renamed file: ${originalName} → ${newName}`);
           } else {
             results.push({
               original: originalName,
@@ -2734,8 +2627,6 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       const overallSuccess = errorCount === 0;
-      
-      console.log(`✅ Bulk rename completed: ${successCount} successful, ${errorCount} failed`);
       
       res.json({
         success: overallSuccess,
@@ -2782,13 +2673,9 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       const renamedFileName = createFileNameWithPrefix(fileName, projectCode);
       
-      console.log(`📤 Uploading file: ${renamedFileName} to ${targetPath}`);
-      console.log(`📊 File size: ${buffer.length} bytes`);
-
       // Upload file using OneDrive service
       const result = await serverOneDriveService.uploadFile(buffer, renamedFileName, targetPath);
-      
-      console.log('✅ File uploaded to OneDrive:', result.name);
+
       res.json({ success: true, file: result });
       
     } catch (error) {
@@ -2800,12 +2687,9 @@ export async function registerRoutes(app: Express): Promise<void> {
   // OneDrive reconciliation endpoint
   app.post("/api/onedrive/reconcile", async (req, res) => {
     try {
-      console.log('🔄 Starting OneDrive reconciliation...');
-      
       // Get orphaned projects (projects without OneDrive mappings)
       const orphanedProjects = await storage.getOrphanedProjects();
-      console.log(`📋 Found ${orphanedProjects.length} orphaned projects`);
-      
+
       if (orphanedProjects.length === 0) {
         return res.json({ 
           success: true, 
@@ -2826,13 +2710,11 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       const rootPath = (rootConfig.value as any).folderPath;
-      console.log(`📁 Using root path: ${rootPath}`);
 
       const results = [];
-      
+
       for (const project of orphanedProjects) {
-        console.log(`🔍 Processing project: ${project.code}`);
-        
+
         try {
           // Try to find existing OneDrive folder for this project
           const folderPath = `${rootPath}/${project.code}`;
@@ -2841,7 +2723,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           
           if (existingFolder) {
             // Folder exists - create mapping
-            console.log(`✅ Found existing folder for ${project.code}, creating mapping`);
             const mapping = await storage.createOneDriveMapping({
               projectCode: project.code,
               oneDriveFolderId: (existingFolder as any).id,
@@ -2857,7 +2738,6 @@ export async function registerRoutes(app: Express): Promise<void> {
             });
           } else {
             // Folder doesn't exist - create it with template
-            console.log(`📁 Creating new OneDrive folder for ${project.code} with ${project.template} template`);
             const folderInfo = await serverOneDriveService.createProjectWithTemplate(
               rootPath, 
               project.code, 
@@ -2899,9 +2779,8 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       const successCount = results.filter(r => r.status !== 'error').length;
-      console.log(`✅ Reconciliation completed: ${successCount}/${results.length} projects processed successfully`);
 
-      res.json({ 
+      res.json({
         success: true, 
         message: `Reconciliation completed: ${successCount}/${results.length} projects processed successfully`,
         processed: results.length,
@@ -2973,7 +2852,6 @@ export async function registerRoutes(app: Express): Promise<void> {
         isConfigured = await serverOneDriveService.testConnection();
       } catch (connectionError) {
         // Expected when OneDrive is not configured - not an error for setup
-        console.log('OneDrive not configured (expected for setup):', (connectionError as Error).message || String(connectionError));
         isConfigured = false;
       }
       
@@ -3447,9 +3325,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Batch sync all prestazioni from metadata to table
   app.post("/api/billing/sync-prestazioni", async (req, res) => {
     try {
-      console.log('🔄 Starting batch sync of prestazioni from metadata...');
       const result = await billingAutomationService.syncAllProjectsPrestazioni();
-      console.log('✅ Batch sync completed:', result);
       res.json({
         message: "Sincronizzazione completata",
         ...result

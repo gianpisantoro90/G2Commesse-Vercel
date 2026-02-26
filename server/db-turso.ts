@@ -14,19 +14,16 @@ function getTursoConfig() {
   const authToken = process.env.TURSO_AUTH_TOKEN;
 
   if (!url) {
-    console.warn('⚠️ TURSO_DATABASE_URL not set');
     return null;
   }
 
   // For local development, use file-based SQLite
   if (url.startsWith('file:') || url.startsWith('sqlite:')) {
-    console.log('📁 Using local SQLite database:', url);
     return { url };
   }
 
   // For production Turso, require auth token
   if (!authToken) {
-    console.warn('⚠️ TURSO_AUTH_TOKEN not set for remote Turso database');
     return null;
   }
 
@@ -42,14 +39,12 @@ if (config) {
   try {
     client = createClient(config);
     db = drizzle(client, { schema });
-    console.log('✅ Turso database connection established');
   } catch (error) {
     console.error('❌ Failed to connect to Turso:', error);
     client = null;
     db = null;
   }
 } else {
-  console.warn('⚠️ No Turso configuration available, database features disabled');
 }
 
 export { client, db };
@@ -65,7 +60,6 @@ export async function initializeDatabase() {
     throw new Error('Database client not available');
   }
 
-  console.log('🔧 Initializing Turso database schema...');
 
   // Create tables in order (respecting foreign key constraints)
   const createTableStatements = [
@@ -395,5 +389,4 @@ export async function initializeDatabase() {
     }
   }
 
-  console.log('✅ Turso database schema initialized');
 }

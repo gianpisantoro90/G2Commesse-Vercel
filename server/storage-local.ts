@@ -130,7 +130,6 @@ export class FileStorage implements IStorage {
   private ensureDataDir() {
     if (!fs.existsSync(this.dataDir)) {
       fs.mkdirSync(this.dataDir, { recursive: true });
-      console.log('📁 Created data directory for local storage');
     }
   }
 
@@ -142,7 +141,6 @@ export class FileStorage implements IStorage {
       }
       return defaultValue;
     } catch (error) {
-      console.warn(`Warning: Could not read ${filePath}, using default value`);
       return defaultValue;
     }
   }
@@ -238,18 +236,14 @@ export class FileStorage implements IStorage {
   }
 
   async updateProject(id: string, updateData: Partial<InsertProject>): Promise<Project | undefined> {
-    console.log('🔧 FileStorage.updateProject called for:', id);
-    console.log('🔧 Update data:', updateData);
     const projects = this.readJsonFile<Project>(this.projectsFile, []);
     const index = projects.findIndex(p => p.id === id);
     if (index === -1) {
-      console.log('❌ Project not found in FileStorage');
       return undefined;
     }
 
     projects[index] = { ...projects[index], ...updateData };
     this.writeJsonFile(this.projectsFile, projects);
-    console.log('✅ FileStorage.updateProject completed, saved to:', this.projectsFile);
     return projects[index];
   }
 
@@ -916,6 +910,4 @@ export class FileStorage implements IStorage {
 }
 
 // Export the storage instance
-console.log('📁 FileStorage module loaded - local persistence active');
-console.log('📁 Data directory:', path.join(process.cwd(), 'data'));
 export const storage: IStorage = new FileStorage();

@@ -236,8 +236,5 @@ app.use((req, res, next) => {
       url: baseUrl,
       nodeEnv: process.env.NODE_ENV,
     });
-    console.log(`\n🚀 G2 Ingegneria avviato con successo!`);
-    console.log(`📱 Apri: ${baseUrl}`);
-    console.log(`⏹️  Premi Ctrl+C per fermare\n`);
   });
 })();

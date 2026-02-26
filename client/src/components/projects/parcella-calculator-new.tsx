@@ -67,9 +67,6 @@ export default function ParcellaCalculator() {
   );
 
   const handleCalcola = () => {
-    console.log('🔍 handleCalcola chiamato');
-    console.log('Input:', { importoOpere, categoriaId, prestazioni });
-
     try {
       const input: ParcellaInputDM2016 = {
         importoOpere,
@@ -82,22 +79,17 @@ export default function ParcellaCalculator() {
         }
       };
 
-      console.log('📊 Calcolo parcella...');
       const risultato = calcolaParcelDM2016(input);
-      console.log('✅ Risultato:', risultato);
       setRisultatoParcella(risultato);
 
-      console.log('💰 Calcolo fattura...');
       const fattura = calcolaFattura(
         risultato.compensoTotale,
         aliquotaCPA,
         aliquotaIVA,
         aliquotaRitenuta
       );
-      console.log('✅ Fattura:', fattura);
       setRisultatoFattura(fattura);
 
-      console.log('🎯 Cambio step a risultato');
       setCurrentStep('risultato');
     } catch (error) {
       console.error('❌ ERRORE nel calcolo:', error);

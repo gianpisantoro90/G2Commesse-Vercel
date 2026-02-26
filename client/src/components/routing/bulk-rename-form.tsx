@@ -112,7 +112,6 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
   const loadBrowseFolder = async (path: string) => {
     setIsLoadingBrowse(true);
     try {
-      console.log(`📁 Loading OneDrive folder: ${path}`);
       const files = await oneDriveService.browseFolder(path);
       setBrowseFiles(files);
       setBrowseCurrentPath(path);
@@ -191,7 +190,6 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
 
     setIsLoadingFiles(true);
     try {
-      console.log(`🔍 Scanning OneDrive folder: ${folderPath}`);
       
       // Scan OneDrive folder recursively
       const files = await oneDriveService.scanFolderRecursive(folderPath, true);
@@ -265,7 +263,6 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
 
     let currentFiles: OneDriveFile[];
     try {
-      console.log(`🔄 Refreshing file scan before rename: ${folderPath}`);
       
       // Fresh scan to get current file IDs
       const scannedFiles = await oneDriveService.scanFolderRecursive(folderPath, true);
@@ -321,7 +318,6 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
     }
 
     try {
-      console.log(`🔄 Starting bulk rename for ${operations.length} files`);
       
       // Call bulk rename API
       const result = await oneDriveService.bulkRenameFiles(operations);

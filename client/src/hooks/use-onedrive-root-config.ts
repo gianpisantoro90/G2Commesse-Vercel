@@ -21,13 +21,11 @@ function saveConfigToLocalStorage(config: OneDriveRootConfig | null) {
   try {
     if (config) {
       localStorage.setItem(LOCALSTORAGE_ROOT_CONFIG_KEY, JSON.stringify(config));
-      console.log('💾 OneDrive root config saved to localStorage:', config.folderPath);
     } else {
       localStorage.removeItem(LOCALSTORAGE_ROOT_CONFIG_KEY);
-      console.log('🗑️ OneDrive root config removed from localStorage');
     }
   } catch (error) {
-    console.warn('⚠️ Failed to save OneDrive config to localStorage:', error);
+    // Failed to save OneDrive config to localStorage
   }
 }
 
@@ -36,11 +34,10 @@ function loadConfigFromLocalStorage(): OneDriveRootConfig | null {
     const saved = localStorage.getItem(LOCALSTORAGE_ROOT_CONFIG_KEY);
     if (saved) {
       const config = JSON.parse(saved) as OneDriveRootConfig;
-      console.log('📱 OneDrive root config loaded from localStorage:', config.folderPath);
       return config;
     }
   } catch (error) {
-    console.warn('⚠️ Failed to load OneDrive config from localStorage:', error);
+    // Failed to load OneDrive config from localStorage
   }
   return null;
 }
@@ -81,7 +78,7 @@ export function useOneDriveRootConfig() {
         throw new Error(`Failed to fetch root config: ${response.statusText}`);
       } catch (fetchError) {
         // Network or backend error, fallback to localStorage
-        console.warn('🔄 Backend unavailable, using localStorage fallback');
+        // Backend unavailable, using localStorage fallback
         const localConfig = loadConfigFromLocalStorage();
         return localConfig;
       }

@@ -80,7 +80,7 @@ export default function AiConfigPanelUnified() {
           }
         }
       } catch (error) {
-        console.warn('Could not load server config:', error);
+        // Could not load server config
       }
       if (aiConfig.apiKey) checkAiStatus();
     };

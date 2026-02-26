@@ -52,7 +52,7 @@ class AIFileRouter {
             const decoded = atob(storedConfig);
             config = JSON.parse(decoded);
           } catch (error) {
-            console.warn('Config decoding failed, trying as JSON:', error);
+            // Config decoding failed, trying as JSON
             config = JSON.parse(storedConfig);
           }
         }
@@ -63,7 +63,6 @@ class AIFileRouter {
         // Store model preference for routing
         this.currentModel = config.model || 'claude-sonnet-4-20250514';
         
-        console.log(`🔧 AI Config loaded: ${this.apiKey ? 'API key configured' : 'No API key'}, Model: ${this.currentModel}`);
         
       } else {
         this.apiKey = null;
@@ -88,7 +87,6 @@ class AIFileRouter {
       return false;
     }
 
-    console.log('Testing AI API connection via backend...');
     
     // Get current model from localStorage if not provided
     let modelToTest = model;
@@ -100,7 +98,7 @@ class AIFileRouter {
           modelToTest = config.model || 'claude-sonnet-4-20250514';
         }
       } catch (error) {
-        console.warn('Could not load model from config:', error);
+        // Could not load model from config
         modelToTest = 'claude-sonnet-4-20250514';
       }
     }
@@ -129,7 +127,6 @@ class AIFileRouter {
         return false;
       }
       
-      console.log('AI API test successful:', data.message);
       return true;
     } catch (error) {
       const errorDetails = {
@@ -151,13 +148,11 @@ class AIFileRouter {
       this.loadConfiguration();
     }
 
-    console.log('🤖 AI-ONLY ROUTING: Starting file analysis...');
     const analysis = await this.analyzeFile(file);
     
     // Try learned patterns first (highest priority)
     const learnedResult = this.checkLearnedPatterns(analysis);
     if (learnedResult.confidence > 0.9) {
-      console.log('✅ Using learned pattern with high confidence');
       return { ...learnedResult, method: 'learned' };
     }
 
@@ -173,9 +168,7 @@ class AIFileRouter {
     
     if (activeApiKey) {
       try {
-        console.log(`🧠 Using AI routing with ${keySource} API key`);
         const aiResult = await this.aiRouting(analysis, projectTemplate, activeApiKey);
-        console.log('✅ AI routing successful:', aiResult);
         return { ...aiResult, method: 'ai' };
       } catch (error) {
         console.error('❌ AI routing failed:', error);
@@ -204,7 +197,7 @@ class AIFileRouter {
         try {
           analysis.preview = await this.getTextPreview(file);
         } catch (error) {
-          console.warn('Could not extract text preview:', error);
+          // Could not extract text preview
         }
       }
     }
@@ -244,7 +237,7 @@ class AIFileRouter {
         return data.available ? 'server-managed' : null;
       }
     } catch (error) {
-      console.log('No environment API key available');
+      // No environment API key available
     }
     return null;
   }
@@ -265,7 +258,6 @@ class AIFileRouter {
 
     const prompt = this.buildAIPrompt(analysis, template);
     
-    console.log('🌐 Making AI routing request...');
     try {
       const response = await fetch('/api/ai-routing', {
         method: 'POST',
@@ -377,7 +369,6 @@ class AIFileRouter {
     // Save to localStorage
     localStorageHelpers.saveLearnedPatterns(this.learnedPatterns);
     
-    console.log(`Learned: ${pattern} -> ${actualPath}`);
   }
 
   // Extract pattern from file analysis
@@ -522,10 +513,8 @@ SOPRALLUOGHI/ - Report sopralluoghi`;
       const isValidPath = availableFolders.includes(cleanPath);
       
       if (!isValidPath && suggestedPath) {
-        console.warn(`⚠️ AI suggested invalid path: ${suggestedPath}. Available paths:`, availableFolders);
         // Try to find closest match
         const closestMatch = this.findClosestPath(suggestedPath, availableFolders);
-        console.log(`🔄 Using closest match: ${closestMatch}`);
         
         return {
           suggestedPath: closestMatch,

@@ -179,14 +179,12 @@ export function calcolaParcelDM2016(input: ParcellaInputDM2016): ParcellaResultD
     if (selezionata) {
       const prestazioneInfo = getPrestazioneByCode(codice);
       if (!prestazioneInfo) {
-        console.warn(`Prestazione ${codice} non trovata nella Tavola Z-2`);
         return;
       }
 
       // Ottieni Q specifico per questa categoria
       const Q = prestazioneInfo.Q[categoriaOpera.categoria];
       if (Q === undefined) {
-        console.warn(`Prestazione ${codice} non applicabile alla categoria ${categoriaOpera.categoria}`);
         return;
       }
 

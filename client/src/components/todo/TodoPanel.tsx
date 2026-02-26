@@ -122,7 +122,6 @@ export default function TodoPanel() {
   // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: async (data: z.infer<typeof insertTaskSchema>) => {
-      console.log('Creating task with data:', data);
       return await apiRequest('POST', '/api/tasks', data);
     },
     onSuccess: () => {
@@ -634,7 +633,6 @@ function CreateTaskForm({
       projectId: data.projectId === "none" ? null : data.projectId,
       assignedToId: data.assignedToId === "none" ? null : data.assignedToId,
     };
-    console.log('Submitting task data:', submitData);
     onSubmit(submitData);
   };
 

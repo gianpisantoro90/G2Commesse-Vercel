@@ -150,7 +150,6 @@ export function renderPrestazioneBadge(
   // Fallback se la prestazione non è riconosciuta  
   if (!config) {
     const sizeClass = size === 'sm' ? 'px-2 py-1 text-xs' : 'px-3 py-1.5 text-sm';
-    console.warn(`Prestazione non riconosciuta: ${prestazione}`);
     return {
       icon: '❓',
       label: String(prestazione).substring(0, 10),

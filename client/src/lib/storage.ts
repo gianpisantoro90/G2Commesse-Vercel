@@ -273,7 +273,7 @@ class G2StorageDB {
         usage = estimate.usage || 0;
         quota = estimate.quota || 0;
       } catch (error) {
-        console.warn('Storage estimate not available:', error);
+        // Storage estimate not available
       }
     }
 

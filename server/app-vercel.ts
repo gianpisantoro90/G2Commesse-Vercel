@@ -142,7 +142,7 @@ export async function createApp() {
       CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "user_sessions" ("expire");
     `);
     client.release();
-    console.log('✅ Session table ready');
+    // Session table ready
   } catch (err) {
     console.error('⚠️ Could not ensure session table:', err);
   }
@@ -199,7 +199,7 @@ export async function createApp() {
         if (logLine.length > 80) {
           logLine = logLine.slice(0, 79) + "…";
         }
-        console.log(logLine);
+        logger.info(logLine);
       }
     });
 

@@ -291,13 +291,6 @@ export default function ClientsTable() {
       const projectClient = project.client?.trim().toLowerCase();
       return projectClient && clientName && projectClient === clientName;
     });
-    console.log(`Visualizzazione commesse per cliente ${client.name} (${client.sigla}):`, {
-      clientName,
-      clientSigla: client.sigla,
-      totalProjects: allProjects.length,
-      filteredProjects: clientProjects.length,
-      sampleProjectClients: allProjects.slice(0, 5).map(p => ({ code: p.code, client: p.client }))
-    });
     setSelectedClient(client);
     setSelectedClientProjects(clientProjects);
     setShowProjectsModal(true);

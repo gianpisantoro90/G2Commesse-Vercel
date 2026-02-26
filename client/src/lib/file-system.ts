@@ -139,8 +139,6 @@ export const downloadScriptFiles = (
 
 // Utility functions
 export const sanitizeFileName = (fileName: string): string => {
-  console.log(`🔍 SANITIZE: Original filename: "${fileName}"`);
-  
   // List of valid G2 template folder names that should not be prefixed
   const validG2FolderNames = [
     '1_CONSEGNA', '2_PERMIT', '3_PROGETTO', '4_MATERIALE_RICEVUTO', '5_CANTIERE',
@@ -150,7 +148,6 @@ export const sanitizeFileName = (fileName: string): string => {
   
   // If this is a valid G2 template folder name, return as-is (they are already valid)
   if (validG2FolderNames.includes(fileName)) {
-    console.log(`✅ SANITIZE: Valid G2 template folder, keeping original: "${fileName}"`);
     return fileName;
   }
   
@@ -173,26 +170,21 @@ export const sanitizeFileName = (fileName: string): string => {
     // Limit length to be safe for all filesystems (increased for project names)
     .substring(0, 100);
     
-  console.log(`🔧 SANITIZE: After basic cleaning: "${sanitized}"`);
-    
   // Check if it's a reserved name and handle it
   const nameUpper = sanitized.toUpperCase();
   if (reservedNames.includes(nameUpper) || reservedNames.includes(nameUpper.replace(/^\d+_?/, ''))) {
     sanitized = `DIR_${sanitized}`;
-    console.log(`⚠️ SANITIZE: Reserved name detected, prefixed: "${sanitized}"`);
   }
   
   // Ensure it doesn't start with a number - prefix with a letter instead of PROJ_
   // But only for non-template folder names
   if (/^\d/.test(sanitized) && !validG2FolderNames.includes(fileName)) {
     sanitized = `F_${sanitized}`;
-    console.log(`🔧 SANITIZE: Started with number, prefixed: "${sanitized}"`);
   }
   
   // Ensure it's not empty
   if (!sanitized || sanitized === '_') {
     sanitized = 'FOLDER';
-    console.log(`⚠️ SANITIZE: Empty result, using fallback: "${sanitized}"`);
   }
   
   // Final validation - make sure it's truly safe
@@ -202,10 +194,8 @@ export const sanitizeFileName = (fileName: string): string => {
   
   if (!isValidPattern) {
     sanitized = `SAFE_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    console.log(`🚨 SANITIZE: Final validation failed, using random: "${sanitized}"`);
   }
   
-  console.log(`✅ SANITIZE: Final result: "${fileName}" -> "${sanitized}"`);
   return sanitized;
 };
 

@@ -261,7 +261,6 @@ export function useOneDriveSync() {
     delete newStatuses[projectId];
     setSyncStatuses(newStatuses);
     localStorage.setItem('onedrive_sync_statuses', JSON.stringify(newStatuses));
-    console.log(`🧹 Reset sync status for project: ${projectId}`);
   };
 
   const getOverallSyncStats = () => {

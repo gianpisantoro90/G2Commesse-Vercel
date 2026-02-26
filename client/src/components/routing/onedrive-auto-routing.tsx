@@ -109,12 +109,10 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         if (mapping) {
           // Use the OneDrive folder path from the mapping
           setScanPath(mapping.oneDriveFolderPath);
-          console.log(`🎯 Auto-selected OneDrive path for ${project.code}: ${mapping.oneDriveFolderPath}`);
         } else {
           // No mapping found, use root path + project code as fallback
           const fallbackPath = `${rootConfig?.folderPath || '/LAVORO_CORRENTE'}/${project.code}`;
           setScanPath(fallbackPath);
-          console.log(`⚠️ No OneDrive mapping found for ${project.code}, using fallback: ${fallbackPath}`);
         }
       }
     } else {
@@ -229,7 +227,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       
       if (oneDriveMapping) {
         // Project has mapping - use backend mapping logic
-        console.log('🔍 Scanning using OneDrive mapping for project:', project.code);
         await scanFilesMutation.mutateAsync({
           folderPath: '', // Empty to signal backend to use mapping
           projectCode: project.code,
@@ -237,7 +234,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         });
       } else {
         // Project has no mapping - use fallback folder path
-        console.log('🔍 Scanning using fallback path for project:', project.code, '→', scanPath);
         await scanFilesMutation.mutateAsync({
           folderPath: scanPath, // Use the fallback path calculated by frontend
           projectCode: project.code,
@@ -376,7 +372,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             alternatives: routingResult.alternatives
           });
 
-          console.log(`✅ Analyzed ${selectedFile.name}: ${routingResult.suggestedPath} (${Math.round(routingResult.confidence * 100)}%)`);
         } catch (error) {
           console.error(`❌ Failed to analyze ${selectedFile.name}:`, error);
           results.push({
@@ -479,7 +474,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           });
           
           successCount++;
-          console.log(`✅ Moved and renamed: ${result.file.name} → ${newFileName} to ${targetPath}`);
         } catch (error) {
           errorCount++;
           console.error(`❌ Failed to move ${result.file.name}:`, error);
@@ -558,14 +552,12 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           // Construct full target path: basePath + suggestedPath
           const targetPath = `${basePath}/${result.suggestedPath}`.replace(/\/+/g, '/');
           
-          console.log(`📤 Uploading ${originalFile.name} to OneDrive: ${targetPath}`);
 
           // Upload file to OneDrive with project code prefix
           const uploadResult = await oneDriveService.uploadFile(originalFile, project.code, targetPath);
           
           if (uploadResult) {
             successCount++;
-            console.log(`✅ Uploaded to OneDrive: ${uploadResult.name} → ${targetPath}`);
           } else {
             throw new Error('Upload failed - no result returned');
           }

@@ -30,10 +30,8 @@ class OneDriveService {
       const data = await response.json();
 
       if (response.ok && data.connected) {
-        console.log('✅ OneDrive connection test successful');
         return true;
       } else {
-        console.log('❌ OneDrive not connected');
         return false;
       }
     } catch (error) {
@@ -78,7 +76,6 @@ class OneDriveService {
 
   async createFolder(folderName: string, parentPath = '/G2_Progetti'): Promise<boolean> {
     // This method is now handled server-side through sync-project endpoint
-    console.log(`📝 Folder creation delegated to server: ${parentPath}/${folderName}`);
     return true;
   }
 
@@ -88,7 +85,6 @@ class OneDriveService {
     targetPath: string
   ): Promise<OneDriveUploadResult | null> {
     try {
-      console.log(`📤 Uploading file: ${file.name} to ${targetPath} with project code: ${projectCode}`);
 
       // Convert file to base64 for transmission
       const fileBuffer = await this.fileToBase64(file);
@@ -110,7 +106,6 @@ class OneDriveService {
 
       const data = await response.json();
       if (data.success) {
-        console.log(`✅ Uploaded file to OneDrive: ${data.file.name}`);
         return data.file;
       } else {
         console.error('❌ Upload failed - server response:', data);
@@ -187,7 +182,6 @@ class OneDriveService {
 
   async deleteFile(fileId: string): Promise<boolean> {
     // TODO: Implement file deletion through server-side API
-    console.log(`📝 File deletion not yet implemented: ${fileId}`);
     return false;
   }
 
@@ -204,9 +198,6 @@ class OneDriveService {
       );
 
       const data = await response.json();
-      if (data.success) {
-        console.log(`✅ Synced project folder to OneDrive: ${projectCode}`);
-      }
       return data.success;
     } catch (error) {
       console.error('❌ Failed to sync project folder:', error);
@@ -227,11 +218,6 @@ class OneDriveService {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.found) {
-          console.log(`✅ Mapped project to existing folder: ${projectCode} -> ${data.folderPath}`);
-        } else {
-          console.log(`ℹ️ No folder found for project: ${projectCode}`);
-        }
         return data;
       } else {
         console.error('❌ Failed to map project:', response.statusText);
@@ -280,7 +266,6 @@ class OneDriveService {
     try {
       // Limit recursion depth to avoid infinite loops and API limits
       if (depth > 3) {
-        console.log(`⚠️  Skipping deep folder: ${displayPath} (depth ${depth})`);
         return [];
       }
       
@@ -307,7 +292,6 @@ class OneDriveService {
         }
       }
       
-      console.log(`📁 Found ${files.length} files in ${displayPath}`);
       return files;
     } catch (error) {
       console.error(`❌ Failed to browse folder ${displayPath}:`, error);
@@ -349,7 +333,6 @@ class OneDriveService {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          console.log(`✅ Scanned ${data.files.length} files from OneDrive folder: ${folderPath}`);
           return data.files;
         } else {
           console.error('❌ Scan failed - server response:', data);
@@ -378,7 +361,6 @@ class OneDriveService {
       );
 
       const data = await response.json();
-      console.log(`✅ Bulk rename completed: ${data.results.length} operations processed`);
       return data;
     } catch (error) {
       console.error('❌ Failed to bulk rename files:', error);
@@ -407,7 +389,6 @@ class OneDriveService {
       if (response.ok) {
         const data = await response.json();
         if (data.success) {
-          console.log(`✅ Moved file: ${data.file.name} to ${data.file.path}`);
           return data.file;
         } else {
           console.error('❌ Move failed - server response:', data);

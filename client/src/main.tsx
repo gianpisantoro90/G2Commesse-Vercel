@@ -8,7 +8,7 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
-        console.log('Service Worker registered successfully:', registration.scope);
+        // Service Worker registered successfully
 
         // Check for updates every hour
         setInterval(() => {
@@ -23,7 +23,7 @@ if ('serviceWorker' in navigator) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               // New service worker available
-              console.log('New version available! Refresh to update.');
+              // New version available
 
               // Optionally show a notification to the user
               if (confirm('Nuova versione disponibile! Vuoi ricaricare la pagina?')) {
@@ -40,7 +40,7 @@ if ('serviceWorker' in navigator) {
 
     // Handle controller change (when new SW becomes active)
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('New service worker activated');
+      // New service worker activated
     });
   });
 }

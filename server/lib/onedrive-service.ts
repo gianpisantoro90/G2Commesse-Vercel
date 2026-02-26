@@ -74,19 +74,8 @@ const PROJECT_TEMPLATES: Record<string, FolderStructure> = {
 
 // Enhanced utility to read GraphError body content with better debugging
 async function readGraphErrorBody(error: any): Promise<{ body: string; bodyType: string; rawError: any }> {
-  console.log('🔍 Reading GraphError body. Error properties:', {
-    hasBody: !!error.body,
-    bodyType: error.body ? typeof error.body : 'undefined',
-    bodyConstructor: error.body?.constructor?.name,
-    isReadableStream: error.body && typeof error.body.getReader === 'function',
-    statusCode: error.statusCode || error.status,
-    message: error.message,
-    code: error.code
-  });
-
   try {
     if (error.body && typeof error.body.getReader === 'function') {
-      console.log('📖 Attempting to read ReadableStream body...');
       const reader = error.body.getReader();
       const decoder = new TextDecoder();
       let result = '';
@@ -100,26 +89,16 @@ async function readGraphErrorBody(error: any): Promise<{ body: string; bodyType:
           chunkCount++;
           const chunk = decoder.decode(value, { stream: !done });
           result += chunk;
-          console.log(`📄 Read chunk ${chunkCount}: ${chunk.substring(0, 200)}${chunk.length > 200 ? '...' : ''}`);
         }
       }
       
-      console.log(`✅ Successfully read ReadableStream body (${result.length} characters):`, result);
       return { body: result, bodyType: 'ReadableStream', rawError: error };
     } else if (error.body && typeof error.body === 'string') {
-      console.log('📄 String body found:', error.body);
       return { body: error.body, bodyType: 'string', rawError: error };
     } else if (error.body && typeof error.body === 'object') {
       const jsonBody = JSON.stringify(error.body);
-      console.log('📄 Object body found:', jsonBody);
       return { body: jsonBody, bodyType: 'object', rawError: error };
     } else {
-      console.log('⚠️ No readable body found. Error object:', JSON.stringify({
-        message: error.message,
-        statusCode: error.statusCode || error.status,
-        code: error.code,
-        name: error.name
-      }, null, 2));
       return { body: `No readable body. Message: ${error.message}`, bodyType: 'none', rawError: error };
     }
   } catch (readError: unknown) {
@@ -144,15 +123,6 @@ async function readGraphErrorBody(error: any): Promise<{ body: string; bodyType:
 
 // Enhanced error handler for Microsoft Graph API calls
 async function handleGraphError(error: any, operation: string, details: any = {}): Promise<never> {
-  console.log(`🚨 Handling Microsoft Graph API Error [${operation}] - Initial error object:`, {
-    name: error.name,
-    message: error.message,
-    statusCode: error.statusCode || error.status,
-    code: error.code,
-    requestId: error.requestId,
-    date: error.date
-  });
-
   const errorResult = await readGraphErrorBody(error);
   const { body: errorBody, bodyType, rawError } = errorResult;
   
@@ -181,65 +151,37 @@ async function handleGraphError(error: any, operation: string, details: any = {}
     if (parsedBody.error) {
       if (parsedBody.error.message) {
         specificError = parsedBody.error.message;
-        console.log(`🔍 Parsed error message: ${specificError}`);
       }
       if (parsedBody.error.code) {
         errorCode = parsedBody.error.code;
         specificError = `[${parsedBody.error.code}] ${specificError}`;
-        console.log(`🔍 Parsed error code: ${errorCode}`);
       }
       if (parsedBody.error.innerError) {
-        console.log(`🔍 Inner error details:`, parsedBody.error.innerError);
       }
     }
   } catch (parseError: unknown) {
     const parseMessage = parseError instanceof Error ? parseError.message : String(parseError);
-    console.log(`⚠️ Failed to parse error body as JSON:`, parseMessage);
     // If body is not JSON, use the raw body
     if (errorBody && errorBody !== 'Unable to read error body' && errorBody !== 'Failed to read error body') {
       specificError = errorBody;
     }
   }
 
-  console.log(`🚨 Final error details for ${operation}:`, {
-    specificError,
-    errorCode,
-    statusCode: error.statusCode || error.status,
-    operation,
-    details
-  });
-  
   throw new Error(`${operation} failed: ${specificError} (Status: ${error.statusCode || error.status})`);
 }
 
 // Enhanced Microsoft Graph API request/response logging
-function logGraphRequest(operation: string, apiPath: string, method: string = 'GET', body?: any, headers?: any) {
-  console.log(`🚀 Microsoft Graph API Request [${operation}]:`, {
-    method: method.toUpperCase(),
-    path: apiPath,
-    fullUrl: `https://graph.microsoft.com/v1.0${apiPath}`,
-    body: body ? JSON.stringify(body, null, 2) : undefined,
-    hasBody: !!body,
-    headers: headers ? JSON.stringify(headers, null, 2) : 'default',
-    timestamp: new Date().toISOString()
-  });
+function logGraphRequest(_operation: string, _apiPath: string, _method: string = 'GET', _body?: any, _headers?: any) {
+  // Logging removed - use logger if needed
 }
 
-function logGraphResponse(operation: string, response: any, error?: any) {
+function logGraphResponse(operation: string, _response: any, error?: any) {
   if (error) {
     console.error(`❌ Microsoft Graph API Response Error [${operation}]:`, {
       hasError: true,
       errorType: error.constructor?.name,
       statusCode: error.statusCode || error.status,
       errorMessage: error.message,
-      timestamp: new Date().toISOString()
-    });
-  } else {
-    console.log(`✅ Microsoft Graph API Response Success [${operation}]:`, {
-      hasError: false,
-      responseType: response?.constructor?.name || typeof response,
-      hasData: !!response,
-      dataSize: response ? (Array.isArray(response.value) ? response.value.length : 'single-item') : 'no-data',
       timestamp: new Date().toISOString()
     });
   }
@@ -366,7 +308,6 @@ class ServerOneDriveService {
 
       // Test by getting the drive root (works with app-only auth)
       await client.api(`${this.driveBase}/root`).get();
-      console.log('✅ OneDrive connection test successful (Server)');
       return true;
     } catch (error) {
       console.error('❌ OneDrive connection test failed (Server):', error);
@@ -405,7 +346,6 @@ class ServerOneDriveService {
       const hasProblematicChars = problematicChars.some(char => folderPath.includes(char));
 
       if (hasProblematicChars) {
-        console.warn(`⚠️ Skipping folder with problematic characters: ${folderPath}`);
         return [];
       }
 
@@ -478,7 +418,6 @@ class ServerOneDriveService {
       try {
         const existingFolder = await client.api(checkUrl).get();
         logGraphResponse('Check Folder Exists', existingFolder);
-        console.log(`✅ OneDrive folder already exists (Server): ${parentPath}/${folderName}`);
         return true;
       } catch (checkError: any) {
         // If folder doesn't exist (404), continue to create it
@@ -508,14 +447,12 @@ class ServerOneDriveService {
       try {
         const response = await client.api(apiUrl).post(folderData);
         logGraphResponse('Create Folder', response);
-        console.log(`✅ Created OneDrive folder (Server): ${parentPath}/${folderName}`);
         return true;
       } catch (apiError: any) {
         logGraphResponse('Create Folder', null, apiError);
         
         // Handle "folder already exists" as success (race condition)
         if (apiError.statusCode === 409 && apiError.code === 'nameAlreadyExists') {
-          console.log(`✅ OneDrive folder created by concurrent request (Server): ${parentPath}/${folderName}`);
           return true;
         }
         
@@ -544,10 +481,6 @@ class ServerOneDriveService {
 
       // Create project folder in the configured root path
       const success = await this.createFolder(projectCode, rootPath);
-      
-      if (success) {
-        console.log(`✅ Synced project folder to OneDrive (Server): ${rootPath}/${projectCode}`);
-      }
       
       return success;
     } catch (error) {
@@ -608,12 +541,10 @@ class ServerOneDriveService {
       try {
         const checkResponse = await client.api(checkUrl).get();
         logGraphResponse('Check Root Folder', checkResponse);
-        console.log(`✅ Root folder already exists (Server): ${rootPath}`);
       } catch (checkError: any) {
         logGraphResponse('Check Root Folder', null, checkError);
         
         // Folder doesn't exist, create it
-        console.log(`📁 Root folder does not exist, creating it: ${rootPath}`);
         const folderName = rootPath.split('/').pop() || ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER.split('/').pop();
         const parentPath = rootPath.substring(0, rootPath.lastIndexOf('/')) || '/';
         
@@ -629,7 +560,6 @@ class ServerOneDriveService {
         try {
           const createResponse = await client.api(createUrl).post(folderData);
           logGraphResponse('Create Root Folder', createResponse);
-          console.log(`✅ Created root folder in OneDrive (Server): ${rootPath}`);
         } catch (createError: any) {
           logGraphResponse('Create Root Folder', null, createError);
           await handleGraphError(createError, 'Create Root Folder', {
@@ -777,7 +707,6 @@ class ServerOneDriveService {
       const client = await this.getClient();
       await client.api(`${this.driveBase}/items/${oneDriveFolderId}`).get();
       
-      console.log(`🔗 Linking project ${projectCode} to OneDrive folder ${oneDriveFolderId}`);
       return true;
     } catch (error) {
       console.error('❌ Failed to link project to OneDrive folder (Server):', error);
@@ -810,7 +739,6 @@ class ServerOneDriveService {
         await client.api(`${this.driveBase}/items/${folderIdOrPath}`).get();
       }
       
-      console.log('✅ OneDrive folder validation successful:', folderIdOrPath);
       return true;
     } catch (error) {
       console.error('❌ OneDrive folder validation failed:', error);
@@ -821,8 +749,6 @@ class ServerOneDriveService {
   async createProjectWithTemplate(rootPath: string, projectCode: string, template: string, description?: string): Promise<{id: string, name: string, path: string} | null> {
     try {
       const client = await this.getClient();
-      
-      console.log(`🚀 Starting project creation with template:`, { rootPath, projectCode, template, description });
       
       // Security: Validate parameters
       if (!rootPath || !projectCode || !template) {
@@ -859,15 +785,6 @@ class ServerOneDriveService {
         }
       }
       
-      console.log(`🔧 After sanitization:`, { 
-        originalRootPath: rootPath, 
-        sanitizedRootPath, 
-        originalProjectCode: projectCode, 
-        sanitizedProjectCode,
-        originalDescription: description,
-        finalFolderName: folderName
-      });
-      
       if (sanitizedRootPath !== rootPath || sanitizedProjectCode !== projectCode) {
         throw new Error('Invalid characters in parameters');
       }
@@ -887,12 +804,6 @@ class ServerOneDriveService {
           .api(apiPath)
           .post(projectFolderData);
           
-        console.log(`✅ Successfully created project folder:`, {
-          id: projectFolder.id,
-          name: projectFolder.name,
-          size: projectFolder.size,
-          webUrl: projectFolder.webUrl
-        });
       } catch (error: any) {
         await handleGraphError(error, 'Create Project Folder', {
           rootPath: sanitizedRootPath,
@@ -905,12 +816,9 @@ class ServerOneDriveService {
       // Copy template structure based on template type
       const projectPath = `${sanitizedRootPath}/${folderName}`;
       
-      console.log(`🔄 Creating ${template} template structure in: ${projectPath}`);
-      
       // Create basic folder structure based on template - this should not fail silently
       await this.copyTemplateStructure(projectPath, template);
       
-      console.log(`✅ Successfully created OneDrive project folder with ${template} template:`, projectPath);
       return {
         id: projectFolder.id,
         name: projectFolder.name,
@@ -990,24 +898,16 @@ class ServerOneDriveService {
           throw error;
         }
         // If we can't check for conflicts, use the desired name and let API handle it
-        console.warn('Could not check for filename conflicts, proceeding with desired name');
         break;
       }
     }
     
-    console.log(`🏷️ Resolved filename: ${desiredFileName} → ${finalFileName}`);
     return finalFileName;
   }
 
   async moveFile(fileId: string, targetFolderIdOrPath: string, newFileName?: string): Promise<{name: string, path: string, parentFolderId: string} | null> {
     try {
       const client = await this.getClient();
-      
-      console.log(`🔄 Attempting to move file:`, {
-        fileId,
-        targetFolderIdOrPath,
-        timestamp: new Date().toISOString()
-      });
       
       // Security: Validate parameters
       if (!fileId) {
@@ -1018,24 +918,14 @@ class ServerOneDriveService {
       const isRenameInPlace = !targetFolderIdOrPath || targetFolderIdOrPath === '';
       
       // Log the actual file ID to debug
-      console.log(`📋 Received file ID for validation:`, {
-        fileId,
-        length: fileId.length,
-        chars: fileId.split('').map(c => ({ char: c, code: c.charCodeAt(0) }))
-      });
-      
       // Temporarily remove strict validation to debug
       // if (!/^[a-zA-Z0-9!\-_\.~]+$/.test(fileId)) {
       //   throw new Error('File ID contains invalid characters');
       // }
       
       // Skip file verification - try to rename directly to avoid timing issues
-      console.log(`🔄 Attempting to rename file directly: ${fileId}`);
-      
       // Handle rename in place vs move to different folder
       if (isRenameInPlace) {
-        console.log(`🏷️ Renaming file in current location: ${fileId}`);
-        
         // Just rename the file in its current location
         if (!newFileName) {
           throw new Error('New filename is required for rename operation');
@@ -1045,14 +935,7 @@ class ServerOneDriveService {
           name: newFileName
         };
         
-        console.log(`🔄 Renaming file to: ${newFileName}`);
         const updatedFile = await client.api(`${this.driveBase}/items/${fileId}`).patch(updateData);
-        
-        console.log(`✅ File renamed successfully:`, {
-          id: updatedFile.id,
-          name: updatedFile.name,
-          path: updatedFile.parentReference?.path + '/' + updatedFile.name
-        });
         
         return {
           name: updatedFile.name,
@@ -1078,8 +961,6 @@ class ServerOneDriveService {
           targetPath = sanitizedPath;
         } catch (error: any) {
           if (error.statusCode === 404) {
-            console.log(`📁 Target folder not found: ${sanitizedPath}. Attempting to create it...`);
-
             // Try to create the folder structure
             const pathParts = sanitizedPath.split('/').filter(p => p.length > 0);
             let currentPath = '';
@@ -1095,14 +976,12 @@ class ServerOneDriveService {
               } catch (folderError: any) {
                 if (folderError.statusCode === 404) {
                   // Folder doesn't exist, create it
-                  console.log(`📁 Creating folder: ${currentPath}`);
                   const newFolder = await client.api(`${this.driveBase}/items/${currentFolderId}/children`).post({
                     name: part,
                     folder: {},
                     '@microsoft.graph.conflictBehavior': 'replace'
                   });
                   currentFolderId = newFolder.id;
-                  console.log(`✅ Created folder: ${currentPath} (ID: ${currentFolderId})`);
                 } else {
                   throw folderError;
                 }
@@ -1111,7 +990,6 @@ class ServerOneDriveService {
             
             targetFolderId = currentFolderId;
             targetPath = sanitizedPath;
-            console.log(`✅ Successfully ensured folder exists: ${sanitizedPath}`);
           } else {
             throw error;
           }
@@ -1140,7 +1018,6 @@ class ServerOneDriveService {
         // Resolve filename conflicts
         finalFileName = await this.resolveFileNameConflict(client, targetFolderId, newFileName);
         moveData.name = finalFileName;
-        console.log(`🏷️ File will be renamed during move: ${newFileName} → ${finalFileName}`);
       } else {
         // Get current filename for path construction
         const currentFile = await client.api(`${this.driveBase}/items/${fileId}`).get();
@@ -1151,7 +1028,6 @@ class ServerOneDriveService {
         .api(`${this.driveBase}/items/${fileId}`)
         .patch(moveData);
       
-      console.log('✅ Moved OneDrive file:', movedFile.name);
       return {
         name: movedFile.name,
         path: targetPath + '/' + movedFile.name,
@@ -1206,7 +1082,6 @@ class ServerOneDriveService {
         
         // Only add files to results, not folders (for bulk rename operations)
         if (!item.folder) {
-          console.log(`📄 Found file for bulk rename: ${item.name} (Drive: ${fileInfo.driveId?.substring(0, 8) || 'unknown'}...)`);
           allFiles.push(fileInfo);
         }
         
@@ -1217,7 +1092,6 @@ class ServerOneDriveService {
             const subFiles = await this.scanFolderRecursiveInternal(subFolderPath, currentDepth + 1, maxDepth, includeSubfolders);
             allFiles.push(...subFiles);
           } catch (subFolderError) {
-            console.warn(`⚠️ Failed to scan subfolder ${subFolderPath}:`, subFolderError);
             // Continue with other folders instead of failing completely
           }
         }
@@ -1230,9 +1104,7 @@ class ServerOneDriveService {
       
       // Handle specific error types
       if (error.statusCode === 404) {
-        console.warn(`⚠️ Folder not found: ${folderPath} - may have been moved or deleted`);
       } else if (error.statusCode === 403) {
-        console.warn(`⚠️ Access denied to folder: ${folderPath} - insufficient permissions`);
       } else {
         await handleGraphError(error, 'Scan Folder Recursive', {
           folderPath,
@@ -1251,8 +1123,6 @@ class ServerOneDriveService {
   }
 
   private async copyTemplateStructure(projectPath: string, template: string): Promise<void> {
-    console.log(`🔄 Creating ${template} template structure at: ${projectPath}`);
-
     // Get template structure
     const templateStructure = PROJECT_TEMPLATES[template];
     if (!templateStructure) {
@@ -1282,22 +1152,14 @@ class ServerOneDriveService {
             .api(apiPath)
             .post(folderData);
 
-          console.log(`${indent}✅ Created folder: ${folderName}`, {
-            id: response.id,
-            name: response.name,
-            path: currentFolderPath
-          });
-
           // Recursively create subfolders if they exist
           if (subStructure && Object.keys(subStructure).length > 0) {
-            console.log(`${indent}📂 Creating ${Object.keys(subStructure).length} subfolders in ${folderName}...`);
             await createFoldersRecursively(subStructure as FolderStructure, currentFolderPath, depth + 1);
           }
         } catch (error: any) {
           // Check if folder already exists (nameAlreadyExists error)
           const errorCode = error.code || error.body?.error?.code;
           if (errorCode === 'nameAlreadyExists') {
-            console.log(`${indent}📁 Folder already exists: ${folderName}, continuing with subfolders...`);
             // Still try to create subfolders even if parent exists
             if (subStructure && Object.keys(subStructure).length > 0) {
               await createFoldersRecursively(subStructure as FolderStructure, currentFolderPath, depth + 1);
@@ -1333,17 +1195,13 @@ class ServerOneDriveService {
     };
 
     const totalFolders = countFolders(templateStructure);
-    console.log(`📁 Creating ${totalFolders} folders for ${template} template (including subfolders)...`);
-
     // Start recursive creation
     await createFoldersRecursively(templateStructure, projectPath);
 
     if (errors.length > 0) {
-      console.warn(`⚠️  Template structure partially failed. Errors:`, errors);
       throw new Error(`Template structure creation failed: ${errors.join(', ')}`);
     }
 
-    console.log(`✅ Successfully created all ${totalFolders} ${template} template folders`);
   }
 
   async uploadFile(fileBuffer: Buffer, fileName: string, targetPath: string): Promise<OneDriveUploadResult> {
@@ -1376,23 +1234,12 @@ class ServerOneDriveService {
       const uploadPath = `${targetPath}/${sanitizedFileName}`.replace(/\/+/g, '/');
       const apiPath = `${this.driveBase}/root:${uploadPath}:/content`;
       
-      console.log(`📤 Uploading file: ${sanitizedFileName} to ${targetPath}`);
-      console.log(`🔗 API Path: ${apiPath}`);
-      console.log(`📊 File size: ${fileBuffer.length} bytes`);
-      
       logGraphRequest('Upload File', apiPath, 'PUT', { fileSize: fileBuffer.length });
       
       // Upload the file using Microsoft Graph API
       const response = await client
         .api(apiPath)
         .put(fileBuffer);
-      
-      console.log(`✅ File uploaded successfully:`, {
-        id: response.id,
-        name: response.name,
-        size: response.size,
-        webUrl: response.webUrl
-      });
       
       return {
         id: response.id,
@@ -1421,17 +1268,9 @@ class ServerOneDriveService {
         throw new Error('Invalid characters in folder path');
       }
       
-      console.log(`🔍 Extracting folder ID from path: ${folderPath}`);
-      console.log(`📍 Using API URL: ${this.driveBase}/root:${sanitizedPath}`);
-
       // Get folder info using the path
       const folderInfo = await client.api(`${this.driveBase}/root:${sanitizedPath}`).get();
       
-      console.log(`✅ Got folder ID: ${folderInfo.id} for path: ${folderPath}`, {
-        id: folderInfo.id,
-        name: folderInfo.name,
-        path: folderInfo.parentReference?.path
-      });
       return folderInfo.id;
     } catch (error: any) {
       console.error(`❌ Failed to get folder ID from path:`, {
@@ -1448,8 +1287,6 @@ class ServerOneDriveService {
 
   async moveProjectToArchive(folderFullPath: string, archivePath: string, projectFolderId?: string, archiveFolderId?: string): Promise<{ success: boolean; newPath?: string }> {
     try {
-      console.log(`🚀 Starting moveProjectToArchive`, { folderFullPath, archivePath, projectFolderId, archiveFolderId });
-      
       const client = await this.getClient();
       
       let sourceItem;
@@ -1458,53 +1295,41 @@ class ServerOneDriveService {
       // If we have the ID, use it directly; otherwise extract it from the path
       if (projectFolderId) {
         try {
-          console.log(`📍 Using provided project folder ID: ${projectFolderId}`);
           sourceItem = await client.api(`${this.driveBase}/items/${projectFolderId}`).get();
-          console.log(`✅ Found source folder by ID:`, { id: sourceItem.id, name: sourceItem.name });
         } catch (error: any) {
-          console.warn(`⚠️ Failed to get source by ID, falling back to path lookup`);
           const sourceId = await this.getFolderIdFromPath(folderFullPath);
           if (!sourceId) throw new Error(`Could not find folder: ${folderFullPath}`);
           sourceItem = await client.api(`${this.driveBase}/items/${sourceId}`).get();
         }
       } else {
-        console.log(`📍 Extracting folder ID from path: ${folderFullPath}`);
         const sourceId = await this.getFolderIdFromPath(folderFullPath);
         if (!sourceId) throw new Error(`Could not find folder: ${folderFullPath}`);
         sourceItem = await client.api(`${this.driveBase}/items/${sourceId}`).get();
-        console.log(`✅ Found source folder by path:`, { id: sourceItem.id, name: sourceItem.name });
       }
       
       // Get archive folder - use ID if provided, otherwise extract from path
       if (archiveFolderId) {
         try {
-          console.log(`📁 Using provided archive folder ID: ${archiveFolderId}`);
           archiveFolder = await client.api(`${this.driveBase}/items/${archiveFolderId}`).get();
-          console.log(`✅ Found archive folder by ID:`, { id: archiveFolder.id, name: archiveFolder.name });
         } catch (error: any) {
-          console.warn(`⚠️ Failed to get archive by ID, falling back to path lookup`);
           const archiveId = await this.getFolderIdFromPath(archivePath);
           if (!archiveId) throw new Error(`Could not find archive folder: ${archivePath}`);
           archiveFolder = await client.api(`${this.driveBase}/items/${archiveId}`).get();
         }
       } else {
-        console.log(`📁 Extracting archive folder ID from path: ${archivePath}`);
         const archiveId = await this.getFolderIdFromPath(archivePath);
         if (!archiveId) throw new Error(`Could not find archive folder: ${archivePath}`);
         archiveFolder = await client.api(`${this.driveBase}/items/${archiveId}`).get();
-        console.log(`✅ Found archive folder by path:`, { id: archiveFolder.id, name: archiveFolder.name });
       }
       
       // Move the item
       const moveData = { parentReference: { id: archiveFolder.id } };
       const moveUrl = `${this.driveBase}/items/${sourceItem.id}`;
-      console.log(`🚚 Moving folder to archive:`, { moveUrl, sourceId: sourceItem.id, archiveId: archiveFolder.id });
       logGraphRequest('Move Folder to Archive', moveUrl, 'PATCH', moveData);
       
       let result;
       try {
         result = await client.api(moveUrl).patch(moveData);
-        console.log(`✅ Move successful:`, { id: result.id, name: result.name, parentId: result.parentReference?.id });
       } catch (moveError: any) {
         console.error(`❌ Move operation failed:`, {
           statusCode: moveError.statusCode,
@@ -1517,7 +1342,6 @@ class ServerOneDriveService {
       
       // Calculate new path: archive path + folder name
       const newPath = `${archivePath}/${sourceItem.name}`;
-      console.log(`✅ Successfully moved project folder to archive`, { newPath });
       return { success: true, newPath };
     } catch (error: any) {
       console.error('❌ Failed to move project to archive:', {
@@ -1528,7 +1352,6 @@ class ServerOneDriveService {
         archivePath
       });
       if (error.statusCode === 404) {
-        console.warn(`⚠️ Folder or archive path not found (404) - skipping move`);
         return { success: true };
       }
       return { success: false };

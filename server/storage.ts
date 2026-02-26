@@ -281,7 +281,6 @@ export class MemStorage implements IStorage {
   }
 
   async updateProject(id: string, updateData: Partial<InsertProject>): Promise<Project | undefined> {
-    console.log('⚠️  MemStorage.updateProject called for:', id, '- THIS SHOULD NOT BE USED!');
     const existing = this.projects.get(id);
     if (!existing) return undefined;
 
@@ -373,7 +372,6 @@ export class MemStorage implements IStorage {
       client.projectsCount = count;
     }
 
-    console.log('✅ Recalculated projects count for all clients (MemStorage)');
   }
 
   // File Routings
@@ -1376,7 +1374,6 @@ export class DatabaseStorage implements IStorage {
   // Run database migrations to ensure schema is up to date
   async runMigrations(): Promise<void> {
     if (!pool) {
-      console.warn('⚠️ No pool available for migrations');
       return;
     }
 
@@ -1392,12 +1389,10 @@ export class DatabaseStorage implements IStorage {
       `);
 
       if (!cigExists.rows[0].exists) {
-        console.log('🔄 Adding CRE fields to projects table...');
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cig TEXT`);
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS numero_contratto TEXT`);
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_inizio_commessa TIMESTAMP`);
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS data_fine_commessa TIMESTAMP`);
-        console.log('✅ CRE fields added to projects table');
       }
 
       // Migration: Add CRE archival tracking fields
@@ -1409,10 +1404,8 @@ export class DatabaseStorage implements IStorage {
       `);
 
       if (!creArchiviatoExists.rows[0].exists) {
-        console.log('🔄 Adding CRE archival fields to projects table...');
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cre_archiviato BOOLEAN DEFAULT FALSE`);
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS cre_data_archiviazione TIMESTAMP`);
-        console.log('✅ CRE archival fields added to projects table');
       }
 
       // Migration: Ensure project_prestazioni table exists
@@ -1424,7 +1417,6 @@ export class DatabaseStorage implements IStorage {
       `);
 
       if (!prestazioniExists.rows[0].exists) {
-        console.log('🔄 Creating project_prestazioni table...');
         await client.query(`
           CREATE TABLE IF NOT EXISTS project_prestazioni (
             id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1447,7 +1439,6 @@ export class DatabaseStorage implements IStorage {
         `);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_project ON project_prestazioni(project_id)`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_prestazioni_stato ON project_prestazioni(stato)`);
-        console.log('✅ project_prestazioni table created');
       }
 
       // Migration: Add prestazione_id and tipo_fattura to project_invoices
@@ -1459,11 +1450,9 @@ export class DatabaseStorage implements IStorage {
       `);
 
       if (!prestazioneIdExists.rows[0].exists) {
-        console.log('🔄 Adding prestazione_id and tipo_fattura to project_invoices...');
         await client.query(`ALTER TABLE project_invoices ADD COLUMN IF NOT EXISTS prestazione_id TEXT`);
         await client.query(`ALTER TABLE project_invoices ADD COLUMN IF NOT EXISTS tipo_fattura TEXT DEFAULT 'unica'`);
         await client.query(`CREATE INDEX IF NOT EXISTS idx_invoices_prestazione ON project_invoices(prestazione_id)`);
-        console.log('✅ prestazione_id and tipo_fattura columns added');
       }
 
       // Ensure both object and oggetto_completo columns exist (schema expects both)
@@ -1476,9 +1465,7 @@ export class DatabaseStorage implements IStorage {
       `);
 
       if (!objectExists.rows[0].exists) {
-        console.log('🔄 Adding missing object column to projects table...');
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS object TEXT NOT NULL DEFAULT ''`);
-        console.log('✅ Object column added to projects table');
       }
 
       const oggettoCompletoExists = await client.query(`
@@ -1489,13 +1476,10 @@ export class DatabaseStorage implements IStorage {
       `);
 
       if (!oggettoCompletoExists.rows[0].exists) {
-        console.log('🔄 Adding missing oggetto_completo column to projects table...');
         await client.query(`ALTER TABLE projects ADD COLUMN IF NOT EXISTS oggetto_completo TEXT`);
-        console.log('✅ oggetto_completo column added to projects table');
       }
 
       client.release();
-      console.log('✅ All migrations completed successfully');
     } catch (error) {
       console.error('❌ Migration error:', error);
       throw error;
@@ -1678,7 +1662,6 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
-    console.log('✅ Recalculated projects count for all clients (DatabaseStorage)');
   }
 
   // File Routings
@@ -2691,7 +2674,7 @@ export class DatabaseStorage implements IStorage {
       // Note: Users are NOT deleted in clearAllData() to preserve authentication
       // So we always use onConflict handling for users
       if (data.users && data.users.length > 0) {
-        console.log(`📥 Importing ${data.users.length} users...`);
+
         const usersWithDates = this.convertTimestampsToDate(data.users, ['createdAt', 'updatedAt']);
         for (const user of usersWithDates) {
           if (mode === 'merge') {
@@ -2716,7 +2699,6 @@ export class DatabaseStorage implements IStorage {
 
       // 2. Clients second (no dependencies)
       if (data.clients && data.clients.length > 0) {
-        console.log(`📥 Importing ${data.clients.length} clients...`);
         const clientsWithDates = this.convertTimestampsToDate(data.clients, ['createdAt']);
         if (mode === 'merge') {
           for (const client of clientsWithDates) {
@@ -2729,7 +2711,6 @@ export class DatabaseStorage implements IStorage {
 
       // 3. System config (no dependencies)
       if (data.systemConfig && data.systemConfig.length > 0) {
-        console.log(`📥 Importing ${data.systemConfig.length} system configs...`);
         const configWithDates = this.convertTimestampsToDate(data.systemConfig, ['updatedAt']);
         if (mode === 'merge') {
           for (const config of configWithDates) {
@@ -2742,7 +2723,6 @@ export class DatabaseStorage implements IStorage {
 
       // 4. Projects (depends on clients)
       if (data.projects && data.projects.length > 0) {
-        console.log(`📥 Importing ${data.projects.length} projects...`);
         const projectsWithDates = this.convertTimestampsToDate(data.projects, ['createdAt', 'dataFattura', 'dataPagamento', 'dataInizioCommessa', 'dataFineCommessa', 'creDataArchiviazione']);
         if (mode === 'merge') {
           for (const project of projectsWithDates) {
@@ -2755,7 +2735,6 @@ export class DatabaseStorage implements IStorage {
 
       // 5. OneDrive mappings (depends on projects)
       if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
-        console.log(`📥 Importing ${data.oneDriveMappings.length} OneDrive mappings...`);
         const mappingsWithDates = this.convertTimestampsToDate(data.oneDriveMappings, ['createdAt', 'updatedAt']);
         if (mode === 'merge') {
           for (const mapping of mappingsWithDates) {
@@ -2768,7 +2747,6 @@ export class DatabaseStorage implements IStorage {
 
       // 6. Files index (depends on projects)
       if (data.filesIndex && data.filesIndex.length > 0) {
-        console.log(`📥 Importing ${data.filesIndex.length} files...`);
         const filesWithDates = this.convertTimestampsToDate(data.filesIndex, ['createdAt', 'updatedAt', 'lastModified']);
         if (mode === 'merge') {
           for (const fileIndex of filesWithDates) {
@@ -2781,7 +2759,6 @@ export class DatabaseStorage implements IStorage {
 
       // 7. File routings (depends on projects)
       if (data.fileRoutings && data.fileRoutings.length > 0) {
-        console.log(`📥 Importing ${data.fileRoutings.length} file routings...`);
         const routingsWithDates = this.convertTimestampsToDate(data.fileRoutings, ['createdAt']);
         if (mode === 'merge') {
           for (const routing of routingsWithDates) {
@@ -2794,7 +2771,6 @@ export class DatabaseStorage implements IStorage {
 
       // 8. Tasks (depends on projects)
       if (data.tasks && data.tasks.length > 0) {
-        console.log(`📥 Importing ${data.tasks.length} tasks...`);
         const tasksWithDates = this.convertTimestampsToDate(data.tasks, ['createdAt', 'updatedAt', 'dueDate', 'completedAt']);
         if (mode === 'merge') {
           for (const task of tasksWithDates) {
@@ -2807,7 +2783,6 @@ export class DatabaseStorage implements IStorage {
 
       // 9. Communications (depends on projects)
       if (data.communications && data.communications.length > 0) {
-        console.log(`📥 Importing ${data.communications.length} communications...`);
         const communicationsWithDates = this.convertTimestampsToDate(data.communications, ['createdAt', 'updatedAt', 'communicationDate', 'importedAt']);
         if (mode === 'merge') {
           for (const communication of communicationsWithDates) {
@@ -2820,7 +2795,6 @@ export class DatabaseStorage implements IStorage {
 
       // 10. Deadlines (depends on projects)
       if (data.deadlines && data.deadlines.length > 0) {
-        console.log(`📥 Importing ${data.deadlines.length} deadlines...`);
         const deadlinesWithDates = this.convertTimestampsToDate(data.deadlines, ['createdAt', 'updatedAt', 'dueDate', 'completedAt']);
         if (mode === 'merge') {
           for (const deadline of deadlinesWithDates) {
@@ -2833,7 +2807,6 @@ export class DatabaseStorage implements IStorage {
 
       // 11. Invoices (depends on projects)
       if (data.invoices && data.invoices.length > 0) {
-        console.log(`📥 Importing ${data.invoices.length} invoices...`);
         const invoicesWithDates = this.convertTimestampsToDate(data.invoices, ['createdAt', 'updatedAt', 'dataEmissione', 'dataPagamento', 'scadenzaPagamento']);
         if (mode === 'merge') {
           for (const invoice of invoicesWithDates) {
@@ -2846,7 +2819,6 @@ export class DatabaseStorage implements IStorage {
 
       // 12. Prestazioni (depends on projects)
       if (data.prestazioni && data.prestazioni.length > 0) {
-        console.log(`📥 Importing ${data.prestazioni.length} prestazioni...`);
         const prestazioniWithDates = this.convertTimestampsToDate(data.prestazioni, ['createdAt', 'updatedAt', 'dataInizio', 'dataCompletamento', 'dataFatturazione', 'dataPagamento']);
         if (mode === 'merge') {
           for (const prestazione of prestazioniWithDates) {
@@ -2859,7 +2831,6 @@ export class DatabaseStorage implements IStorage {
 
       // 13. SAL (depends on projects)
       if (data.sal && data.sal.length > 0) {
-        console.log(`📥 Importing ${data.sal.length} SAL...`);
         const salWithDates = this.convertTimestampsToDate(data.sal, ['createdAt', 'updatedAt', 'dataEmissione', 'dataApprovazione']);
         if (mode === 'merge') {
           for (const sal of salWithDates) {
@@ -2872,7 +2843,6 @@ export class DatabaseStorage implements IStorage {
 
       // 14. Changelog (depends on projects)
       if (data.changelog && data.changelog.length > 0) {
-        console.log(`📥 Importing ${data.changelog.length} changelog entries...`);
         const changelogWithDates = this.convertTimestampsToDate(data.changelog, ['createdAt']);
         if (mode === 'merge') {
           for (const entry of changelogWithDates) {
@@ -2885,7 +2855,6 @@ export class DatabaseStorage implements IStorage {
 
       // 15. Budget (depends on projects)
       if (data.budget && data.budget.length > 0) {
-        console.log(`📥 Importing ${data.budget.length} budget entries...`);
         const budgetWithDates = this.convertTimestampsToDate(data.budget, ['createdAt', 'updatedAt']);
         if (mode === 'merge') {
           for (const budget of budgetWithDates) {
@@ -2898,7 +2867,6 @@ export class DatabaseStorage implements IStorage {
 
       // 16. Resources (depends on projects)
       if (data.resources && data.resources.length > 0) {
-        console.log(`📥 Importing ${data.resources.length} resources...`);
         const resourcesWithDates = this.convertTimestampsToDate(data.resources, ['createdAt', 'updatedAt', 'dataInizio', 'dataFine']);
         if (mode === 'merge') {
           for (const resource of resourcesWithDates) {
@@ -2911,7 +2879,6 @@ export class DatabaseStorage implements IStorage {
 
       // 17. Saved Filters (no dependencies)
       if (data.filters && data.filters.length > 0) {
-        console.log(`📥 Importing ${data.filters.length} saved filters...`);
         const filtersWithDates = this.convertTimestampsToDate(data.filters, ['createdAt', 'updatedAt']);
         if (mode === 'merge') {
           for (const filter of filtersWithDates) {
@@ -2922,7 +2889,6 @@ export class DatabaseStorage implements IStorage {
         }
       }
 
-      console.log('✅ All data imported successfully');
     } catch (error) {
       console.error('❌ Error during import:', error);
       throw error;
@@ -3023,27 +2989,20 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Use database storage in production, file storage for local development
-console.log('🔍 Storage initialization');
-console.log('🔍 DATABASE_URL exists:', !!process.env.DATABASE_URL);
-console.log('🔍 TURSO_DATABASE_URL exists:', !!process.env.TURSO_DATABASE_URL);
-console.log('🔍 Environment NODE_ENV:', process.env.NODE_ENV);
 
 async function initializeStorage(): Promise<IStorage> {
   // Priority: Turso > Neon/PostgreSQL > FileStorage > MemStorage
 
   // 1. Try Turso first (zero-cost deployment)
   if (process.env.TURSO_DATABASE_URL) {
-    console.log('🔷 Turso configuration detected, attempting connection...');
     try {
       const { TursoStorage } = await import('./storage-turso.js');
       const tursoStorage = new TursoStorage();
       await tursoStorage.initialize();
       const isConnected = await tursoStorage.testConnection();
       if (isConnected) {
-        console.log('✅ Using TursoStorage - connection verified');
         return tursoStorage as unknown as IStorage;
       } else {
-        console.log('⚠️ Turso connection failed, trying other options...');
       }
     } catch (error) {
       console.error('❌ Failed to initialize TursoStorage:', error);
@@ -3052,18 +3011,14 @@ async function initializeStorage(): Promise<IStorage> {
 
   // 2. Try Neon/PostgreSQL if DATABASE_URL is set
   if (process.env.DATABASE_URL) {
-    console.log('🔷 PostgreSQL configuration detected, attempting connection...');
     const dbStorage = new DatabaseStorage();
     try {
       const isConnected = await dbStorage.testConnection();
       if (isConnected) {
         // Run migrations BEFORE returning storage to ensure schema is up to date
-        console.log('🔄 Running database migrations...');
         await dbStorage.runMigrations();
-        console.log('✅ Using DatabaseStorage (PostgreSQL) - connection verified');
         return dbStorage;
       } else {
-        console.log('⚠️ PostgreSQL connection failed, trying other options...');
       }
     } catch (error) {
       console.error('❌ PostgreSQL connection error:', error);
@@ -3073,8 +3028,6 @@ async function initializeStorage(): Promise<IStorage> {
   // 3. For local development or if databases fail, use FileStorage
   const isLocal = process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'development';
   if (isLocal || !process.env.DATABASE_URL && !process.env.TURSO_DATABASE_URL) {
-    console.log('📁 Using FileStorage for local development with persistence');
-    console.log('📁 Data will be saved in:', process.cwd() + '/data');
     try {
       const { storage: fileStorage } = await import('./storage-local.js');
       return fileStorage as unknown as IStorage;
@@ -3084,7 +3037,6 @@ async function initializeStorage(): Promise<IStorage> {
   }
 
   // 4. Last resort: MemStorage (data not persisted!)
-  console.warn('⚠️ Using MemStorage - data will NOT be persisted!');
   return new MemStorage();
 }
 
@@ -3108,7 +3060,6 @@ class FallbackStorage implements IStorage {
     } catch (error: any) {
       // Check if it's a database connection error
       if (error?.code === 'XX000' || error?.message?.includes('endpoint has been disabled') || error?.message?.includes('database')) {
-        console.warn('⚠️ Database operation failed, falling back to MemStorage:', error.message);
         
         // Switch to fallback storage permanently
         this.currentStorage = this.fallbackStorage;
@@ -3560,7 +3511,6 @@ class FallbackStorage implements IStorage {
 let storage: IStorage;
 const storagePromise = initializeStorage().then(initializedStorage => {
   storage = initializedStorage;
-  console.log('💾 Storage initialized successfully');
   return initializedStorage;
 }).catch(error => {
   console.error('❌ Storage initialization failed, using MemStorage:', error);

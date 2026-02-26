@@ -225,7 +225,6 @@ export class TursoStorage implements IStorage {
       }
     }
 
-    console.log('✅ Recalculated projects count for all clients (TursoStorage)');
   }
 
   // ============================================
@@ -993,7 +992,6 @@ export class TursoStorage implements IStorage {
       }
     }
 
-    console.log('✅ All data imported to Turso');
   }
 
   async clearAllData() {
