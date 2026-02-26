@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import DOMPurify from "dompurify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -473,7 +474,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
               </div>
               <div
                 className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: comm.emailHtml }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comm.emailHtml) }}
               />
             </div>
           )}
@@ -1345,7 +1346,7 @@ export default function RegistroComunicazioni() {
                 {selectedComm?.emailHtml ? (
                   <div
                     className="prose prose-sm max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: selectedComm.emailHtml }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedComm.emailHtml) }}
                   />
                 ) : (
                   <p className="text-sm whitespace-pre-wrap">{selectedComm?.body}</p>

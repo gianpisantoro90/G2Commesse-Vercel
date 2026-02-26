@@ -115,8 +115,8 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
     return next();
   }
 
-  // Allow all auth-related endpoints and admin reset endpoint
-  if (req.path.startsWith('/api/auth/') || req.path === '/api/admin/reset-all-projects-to-in-corso' || req.path === '/api/emails/check-now') {
+  // Allow only auth-related endpoints without authentication
+  if (req.path.startsWith('/api/auth/')) {
     return next();
   }
 
@@ -408,66 +408,37 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Admin endpoint to reset all projects to "in corso" status - GET (public for testing)
-  app.get("/api/admin/reset-all-projects-to-in-corso", async (req, res) => {
-    try {
-      console.log('🔄 [RESET] Starting reset of all projects to "in corso" status...');
-      const allProjects = await storage.getAllProjects();
-      console.log(`📊 [RESET] Found ${allProjects.length} total projects`);
-      
-      let updatedCount = 0;
-      let sospesaCount = 0;
-      
-      for (const project of allProjects) {
-        if (project.status === 'sospesa') {
-          sospesaCount++;
-        }
-        const updated = await storage.updateProject(project.id, { status: 'in corso' });
-        if (updated) {
-          updatedCount++;
-        }
-      }
-      
-      const message = `✅ Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
-      console.log(message);
-      res.json({ message, updatedCount, sospesaCount, totalProjects: allProjects.length });
-    } catch (error) {
-      console.error('❌ [RESET] Error resetting projects:', error);
-      res.status(500).json({ message: "Errore nel reset dei progetti", error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
-
-  // Admin endpoint to reset all projects to "in corso" status - POST (public for testing)
-  app.post("/api/admin/reset-all-projects-to-in-corso", async (req, res) => {
-    try {
-      console.log('🔄 [RESET] Starting reset of all projects to "in corso" status...');
-      const allProjects = await storage.getAllProjects();
-      console.log(`📊 [RESET] Found ${allProjects.length} total projects`);
-      
-      let updatedCount = 0;
-      let sospesaCount = 0;
-      
-      for (const project of allProjects) {
-        if (project.status === 'sospesa') {
-          sospesaCount++;
-        }
-        const updated = await storage.updateProject(project.id, { status: 'in corso' });
-        if (updated) {
-          updatedCount++;
-        }
-      }
-      
-      const message = `✅ Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
-      console.log(message);
-      res.json({ message, updatedCount, sospesaCount, totalProjects: allProjects.length });
-    } catch (error) {
-      console.error('❌ [RESET] Error resetting projects:', error);
-      res.status(500).json({ message: "Errore nel reset dei progetti", error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
-
-  // Apply authentication middleware to all other API routes
+  // Apply authentication middleware to all API routes
   app.use("/api", requireAuth);
+
+  // Admin endpoint to reset all projects to "in corso" status (POST only, admin protected)
+  app.post("/api/admin/reset-all-projects-to-in-corso", requireAdmin, async (req, res) => {
+    try {
+      console.log('🔄 [RESET] Starting reset of all projects to "in corso" status...');
+      const allProjects = await storage.getAllProjects();
+      console.log(`📊 [RESET] Found ${allProjects.length} total projects`);
+
+      let updatedCount = 0;
+      let sospesaCount = 0;
+
+      for (const project of allProjects) {
+        if (project.status === 'sospesa') {
+          sospesaCount++;
+        }
+        const updated = await storage.updateProject(project.id, { status: 'in corso' });
+        if (updated) {
+          updatedCount++;
+        }
+      }
+
+      const message = `✅ Reset complete: ${updatedCount} projects updated (${sospesaCount} were sospesa)`;
+      console.log(message);
+      res.json({ message, updatedCount, sospesaCount, totalProjects: allProjects.length });
+    } catch (error) {
+      console.error('❌ [RESET] Error resetting projects:', error);
+      res.status(500).json({ message: "Errore nel reset dei progetti" });
+    }
+  });
 
   // ============================================
   // USER MANAGEMENT ENDPOINTS (Admin only)
@@ -1711,7 +1682,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post("/api/system-config", async (req, res) => {
+  app.post("/api/system-config", requireAdmin, async (req, res) => {
     try {
       const { key, value } = req.body;
       if (!key) {
@@ -1765,7 +1736,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // Bulk operations
-  app.get("/api/export", async (req, res) => {
+  app.get("/api/export", requireAdmin, async (req, res) => {
     try {
       const data = await storage.exportAllData();
       res.json(data);
@@ -1774,7 +1745,7 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  app.post("/api/import", async (req, res) => {
+  app.post("/api/import", requireAdmin, async (req, res) => {
     try {
       const { mode, ...data } = req.body;
       const importMode = mode === 'merge' ? 'merge' : 'overwrite';
@@ -1788,16 +1759,13 @@ export async function registerRoutes(app: Express): Promise<void> {
       res.json({ message, mode: importMode });
     } catch (error: any) {
       console.error('❌ Errore durante importazione dati:', error);
-      console.error('Stack trace:', error.stack);
-      res.status(500).json({ 
-        message: "Errore nell'importazione dei dati", 
-        error: error.message,
-        details: error.toString()
+      res.status(500).json({
+        message: "Errore nell'importazione dei dati"
       });
     }
   });
 
-  app.delete("/api/clear-all", async (req, res) => {
+  app.delete("/api/clear-all", requireAdmin, async (req, res) => {
     try {
       await storage.clearAllData();
       res.json({ message: "Tutti i dati sono stati cancellati" });
@@ -1808,36 +1776,38 @@ export async function registerRoutes(app: Express): Promise<void> {
 
 
 
-  // Get environment API key with enhanced local development support
+  // API key availability check (does NOT expose the key itself)
   app.get("/api/get-env-api-key", async (req, res) => {
     try {
-      // Check multiple possible environment variables for flexibility
-      const apiKey = process.env.ANTHROPIC_API_KEY || 
-                    process.env.CLAUDE_API_KEY || 
+      const apiKey = process.env.ANTHROPIC_API_KEY ||
+                    process.env.CLAUDE_API_KEY ||
                     process.env.AI_API_KEY;
-      
+
       if (apiKey) {
-        console.log('✅ Environment API key found, providing fallback support');
-        res.json({ apiKey });
+        res.json({ available: true, message: "API Key configurata lato server" });
       } else {
-        console.log('⚠️ No environment API key found - user must configure manually');
-        res.status(404).json({ 
-          message: "API Key non trovata nelle variabili d'ambiente", 
-          suggestion: "Configura manualmente l'API Key nelle impostazioni AI" 
+        res.status(404).json({
+          available: false,
+          message: "API Key non trovata nelle variabili d'ambiente",
+          suggestion: "Configura manualmente l'API Key nelle impostazioni AI"
         });
       }
     } catch (error) {
-      console.error('❌ Error retrieving environment API key:', error);
-      res.status(500).json({ message: "Errore nel recupero API key" });
+      res.status(500).json({ message: "Errore nel controllo API key" });
     }
   });
 
   // AI test endpoint (supports multiple providers)
   app.post("/api/test-claude", async (req, res) => {
     try {
-      const { apiKey, model } = req.body;
-      if (!apiKey) {
-        return res.status(400).json({ message: "API Key mancante" });
+      let { apiKey, model } = req.body;
+
+      // Use server-side API key when client signals 'server-managed' or sends no key
+      if (!apiKey || apiKey === 'server-managed') {
+        apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
+        if (!apiKey) {
+          return res.status(400).json({ message: "API Key non configurata sul server" });
+        }
       }
 
       // Determine provider based on model or API key format
@@ -1901,12 +1871,17 @@ export async function registerRoutes(app: Express): Promise<void> {
   // AI routing endpoint (supports multiple providers)
   app.post("/api/ai-routing", async (req, res) => {
     try {
-      const { apiKey, prompt, model } = req.body;
-      if (!apiKey) {
-        return res.status(400).json({ message: "API Key mancante" });
-      }
+      let { apiKey, prompt, model } = req.body;
       if (!prompt) {
         return res.status(400).json({ message: "Prompt mancante" });
+      }
+
+      // Use server-side API key when client signals 'server-managed' or sends no key
+      if (!apiKey || apiKey === 'server-managed') {
+        apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
+        if (!apiKey) {
+          return res.status(400).json({ message: "API Key non configurata sul server" });
+        }
       }
 
       // Determine provider based on model or API key format

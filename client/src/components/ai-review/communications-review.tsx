@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import DOMPurify from "dompurify";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -566,7 +567,7 @@ export function CommunicationsReview() {
                 {selectedComm?.emailHtml ? (
                   <div
                     className="prose prose-sm max-w-none dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: selectedComm.emailHtml }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedComm.emailHtml) }}
                   />
                 ) : (
                   <p className="text-sm whitespace-pre-wrap">{selectedComm?.body}</p>

@@ -15,6 +15,10 @@ nul
 # Local data
 data/
 
+# Local startup scripts with credentials
+start-dev-local.bat
+G2-START.bat
+
 # Vercel
 .vercel/
 

@@ -233,13 +233,14 @@ class AIFileRouter {
     };
   }
 
-  // Get API key from environment variables via backend
+  // Check if server has an API key configured (does not retrieve the key itself)
   private async getEnvironmentApiKey(): Promise<string | null> {
     try {
       const response = await fetch('/api/get-env-api-key');
       if (response.ok) {
         const data = await response.json();
-        return data.apiKey || null;
+        // Key is available server-side; return a sentinel so AI routing uses the server proxy
+        return data.available ? 'server-managed' : null;
       }
     } catch (error) {
       console.log('No environment API key available');
