@@ -174,14 +174,18 @@ export async function registerRoutes(app: Express): Promise<void> {
         });
       }
 
-      // Security: Minimal logging (only in development, no credentials)
+      // Temporary debug logging for login diagnosis
+      const storageType = storage.constructor?.name || 'unknown';
+      console.error(`[LOGIN-DEBUG] username="${username}", storageType=${storageType}, bodyType=${typeof req.body}`);
 
       // Try to authenticate against database first
       const user = await storage.getUserByUsername(username);
+      console.error(`[LOGIN-DEBUG] user found: ${!!user}, active: ${user?.active}, hasHash: ${!!user?.passwordHash}, hashLen: ${user?.passwordHash?.length}`);
 
       if (user && user.active) {
         // Verify password
         const isValid = await bcrypt.compare(password, user.passwordHash);
+        console.error(`[LOGIN-DEBUG] bcrypt result: ${isValid}`);
 
         if (isValid) {
           // Security: Regenerate session ID to prevent session fixation attacks
