@@ -63,7 +63,7 @@ export function useOneDriveRootConfig() {
     queryKey: ONEDRIVE_ROOT_CONFIG_KEY,
     queryFn: async () => {
       try {
-        const response = await fetch('/api/onedrive/root-folder');
+        const response = await fetch('/api/onedrive/root-folder', { credentials: "include" });
         if (response.ok) {
           const data = await response.json();
           const config = data.config as OneDriveRootConfig | null;
@@ -102,6 +102,7 @@ export function useOneDriveRootConfig() {
       const response = await fetch('/api/onedrive/set-root-folder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: "include",
         body: JSON.stringify({ folderId, folderPath }),
       });
 
@@ -134,6 +135,7 @@ export function useOneDriveRootConfig() {
     mutationFn: async () => {
       const response = await fetch('/api/onedrive/root-folder', {
         method: 'DELETE',
+        credentials: "include",
       });
 
       if (!response.ok) {

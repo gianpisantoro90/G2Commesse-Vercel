@@ -95,7 +95,7 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const response = await fetch(`/api/projects/${project.id}/cre/generate`);
+      const response = await fetch(`/api/projects/${project.id}/cre/generate`, { credentials: "include" });
       if (!response.ok) {
         throw new Error('Errore nella generazione del documento');
       }

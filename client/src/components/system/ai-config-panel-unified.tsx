@@ -65,7 +65,7 @@ export default function AiConfigPanelUnified() {
   useEffect(() => {
     const loadServerConfig = async () => {
       try {
-        const response = await fetch('/api/system-config/ai_config');
+        const response = await fetch('/api/system-config/ai_config', { credentials: "include" });
         if (response.ok) {
           const { value } = await response.json();
           if (value) {
@@ -141,6 +141,7 @@ export default function AiConfigPanelUnified() {
       const response = await fetch('/api/system-config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: "include",
         body: JSON.stringify({ key: 'ai_config', value: configToSave }),
       });
       if (!response.ok) throw new Error('Errore nel salvataggio');

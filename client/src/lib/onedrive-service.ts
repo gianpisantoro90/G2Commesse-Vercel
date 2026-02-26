@@ -44,7 +44,7 @@ class OneDriveService {
 
   async getUserInfo(): Promise<{ name: string; email: string } | null> {
     try {
-      const response = await fetch('/api/onedrive/user');
+      const response = await fetch('/api/onedrive/user', { credentials: "include" });
       
       if (response.ok) {
         const data = await response.json();
@@ -61,7 +61,7 @@ class OneDriveService {
 
   async listFiles(folderPath = '/G2_Progetti'): Promise<OneDriveFile[]> {
     try {
-      const response = await fetch(`/api/onedrive/files?path=${encodeURIComponent(folderPath)}`);
+      const response = await fetch(`/api/onedrive/files?path=${encodeURIComponent(folderPath)}`, { credentials: "include" });
       
       if (response.ok) {
         const data = await response.json();
@@ -171,7 +171,7 @@ class OneDriveService {
 
   async downloadFile(fileId: string): Promise<Blob | null> {
     try {
-      const response = await fetch(`/api/onedrive/download/${fileId}`);
+      const response = await fetch(`/api/onedrive/download/${fileId}`, { credentials: "include" });
       
       if (response.ok) {
         return await response.blob();
@@ -221,6 +221,7 @@ class OneDriveService {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: "include",
         body: JSON.stringify({ projectCode }),
       });
 
@@ -245,7 +246,7 @@ class OneDriveService {
   async getAllFiles(): Promise<OneDriveFile[]> {
     try {
       // Get all folders from root
-      const rootResponse = await fetch('/api/onedrive/browse?path=/');
+      const rootResponse = await fetch('/api/onedrive/browse?path=/', { credentials: "include" });
       if (!rootResponse.ok) {
         console.error('❌ Failed to get root folders:', rootResponse.statusText);
         return [];
@@ -283,7 +284,7 @@ class OneDriveService {
         return [];
       }
       
-      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(folderPath)}`);
+      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(folderPath)}`, { credentials: "include" });
       if (!response.ok) {
         console.error(`❌ Failed to browse folder ${displayPath}:`, response.statusText);
         return [];
@@ -316,7 +317,7 @@ class OneDriveService {
 
   async browseFolder(folderPath: string): Promise<OneDriveFile[]> {
     try {
-      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(folderPath)}`);
+      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(folderPath)}`, { credentials: "include" });
       
       if (response.ok) {
         const data = await response.json();
@@ -338,6 +339,7 @@ class OneDriveService {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: "include",
         body: JSON.stringify({
           folderPath: folderPath,
           includeSubfolders: includeSubfolders
@@ -394,6 +396,7 @@ class OneDriveService {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: "include",
         body: JSON.stringify({
           fileId: fileId,
           targetPath: targetPath,

@@ -69,7 +69,7 @@ export default function FolderConfigPanel() {
   const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles } = useQuery({
     queryKey: ['onedrive-browse', currentPath],
     queryFn: async () => {
-      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(currentPath)}`);
+      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(currentPath)}`, { credentials: "include" });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);

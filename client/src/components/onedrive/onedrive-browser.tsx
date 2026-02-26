@@ -62,7 +62,7 @@ export default function OneDriveBrowser() {
   const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles, error: browseError } = useQuery({
     queryKey: ['onedrive-browse', currentPath],
     queryFn: async () => {
-      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(currentPath)}`);
+      const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(currentPath)}`, { credentials: "include" });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `Errore ${response.status}: ${response.statusText}`);
@@ -83,7 +83,7 @@ export default function OneDriveBrowser() {
     queryKey: ['onedrive-search', searchQuery],
     queryFn: async () => {
       if (!searchQuery.trim()) return [];
-      const response = await fetch(`/api/onedrive/search?q=${encodeURIComponent(searchQuery)}`);
+      const response = await fetch(`/api/onedrive/search?q=${encodeURIComponent(searchQuery)}`, { credentials: "include" });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `Errore ricerca ${response.status}`);
@@ -98,7 +98,7 @@ export default function OneDriveBrowser() {
   const { data: folderHierarchy, error: hierarchyError } = useQuery({
     queryKey: ['onedrive-hierarchy'],
     queryFn: async () => {
-      const response = await fetch('/api/onedrive/hierarchy');
+      const response = await fetch('/api/onedrive/hierarchy', { credentials: "include" });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'Errore nel recupero cartelle');
@@ -168,8 +168,9 @@ export default function OneDriveBrowser() {
       const response = await fetch('/api/onedrive/link-project', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          projectCode, 
+        credentials: "include",
+        body: JSON.stringify({
+          projectCode,
           oneDriveFolderId: folderId,
           oneDriveFolderName: folderName,
           oneDriveFolderPath: folderPath
@@ -290,7 +291,7 @@ export default function OneDriveBrowser() {
       
       // Try to get file content for preview
       try {
-        const response = await fetch(`/api/onedrive/content/${file.id}`);
+        const response = await fetch(`/api/onedrive/content/${file.id}`, { credentials: "include" });
         if (response.ok) {
           const data = await response.json();
           setPreviewContent(data.content);
@@ -316,7 +317,7 @@ export default function OneDriveBrowser() {
       if (!node.children || node.children.length === 0) {
         try {
           const childPath = path === '/' ? `/${node.file.name}` : `${path}/${node.file.name}`;
-          const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(childPath)}`);
+          const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(childPath)}`, { credentials: "include" });
           if (response.ok) {
             const children = await response.json() as OneDriveFile[];
             const childNodes: TreeNode[] = children

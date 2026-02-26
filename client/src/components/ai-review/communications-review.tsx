@@ -106,7 +106,7 @@ export function CommunicationsReview() {
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
     queryKey: QK.communicationsPending,
     queryFn: async () => {
-      const response = await fetch("/api/communications/pending-review");
+      const response = await fetch("/api/communications/pending-review", { credentials: "include" });
       if (!response.ok) throw new Error("Failed to fetch pending communications");
       return response.json();
     },
@@ -116,7 +116,7 @@ export function CommunicationsReview() {
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: QK.projects,
     queryFn: async () => {
-      const response = await fetch("/api/projects");
+      const response = await fetch("/api/projects", { credentials: "include" });
       if (!response.ok) throw new Error("Failed to fetch projects");
       return response.json();
     },

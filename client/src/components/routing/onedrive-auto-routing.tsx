@@ -92,7 +92,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
   const { data: oneDriveMappings = [] } = useQuery({
     queryKey: ["/api/onedrive/mappings"],
     queryFn: async () => {
-      const response = await fetch('/api/onedrive/mappings');
+      const response = await fetch('/api/onedrive/mappings', { credentials: "include" });
       if (response.ok) {
         return await response.json();
       }
@@ -133,6 +133,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       const response = await fetch('/api/onedrive/scan-files', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: "include",
         body: JSON.stringify({ folderPath, projectCode, includeSubfolders })
       });
       
@@ -174,10 +175,11 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       const response = await fetch('/api/onedrive/move-file', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          fileId, 
+        credentials: "include",
+        body: JSON.stringify({
+          fileId,
           targetPath: targetPath,
-          fileName 
+          fileName
         })
       });
       

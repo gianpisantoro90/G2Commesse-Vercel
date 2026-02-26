@@ -23,7 +23,7 @@ export function useOneDriveArchiveConfig() {
   } = useQuery({
     queryKey: ONEDRIVE_ARCHIVE_CONFIG_KEY,
     queryFn: async () => {
-      const response = await fetch('/api/onedrive/archive-folder');
+      const response = await fetch('/api/onedrive/archive-folder', { credentials: "include" });
       if (response.ok) {
         return response.json().then((data: any) => data.config as OneDriveArchiveConfig | null);
       }
@@ -40,6 +40,7 @@ export function useOneDriveArchiveConfig() {
       const response = await fetch('/api/onedrive/set-archive-folder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: "include",
         body: JSON.stringify({ folderId, folderPath }),
       });
 
@@ -59,6 +60,7 @@ export function useOneDriveArchiveConfig() {
     mutationFn: async () => {
       const response = await fetch('/api/onedrive/archive-folder', {
         method: 'DELETE',
+        credentials: "include",
       });
 
       if (!response.ok) {

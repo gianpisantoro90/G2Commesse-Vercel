@@ -95,7 +95,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
     const project = projects.find(p => p.id === projectId);
     if (project) {
       // Look for project mapping to suggest default folder
-      fetch(`/api/onedrive/mappings/${project.code}`)
+      fetch(`/api/onedrive/mappings/${project.code}`, { credentials: "include" })
         .then(res => res.ok ? res.json() : null)
         .then(mapping => {
           if (mapping?.oneDriveFolderPath) {

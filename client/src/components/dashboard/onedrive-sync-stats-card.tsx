@@ -35,7 +35,7 @@ export default function OneDriveSyncStatsCard() {
     queryKey: ['files-index-stats'],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/files-index/stats');
+        const response = await fetch('/api/files-index/stats', { credentials: "include" });
         if (response.ok) {
           return await response.json();
         }

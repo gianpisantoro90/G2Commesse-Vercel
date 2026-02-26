@@ -111,6 +111,7 @@ class AIFileRouter {
         headers: {
           'content-type': 'application/json',
         },
+        credentials: "include",
         body: JSON.stringify({
           apiKey: keyToTest,
           model: modelToTest,
@@ -236,7 +237,7 @@ class AIFileRouter {
   // Check if server has an API key configured (does not retrieve the key itself)
   private async getEnvironmentApiKey(): Promise<string | null> {
     try {
-      const response = await fetch('/api/get-env-api-key');
+      const response = await fetch('/api/get-env-api-key', { credentials: "include" });
       if (response.ok) {
         const data = await response.json();
         // Key is available server-side; return a sentinel so AI routing uses the server proxy
@@ -271,6 +272,7 @@ class AIFileRouter {
         headers: {
           'content-type': 'application/json',
         },
+        credentials: "include",
         body: JSON.stringify({
           apiKey: activeApiKey,
           prompt: prompt,

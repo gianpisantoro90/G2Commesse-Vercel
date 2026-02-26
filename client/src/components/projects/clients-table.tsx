@@ -207,6 +207,7 @@ export default function ClientsTable() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -242,6 +243,7 @@ export default function ClientsTable() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: "include",
       });
 
       if (!response.ok) {
