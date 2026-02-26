@@ -452,7 +452,7 @@ RISPOSTA IN JSON (esempio):
 
       // Sort projectMatches by confidence descending
       if (analysis.projectMatches.length > 0) {
-        analysis.projectMatches.sort((a, b) => b.confidence - a.confidence);
+        analysis.projectMatches.sort((a: any, b: any) => b.confidence - a.confidence);
 
         const bestMatch = analysis.projectMatches[0];
         analysis.confidence = bestMatch.confidence;
@@ -493,8 +493,8 @@ RISPOSTA IN JSON (esempio):
     const amounts = text.match(amountRegex) || [];
 
     return {
-      deadlines: [...new Set(deadlines)].slice(0, 5),
-      amounts: [...new Set(amounts)].slice(0, 5),
+      deadlines: Array.from(new Set(deadlines)).slice(0, 5),
+      amounts: Array.from(new Set(amounts)).slice(0, 5),
       actionItems: [],
       keyPoints: [],
     };

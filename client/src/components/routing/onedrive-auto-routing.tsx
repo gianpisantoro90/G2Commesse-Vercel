@@ -710,7 +710,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                 <ProjectCombobox
                   projects={projects}
                   value={selectedProject}
-                  onValueChange={setSelectedProject}
+                  onValueChange={(value) => setSelectedProject(value ?? '')}
                   placeholder="Cerca progetto per codice, oggetto o cliente..."
                 />
               </div>

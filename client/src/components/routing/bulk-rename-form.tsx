@@ -403,7 +403,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           <ProjectCombobox
             projects={projects}
             value={selectedProject}
-            onValueChange={handleProjectChange}
+            onValueChange={(value) => { if (value) handleProjectChange(value); }}
             placeholder="Cerca commessa per codice, oggetto o cliente..."
           />
         </div>

@@ -227,7 +227,9 @@ export class FileStorage implements IStorage {
       dataPagamento: insertProject.dataPagamento || null,
       importoPagato: insertProject.importoPagato || null,
       noteFatturazione: insertProject.noteFatturazione || null,
-    };
+      dataInizioCommessa: (insertProject as any).dataInizioCommessa || null,
+      dataFineCommessa: (insertProject as any).dataFineCommessa || null,
+    } as Project;
 
     projects.push(project);
     this.writeJsonFile(this.projectsFile, projects);
@@ -294,8 +296,9 @@ export class FileStorage implements IStorage {
       id,
       city: insertClient.city || null,
       projectsCount: insertClient.projectsCount || 0,
-    };
-    
+      createdAt: new Date(),
+    } as Client;
+
     clients.push(client);
     this.writeJsonFile(this.clientsFile, clients);
     return client;
@@ -572,7 +575,7 @@ export class FileStorage implements IStorage {
       isImportant: insertCommunication.isImportant || null,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as Communication;
     communications.push(communication);
     this.writeJsonFile(this.communicationsFile, communications);
     return communication;
@@ -692,7 +695,7 @@ export class FileStorage implements IStorage {
       ...insertUser,
       id,
       role: insertUser.role || "user",
-      isActive: insertUser.isActive !== undefined ? insertUser.isActive : true,
+      active: insertUser.active !== undefined ? insertUser.active : true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -744,12 +747,12 @@ export class FileStorage implements IStorage {
 
   async getTasksByAssignee(userId: string): Promise<Task[]> {
     const tasks = this.readJsonFile<Task>(this.tasksFile, []);
-    return tasks.filter(t => t.assignedTo === userId);
+    return tasks.filter(t => t.assignedToId === userId);
   }
 
   async getTasksByCreator(userId: string): Promise<Task[]> {
     const tasks = this.readJsonFile<Task>(this.tasksFile, []);
-    return tasks.filter(t => t.createdBy === userId);
+    return tasks.filter(t => t.createdById === userId);
   }
 
   async createTask(insertTask: InsertTask): Promise<Task> {
@@ -763,12 +766,12 @@ export class FileStorage implements IStorage {
       description: insertTask.description || null,
       dueDate: insertTask.dueDate || null,
       projectId: insertTask.projectId || null,
-      assignedTo: insertTask.assignedTo || null,
-      tags: insertTask.tags || [],
-      completedAt: insertTask.completedAt || null,
+      assignedToId: insertTask.assignedToId || null,
+      notes: (insertTask as any).notes || null,
+      completedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as Task;
     tasks.push(task);
     this.writeJsonFile(this.tasksFile, tasks);
     return task;

@@ -287,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       const aiConfigResult = await storage.getSystemConfig('ai_config');
       const storedConfig = aiConfigResult?.value;
       
-      const finalConfig: AIConfig | string | undefined = storedConfig || process.env.ANTHROPIC_API_KEY;
+      const finalConfig: any = storedConfig || process.env.ANTHROPIC_API_KEY;
 
       // Analyze email with AI
       const analysis = await emailService.analyzeEmailWithAI(
@@ -1146,7 +1146,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(404).json({ message: "Comunicazione non trovata" });
       }
 
-      const suggestedTask = communication.aiSuggestions?.suggestedTasks?.[taskIndex];
+      const suggestedTask = (communication.aiSuggestions as any)?.suggestedTasks?.[taskIndex];
       if (!suggestedTask) {
         return res.status(404).json({ message: "Task suggerito non trovato" });
       }
@@ -1165,7 +1165,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
 
       // Update communication with task approval status
-      const aiTasksStatus = communication.aiTasksStatus || {};
+      const aiTasksStatus = (communication.aiTasksStatus || {}) as Record<string, any>;
       aiTasksStatus[taskIndex] = {
         action: 'approved',
         taskId: newTask.id,
@@ -1199,7 +1199,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // Update communication with task dismissal status
-      const aiTasksStatus = communication.aiTasksStatus || {};
+      const aiTasksStatus = (communication.aiTasksStatus || {}) as Record<string, any>;
       aiTasksStatus[taskIndex] = {
         action: 'dismissed',
         dismissedAt: new Date().toISOString(),
@@ -1266,7 +1266,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(404).json({ message: "Comunicazione non trovata" });
       }
 
-      const suggestedDeadline = communication.aiSuggestions?.suggestedDeadlines?.[deadlineIndex];
+      const suggestedDeadline = (communication.aiSuggestions as any)?.suggestedDeadlines?.[deadlineIndex];
       if (!suggestedDeadline) {
         return res.status(404).json({ message: "Scadenza suggerita non trovata" });
       }
@@ -1284,7 +1284,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       });
 
       // Update communication with deadline approval status
-      const aiDeadlinesStatus = communication.aiDeadlinesStatus || {};
+      const aiDeadlinesStatus = (communication.aiDeadlinesStatus || {}) as Record<string, any>;
       aiDeadlinesStatus[deadlineIndex] = {
         action: 'approved',
         deadlineId: newDeadline.id,
@@ -1318,7 +1318,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // Update communication with deadline dismissal status
-      const aiDeadlinesStatus = communication.aiDeadlinesStatus || {};
+      const aiDeadlinesStatus = (communication.aiDeadlinesStatus || {}) as Record<string, any>;
       aiDeadlinesStatus[deadlineIndex] = {
         action: 'dismissed',
         dismissedAt: new Date().toISOString(),
@@ -1614,7 +1614,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (key === 'ai_config') {
         try {
           const existingConfig = await storage.getSystemConfig('ai_config');
-          const existingApiKey = existingConfig?.value?.apiKey;
+          const existingApiKey = (existingConfig?.value as any)?.apiKey;
           
           const configToValidate = {
             ...value,
@@ -1903,7 +1903,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ error: 'Invalid folder path parameter' });
       }
 
-      const files = await serverOneDriveService.listFiles(folderPath);
+      const files = await serverOneDriveService.listFiles(folderPath as any);
       res.json(files);
     } catch (error: any) {
       console.error('OneDrive list files failed:', error);
@@ -2084,7 +2084,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       let folderId = validatedData.oneDriveFolderId;
       if (!folderId && validatedData.oneDriveFolderPath) {
         console.log(`🔍 Extracting folder ID from path: ${validatedData.oneDriveFolderPath}`);
-        folderId = await serverOneDriveService.getFolderIdFromPath(validatedData.oneDriveFolderPath);
+        folderId = await serverOneDriveService.getFolderIdFromPath(validatedData.oneDriveFolderPath) ?? '';
         if (folderId) {
           console.log(`✅ Got folder ID: ${folderId}`);
           validatedData.oneDriveFolderId = folderId;
@@ -2168,7 +2168,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(400).json({ error: 'Invalid folder path parameter' });
       }
       
-      const files = await serverOneDriveService.listFiles(folderPath);
+      const files = await serverOneDriveService.listFiles(folderPath as any);
       res.json(files);
     } catch (error: any) {
       console.error('OneDrive browse failed:', error);
@@ -2924,7 +2924,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       const totalFiles = files.length;
       const lastIndexed = files.length > 0
         ? files.reduce((latest, f) => {
-            const d = f.lastScanned ? new Date(f.lastScanned).getTime() : 0;
+            const d = (f as any).lastScanned ? new Date((f as any).lastScanned).getTime() : 0;
             return d > latest ? d : latest;
           }, 0)
         : null;
@@ -3212,7 +3212,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       const invoice = await storage.createInvoice({
         ...validatedData,
         projectId: req.params.projectId,
-      });
+      } as any);
 
       // Se la fattura è collegata a una prestazione, ricalcola gli importi
       if (validatedData.prestazioneId) {
@@ -3253,7 +3253,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       if (existingInvoice?.prestazioneId) prestazioneIds.add(existingInvoice.prestazioneId);
       if (updated.prestazioneId) prestazioneIds.add(updated.prestazioneId);
 
-      for (const prestazioneId of prestazioneIds) {
+      for (const prestazioneId of Array.from(prestazioneIds)) {
         await storage.recalculatePrestazioneImporti(prestazioneId);
       }
 
@@ -3815,7 +3815,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       await storage.updateProject(projectId, {
         dataInizioCommessa,
         dataFineCommessa,
-      });
+      } as any);
     } catch (error) {
       console.error('Error updating project dates from prestazioni:', error);
       // Don't throw - this is a background operation

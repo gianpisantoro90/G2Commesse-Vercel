@@ -931,9 +931,9 @@ export default function BillingFlow() {
                                         {alert.prestazionelivello.toUpperCase()}
                                       </span>
                                     )}
-                                    {alert.importoPrevisto > 0 && (
+                                    {(alert.importoPrevisto ?? 0) > 0 && (
                                       <span className="ml-1 text-gray-500">
-                                        ({formatCurrency(alert.importoPrevisto)})
+                                        ({formatCurrency(alert.importoPrevisto ?? 0)})
                                       </span>
                                     )}
                                   </span>
@@ -941,9 +941,9 @@ export default function BillingFlow() {
                                 {(alert.type === 'scaduta' || alert.type === 'ritardo') && alert.invoiceNumero && (
                                   <span>
                                     <span className="font-medium">Fatt. {alert.invoiceNumero}</span>
-                                    {alert.invoiceImporto > 0 && (
+                                    {(alert.invoiceImporto ?? 0) > 0 && (
                                       <span className="ml-1 font-medium text-gray-900 dark:text-white">
-                                        {formatCurrency(alert.invoiceImporto)}
+                                        {formatCurrency(alert.invoiceImporto ?? 0)}
                                       </span>
                                     )}
                                   </span>
@@ -1676,7 +1676,7 @@ export default function BillingFlow() {
                 <Label>Commessa *</Label>
                 <ProjectCombobox
                   projects={projects}
-                  value={selectedProject?.id}
+                  value={(selectedProject as any)?.id}
                   onValueChange={(projectId) => {
                     const project = projects.find(p => p.id === projectId);
                     setSelectedProject(project || null);
@@ -1720,7 +1720,7 @@ export default function BillingFlow() {
                         <SelectItem key={prest.id} value={prest.id}>
                           {PRESTAZIONE_CONFIG[prest.tipo]?.label || prest.tipo}
                           {prest.livelloProgettazione && ` - ${prest.livelloProgettazione.toUpperCase()}`}
-                          {prest.importoPrevisto > 0 && ` (€${(prest.importoPrevisto / 100).toLocaleString('it-IT')})`}
+                          {(prest.importoPrevisto ?? 0) > 0 && ` (€${((prest.importoPrevisto ?? 0) / 100).toLocaleString('it-IT')})`}
                         </SelectItem>
                       ))}
                   </SelectContent>

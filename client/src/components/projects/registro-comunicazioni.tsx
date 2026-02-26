@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -1074,7 +1075,6 @@ export default function RegistroComunicazioni() {
                     <TableHead className="w-[5%]">
                       <Checkbox
                         checked={selectedIds.size === paginatedComms.length && paginatedComms.length > 0}
-                        indeterminate={selectedIds.size > 0 && selectedIds.size < paginatedComms.length}
                         onCheckedChange={handleSelectAll}
                         data-testid="checkbox-select-all"
                       />

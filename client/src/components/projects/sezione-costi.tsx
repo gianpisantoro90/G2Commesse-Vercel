@@ -60,7 +60,7 @@ export default function SezioneCosti() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"margine" | "marginePercent" | "ricavi" | "costi">("margine");
+  const [sortBy, setSortBy] = useState<"margine" | "marginePercent" | "ricaviPrevisti" | "costiTotali">("margine");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const { toast } = useToast();
@@ -737,8 +737,8 @@ export default function SezioneCosti() {
                   <SelectContent>
                     <SelectItem value="margine">Margine €</SelectItem>
                     <SelectItem value="marginePercent">Margine %</SelectItem>
-                    <SelectItem value="ricavi">Ricavi</SelectItem>
-                    <SelectItem value="costi">Costi</SelectItem>
+                    <SelectItem value="ricaviPrevisti">Ricavi</SelectItem>
+                    <SelectItem value="costiTotali">Costi</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="sm" onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}>

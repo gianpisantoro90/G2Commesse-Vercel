@@ -272,7 +272,9 @@ export class MemStorage implements IStorage {
       // CRE archival fields
       creArchiviato: insertProject.creArchiviato || false,
       creDataArchiviazione: insertProject.creDataArchiviazione || null,
-    };
+      dataInizioCommessa: (insertProject as any).dataInizioCommessa || null,
+      dataFineCommessa: (insertProject as any).dataFineCommessa || null,
+    } as Project;
     this.projects.set(id, project);
 
     return project;
@@ -324,7 +326,8 @@ export class MemStorage implements IStorage {
       id,
       city: insertClient.city || null,
       projectsCount: insertClient.projectsCount || 0,
-    };
+      createdAt: new Date(),
+    } as Client;
     this.clients.set(id, client);
     return client;
   }
@@ -338,7 +341,7 @@ export class MemStorage implements IStorage {
 
     // Se il nome del cliente è cambiato, sincronizza tutti i progetti collegati
     if (updateData.name) {
-      for (const project of this.projects.values()) {
+      for (const project of Array.from(this.projects.values())) {
         if (project.clientId === id) {
           project.client = updateData.name;
         }
@@ -665,7 +668,7 @@ export class MemStorage implements IStorage {
       isImportant: insertCommunication.isImportant || null,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as Communication;
     this.communications.set(id, communication);
     return communication;
   }
@@ -920,7 +923,7 @@ export class MemStorage implements IStorage {
       attachmentPath: insertInvoice.attachmentPath || null,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as ProjectInvoice;
     this.invoices.set(id, invoice);
 
     // Sincronizza i campi fatturazione del progetto
@@ -979,14 +982,14 @@ export class MemStorage implements IStorage {
     if (!project) return;
 
     // Estrai tipi unici di prestazione
-    const tipiUnici = [...new Set(prestazioniList.map(p => p.tipo))];
+    const tipiUnici = Array.from(new Set(prestazioniList.map(p => p.tipo)));
 
     // Estrai livelli progettazione unici (solo da prestazioni di tipo 'progettazione')
-    const livelliUnici = [...new Set(
+    const livelliUnici = Array.from(new Set(
       prestazioniList
         .filter(p => p.tipo === 'progettazione' && p.livelloProgettazione)
         .map(p => p.livelloProgettazione!)
-    )];
+    ));
 
     // Aggiorna il metadata del progetto
     const currentMetadata = (project.metadata || {}) as Record<string, any>;
@@ -1148,7 +1151,7 @@ export class MemStorage implements IStorage {
       isResponsabile: resource.isResponsabile || false,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as ProjectResource;
     this.resources.set(id, newResource);
     return newResource;
   }
@@ -1194,7 +1197,7 @@ export class MemStorage implements IStorage {
       ricaviEffettivi: budgetData.ricaviEffettivi || 0,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as ProjectBudget;
     this.budget.set(id, newBudget);
     return newBudget;
   }
@@ -1224,7 +1227,7 @@ export class MemStorage implements IStorage {
       importo: cost.importo || 0,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
+    } as ProjectCost;
     this.costs.set(id, newCost);
     return newCost;
   }
@@ -2415,14 +2418,14 @@ export class DatabaseStorage implements IStorage {
       if (!project) return;
 
       // Estrai tipi unici di prestazione
-      const tipiUnici = [...new Set(prestazioniList.map(p => p.tipo))];
+      const tipiUnici = Array.from(new Set(prestazioniList.map(p => p.tipo)));
 
       // Estrai livelli progettazione unici (solo da prestazioni di tipo 'progettazione')
-      const livelliUnici = [...new Set(
+      const livelliUnici = Array.from(new Set(
         prestazioniList
           .filter(p => p.tipo === 'progettazione' && p.livelloProgettazione)
           .map(p => p.livelloProgettazione!)
-      )];
+      ));
 
       // Aggiorna il metadata del progetto
       const currentMetadata = (project.metadata || {}) as Record<string, any>;
@@ -2646,13 +2649,13 @@ export class DatabaseStorage implements IStorage {
     timestampFields: string[]
   ): T[] {
     return records.map(record => {
-      const converted = { ...record };
+      const converted = { ...record } as any;
       for (const field of timestampFields) {
         if (converted[field] && typeof converted[field] === 'string') {
           converted[field] = new Date(converted[field]);
         }
       }
-      return converted;
+      return converted as T;
     });
   }
 
@@ -3038,7 +3041,7 @@ async function initializeStorage(): Promise<IStorage> {
       const isConnected = await tursoStorage.testConnection();
       if (isConnected) {
         console.log('✅ Using TursoStorage - connection verified');
-        return tursoStorage;
+        return tursoStorage as unknown as IStorage;
       } else {
         console.log('⚠️ Turso connection failed, trying other options...');
       }
@@ -3074,7 +3077,7 @@ async function initializeStorage(): Promise<IStorage> {
     console.log('📁 Data will be saved in:', process.cwd() + '/data');
     try {
       const { storage: fileStorage } = await import('./storage-local.js');
-      return fileStorage;
+      return fileStorage as unknown as IStorage;
     } catch (error) {
       console.error('❌ Failed to load FileStorage:', error);
     }

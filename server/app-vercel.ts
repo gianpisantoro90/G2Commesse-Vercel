@@ -5,6 +5,7 @@
 
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+// @ts-expect-error no types available
 import pgSimple from "connect-pg-simple";
 import pg from "pg";
 import rateLimit from "express-rate-limit";

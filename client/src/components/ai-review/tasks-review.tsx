@@ -62,7 +62,7 @@ export function TasksReview() {
   });
 
   // Fetch users for assignment
-  const { data: users = [] } = useQuery({
+  const { data: users = [] } = useQuery<any[]>({
     queryKey: QK.users,
   });
 
@@ -195,7 +195,7 @@ export function TasksReview() {
         {communications.map((comm) => {
           const suggestedTasks = comm.aiSuggestions?.suggestedTasks || [];
           const tasksStatus = comm.aiTasksStatus || {};
-          const pendingTasks = suggestedTasks.filter((_, idx) => !tasksStatus[idx] || tasksStatus[idx].action === 'pending');
+          const pendingTasks = suggestedTasks.filter((_, idx) => !tasksStatus[idx] || (tasksStatus[idx].action as string) === 'pending');
 
           if (pendingTasks.length === 0) return null;
 
@@ -234,7 +234,7 @@ export function TasksReview() {
                   const taskStatus = tasksStatus[taskIndex];
 
                   // Skip if already processed
-                  if (taskStatus && taskStatus.action !== 'pending') return null;
+                  if (taskStatus && (taskStatus.action as string) !== 'pending') return null;
 
                   const key = `${comm.id}-${taskIndex}`;
 

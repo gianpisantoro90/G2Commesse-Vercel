@@ -137,7 +137,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       const projectData = {
         ...data,
         metadata: {
-          ...(data.metadata || {}),
+          ...(typeof data.metadata === 'object' && data.metadata !== null ? data.metadata as Record<string, unknown> : {}),
           prestazioni: prestazioniData.prestazioni,
           livelloProgettazione: prestazioniData.livelloProgettazione,
           classificazioniDM2016: prestazioniData.classificazioniDM2016,

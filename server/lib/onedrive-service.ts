@@ -391,7 +391,7 @@ class ServerOneDriveService {
     }
   }
 
-  async listFiles(folderPath = ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER): Promise<OneDriveFile[]> {
+  async listFiles(folderPath: string = ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER): Promise<OneDriveFile[]> {
     try {
       const client = await this.getClient();
 

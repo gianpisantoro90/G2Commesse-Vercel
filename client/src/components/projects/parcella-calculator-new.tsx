@@ -125,8 +125,8 @@ CALCOLO PARCELLA PROFESSIONALE - DM 17/06/2016
 ${risultatoParcella.note.join('\n')}
 
 PRESTAZIONI RICHIESTE:
-${Object.values(risultatoParcella.compensi).map(c =>
-  `- ${c.prestazione}: ${c.percentuale.toFixed(2)}% = ${formatEuro(c.importo)}`
+${risultatoParcella.prestazioni.map(c =>
+  `- ${c.descrizione}: ${c.percentualeEffettiva.toFixed(2)}% = ${formatEuro(c.compenso)}`
 ).join('\n')}
 
 COMPENSO TOTALE: ${formatEuro(risultatoParcella.compensoTotale)}
@@ -358,7 +358,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                   <Checkbox
                     id="spese-accessorie"
                     checked={speseAccessorie}
-                    onCheckedChange={setSpeseAccessorie}
+                    onCheckedChange={(checked) => setSpeseAccessorie(checked === true)}
                     className="w-5 h-5"
                   />
                 </div>
@@ -375,7 +375,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                   <Checkbox
                     id="bim-toggle"
                     checked={bimObbligatorio}
-                    onCheckedChange={setBimObbligatorio}
+                    onCheckedChange={(checked) => setBimObbligatorio(checked === true)}
                     className="w-5 h-5"
                   />
                 </div>

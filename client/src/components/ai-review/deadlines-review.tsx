@@ -100,7 +100,7 @@ export function DeadlinesReview() {
         comm,
         deadline,
         index,
-        isPending: !deadlinesStatus[index] || deadlinesStatus[index].action === 'pending'
+        isPending: !deadlinesStatus[index] || (deadlinesStatus[index].action as string) === 'pending'
       }))
       .filter(item => item.isPending);
   });

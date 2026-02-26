@@ -191,7 +191,7 @@ class EmailPoller {
               });
 
               msg.on('body', (stream) => {
-                simpleParser(stream, (err, parsed) => {
+                simpleParser(stream as any, (err, parsed) => {
                   if (err) {
                     logger.error('Failed to parse email', { error: err });
                     return;
@@ -504,7 +504,7 @@ class EmailPoller {
           bodyText: parsedEmail.bodyText,
           bodyHtml: parsedEmail.bodyHtml,
         },
-        finalConfig
+        finalConfig as any
       );
 
       if (isSpamOrNews) {
@@ -529,7 +529,7 @@ class EmailPoller {
           client: p.client,
           object: p.object,
         })),
-        finalConfig
+        finalConfig as any
       );
 
       logger.info('AI analysis complete', {
@@ -660,7 +660,7 @@ class EmailPoller {
         });
       });
 
-      imap.once('error', (err) => {
+      imap.once('error', (err: any) => {
         logger.error('IMAP error while marking as read', { error: err });
         reject(err);
       });

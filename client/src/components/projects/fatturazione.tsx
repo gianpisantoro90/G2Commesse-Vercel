@@ -285,7 +285,7 @@ export default function Fatturazione() {
                 <ProjectCombobox
                   projects={projects || []}
                   value={selectedProject}
-                  onValueChange={setSelectedProject}
+                  onValueChange={(value) => setSelectedProject(value ?? null)}
                   disabled={!!editingInvoice}
                 />
               </div>
