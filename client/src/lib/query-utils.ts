@@ -1,142 +1,141 @@
 /**
  * Query utilities for optimizing React Query usage
- * Provides common configurations and helpers for data fetching
+ * Provides centralized query keys and invalidation helpers.
+ *
+ * IMPORTANT: Query keys must be URL-based arrays compatible with getQueryFn(),
+ * which joins the array with "/" to form the fetch URL.
+ * Non-URL keys (e.g. "onedrive-connection") require an explicit queryFn.
  */
 
-import { useQueryClient, type UseQueryOptions, type UseMutationOptions } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
 /**
- * Default query options for different data types
+ * Centralized query key constants.
+ * URL-based keys work with getQueryFn (auto-fetch via queryKey.join("/")).
+ * Semantic keys (non-URL) require an explicit queryFn in the component.
  */
-export const QUERY_DEFAULTS = {
-  // Frequently changing data (projects, communications)
-  dynamic: {
-    staleTime: 1 * 60 * 60 * 1000, // 1 hour - minimize compute units
-    gcTime: 30 * 60 * 1000, // 30 minutes (formerly cacheTime)
-    refetchOnWindowFocus: false, // Disable to minimize compute units
-    refetchInterval: false, // No polling
-    retry: 2,
-  },
-  // Rarely changing data (clients, system config) - longer cache
-  static: {
-    staleTime: 30 * 60 * 1000, // 30 minutes (was 10 min)
-    gcTime: 2 * 60 * 60 * 1000, // 2 hours (was 1 hour)
-    refetchOnWindowFocus: false,
-    refetchInterval: false, // No polling
-    retry: 3,
-  },
-  // Real-time data disabled to minimize compute units
-  realtime: {
-    staleTime: 1 * 60 * 60 * 1000, // 1 hour - no polling
-    gcTime: 60 * 60 * 1000, // 1 hour
-    refetchOnWindowFocus: false,
-    refetchInterval: false, // NO polling - minimize compute units
-    retry: 1,
-  },
-  // Heavy data (file listings, large reports)
-  heavy: {
-    staleTime: 60 * 60 * 1000, // 1 hour
-    gcTime: 120 * 60 * 1000, // 2 hours
-    refetchOnWindowFocus: false,
-    refetchInterval: false, // No polling
-    retry: 1,
-  },
-} as const;
-
-/**
- * Query key factories for consistent cache invalidation
- */
-export const queryKeys = {
+export const QK = {
   // Projects
-  projects: {
-    all: ['projects'] as const,
-    lists: () => [...queryKeys.projects.all, 'list'] as const,
-    list: (filters?: Record<string, any>) => [...queryKeys.projects.lists(), { filters }] as const,
-    details: () => [...queryKeys.projects.all, 'detail'] as const,
-    detail: (id: string) => [...queryKeys.projects.details(), id] as const,
-  },
+  projects: ["/api/projects"] as const,
+  projectDetail: (id: number | string) => [`/api/projects/${id}`] as const,
+  projectPrestazioni: (id: number | string) => [`/api/projects/${id}/prestazioni`] as const,
+  projectInvoices: (id: number | string) => [`/api/projects/${id}/invoices`] as const,
+  projectCrePreview: (id: number | string) => [`/api/projects/${id}/cre/preview`] as const,
 
   // Clients
-  clients: {
-    all: ['clients'] as const,
-    lists: () => [...queryKeys.clients.all, 'list'] as const,
-    list: (filters?: Record<string, any>) => [...queryKeys.clients.lists(), { filters }] as const,
-    details: () => [...queryKeys.clients.all, 'detail'] as const,
-    detail: (id: string) => [...queryKeys.clients.details(), id] as const,
-  },
+  clients: ["/api/clients"] as const,
 
-  // OneDrive
-  onedrive: {
-    all: ['onedrive'] as const,
-    connection: () => [...queryKeys.onedrive.all, 'connection'] as const,
-    mappings: () => [...queryKeys.onedrive.all, 'mappings'] as const,
-    mapping: (projectCode: string) => [...queryKeys.onedrive.mappings(), projectCode] as const,
-    files: () => [...queryKeys.onedrive.all, 'files'] as const,
-    fileList: (path: string) => [...queryKeys.onedrive.files(), path] as const,
-  },
+  // Users
+  users: ["/api/users"] as const,
+
+  // Tasks
+  tasks: ["/api/tasks"] as const,
 
   // Communications
-  communications: {
-    all: ['communications'] as const,
-    lists: () => [...queryKeys.communications.all, 'list'] as const,
-    list: (projectId?: string) => [...queryKeys.communications.lists(), { projectId }] as const,
-  },
+  communications: ["/api/communications"] as const,
+  communicationsPending: ["/api/communications/pending-review"] as const,
 
   // Deadlines
-  deadlines: {
-    all: ['deadlines'] as const,
-    lists: () => [...queryKeys.deadlines.all, 'list'] as const,
-    list: (projectId?: string) => [...queryKeys.deadlines.lists(), { projectId }] as const,
-  },
+  deadlines: ["/api/deadlines"] as const,
+
+  // Prestazioni
+  prestazioni: ["/api/prestazioni"] as const,
+  prestazioniStats: ["/api/prestazioni/stats"] as const,
+
+  // Invoices
+  invoices: ["/api/invoices"] as const,
+  projectInvoicesList: ["/api/project-invoices"] as const,
+
+  // Billing
+  billingConfig: ["/api/billing-config"] as const,
+  billingAlerts: ["/api/billing-alerts"] as const,
+  billingAlertsStats: ["/api/billing-alerts/stats"] as const,
+  billingAlertsByProject: (id: number | string) => [`/api/billing-alerts/${id}`] as const,
+
+  // Resources & Costs
+  projectResources: ["/api/project-resources"] as const,
+  projectCosts: ["/api/project-costs"] as const,
+
+  // Dashboard
+  dashboardStats: ["/api/dashboard/stats"] as const,
+
+  // AI
+  aiSuggestedTasks: ["/api/ai/suggested-tasks"] as const,
+  aiSuggestedDeadlines: ["/api/ai/suggested-deadlines"] as const,
+
+  // System
+  systemConfig: ["/api/system-config"] as const,
+
+  // OneDrive (URL-based)
+  onedriveMappings: ["/api/onedrive/mappings"] as const,
+
+  // OneDrive (semantic keys - require explicit queryFn)
+  onedriveConnection: ["onedrive-connection"] as const,
+  onedriveFiles: ["onedrive-files"] as const,
+  onedriveBrowse: (path?: string) => path ? ["onedrive-browse", path] as const : ["onedrive-browse"] as const,
+  onedriveSearch: (query?: string) => query ? ["onedrive-search", query] as const : ["onedrive-search"] as const,
+  onedriveHierarchy: ["onedrive-hierarchy"] as const,
+  onedriveAllFiles: ["onedrive-all-files"] as const,
+  onedriveUser: ["onedrive-user"] as const,
+  filesIndexStats: ["files-index-stats"] as const,
 } as const;
 
 /**
- * Hook to invalidate related queries after mutations
+ * Hook to invalidate related queries after mutations.
+ * Groups common invalidation patterns to avoid scattered queryClient calls.
  */
 export function useInvalidateQueries() {
   const queryClient = useQueryClient();
 
-  const invalidateProjects = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
-  }, [queryClient]);
-
-  const invalidateProject = useCallback((id: string) => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.projects.detail(id) });
-    queryClient.invalidateQueries({ queryKey: queryKeys.projects.lists() });
-  }, [queryClient]);
-
-  const invalidateClients = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.clients.all });
-  }, [queryClient]);
-
-  const invalidateOneDrive = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.onedrive.all });
-  }, [queryClient]);
-
-  const invalidateCommunications = useCallback((projectId?: string) => {
-    if (projectId) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.communications.list(projectId) });
-    } else {
-      queryClient.invalidateQueries({ queryKey: queryKeys.communications.all });
-    }
-  }, [queryClient]);
-
-  const invalidateDeadlines = useCallback((projectId?: string) => {
-    if (projectId) {
-      queryClient.invalidateQueries({ queryKey: queryKeys.deadlines.list(projectId) });
-    } else {
-      queryClient.invalidateQueries({ queryKey: queryKeys.deadlines.all });
-    }
-  }, [queryClient]);
-
   return {
-    invalidateProjects,
-    invalidateProject,
-    invalidateClients,
-    invalidateOneDrive,
-    invalidateCommunications,
-    invalidateDeadlines,
+    projects: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.projects });
+    }, [queryClient]),
+
+    clients: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.clients });
+    }, [queryClient]),
+
+    communications: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.communications });
+      queryClient.invalidateQueries({ queryKey: QK.communicationsPending });
+    }, [queryClient]),
+
+    deadlines: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.deadlines });
+    }, [queryClient]),
+
+    prestazioni: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioniStats });
+    }, [queryClient]),
+
+    invoices: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.invoices });
+      queryClient.invalidateQueries({ queryKey: QK.projectInvoicesList });
+    }, [queryClient]),
+
+    billing: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.billingAlerts });
+      queryClient.invalidateQueries({ queryKey: QK.billingAlertsStats });
+      queryClient.invalidateQueries({ queryKey: QK.billingConfig });
+    }, [queryClient]),
+
+    onedrive: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.onedriveMappings });
+      queryClient.invalidateQueries({ queryKey: ["onedrive-files"] });
+      queryClient.invalidateQueries({ queryKey: ["onedrive-browse"] });
+      queryClient.invalidateQueries({ queryKey: ["onedrive-hierarchy"] });
+    }, [queryClient]),
+
+    tasks: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.tasks });
+    }, [queryClient]),
+
+    users: useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: QK.users });
+    }, [queryClient]),
   };
 }
 
@@ -148,64 +147,10 @@ export function optimisticUpdate<T>(
   queryKey: readonly unknown[],
   updater: (old: T | undefined) => T
 ) {
-  // Cancel outgoing refetches
   queryClient.cancelQueries({ queryKey });
-
-  // Snapshot previous value
   const previous = queryClient.getQueryData<T>(queryKey);
-
-  // Optimistically update
   queryClient.setQueryData<T>(queryKey, updater);
-
-  // Return rollback function
   return () => {
     queryClient.setQueryData(queryKey, previous);
-  };
-}
-
-/**
- * Prefetch helper for navigation optimization
- */
-export function usePrefetchQueries() {
-  const queryClient = useQueryClient();
-
-  const prefetchProject = useCallback((id: string) => {
-    queryClient.prefetchQuery({
-      queryKey: queryKeys.projects.detail(id),
-      queryFn: () => fetch(`/api/projects/${id}`).then(res => res.json()),
-      ...QUERY_DEFAULTS.dynamic,
-    });
-  }, [queryClient]);
-
-  const prefetchProjects = useCallback(() => {
-    queryClient.prefetchQuery({
-      queryKey: queryKeys.projects.lists(),
-      queryFn: () => fetch('/api/projects').then(res => res.json()),
-      ...QUERY_DEFAULTS.dynamic,
-    });
-  }, [queryClient]);
-
-  return {
-    prefetchProject,
-    prefetchProjects,
-  };
-}
-
-/**
- * Debounced query helper for search/filter operations
- */
-export function useDebouncedQuery<T>(
-  queryKey: readonly unknown[],
-  queryFn: () => Promise<T>,
-  debounceMs: number = 300,
-  options?: Omit<UseQueryOptions<T>, 'queryKey' | 'queryFn'>
-) {
-  // This would require additional debounce implementation
-  // For now, just return the query configuration
-  return {
-    queryKey,
-    queryFn,
-    ...options,
-    // Add debounce logic here if needed
   };
 }

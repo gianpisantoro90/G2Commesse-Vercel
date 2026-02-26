@@ -4,17 +4,18 @@ import { Button } from "@/components/ui/button";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { Cloud, RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
 import { ProjectStatusBadge } from "@/components/ui/status-badge";
+import { QK } from "@/lib/query-utils";
 
 export default function RecentProjectsTable() {
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   const { isConnected, getSyncStatus } = useOneDriveSync();
-  
+
   // Get OneDrive mappings to check if projects are already synced
   const { data: oneDriveMappings } = useQuery({
-    queryKey: ["/api/onedrive/mappings"],
+    queryKey: QK.onedriveMappings,
     enabled: isConnected
   }) as { data: any[] | undefined };
 

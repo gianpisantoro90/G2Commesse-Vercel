@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QK } from "@/lib/query-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -100,12 +101,12 @@ export default function ClientsTable() {
   const queryClient = useQueryClient();
 
   const { data: clients = [], isLoading } = useQuery<Client[]>({
-    queryKey: ["/api/clients"],
+    queryKey: QK.clients,
   });
 
   // Fetch projects for viewing client projects
   const { data: allProjects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   // Add client form
@@ -153,7 +154,7 @@ export default function ClientsTable() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: QK.clients });
       toast({
         title: "Cliente creato",
         description: "Il nuovo cliente è stato aggiunto con successo",
@@ -178,8 +179,8 @@ export default function ClientsTable() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: QK.clients });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
       toast({
         title: "Cliente aggiornato",
         description: "Il cliente è stato aggiornato con successo",
@@ -216,8 +217,8 @@ export default function ClientsTable() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: QK.clients });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
       toast({
         title: "Cliente eliminato",
         description: "Il cliente è stato eliminato con successo",
@@ -251,7 +252,7 @@ export default function ClientsTable() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: QK.clients });
       toast({
         title: "Sincronizzazione completata",
         description: "I conteggi delle commesse sono stati aggiornati",

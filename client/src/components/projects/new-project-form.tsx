@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { QK } from "@/lib/query-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,7 +59,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
   // Fetch existing clients
   const { data: clients = [] } = useQuery<Client[]>({
-    queryKey: ["/api/clients"],
+    queryKey: QK.clients,
   });
 
   const form = useForm<FormData>({
@@ -210,9 +211,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         title: "Commessa creata con successo",
         description: `Progetto ${project.code} creato su OneDrive: ${folder?.name}`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-      queryClient.invalidateQueries({ queryKey: ['onedrive-files'] });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
+      queryClient.invalidateQueries({ queryKey: QK.clients });
+      queryClient.invalidateQueries({ queryKey: QK.onedriveFiles });
       onProjectSaved(project);
     },
     onError: (error: any) => {
@@ -260,8 +261,8 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         title: "Commessa creata con successo",
         description: `Progetto ${project.code} creato. Potrai associare OneDrive successivamente.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
+      queryClient.invalidateQueries({ queryKey: QK.clients });
       onProjectSaved(project);
     },
     onError: (error: any) => {

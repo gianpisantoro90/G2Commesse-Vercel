@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 // Badge per stato progetto/commessa
@@ -9,7 +10,7 @@ interface ProjectStatusBadgeProps {
   showIcon?: boolean;
 }
 
-export function ProjectStatusBadge({ status, className, showIcon = true }: ProjectStatusBadgeProps) {
+export const ProjectStatusBadge = memo(function ProjectStatusBadge({ status, className, showIcon = true }: ProjectStatusBadgeProps) {
   const config = {
     "in corso": {
       icon: "🟡",
@@ -42,7 +43,7 @@ export function ProjectStatusBadge({ status, className, showIcon = true }: Proje
       {label}
     </span>
   );
-}
+});
 
 // Badge per stato task
 type TaskStatus = "completed" | "in_progress" | "cancelled" | "pending";
@@ -53,7 +54,7 @@ interface TaskStatusBadgeProps {
   showIcon?: boolean;
 }
 
-export function TaskStatusBadge({ status, className, showIcon = true }: TaskStatusBadgeProps) {
+export const TaskStatusBadge = memo(function TaskStatusBadge({ status, className, showIcon = true }: TaskStatusBadgeProps) {
   const config = {
     completed: {
       icon: "✅",
@@ -91,7 +92,7 @@ export function TaskStatusBadge({ status, className, showIcon = true }: TaskStat
       {label}
     </span>
   );
-}
+});
 
 // Badge per priorità task
 type Priority = "high" | "medium" | "low";
@@ -102,7 +103,7 @@ interface PriorityBadgeProps {
   showIcon?: boolean;
 }
 
-export function PriorityBadge({ priority, className, showIcon = true }: PriorityBadgeProps) {
+export const PriorityBadge = memo(function PriorityBadge({ priority, className, showIcon = true }: PriorityBadgeProps) {
   const config = {
     high: {
       icon: "🔴",
@@ -135,4 +136,4 @@ export function PriorityBadge({ priority, className, showIcon = true }: Priority
       {label}
     </span>
   );
-}
+});

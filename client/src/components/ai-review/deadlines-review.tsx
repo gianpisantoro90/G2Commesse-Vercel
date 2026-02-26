@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QK } from "@/lib/query-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,7 +87,7 @@ export function DeadlinesReview() {
 
   // Fetch communications with suggested deadlines
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
-    queryKey: ["/api/ai/suggested-deadlines"],
+    queryKey: QK.aiSuggestedDeadlines,
   });
 
   // Flatten deadlines for table view
@@ -126,8 +127,8 @@ export function DeadlinesReview() {
         title: "Scadenza creata",
         description: `La scadenza "${data.deadline.title}" è stata creata con successo`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/ai/suggested-deadlines"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/deadlines"] });
+      queryClient.invalidateQueries({ queryKey: QK.aiSuggestedDeadlines });
+      queryClient.invalidateQueries({ queryKey: QK.deadlines });
       setSelectedComm(null);
     },
     onError: (error: Error) => {
@@ -161,7 +162,7 @@ export function DeadlinesReview() {
         title: "Scadenza rifiutata",
         description: "La scadenza suggerita è stata rifiutata",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/ai/suggested-deadlines"] });
+      queryClient.invalidateQueries({ queryKey: QK.aiSuggestedDeadlines });
       setSelectedComm(null);
     },
     onError: (error: Error) => {

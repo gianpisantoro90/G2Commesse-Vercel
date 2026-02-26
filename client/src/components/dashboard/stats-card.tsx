@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type Project, type Client } from "@shared/schema";
+import { QK } from "@/lib/query-utils";
 
 export default function StatsCard() {
   const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   const { data: clients = [], isLoading: isLoadingClients } = useQuery<Client[]>({
-    queryKey: ["/api/clients"],
+    queryKey: QK.clients,
   });
 
   // Calcola statistiche per status (usando i valori corretti del database)

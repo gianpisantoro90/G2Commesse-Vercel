@@ -3,20 +3,21 @@ import { type Task, type Project, type User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { TaskStatusBadge, PriorityBadge } from "@/components/ui/status-badge";
+import { QK } from "@/lib/query-utils";
 
 export default function RecentTasksTable() {
   const { user } = useAuth();
 
   const { data: tasks = [] } = useQuery<Task[]>({
-    queryKey: ["/api/tasks"],
+    queryKey: QK.tasks,
   });
 
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   const { data: users = [] } = useQuery<User[]>({
-    queryKey: ["/api/users"],
+    queryKey: QK.users,
   });
 
   // Get the 5 most recent tasks

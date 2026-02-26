@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { QK } from "@/lib/query-utils";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +16,7 @@ import { type PrestazioniStats } from "@shared/schema";
 
 export default function PrestazioniStatsWidget() {
   const { data: stats, isLoading, error } = useQuery<PrestazioniStats>({
-    queryKey: ["/api/prestazioni/stats"],
+    queryKey: QK.prestazioniStats,
   });
 
   const formatCurrency = (cents: number) => {

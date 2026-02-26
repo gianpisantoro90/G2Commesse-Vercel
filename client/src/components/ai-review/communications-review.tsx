@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { QK } from "@/lib/query-utils";
 import DOMPurify from "dompurify";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -103,7 +104,7 @@ export function CommunicationsReview() {
 
   // Fetch communications that need review
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
-    queryKey: ["/api/communications/pending-review"],
+    queryKey: QK.communicationsPending,
     queryFn: async () => {
       const response = await fetch("/api/communications/pending-review");
       if (!response.ok) throw new Error("Failed to fetch pending communications");
@@ -113,7 +114,7 @@ export function CommunicationsReview() {
 
   // Fetch projects for manual assignment
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
     queryFn: async () => {
       const response = await fetch("/api/projects");
       if (!response.ok) throw new Error("Failed to fetch projects");
@@ -148,8 +149,8 @@ export function CommunicationsReview() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/communications/pending-review"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      queryClient.invalidateQueries({ queryKey: QK.communicationsPending });
+      queryClient.invalidateQueries({ queryKey: QK.communications });
       setSelectedComm(null);
       setProjectSearch("");
       setSelectedProjectId(null);
@@ -173,8 +174,8 @@ export function CommunicationsReview() {
       await apiRequest("POST", `/api/communications/${communicationId}/dismiss-suggestions`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/communications/pending-review"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      queryClient.invalidateQueries({ queryKey: QK.communicationsPending });
+      queryClient.invalidateQueries({ queryKey: QK.communications });
       toast({
         title: "Comunicazione ignorata",
         description: "La comunicazione è stata rimossa dalla lista di revisione",
@@ -190,8 +191,8 @@ export function CommunicationsReview() {
   });
 
   const handleProjectAssigned = () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/communications/pending-review"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+    queryClient.invalidateQueries({ queryKey: QK.communicationsPending });
+    queryClient.invalidateQueries({ queryKey: QK.communications });
     setSelectedComm(null);
   };
 

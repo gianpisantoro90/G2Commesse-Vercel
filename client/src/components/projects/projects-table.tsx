@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QK } from "@/lib/query-utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -76,22 +77,22 @@ export default function ProjectsTable() {
   const queryClient = useQueryClient();
 
   const { data: projects = [], isLoading, refetch } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   // Load communications
   const { data: communications = [] } = useQuery<Communication[]>({
-    queryKey: ["/api/communications"],
+    queryKey: QK.communications,
   });
 
   // Load deadlines
   const { data: deadlines = [] } = useQuery<Deadline[]>({
-    queryKey: ["/api/deadlines"],
+    queryKey: QK.deadlines,
   });
 
   // Load prestazioni for fatturazione column
   const { data: allPrestazioni = [] } = useQuery<ProjectPrestazione[]>({
-    queryKey: ["/api/prestazioni"],
+    queryKey: QK.prestazioni,
     enabled: showFatturazione && isAdmin,
   });
 
@@ -126,7 +127,7 @@ export default function ProjectsTable() {
 
   // OneDrive integration
   const { data: oneDriveMappings = [] } = useQuery<OneDriveMapping[]>({
-    queryKey: ["/api/onedrive/mappings"],
+    queryKey: QK.onedriveMappings,
   });
 
   const {
@@ -146,9 +147,9 @@ export default function ProjectsTable() {
         title: "Commessa eliminata",
         description: "La commessa è stata eliminata con successo",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
+      queryClient.invalidateQueries({ queryKey: QK.clients });
+      queryClient.invalidateQueries({ queryKey: QK.onedriveMappings });
     },
     onError: () => {
       toast({
@@ -172,7 +173,7 @@ export default function ProjectsTable() {
           ? "Il CRE firmato è stato segnato come ricevuto"
           : "Lo stato di archiviazione CRE è stato rimosso",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
     },
     onError: () => {
       toast({

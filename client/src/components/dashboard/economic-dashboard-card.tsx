@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { QK } from "@/lib/query-utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -16,11 +17,11 @@ import {
 
 export default function EconomicDashboardCard() {
   const { data: projects = [], isLoading } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   const { data: prestazioniStats } = useQuery<PrestazioniStats>({
-    queryKey: ["/api/prestazioni/stats"],
+    queryKey: QK.prestazioniStats,
   });
 
   if (isLoading) {

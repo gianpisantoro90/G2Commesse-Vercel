@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { QK } from "@/lib/query-utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -57,12 +58,12 @@ export function TasksReview() {
 
   // Fetch communications with suggested tasks
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
-    queryKey: ["/api/ai/suggested-tasks"],
+    queryKey: QK.aiSuggestedTasks,
   });
 
   // Fetch users for assignment
   const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
+    queryKey: QK.users,
   });
 
   // Approve task mutation
@@ -87,8 +88,8 @@ export function TasksReview() {
         title: "Task creato",
         description: `Il task "${data.task.title}" è stato creato con successo`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/ai/suggested-tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: QK.aiSuggestedTasks });
+      queryClient.invalidateQueries({ queryKey: QK.tasks });
     },
     onError: (error: Error) => {
       toast({
@@ -121,7 +122,7 @@ export function TasksReview() {
         title: "Task rifiutato",
         description: "Il task suggerito è stato rifiutato",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/ai/suggested-tasks"] });
+      queryClient.invalidateQueries({ queryKey: QK.aiSuggestedTasks });
     },
     onError: (error: Error) => {
       toast({
