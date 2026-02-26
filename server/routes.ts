@@ -160,25 +160,6 @@ export async function registerRoutes(app: Express): Promise<void> {
   billingAutomationService.initialize(storage as any);
   console.log('💰 Billing Automation Service initialized');
 
-  // Auto-reset all projects to "in corso" on startup (for deployment sync) - only in dev
-  if (process.env.NODE_ENV !== 'production') {
-    try {
-      const allProjects = await storage.getAllProjects();
-      const sospesaCount = allProjects.filter(p => p.status === 'sospesa').length;
-      if (sospesaCount > 0) {
-        console.log(`🔄 Startup: Resetting ${sospesaCount} projects from "sospesa" to "in corso"...`);
-        for (const project of allProjects) {
-          if (project.status === 'sospesa') {
-            await storage.updateProject(project.id, { status: 'in corso' });
-          }
-        }
-        console.log(`✅ Startup reset complete: ${sospesaCount} projects updated`);
-      }
-    } catch (error) {
-      console.error('⚠️ Error during project reset on startup:', error);
-    }
-  }
-
   // Authentication routes
   // Security: Apply rate limiting to login endpoint
   app.post("/api/auth/login", loginLimiter, async (req, res) => {
@@ -237,43 +218,6 @@ export async function registerRoutes(app: Express): Promise<void> {
           });
           return;
         }
-      }
-
-      // Fallback to environment variables for legacy support
-      // This allows the initial admin user to login before migration
-      const envUsername = process.env.AUTH_USERNAME;
-      const envPassword = process.env.AUTH_PASSWORD;
-
-      if (envUsername && envPassword && username === envUsername && password === envPassword) {
-        // Security: Regenerate session ID
-        req.session.regenerate((err) => {
-          if (err) {
-            console.error('Session regeneration error:', err);
-            return res.status(500).json({
-              success: false,
-              message: "Errore durante la sessione"
-            });
-          }
-
-          // Set authenticated flag with admin role for env user
-          req.session.authenticated = true;
-          req.session.userId = 'legacy-admin';
-          req.session.username = envUsername;
-          req.session.fullName = envUsername;
-          req.session.role = 'admin';
-
-          return res.json({
-            success: true,
-            message: "Login effettuato con successo (legacy)",
-            user: {
-              id: 'legacy-admin',
-              username: envUsername,
-              fullName: envUsername,
-              role: 'admin'
-            }
-          });
-        });
-        return;
       }
 
       // Invalid credentials
@@ -1615,28 +1559,6 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // File Routing
-  app.post("/api/file-routing", async (req, res) => {
-    try {
-      const validatedData = insertFileRoutingSchema.parse(req.body);
-      const routing = await storage.createFileRouting(validatedData);
-      res.status(201).json(routing);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Dati non validi", errors: error.errors });
-      }
-      res.status(500).json({ message: "Errore nella creazione del routing" });
-    }
-  });
-
-  app.get("/api/file-routing/:projectId", async (req, res) => {
-    try {
-      const routings = await storage.getFileRoutingsByProject(req.params.projectId);
-      res.json(routings);
-    } catch (error) {
-      res.status(500).json({ message: "Errore nel recupero dei routing" });
-    }
-  });
-
   // File Routings
   app.get("/api/file-routings/:projectId", async (req, res) => {
     try {
@@ -2455,42 +2377,6 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // OneDrive Mappings CRUD endpoints
-  app.get("/api/onedrive-mappings", async (req, res) => {
-    try {
-      const mappings = await storage.getAllOneDriveMappings();
-      res.json(mappings);
-    } catch (error) {
-      console.error('Get OneDrive mappings failed:', error);
-      res.status(500).json({ error: 'Failed to retrieve OneDrive mappings' });
-    }
-  });
-
-  app.get("/api/onedrive-mappings/:projectCode", async (req, res) => {
-    try {
-      const mapping = await storage.getOneDriveMapping(req.params.projectCode);
-      if (!mapping) {
-        return res.status(404).json({ error: 'OneDrive mapping not found' });
-      }
-      res.json(mapping);
-    } catch (error) {
-      console.error('Get OneDrive mapping failed:', error);
-      res.status(500).json({ error: 'Failed to retrieve OneDrive mapping' });
-    }
-  });
-
-  app.delete("/api/onedrive-mappings/:projectCode", async (req, res) => {
-    try {
-      const deleted = await storage.deleteOneDriveMapping(req.params.projectCode);
-      if (!deleted) {
-        return res.status(404).json({ error: 'OneDrive mapping not found' });
-      }
-      res.json({ message: 'OneDrive mapping deleted successfully' });
-    } catch (error) {
-      console.error('Delete OneDrive mapping failed:', error);
-      res.status(500).json({ error: 'Failed to delete OneDrive mapping' });
-    }
-  });
-
   app.post("/api/onedrive/validate-folder", async (req, res) => {
     try {
       const { folderIdOrPath } = req.body;
@@ -3032,6 +2918,26 @@ export async function registerRoutes(app: Express): Promise<void> {
   });
 
   // Files Index management
+  app.get("/api/files-index/stats", async (req, res) => {
+    try {
+      const files = await storage.getFilesIndex({ limit: 10000 });
+      const totalFiles = files.length;
+      const lastIndexed = files.length > 0
+        ? files.reduce((latest, f) => {
+            const d = f.lastScanned ? new Date(f.lastScanned).getTime() : 0;
+            return d > latest ? d : latest;
+          }, 0)
+        : null;
+      res.json({
+        totalFiles,
+        indexedFiles: totalFiles,
+        lastIndexed: lastIndexed ? new Date(lastIndexed).toISOString() : null,
+      });
+    } catch (error) {
+      res.status(500).json({ totalFiles: 0, indexedFiles: 0, lastIndexed: null });
+    }
+  });
+
   app.get("/api/files-index", async (req, res) => {
     try {
       const { projectCode, path, limit = 100 } = req.query;

@@ -25,7 +25,6 @@ import AiConfigPanelUnified from "@/components/system/ai-config-panel-unified";
 import FolderConfigPanel from "@/components/system/folder-config-panel";
 import OneDrivePanel from "@/components/system/onedrive-panel";
 import UserManagementPanel from "@/components/system/user-management-panel";
-import OneDriveFileRouter from "@/components/onedrive/onedrive-file-router";
 import OneDriveBrowser from "@/components/onedrive/onedrive-browser";
 import TodoPanel from "@/components/todo/TodoPanel";
 import PrestazioniStatsWidget from "@/components/dashboard/prestazioni-stats-widget";
