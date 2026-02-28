@@ -178,7 +178,7 @@ export function AISuggestionsPanel({
                         </Badge>
                       </div>
                       {currentProjectId === match.projectId && (
-                        <Badge variant="default" className="mt-1 bg-green-600">
+                        <Badge variant="default" className="mt-1 bg-green-600 dark:bg-green-700">
                           ✓ Commessa Attuale
                         </Badge>
                       )}
@@ -201,7 +201,7 @@ export function AISuggestionsPanel({
                         <Badge
                           key={field}
                           variant="secondary"
-                          className="text-xs bg-blue-100 text-blue-700"
+                          className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
                         >
                           {field}
                         </Badge>

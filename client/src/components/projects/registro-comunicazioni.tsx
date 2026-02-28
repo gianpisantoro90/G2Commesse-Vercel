@@ -882,10 +882,10 @@ export default function RegistroComunicazioni() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <MessageSquare className="h-6 w-6 text-blue-600" />
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-blue-600" />
             Registro Comunicazioni
-          </h2>
+          </h3>
           <p className="text-sm text-muted-foreground mt-1">
             Traccia tutte le comunicazioni per ogni commessa
           </p>
@@ -1064,10 +1064,10 @@ export default function RegistroComunicazioni() {
         <div className="card-g2 p-0 overflow-hidden">
           <div>
             {filteredComms.length === 0 ? (
-              <div className="text-center py-12">
-                <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Nessuna comunicazione trovata</p>
-                <p className="text-sm text-muted-foreground mt-1">Registra la prima comunicazione per iniziare</p>
+              <div className="text-center py-8 text-muted-foreground">
+                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="font-medium">Nessuna comunicazione trovata</p>
+                <p className="text-sm mt-1">Registra la prima comunicazione per iniziare</p>
               </div>
             ) : (
               <Table>

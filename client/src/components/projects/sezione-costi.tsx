@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { ProjectStatusBadge } from "@/components/ui/status-badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -385,7 +386,7 @@ export default function SezioneCosti() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Analisi Costi</h2>
+          <h3 className="text-lg font-semibold text-foreground">Analisi Costi</h3>
           <p className="text-muted-foreground mt-1">Monitoraggio costi e margini per commessa</p>
         </div>
         <Button onClick={() => openAddCostDialog()}>
@@ -654,7 +655,7 @@ export default function SezioneCosti() {
         <TabsContent value="panoramica" className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="card-g2">
-              <h3 className="text-lg font-semibold mb-4">Distribuzione Costi per Tipologia</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Distribuzione Costi per Tipologia</h3>
               {costiDistributionData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
@@ -670,7 +671,7 @@ export default function SezioneCosti() {
             </div>
 
             <div className="card-g2">
-              <h3 className="text-lg font-semibold mb-4">Top 5 Commesse per Margine</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Top 5 Commesse per Margine</h3>
               <div className="space-y-3">
                 {top5Margine.map((item, index) => (
                   <div key={item.project.id} className="flex items-center justify-between p-3 border rounded-lg">
@@ -705,7 +706,7 @@ export default function SezioneCosti() {
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-red-600 dark:text-red-400">{formatCurrency(item.margine)}</div>
-                      <Badge className="bg-red-100 text-red-800">{item.marginePercent.toFixed(1)}%</Badge>
+                      <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">{item.marginePercent.toFixed(1)}%</Badge>
                     </div>
                   </div>
                 ))}
@@ -759,7 +760,7 @@ export default function SezioneCosti() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3">
                       <span className="font-semibold">{item.project.code}</span>
-                      <Badge variant={item.project.status === 'in corso' ? 'default' : 'secondary'}>{item.project.status}</Badge>
+                      <ProjectStatusBadge status={item.project.status as "in corso" | "conclusa" | "sospesa"} />
                     </div>
                     <div className="text-sm text-muted-foreground truncate">{item.project.client} - {item.project.object}</div>
                   </div>
@@ -825,14 +826,14 @@ export default function SezioneCosti() {
                         <h4 className="font-semibold mb-3">Risorse ({item.resources.length})</h4>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
-                            <thead>
+                            <thead className="bg-muted">
                               <tr className="border-b">
-                                <th className="text-left py-2 px-3">Risorsa</th>
-                                <th className="text-left py-2 px-3">Ruolo</th>
-                                <th className="text-right py-2 px-3">Ore</th>
-                                <th className="text-right py-2 px-3">€/h</th>
-                                <th className="text-right py-2 px-3">Totale</th>
-                                <th className="text-center py-2 px-3">Azioni</th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Risorsa</th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Ruolo</th>
+                                <th className="text-right py-3 px-4 font-semibold text-foreground text-sm">Ore</th>
+                                <th className="text-right py-3 px-4 font-semibold text-foreground text-sm">€/h</th>
+                                <th className="text-right py-3 px-4 font-semibold text-foreground text-sm">Totale</th>
+                                <th className="text-center py-3 px-4 font-semibold text-foreground text-sm">Azioni</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -870,13 +871,13 @@ export default function SezioneCosti() {
                         <h4 className="font-semibold mb-3">Altri Costi ({item.costs.length})</h4>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
-                            <thead>
+                            <thead className="bg-muted">
                               <tr className="border-b">
-                                <th className="text-left py-2 px-3">Tipo</th>
-                                <th className="text-left py-2 px-3">Descrizione</th>
-                                <th className="text-left py-2 px-3">Fornitore</th>
-                                <th className="text-right py-2 px-3">Importo</th>
-                                <th className="text-center py-2 px-3">Azioni</th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Tipo</th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Descrizione</th>
+                                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Fornitore</th>
+                                <th className="text-right py-3 px-4 font-semibold text-foreground text-sm">Importo</th>
+                                <th className="text-center py-3 px-4 font-semibold text-foreground text-sm">Azioni</th>
                               </tr>
                             </thead>
                             <tbody>

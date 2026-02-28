@@ -13,7 +13,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-background border-b-2 border-primary sticky top-0 z-50 shadow-sm" data-testid="header">
+    <header className="bg-background border-b-2 border-primary sticky top-0 z-50" data-testid="header">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2 sm:py-4">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -21,7 +21,7 @@ export default function Header() {
             <img
               src={logoUrl}
               alt="G2 Ingegneria Logo"
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-lg object-contain flex-shrink-0"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-md object-contain flex-shrink-0"
               data-testid="brand-logo"
             />
             <div className="min-w-0">

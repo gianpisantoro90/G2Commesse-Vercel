@@ -180,7 +180,7 @@ export function TasksReview() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Task Proposte dall'AI</h2>
+          <h3 className="text-lg font-semibold text-foreground">Task Proposte dall'AI</h3>
           <p className="text-sm text-muted-foreground">
             {communications.length} comunicazion{communications.length === 1 ? 'e' : 'i'} con task suggeriti
           </p>

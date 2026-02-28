@@ -109,10 +109,10 @@ export default function StoragePanel() {
 
   return (
     <div data-testid="storage-panel">
-      <h3 className="text-2xl font-bold text-foreground mb-6">Gestione Dati</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-6">Gestione Dati</h3>
       
       {/* Data Management */}
-      <div className="bg-muted rounded-xl p-6">
+      <div className="bg-muted rounded-md p-6">
         <div className="grid gap-4 md:grid-cols-3">
           <div className="bg-background rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">📤</div>

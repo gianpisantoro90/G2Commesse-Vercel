@@ -284,7 +284,7 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
               </Button>
             )}
             {deadline.status === 'completed' && (
-              <Badge className="bg-green-500 text-white">
+              <Badge className="bg-green-500 dark:bg-green-600 text-white">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 <span className="hidden sm:inline">Completata</span>
               </Badge>
@@ -474,10 +474,10 @@ export default function Scadenzario() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <CalendarClock className="h-6 w-6 text-blue-600" />
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <CalendarClock className="h-5 w-5 text-blue-600" />
             Scadenzario Commesse
-          </h2>
+          </h3>
           <p className="text-sm text-muted-foreground mt-1">
             Gestisci scadenze, milestone e notifiche per le tue commesse
           </p>
@@ -614,10 +614,10 @@ export default function Scadenzario() {
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {paginatedDeadlines.length === 0 ? (
-            <div className="col-span-full text-center py-12">
-              <CalendarClock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Nessuna scadenza trovata</p>
-              <p className="text-sm text-muted-foreground mt-1">Crea la prima scadenza per iniziare</p>
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              <CalendarClock className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p className="font-medium">Nessuna scadenza trovata</p>
+              <p className="text-sm mt-1">Crea la prima scadenza per iniziare</p>
             </div>
           ) : (
             paginatedDeadlines.map((deadline) => (

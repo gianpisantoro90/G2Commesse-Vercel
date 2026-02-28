@@ -318,22 +318,22 @@ export default function UserManagementPanel() {
           <table className="min-w-full divide-y divide-border">
             <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">
                   Utente
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">
                   Ruolo
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">
                   Stato
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">
                   Creato il
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-right py-3 px-4 font-semibold text-foreground text-sm">
                   Azioni
                 </th>
               </tr>
@@ -341,7 +341,7 @@ export default function UserManagementPanel() {
             <tbody className="bg-background divide-y divide-border">
               {users.map((user) => (
                 <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="py-3 px-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 bg-primary text-white rounded-full flex items-center justify-center font-semibold">
                         {user.fullName.charAt(0).toUpperCase()}
@@ -356,10 +356,10 @@ export default function UserManagementPanel() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-muted-foreground">
                     {user.email}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="py-3 px-4 whitespace-nowrap">
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       user.role === 'admin'
                         ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
@@ -368,7 +368,7 @@ export default function UserManagementPanel() {
                       {user.role === 'admin' ? 'Amministratore' : 'Utilizzatore'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="py-3 px-4 whitespace-nowrap">
                     <button
                       onClick={() => handleToggleActive(user)}
                       disabled={user.id === currentUser?.id}
@@ -381,10 +381,10 @@ export default function UserManagementPanel() {
                       {user.active ? 'Attivo' : 'Disattivato'}
                     </button>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                  <td className="py-3 px-4 whitespace-nowrap text-sm text-muted-foreground">
                     {new Date(user.createdAt).toLocaleDateString('it-IT')}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                  <td className="py-3 px-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     {user.id !== currentUser?.id ? (
                       <>
                         <Button
@@ -423,7 +423,7 @@ export default function UserManagementPanel() {
 
       {users.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          Nessun utente trovato
+          <p className="font-medium">Nessun utente trovato</p>
         </div>
       )}
 

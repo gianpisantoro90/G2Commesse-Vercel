@@ -170,7 +170,7 @@ export default function EconomicDashboardCard() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* KPI 1: Importo Totale Opere */}
-              <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border border-blue-200 dark:border-blue-800">
+              <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border border-blue-200 dark:border-blue-800">
                 <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
                   Importo Totale Opere
                 </p>
@@ -183,7 +183,7 @@ export default function EconomicDashboardCard() {
               </div>
 
               {/* KPI 2: Compensi Fatturati */}
-              <div className="p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border border-green-200 dark:border-green-800">
+              <div className="p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/50 border border-green-200 dark:border-green-800">
                 <p className="text-sm font-medium text-green-700 dark:text-green-300 mb-1">
                   Compensi Fatturati
                 </p>
@@ -197,7 +197,7 @@ export default function EconomicDashboardCard() {
               </div>
 
               {/* KPI 3: Da Fatturare */}
-              <div className="p-4 rounded-xl bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/50 dark:to-yellow-900/50 border border-yellow-200 dark:border-yellow-800">
+              <div className="p-4 rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/50 dark:to-yellow-900/50 border border-yellow-200 dark:border-yellow-800">
                 <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300 mb-1">
                   Da Fatturare
                 </p>
@@ -210,7 +210,7 @@ export default function EconomicDashboardCard() {
               </div>
 
               {/* KPI 4: Incassato */}
-              <div className="p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border border-purple-200 dark:border-purple-800">
+              <div className="p-4 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/50 border border-purple-200 dark:border-purple-800">
                 <p className="text-sm font-medium text-purple-700 dark:text-purple-300 mb-1">
                   Totale Incassato
                 </p>
@@ -226,7 +226,7 @@ export default function EconomicDashboardCard() {
 
             {/* Metriche Secondarie */}
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="p-4 rounded-xl bg-muted border border-border">
+              <div className="p-4 rounded-lg bg-muted border border-border">
                 <p className="text-sm font-medium text-muted-foreground mb-2">
                   Importo Previsto Totale
                 </p>
@@ -239,7 +239,7 @@ export default function EconomicDashboardCard() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-muted border border-border">
+              <div className="p-4 rounded-lg bg-muted border border-border">
                 <p className="text-sm font-medium text-muted-foreground mb-2">
                   Da Incassare
                 </p>
@@ -252,7 +252,7 @@ export default function EconomicDashboardCard() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-muted border border-border">
+              <div className="p-4 rounded-lg bg-muted border border-border">
                 <p className="text-sm font-medium text-muted-foreground mb-2">
                   Tasso Incasso
                 </p>
@@ -273,7 +273,7 @@ export default function EconomicDashboardCard() {
           <TabsContent value="charts" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               {/* Grafico Distribuzione per Anno */}
-              <div className="p-4 rounded-xl bg-muted border border-border">
+              <div className="p-4 rounded-lg bg-muted border border-border">
                 <div className="mb-4">
                   <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
@@ -313,7 +313,7 @@ export default function EconomicDashboardCard() {
               </div>
 
               {/* Grafico Distribuzione per Stato */}
-              <div className="p-4 rounded-xl bg-muted border border-border">
+              <div className="p-4 rounded-lg bg-muted border border-border">
                 <div className="mb-4">
                   <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                     <PieChartIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -366,7 +366,7 @@ export default function EconomicDashboardCard() {
 
           {/* Top Commesse */}
           <TabsContent value="top-projects" className="space-y-4">
-            <div className="p-4 rounded-xl bg-muted border border-border">
+            <div className="p-4 rounded-lg bg-muted border border-border">
               <div className="mb-4">
                 <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-purple-600 dark:text-purple-400" />

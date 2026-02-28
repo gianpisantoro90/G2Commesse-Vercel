@@ -139,7 +139,7 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
           <Label className="block text-sm font-semibold text-foreground mb-2">
             Carica File da Classificare
           </Label>
-          <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary transition-colors">
+          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
             <input
               type="file"
               multiple

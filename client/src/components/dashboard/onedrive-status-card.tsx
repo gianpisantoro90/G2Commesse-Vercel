@@ -65,7 +65,7 @@ export default function OneDriveStatusCard() {
   const getConnectionStatusBadge = () => {
     if (isSyncingAll || isSyncingManually) {
       return (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
           <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
           Sincronizzazione
         </Badge>
@@ -73,14 +73,14 @@ export default function OneDriveStatusCard() {
     }
     if (isConnected) {
       return (
-        <Badge variant="secondary" className="bg-green-100 text-green-800">
+        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
           <CheckCircle className="h-3 w-3 mr-1" />
           Connesso
         </Badge>
       );
     }
     return (
-      <Badge variant="destructive" className="bg-red-100 text-red-800">
+      <Badge variant="destructive" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
         <AlertTriangle className="h-3 w-3 mr-1" />
         Disconnesso
       </Badge>

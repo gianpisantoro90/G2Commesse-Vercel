@@ -112,7 +112,7 @@ export default function CashFlowForecastCard() {
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
           <div>
-            <h3 className="font-semibold text-foreground">Previsione Cash Flow</h3>
+            <h3 className="text-lg font-semibold text-foreground">Previsione Cash Flow</h3>
             <p className="text-xs text-muted-foreground">
               Prossimi {forecast.months.length} mesi (storico + previsione)
             </p>

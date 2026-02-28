@@ -214,7 +214,7 @@ export default function TodoPanel() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">To Do</h1>
+          <h3 className="text-lg font-semibold text-foreground">To Do</h3>
           <p className="text-muted-foreground mt-1">
             Gestisci le tue task e assegnazioni
           </p>

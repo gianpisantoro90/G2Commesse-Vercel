@@ -429,7 +429,7 @@ export default function ClientsTable() {
       {filteredClients.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <div className="text-4xl mb-2">👥</div>
-          <p className="text-lg font-medium">
+          <p className="font-medium">
             {searchTerm ? "Nessun cliente trovato" : "Nessun cliente presente"}
           </p>
           <p className="text-sm">

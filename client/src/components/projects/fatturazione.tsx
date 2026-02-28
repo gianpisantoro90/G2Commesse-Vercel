@@ -261,7 +261,7 @@ export default function Fatturazione() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Gestione Fatture</h2>
+          <h3 className="text-lg font-semibold text-foreground">Gestione Fatture</h3>
           <p className="text-muted-foreground mt-1">Emissione e tracciamento fatture per commessa</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -498,20 +498,22 @@ export default function Fatturazione() {
             {isLoading ? (
               <p className="text-center text-muted-foreground py-8">Caricamento...</p>
             ) : invoices?.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">Nessuna fattura emessa</p>
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="font-medium">Nessuna fattura emessa</p>
+              </div>
             ) : (
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead>
+                    <thead className="bg-muted">
                       <tr className="border-b dark:border-border">
-                        <th className="text-left py-3 px-4 text-foreground">N. Fattura</th>
-                        <th className="text-left py-3 px-4 text-foreground">Commessa</th>
-                        <th className="text-left py-3 px-4 text-foreground">Data Emissione</th>
-                        <th className="text-right py-3 px-4 text-foreground">Importo</th>
-                        <th className="text-center py-3 px-4 text-foreground">Stato</th>
-                        <th className="text-center py-3 px-4 text-foreground">Scadenza</th>
-                        <th className="text-center py-3 px-4 text-foreground">Azioni</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">N. Fattura</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Commessa</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Data Emissione</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground text-sm">Importo</th>
+                        <th className="text-center py-3 px-4 font-semibold text-foreground text-sm">Stato</th>
+                        <th className="text-center py-3 px-4 font-semibold text-foreground text-sm">Scadenza</th>
+                        <th className="text-center py-3 px-4 font-semibold text-foreground text-sm">Azioni</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -689,8 +691,10 @@ export default function Fatturazione() {
             </div>
           ))}
           {groupedInvoices.length === 0 && (
-            <div className="card-g2 p-8">
-              <p className="text-center text-muted-foreground">Nessuna fattura emessa</p>
+            <div className="card-g2">
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="font-medium">Nessuna fattura emessa</p>
+              </div>
             </div>
           )}
         </TabsContent>
@@ -698,7 +702,9 @@ export default function Fatturazione() {
         <TabsContent value="unpaid" className="space-y-4">
           <div className="card-g2">
             {invoices?.filter(i => i.stato !== 'pagata').length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">Nessuna fattura da incassare</p>
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="font-medium">Nessuna fattura da incassare</p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {invoices?.filter(i => i.stato !== 'pagata').map(invoice => {

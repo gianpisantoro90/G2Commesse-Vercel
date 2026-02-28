@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { type Project } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
-import { Cloud, RefreshCw, AlertTriangle, CheckCircle } from "lucide-react";
+import { Cloud, RefreshCw, AlertTriangle, CheckCircle, FolderOpen } from "lucide-react";
 import { ProjectStatusBadge } from "@/components/ui/status-badge";
 import { QK } from "@/lib/query-utils";
 
@@ -93,23 +93,23 @@ export default function RecentProjectsTable() {
       
       {recentProjects.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          <div className="text-4xl mb-2">📁</div>
-          <p>Nessuna commessa presente</p>
-          <p className="text-sm">Crea la prima commessa per iniziare</p>
+          <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p className="font-medium">Nessuna commessa presente</p>
+          <p className="text-sm mt-1">Crea la prima commessa per iniziare</p>
         </div>
       ) : (
         <>
           {/* Desktop/Tablet: Table */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
-              <thead>
+              <thead className="bg-muted">
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Codice</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Cliente</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Città</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Oggetto</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Status</th>
-                  <th className="text-center py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">☁️</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Codice</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Cliente</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Città</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Oggetto</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Status</th>
+                  <th className="text-center py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">☁️</th>
                 </tr>
               </thead>
               <tbody>

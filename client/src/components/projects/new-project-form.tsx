@@ -375,7 +375,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             <div className="p-4 space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="client" className="block text-sm font-semibold text-foreground mb-2">
+                  <Label htmlFor="client" className="block text-sm font-medium text-foreground mb-2">
                     Cliente *
                   </Label>
                   <ClientCombobox
@@ -391,7 +391,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="city" className="block text-sm font-semibold text-foreground mb-2">
+                  <Label htmlFor="city" className="block text-sm font-medium text-foreground mb-2">
                     Città *
                   </Label>
                   <Input
@@ -410,7 +410,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {/* Tipo Rapporto */}
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label className="block text-sm font-semibold text-foreground mb-2">
+                  <Label className="block text-sm font-medium text-foreground mb-2">
                     Tipo Rapporto *
                     <span className="ml-1 text-xs text-muted-foreground font-normal">Chi commissiona a G2?</span>
                   </Label>
@@ -435,7 +435,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                 {/* Committente Finale - condizionale */}
                 {form.watch("tipoRapporto") && form.watch("tipoRapporto") !== "diretto" && (
                   <div>
-                    <Label htmlFor="committente-finale" className="block text-sm font-semibold text-foreground mb-2">
+                    <Label htmlFor="committente-finale" className="block text-sm font-medium text-foreground mb-2">
                       Committente Finale
                     </Label>
                     <Input
@@ -450,7 +450,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
               {/* Oggetto */}
               <div>
-                <Label htmlFor="object" className="block text-sm font-semibold text-foreground mb-2">
+                <Label htmlFor="object" className="block text-sm font-medium text-foreground mb-2">
                   Oggetto Commessa (Abbreviato) *
                   <span className="ml-1 text-xs text-muted-foreground font-normal">Per cartelle e tabella</span>
                 </Label>
@@ -465,7 +465,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
               {/* Oggetto Completo */}
               <div>
-                <Label htmlFor="oggettoCompleto" className="block text-sm font-semibold text-foreground mb-2">
+                <Label htmlFor="oggettoCompleto" className="block text-sm font-medium text-foreground mb-2">
                   Oggetto Completo
                   <span className="ml-1 text-xs text-muted-foreground font-normal">Descrizione estesa per CRE</span>
                 </Label>
@@ -480,7 +480,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {/* Anno, Template, Stato */}
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
-                  <Label htmlFor="year" className="block text-sm font-semibold text-foreground mb-2">
+                  <Label htmlFor="year" className="block text-sm font-medium text-foreground mb-2">
                     Anno (AA) *
                   </Label>
                   <Input
@@ -495,7 +495,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   />
                 </div>
                 <div>
-                  <Label className="block text-sm font-semibold text-foreground mb-2">
+                  <Label className="block text-sm font-medium text-foreground mb-2">
                     Template Progetto *
                   </Label>
                   <Select
@@ -512,7 +512,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   </Select>
                 </div>
                 <div>
-                  <Label className="block text-sm font-semibold text-foreground mb-2">
+                  <Label className="block text-sm font-medium text-foreground mb-2">
                     Stato Commessa *
                   </Label>
                   <Select
@@ -533,7 +533,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
               {/* Codice Commessa */}
               <div>
-                <Label className="block text-sm font-semibold text-foreground mb-2">
+                <Label className="block text-sm font-medium text-foreground mb-2">
                   Codice Commessa
                 </Label>
                 <div className="flex gap-3">
@@ -574,7 +574,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             <div className="p-4 space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="cig" className="block text-sm font-semibold text-foreground mb-2">
+                  <Label htmlFor="cig" className="block text-sm font-medium text-foreground mb-2">
                     CIG
                     <span className="ml-1 text-xs text-muted-foreground font-normal">Codice Identificativo Gara</span>
                   </Label>
@@ -586,7 +586,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   />
                 </div>
                 <div>
-                  <Label htmlFor="numeroContratto" className="block text-sm font-semibold text-foreground mb-2">
+                  <Label htmlFor="numeroContratto" className="block text-sm font-medium text-foreground mb-2">
                     N. Contratto
                     <span className="ml-1 text-xs text-muted-foreground font-normal">Numero contratto/accordo</span>
                   </Label>
@@ -617,7 +617,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             <div className="p-4 space-y-4">
               {/* Tipologia Prestazioni */}
               <div>
-                <Label className="text-sm font-semibold text-foreground mb-3 block">
+                <Label className="text-sm font-medium text-foreground mb-3 block">
                   Tipologia Prestazioni
                 </Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -640,7 +640,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {/* Livello Progettazione - condizionale */}
               {showLivelloProgettazione && (
                 <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <Label className="text-sm font-semibold text-foreground mb-3 block">
+                  <Label className="text-sm font-medium text-foreground mb-3 block">
                     Livello Progettazione
                   </Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -969,7 +969,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               type="button"
               onClick={handleCreateWithOneDrive}
               disabled={createProjectMutation.isPending || createProjectOnlyMutation.isPending || !generatedCode || !isConnected || !isRootConfigured}
-              className="px-8 py-3 bg-g2-success text-white rounded-xl font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+              className="px-8 py-3 bg-g2-success text-white rounded-md font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
             >
               {createProjectMutation.isPending ? (
                 <>
@@ -988,7 +988,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               type="button"
               onClick={handleCreateWithoutOneDrive}
               disabled={createProjectMutation.isPending || createProjectOnlyMutation.isPending || !generatedCode}
-              className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="px-8 py-3 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
               {createProjectOnlyMutation.isPending ? (
                 <>
@@ -1018,7 +1018,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   classificazioniDM2016: [],
                 });
               }}
-              className="px-8 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+              className="px-8 py-3 border-2 border-border text-foreground rounded-md font-semibold hover:bg-muted transition-colors disabled:opacity-50"
             >
               Cancella
             </Button>

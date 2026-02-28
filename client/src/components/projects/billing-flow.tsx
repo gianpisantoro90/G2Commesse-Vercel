@@ -735,10 +735,10 @@ export default function BillingFlow() {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Euro className="w-7 h-7" />
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Euro className="h-5 w-5" />
             Fatturazione
-          </h2>
+          </h3>
           <p className="text-muted-foreground mt-1">
             Gestione completa prestazioni e fatture
           </p>
@@ -1227,7 +1227,7 @@ export default function BillingFlow() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-muted-foreground italic text-center py-4">
+                    <div className="text-sm text-muted-foreground text-center py-8">
                       Nessuna prestazione completata
                     </div>
                   )
@@ -1279,7 +1279,7 @@ export default function BillingFlow() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-muted-foreground italic text-center py-4">
+                    <div className="text-sm text-muted-foreground text-center py-8">
                       Nessuna prestazione in questo stato
                     </div>
                   )
@@ -1364,7 +1364,7 @@ export default function BillingFlow() {
               {/* Lista fatture */}
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {filteredInvoices.length === 0 ? (
-                  <div className="text-sm text-muted-foreground italic text-center py-4">
+                  <div className="text-sm text-muted-foreground text-center py-8">
                     Nessuna fattura trovata
                   </div>
                 ) : (

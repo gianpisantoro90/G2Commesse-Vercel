@@ -13,7 +13,7 @@ export default function Dashboard() {
   const isAdmin = user?.role === "admin";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h2 className="text-xl font-semibold text-foreground">Dashboard</h2>
         <p className="text-sm text-muted-foreground">Panoramica generale del sistema</p>

@@ -261,7 +261,7 @@ export default function FolderConfigPanel() {
         <div className="flex items-center gap-3 mb-6">
           <span className="text-3xl">☁️</span>
           <div>
-            <h3 className="text-xl font-bold text-foreground">Configurazione Cartelle OneDrive</h3>
+            <h3 className="text-lg font-semibold text-foreground">Configurazione Cartelle OneDrive</h3>
             <p className="text-muted-foreground">Configura la cartella radice OneDrive dove sono contenute tutte le commesse</p>
           </div>
         </div>
@@ -289,14 +289,14 @@ export default function FolderConfigPanel() {
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">☁️</span>
         <div>
-          <h3 className="text-xl font-bold text-foreground">Configurazione Cartelle OneDrive</h3>
+          <h3 className="text-lg font-semibold text-foreground">Configurazione Cartelle OneDrive</h3>
           <p className="text-muted-foreground">Configura la cartella radice OneDrive dove sono contenute tutte le commesse G2</p>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Root Folder Configuration */}
-        <div className="bg-background border-2 border-border rounded-xl p-6">
+        <div className="bg-background border-2 border-border rounded-md p-6">
           <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <FolderOpen className="w-5 h-5" />
             Cartella Radice OneDrive
@@ -353,7 +353,7 @@ export default function FolderConfigPanel() {
         </div>
 
         {/* Archive Folder Configuration */}
-        <div className="bg-background border-2 border-border rounded-xl p-6">
+        <div className="bg-background border-2 border-border rounded-md p-6">
           <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Archive className="w-5 h-5" />
             Cartella Archivio
@@ -408,7 +408,7 @@ export default function FolderConfigPanel() {
 
         {/* Information Panel */}
         <div className="space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-6">
             <h4 className="text-lg font-semibold text-foreground mb-4">ℹ️ Come Funziona</h4>
             <div className="space-y-3 text-sm text-foreground">
               <p>
@@ -424,7 +424,7 @@ export default function FolderConfigPanel() {
           </div>
 
           {rootConfig && (
-            <div className="bg-background border-2 border-border rounded-xl p-6">
+            <div className="bg-background border-2 border-border rounded-md p-6">
               <h4 className="text-lg font-semibold text-foreground mb-4">📊 Stato Configurazione</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -451,7 +451,7 @@ export default function FolderConfigPanel() {
 
       {/* OneDrive Browser - Root Folder */}
       {showBrowser && (
-        <div className="bg-background rounded-xl border border-border p-6">
+        <div className="bg-background rounded-md border border-border p-6">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-lg font-semibold text-foreground">☁️ Browser OneDrive - Cartella Radice</h4>
             <Button
@@ -575,7 +575,7 @@ export default function FolderConfigPanel() {
 
       {/* OneDrive Browser - Archive Folder */}
       {showArchiveBrowser && (
-        <div className="bg-background rounded-xl border border-border p-6">
+        <div className="bg-background rounded-md border border-border p-6">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-lg font-semibold text-foreground">☁️ Browser OneDrive - Cartella Archivio</h4>
             <Button

@@ -618,11 +618,11 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                   </div>
                   <div className="ml-2">
                     {item.original === item.renamed ? (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                      <span className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 px-2 py-1 rounded">
                         ✓ Già corretto
                       </span>
                     ) : (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 px-2 py-1 rounded">
                         🔄 Da rinominare
                       </span>
                     )}

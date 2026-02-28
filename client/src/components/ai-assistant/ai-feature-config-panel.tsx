@@ -151,10 +151,10 @@ export default function AiFeatureConfigPanel() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Settings2 className="w-6 h-6" />
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Settings2 className="h-5 w-5" />
           Configurazione AI Avanzata
-        </h2>
+        </h3>
         <p className="text-muted-foreground">
           Configura provider e modello AI per ogni funzionalita', soglie di auto-approvazione e monitoraggio feedback.
         </p>
@@ -197,7 +197,7 @@ export default function AiFeatureConfigPanel() {
                     <div className="flex items-center gap-3 min-w-[200px]">
                       <Icon className="h-5 w-5 text-primary shrink-0" />
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-between">
                           <p className="font-medium text-foreground text-sm">{feature.name}</p>
                           <Switch
                             checked={config.enabled}
@@ -269,7 +269,7 @@ export default function AiFeatureConfigPanel() {
           <div className="card-g2 p-4 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-foreground">Auto-Approvazione</p>
+                <p className="font-medium text-foreground">Auto-Approvazione</p>
                 <p className="text-sm text-muted-foreground">Applica automaticamente suggerimenti ad alta confidenza</p>
               </div>
               <Switch

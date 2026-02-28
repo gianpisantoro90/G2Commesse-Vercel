@@ -222,9 +222,9 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
           const selectedPath = selectedPaths[fileIndex];
 
           return (
-            <div key={fileIndex} className="border border-border rounded-xl p-4 bg-card">
+            <div key={fileIndex} className="border border-border rounded-lg p-4 bg-card">
               {/* File Info */}
-              <div className="bg-muted rounded-xl p-4 mb-4">
+              <div className="bg-muted rounded-lg p-4 mb-4">
                 <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                   <span className="text-lg">📄</span>
                   File {fileIndex + 1} di {results.length}
@@ -338,7 +338,7 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
           );
         })}
 
-        <div className="flex gap-3 pt-4 border-t border-border bg-muted rounded-xl p-4">
+        <div className="flex gap-3 pt-4 border-t border-border bg-muted rounded-lg p-4">
           <Button
             onClick={handleAcceptAllSuggestions}
             className="px-6 py-2 bg-g2-success text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"

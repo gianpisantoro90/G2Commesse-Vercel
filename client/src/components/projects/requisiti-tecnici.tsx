@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronRight, Filter, RotateCcw } from "lucide-react";
+import { ProjectStatusBadge } from "@/components/ui/status-badge";
 import { type Project, type ProjectPrestazioni } from "@shared/schema";
 import { getCategoriaById, type CategoriaOpera } from "@/lib/dm2016-tavole-ufficiali";
 
@@ -519,17 +520,7 @@ export default function RequisitiTecnici() {
                                         {c.projectYear}
                                       </td>
                                       <td className="p-2 text-center">
-                                        <span
-                                          className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                                            c.projectStatus === "in corso"
-                                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                              : c.projectStatus === "sospesa"
-                                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                              : "bg-muted text-foreground dark:bg-muted dark:text-foreground"
-                                          }`}
-                                        >
-                                          {c.projectStatus}
-                                        </span>
+                                        <ProjectStatusBadge status={c.projectStatus as "in corso" | "conclusa" | "sospesa"} />
                                       </td>
                                       <td className="p-2 text-right font-medium text-green-600">
                                         {formatCurrency(c.importo)}

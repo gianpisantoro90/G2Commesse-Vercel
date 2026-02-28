@@ -4,6 +4,7 @@ import { type Task, type Project, type User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { TaskStatusBadge, PriorityBadge } from "@/components/ui/status-badge";
+import { CheckCircle } from "lucide-react";
 import { QK } from "@/lib/query-utils";
 
 export default function RecentTasksTable() {
@@ -55,23 +56,23 @@ export default function RecentTasksTable() {
 
       {recentTasks.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          <div className="text-4xl mb-2">✅</div>
-          <p>Nessuna task presente</p>
-          <p className="text-sm">Crea la prima task per iniziare</p>
+          <CheckCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p className="font-medium">Nessuna task presente</p>
+          <p className="text-sm mt-1">Crea la prima task per iniziare</p>
         </div>
       ) : (
         <>
           {/* Desktop/Tablet: Table */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
-              <thead>
+              <thead className="bg-muted">
                 <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Titolo</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Commessa</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Assegnato</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Priorità</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Status</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-xs sm:text-sm">Scadenza</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Titolo</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Commessa</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Assegnato</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Priorità</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Status</th>
+                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Scadenza</th>
                 </tr>
               </thead>
               <tbody>

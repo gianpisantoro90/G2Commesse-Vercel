@@ -141,7 +141,7 @@ export default function AiInsightsCard() {
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
           <div>
-            <h3 className="font-semibold text-foreground">Intelligence AI</h3>
+            <h3 className="text-lg font-semibold text-foreground">Intelligence AI</h3>
             <p className="text-xs text-muted-foreground">
               {insightsData?.generatedAt
                 ? `Aggiornato: ${new Date(insightsData.generatedAt).toLocaleString('it-IT')}`
@@ -257,9 +257,10 @@ export default function AiInsightsCard() {
 
       {/* Empty state */}
       {insights.length === 0 && !insightsLoading && (
-        <div className="text-center py-6 text-muted-foreground">
-          <Brain className="h-10 w-10 mx-auto mb-2 opacity-30" />
-          <p className="text-sm">Nessun alert attivo. Tutti i progetti sono in buono stato!</p>
+        <div className="text-center py-8 text-muted-foreground">
+          <Brain className="h-12 w-12 mx-auto mb-3 opacity-50" />
+          <p className="font-medium">Nessun alert attivo</p>
+          <p className="text-sm mt-1">Tutti i progetti sono in buono stato!</p>
         </div>
       )}
     </div>

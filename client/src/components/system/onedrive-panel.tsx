@@ -137,10 +137,10 @@ export default function OneDrivePanel() {
 
   return (
     <div className="max-w-4xl" data-testid="onedrive-panel">
-      <h3 className="text-2xl font-bold text-foreground mb-6">☁️ Integrazione OneDrive</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-6">Integrazione OneDrive</h3>
       
       {/* Connection Status */}
-      <div className="bg-background rounded-xl border border-border p-6 mb-6">
+      <div className="bg-background rounded-md border border-border p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${isConnected ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
@@ -180,7 +180,7 @@ export default function OneDrivePanel() {
       </div>
 
       {/* Settings */}
-      <div className="bg-background rounded-xl border border-border p-6 mb-6">
+      <div className="bg-background rounded-md border border-border p-6 mb-6">
         <h4 className="text-lg font-semibold text-foreground mb-4">⚙️ Mappatura Cartelle OneDrive</h4>
 
         <div className="space-y-4">
@@ -257,7 +257,7 @@ export default function OneDrivePanel() {
 
 
       {!isConnected && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-6">
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-6">
           <div className="flex items-start gap-3">
             <Cloud className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
             <div className="flex-1">

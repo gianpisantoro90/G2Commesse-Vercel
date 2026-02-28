@@ -441,9 +441,9 @@ export default function OneDriveBrowser() {
   return (
     <div className="max-w-7xl space-y-6" data-testid="onedrive-browser">
       {/* Header with search */}
-      <div className="bg-background rounded-xl border border-border p-6">
+      <div className="bg-background rounded-md border border-border p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-2xl font-bold text-foreground">☁️ Browser OneDrive</h3>
+          <h3 className="text-lg font-semibold text-foreground">Browser OneDrive</h3>
           <Button 
             variant="outline" 
             size="sm" 

@@ -600,9 +600,9 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
   // Get confidence badge color
   const getConfidenceBadge = (confidence: number) => {
     const percentage = Math.round(confidence * 100);
-    if (percentage >= 80) return "bg-green-100 text-green-800";
-    if (percentage >= 60) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
+    if (percentage >= 80) return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200";
+    if (percentage >= 60) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200";
+    return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200";
   };
 
   // Check if OneDrive is ready (required for both modes now)

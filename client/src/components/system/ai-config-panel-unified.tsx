@@ -161,10 +161,10 @@ export default function AiConfigPanelUnified() {
     <div className="space-y-6">
       {/* Header Section */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <Brain className="w-6 h-6" />
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Brain className="h-5 w-5" />
           Gestione AI Integrata
-        </h2>
+        </h3>
         <p className="text-muted-foreground">
           Configura i provider AI per routing intelligente e revisioni comunicazioni automatiche
         </p>
