@@ -30,6 +30,7 @@ import { type Project, type OneDriveMapping, type ProjectMetadata, type Communic
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
 import CREGenerator from "./cre-generator";
+import EmailDraftGenerator from "./email-draft-generator";
 import { ProjectHealthBadge } from "./project-health-card";
 import {
   renderPrestazioneBadge,
@@ -1218,6 +1219,17 @@ export default function ProjectsTable() {
                             📜
                           </Button>
                         </CREGenerator>
+                        <EmailDraftGenerator project={project}>
+                          <Button
+                            size="default"
+                            variant="ghost"
+                            className="min-w-[44px] min-h-[44px] p-3 text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900 rounded-lg transition-colors"
+                            title="Genera bozza email con AI"
+                            aria-label="Genera bozza email AI"
+                          >
+                            ✉️
+                          </Button>
+                        </EmailDraftGenerator>
                         <Button
                           size="default"
                           variant="ghost"

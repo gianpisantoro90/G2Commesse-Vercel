@@ -4426,4 +4426,74 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // ============================================
+  // AI EMAIL DRAFT GENERATION
+  // ============================================
+
+  // Generate AI email draft
+  app.post("/api/ai/email-draft", async (req, res) => {
+    try {
+      const { projectId, purpose, customContext, recipientName, recipientEmail, tone, language, replyToSubject, replyToBody } = req.body;
+
+      if (!projectId || !purpose) {
+        return res.status(400).json({ message: "projectId e purpose sono obbligatori" });
+      }
+
+      const aiConfigData = await storage.getSystemConfig('ai_config');
+      const globalConfig = aiConfigData?.value as any;
+      const featureConfigsData = await storage.getSystemConfig('ai_feature_configs');
+      const featureConfigs = (featureConfigsData?.value || []) as any[];
+
+      const { generateEmailDraft } = await import("./lib/ai-email-draft");
+      const draft = await generateEmailDraft(
+        { projectId, purpose, customContext, recipientName, recipientEmail, tone, language, replyToSubject, replyToBody },
+        storage,
+        globalConfig,
+        featureConfigs,
+      );
+      res.json(draft);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      logger.error('Email draft generation error', { error: msg });
+      res.status(500).json({ message: `Errore nella generazione bozza email: ${msg}` });
+    }
+  });
+
+  // Get email templates (no AI needed)
+  app.get("/api/ai/email-templates", async (_req, res) => {
+    try {
+      const { getEmailTemplates } = await import("./lib/ai-email-draft");
+      const purposes = [
+        'sollecito_pagamento', 'richiesta_informazioni', 'aggiornamento_stato',
+        'invio_documenti', 'conferma_ricezione', 'richiesta_approvazione',
+        'comunicazione_ritardo', 'custom'
+      ] as const;
+
+      const templates = Object.fromEntries(
+        purposes.map(p => [p, getEmailTemplates(p)])
+      );
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero template" });
+    }
+  });
+
+  // ============================================
+  // CASH FLOW FORECAST
+  // ============================================
+
+  // Get cash flow forecast
+  app.get("/api/ai/cashflow-forecast", async (req, res) => {
+    try {
+      const months = parseInt(req.query.months as string) || 6;
+      const { generateCashFlowForecast } = await import("./lib/ai-cashflow-forecast");
+      const forecast = await generateCashFlowForecast(storage, Math.min(months, 12));
+      res.json(forecast);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      logger.error('Cash flow forecast error', { error: msg });
+      res.status(500).json({ message: `Errore nella previsione cash flow: ${msg}` });
+    }
+  });
+
 }
