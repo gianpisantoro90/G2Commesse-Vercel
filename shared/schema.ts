@@ -24,7 +24,6 @@ export type AIConfigResponse = z.infer<typeof aiConfigResponseSchema>;
 export const AI_FEATURES = [
   'email_analysis',
   'chat_assistant',
-  'email_drafting',
   'project_health',
   'proactive_alerts',
   'financial_forecast',

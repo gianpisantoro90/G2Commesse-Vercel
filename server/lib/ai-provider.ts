@@ -161,7 +161,6 @@ async function callDeepSeek(apiKey: string, model: string, options: AICompletion
 const DEFAULT_FEATURE_CONFIGS: Record<AIFeature, { provider: 'anthropic' | 'deepseek'; model: string }> = {
   email_analysis: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
   chat_assistant: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
-  email_drafting: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
   project_health: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
   proactive_alerts: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
   financial_forecast: { provider: 'anthropic', model: 'claude-sonnet-4-20250514' },
