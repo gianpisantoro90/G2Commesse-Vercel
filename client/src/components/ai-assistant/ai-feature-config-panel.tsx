@@ -195,7 +195,7 @@ export default function AiFeatureConfigPanel() {
                 <div key={feature.id} className="card-g2 p-4">
                   <div className="flex items-start gap-4">
                     <div className="flex items-center gap-3 min-w-[200px]">
-                      <Icon className="h-5 w-5 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <Icon className="h-5 w-5 text-primary shrink-0" />
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-gray-900 dark:text-white text-sm">{feature.name}</p>

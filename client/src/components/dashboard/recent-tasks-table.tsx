@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { type Task, type Project, type User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -47,16 +48,8 @@ export default function RecentTasksTable() {
     <div className="card-g2" data-testid="recent-tasks-table">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Task Recenti</h3>
-        <Button
-          variant="ghost"
-          className="text-primary hover:text-teal-700 font-medium text-sm whitespace-nowrap"
-          data-testid="view-all-tasks"
-          onClick={() => {
-            const tabButton = document.querySelector('[data-testid="tab-todo"]') as HTMLElement;
-            if (tabButton) tabButton.click();
-          }}
-        >
-          Vedi Tutte →
+        <Button variant="ghost" asChild className="text-primary hover:text-primary/80 font-medium text-sm whitespace-nowrap" data-testid="view-all-tasks">
+          <Link href="/todo">Vedi Tutte →</Link>
         </Button>
       </div>
 

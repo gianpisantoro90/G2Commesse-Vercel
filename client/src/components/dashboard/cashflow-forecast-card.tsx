@@ -110,7 +110,7 @@ export default function CashFlowForecastCard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+          <TrendingUp className="w-5 h-5 text-primary" />
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white">Previsione Cash Flow</h3>
             <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -223,7 +223,7 @@ export default function CashFlowForecastCard() {
                   </div>
                   <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-teal-500 transition-all"
+                      className="h-full rounded-full bg-primary transition-all"
                       style={{ width: `${Math.round(month.confidence * 100)}%`, opacity: month.confidence }}
                     />
                   </div>

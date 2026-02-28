@@ -605,7 +605,7 @@ export default function ProjectsTable() {
                 return (
                   <div
                     key={project.id}
-                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
+                    className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-4"
                     data-testid={`project-card-${project.id}`}
                   >
                     {/* Header: Code + Status */}

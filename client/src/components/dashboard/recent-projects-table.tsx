@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { type Project } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
@@ -85,8 +86,8 @@ export default function RecentProjectsTable() {
     <div className="card-g2" data-testid="recent-projects-table">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Commesse Recenti</h3>
-        <Button variant="ghost" className="text-primary hover:text-teal-700 font-medium text-sm whitespace-nowrap" data-testid="view-all-projects">
-          Vedi Tutte →
+        <Button variant="ghost" asChild className="text-primary hover:text-primary/80 font-medium text-sm whitespace-nowrap" data-testid="view-all-projects">
+          <Link href="/commesse">Vedi Tutte →</Link>
         </Button>
       </div>
       

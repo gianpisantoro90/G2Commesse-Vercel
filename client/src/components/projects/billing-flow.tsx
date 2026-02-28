@@ -895,7 +895,7 @@ export default function BillingFlow() {
                       <div
                         key={`${alert.type}-${alert.projectId}-${alert.prestazioneId || alert.invoiceId}-${idx}`}
                         className={cn(
-                          "p-2 rounded-lg border cursor-pointer hover:shadow-md transition-shadow",
+                          "p-2 rounded-lg border cursor-pointer hover:opacity-80 transition-opacity",
                           typeConfig.bgColor,
                           typeConfig.borderColor
                         )}
@@ -1168,7 +1168,7 @@ export default function BillingFlow() {
                       <div
                         key={idx}
                         className={cn(
-                          "p-2 rounded-lg border cursor-pointer hover:shadow-md transition-shadow",
+                          "p-2 rounded-lg border cursor-pointer hover:opacity-80 transition-opacity",
                           item.hasInvoice
                             ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
                             : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
@@ -1237,7 +1237,7 @@ export default function BillingFlow() {
                     (prestazioniByStatus[showStatusDetails as keyof typeof prestazioniByStatus]?.items || []).map((item: any, idx: number) => (
                       <div
                         key={idx}
-                        className="p-2 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 cursor-pointer hover:shadow-md transition-shadow"
+                        className="p-2 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => {
                           handleSearchChange(item.projectCode);
                           setShowStatusDetails(null);
@@ -1378,7 +1378,7 @@ export default function BillingFlow() {
                       <div
                         key={invoice.id}
                         className={cn(
-                          "p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow",
+                          "p-3 rounded-lg border cursor-pointer hover:opacity-80 transition-opacity",
                           invoice.isOrphan
                             ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
                             : statoConfig.bgColor,

@@ -13,7 +13,7 @@ export default defineConfig({
         name: 'G2 Gestione Commesse',
         short_name: 'G2 Commesse',
         description: 'Sistema di gestione commesse per G2 Ingegneria',
-        theme_color: '#1B5B5A',
+        theme_color: '#1E40AF',
         background_color: '#F9FAFB',
         display: 'standalone',
         orientation: 'any',
