@@ -12,7 +12,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import {
-  Brain, Mail, MessageSquare, PenLine, Activity, Bell, TrendingUp, FileText,
+  Brain, Mail, MessageSquare, Activity, Bell, TrendingUp, FileText,
   Settings2, Shield, Save, BarChart3, Check, AlertTriangle
 } from "lucide-react";
 
@@ -43,7 +43,6 @@ interface FeedbackStats {
 const FEATURES = [
   { id: 'email_analysis', name: 'Analisi Email', desc: 'Classificazione, matching progetto, estrazione task', icon: Mail },
   { id: 'chat_assistant', name: 'Chat Assistant', desc: 'Chatbot conversazionale con dati sistema', icon: MessageSquare },
-  { id: 'email_drafting', name: 'Bozze Email', desc: 'Generazione bozze email contestualizzate', icon: PenLine },
   { id: 'project_health', name: 'Salute Progetto', desc: 'Analisi rischio e stato progetti', icon: Activity },
   { id: 'proactive_alerts', name: 'Alert Proattivi', desc: 'Suggerimenti e notifiche intelligenti', icon: Bell },
   { id: 'financial_forecast', name: 'Previsioni Finanziarie', desc: 'Cash flow e previsioni fatturazione', icon: TrendingUp },
