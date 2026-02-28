@@ -30,6 +30,7 @@ import { type Project, type OneDriveMapping, type ProjectMetadata, type Communic
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import EditProjectForm from "./edit-project-form";
 import CREGenerator from "./cre-generator";
+import { ProjectHealthBadge } from "./project-health-card";
 import {
   renderPrestazioneBadge,
   formatImporto,
@@ -72,6 +73,7 @@ export default function ProjectsTable() {
   const [showComunicazioni, setShowComunicazioni] = useState(true);
   const [showScadenze, setShowScadenze] = useState(true);
   const [showOneDrive, setShowOneDrive] = useState(false);
+  const [showHealth, setShowHealth] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -501,6 +503,14 @@ export default function ProjectsTable() {
           >
             ☁️ <span className="hidden sm:inline">OneDrive</span><span className="sm:hidden">Cloud</span>
           </Button>
+          <Button
+            size="default"
+            variant={showHealth ? "default" : "outline"}
+            onClick={() => setShowHealth(!showHealth)}
+            className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
+          >
+            🩺 <span className="hidden sm:inline">Salute AI</span><span className="sm:hidden">AI</span>
+          </Button>
         </div>
 
         {/* Filters Row - MOBILE OPTIMIZED */}
@@ -825,6 +835,12 @@ export default function ProjectsTable() {
                   )}
                   {showOneDrive && (
                     <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-48">OneDrive</th>
+                  )}
+                  {showHealth && (
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-24">
+                      Salute
+                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Score salute progetto calcolato dall'AI (0-100)">ⓘ</span>
+                    </th>
                   )}
                   <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tr-lg w-32">Azioni</th>
                 </tr>
@@ -1169,6 +1185,11 @@ export default function ProjectsTable() {
                             </div>
                           );
                         })()}
+                      </td>
+                    )}
+                    {showHealth && (
+                      <td className="py-4 px-4">
+                        <ProjectHealthBadge projectId={project.id} />
                       </td>
                     )}
                     <td className="py-4 px-4">

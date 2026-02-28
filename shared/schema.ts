@@ -17,6 +17,38 @@ export type AIConfig = z.infer<typeof aiConfigSchema>;
 export const aiConfigResponseSchema = aiConfigSchema.omit({ apiKey: true });
 export type AIConfigResponse = z.infer<typeof aiConfigResponseSchema>;
 
+// ============================================
+// AI FEATURE CONFIGURATION - Per-feature provider/model routing
+// ============================================
+
+export const AI_FEATURES = [
+  'email_analysis',
+  'chat_assistant',
+  'email_drafting',
+  'project_health',
+  'proactive_alerts',
+  'financial_forecast',
+  'report_generation',
+] as const;
+export type AIFeature = typeof AI_FEATURES[number];
+
+export const aiFeatureConfigSchema = z.object({
+  feature: z.enum(AI_FEATURES),
+  provider: z.enum(['anthropic', 'deepseek']),
+  model: z.string().min(1),
+  enabled: z.boolean().default(true),
+});
+export type AIFeatureConfig = z.infer<typeof aiFeatureConfigSchema>;
+
+// Auto-approval configuration
+export const aiAutoApprovalSchema = z.object({
+  enabled: z.boolean().default(false),
+  emailAssignmentThreshold: z.number().min(0).max(1).default(0.95),
+  taskCreationThreshold: z.number().min(0).max(1).default(0.90),
+  deadlineCreationThreshold: z.number().min(0).max(1).default(0.90),
+});
+export type AIAutoApproval = z.infer<typeof aiAutoApprovalSchema>;
+
 export const projects = pgTable("projects", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   code: text("code").notNull().unique(),
@@ -783,3 +815,80 @@ export interface PrestazioniStats {
   importoDaFatturare: number;
   importoDaIncassare: number;
 }
+
+// ============================================
+// AI CONVERSATIONS & FEEDBACK
+// ============================================
+
+// AI Chat conversations
+export const aiConversations = pgTable("ai_conversations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title"), // Auto-generated from first message
+  messages: jsonb("messages").default([]), // Array of {role, content, timestamp}
+  context: jsonb("context"), // Snapshot of system context used
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAiConversationSchema = createInsertSchema(aiConversations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertAiConversation = z.infer<typeof insertAiConversationSchema>;
+export type AiConversation = typeof aiConversations.$inferSelect;
+
+// AI Chat message structure
+export interface AiChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+// AI Feedback for learning mode
+export const aiFeedback = pgTable("ai_feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  communicationId: text("communication_id").references(() => communications.id, { onDelete: "cascade" }),
+  feedbackType: text("feedback_type").notNull(), // 'project_match', 'task_suggestion', 'deadline_suggestion', 'spam_detection'
+  action: text("action").notNull(), // 'approved', 'dismissed', 'corrected'
+  aiSuggestion: jsonb("ai_suggestion"), // What AI suggested
+  userCorrection: jsonb("user_correction"), // What user chose instead (if corrected)
+  aiConfidence: integer("ai_confidence"), // Original AI confidence (0-100)
+  userId: text("user_id").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAiFeedbackSchema = createInsertSchema(aiFeedback).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAiFeedback = z.infer<typeof insertAiFeedbackSchema>;
+export type AiFeedback = typeof aiFeedback.$inferSelect;
+
+// AI Insights (proactive suggestions)
+export const aiInsights = pgTable("ai_insights", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: text("type").notNull(), // 'billing', 'deadline', 'communication', 'project_health', 'financial'
+  priority: text("priority").notNull().default("medium"), // 'low', 'medium', 'high', 'urgent'
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  actionSuggestion: text("action_suggestion"), // Suggested action to resolve
+  data: jsonb("data"), // Additional data (amounts, dates, etc.)
+  status: text("status").notNull().default("active"), // 'active', 'dismissed', 'resolved'
+  dismissedBy: text("dismissed_by").references(() => users.id),
+  dismissedAt: timestamp("dismissed_at"),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAiInsightSchema = createInsertSchema(aiInsights).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAiInsight = z.infer<typeof insertAiInsightSchema>;
+export type AiInsight = typeof aiInsights.$inferSelect;

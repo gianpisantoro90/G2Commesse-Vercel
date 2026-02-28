@@ -9,6 +9,7 @@ import RevisioneAI from "@/pages/revisione-ai";
 import { LoginPage } from "@/pages/LoginPage";
 import { useAuth } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/error-boundary";
+import AiChatWidget from "@/components/ai-assistant/ai-chat-widget";
 
 function LoadingScreen() {
   return (
@@ -55,6 +56,7 @@ function AppContent() {
       </a>
       <Toaster />
       <AuthenticatedRouter />
+      <AiChatWidget />
     </div>
   );
 }
