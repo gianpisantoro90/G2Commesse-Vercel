@@ -36,7 +36,8 @@ import {
   ChevronRight,
   X,
   Search,
-  FolderOpen
+  FolderOpen,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -227,7 +228,7 @@ export function CommunicationsReview() {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">Caricamento comunicazioni...</p>
         </div>
       </div>

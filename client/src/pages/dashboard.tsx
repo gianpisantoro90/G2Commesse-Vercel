@@ -4,7 +4,7 @@ import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
-import PrestazioniStatsWidget from "@/components/dashboard/prestazioni-stats-widget";
+
 import AiInsightsCard from "@/components/dashboard/ai-insights-card";
 import CashFlowForecastCard from "@/components/dashboard/cashflow-forecast-card";
 
@@ -22,12 +22,7 @@ export default function Dashboard() {
       {isAdmin && <AiInsightsCard />}
       {isAdmin && <EconomicDashboardCard />}
       {isAdmin && <CashFlowForecastCard />}
-      {isAdmin && (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <PrestazioniStatsWidget />
-          <StatsCard />
-        </div>
-      )}
+      {isAdmin && <StatsCard />}
       <RecentTasksTable />
       <RecentProjectsTable />
       <OneDriveStatusCard />

@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
-import { Folder, FolderOpen, ChevronRight, ChevronDown, RefreshCw } from "lucide-react";
+import { Folder, FolderOpen, ChevronRight, ChevronDown, RefreshCw, Loader2 } from "lucide-react";
 import { type Project } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
@@ -579,7 +579,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           >
             {isLoadingFiles ? (
               <>
-                <span className="animate-spin mr-2">⟳</span>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 Scansionando OneDrive...
               </>
             ) : folderFiles.length > 0 ? (
@@ -643,7 +643,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           >
             {isProcessing ? (
               <>
-                <span className="animate-spin mr-2">⟳</span>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 Rinominando...
               </>
             ) : (

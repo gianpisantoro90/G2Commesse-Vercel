@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
 import { LoginPage } from "@/pages/LoginPage";
 import { useAuth, AuthProvider } from "@/hooks/useAuth";
+import { PageFallback } from "@/components/layout/page-fallback";
 import { ErrorBoundary } from "@/components/error-boundary";
 import AiChatWidget from "@/components/ai-assistant/ai-chat-widget";
 import AppLayout from "@/components/layout/app-layout";
@@ -37,15 +38,6 @@ function LoadingScreen() {
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
         <p className="text-sm text-muted-foreground">Caricamento...</p>
       </div>
-    </div>
-  );
-}
-
-function PageFallback() {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      <span className="ml-2 text-muted-foreground">Caricamento...</span>
     </div>
   );
 }

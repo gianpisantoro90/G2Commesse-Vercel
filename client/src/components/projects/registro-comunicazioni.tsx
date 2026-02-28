@@ -147,6 +147,7 @@ function CommunicationForm({
   initialData?: Partial<Communication>;
   projects: Project[];
 }) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     projectId: initialData?.projectId || '',
     type: initialData?.type || 'email',
@@ -167,11 +168,11 @@ function CommunicationForm({
 
     // Validazione
     if (!formData.projectId) {
-      alert("Seleziona una commessa");
+      toast({ title: "Attenzione", description: "Seleziona una commessa", variant: "destructive" });
       return;
     }
     if (!formData.subject.trim()) {
-      alert("Inserisci l'oggetto della comunicazione");
+      toast({ title: "Attenzione", description: "Inserisci l'oggetto della comunicazione", variant: "destructive" });
       return;
     }
 

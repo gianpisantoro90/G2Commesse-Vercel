@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { type Project } from "@shared/schema";
 import { aiRouter, type RoutingResult } from "@/lib/ai-router";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 
 interface RoutingFormProps {
   onAnalysisComplete: (results: Array<{result: RoutingResult, file: File}>, project: Project | null) => void;
@@ -190,7 +190,7 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
           >
             {isAnalyzing ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 Analizzando {selectedFiles.length} file...
               </>
             ) : (
