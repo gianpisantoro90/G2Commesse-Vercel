@@ -444,7 +444,7 @@ export default function ClientsTable() {
               {paginatedClients.map((client) => (
                 <div
                   key={client.id}
-                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm"
+                  className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-4"
                   data-testid={`client-card-${client.id}`}
                 >
                   {/* Header: Sigla + Projects Count */}

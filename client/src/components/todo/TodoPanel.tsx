@@ -321,7 +321,7 @@ export default function TodoPanel() {
         {/* Task content */}
         <div className="overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 shadow-sm w-full flex-wrap h-auto gap-1 p-1">
+            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 w-full flex-wrap h-auto gap-1 p-1">
               <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
                 <span className="truncate">Tutte</span>
                 <span className="ml-1 tabular-nums">({filteredTasks.length})</span>

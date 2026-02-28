@@ -154,7 +154,7 @@ export function AISuggestionsPanel({
                 className={`rounded-lg border p-4 transition-all ${
                   selectedMatchIndex === index
                     ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950/30'
-                    : 'hover:shadow-md bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
                 } ${
                   currentProjectId === match.projectId
                     ? 'border-green-500 bg-green-50 dark:bg-green-950/30'

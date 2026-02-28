@@ -1,35 +1,102 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Brain, Mail, CheckSquare, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Brain, Mail, CheckSquare, Calendar, RefreshCw, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { CommunicationsReview } from "@/components/ai-review/communications-review";
 import { TasksReview } from "@/components/ai-review/tasks-review";
 import { DeadlinesReview } from "@/components/ai-review/deadlines-review";
 
+function getTabFromPath(path: string) {
+  if (path === "/revisione-ai/tasks") return "tasks";
+  if (path === "/revisione-ai/scadenze") return "deadlines";
+  return "communications";
+}
+
 export default function RevisioneAI() {
-  const [activeTab, setActiveTab] = useState("communications");
+  const [location, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState(getTabFromPath(location));
+  const [isCheckingEmails, setIsCheckingEmails] = useState(false);
+  const { toast } = useToast();
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (value === "communications") setLocation("/revisione-ai");
+    else if (value === "tasks") setLocation("/revisione-ai/tasks");
+    else if (value === "deadlines") setLocation("/revisione-ai/scadenze");
+  };
+
+  const handleCheckEmails = async () => {
+    setIsCheckingEmails(true);
+    try {
+      const response = await fetch("/api/emails/check-now", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Errore nel controllo email");
+      }
+
+      const data = await response.json();
+      toast({
+        title: "Controllo Completato",
+        description: data.message,
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Errore nel controllo email",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingEmails(false);
+    }
+  };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 sm:p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-          <Brain className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 dark:text-purple-400" />
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Brain className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">Revisione AI</h2>
+            <p className="text-sm text-muted-foreground">
+              Gestisci comunicazioni, task e scadenze suggerite dall'AI
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Revisione AI</h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            <span className="hidden sm:inline">Gestisci comunicazioni, task e scadenze suggerite dall'intelligenza artificiale</span>
-            <span className="sm:hidden">Gestisci suggerimenti AI</span>
-          </p>
-        </div>
+        <Button
+          onClick={handleCheckEmails}
+          disabled={isCheckingEmails}
+          className="gap-2 w-full sm:w-auto"
+          variant="default"
+        >
+          {isCheckingEmails ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Controllo in corso...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="w-4 h-4" />
+              Controlla Email
+            </>
+          )}
+        </Button>
       </div>
 
-      {/* Main Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1 mb-4">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="bg-muted w-full flex-wrap h-auto gap-1 p-1">
           <TabsTrigger
             value="communications"
-            className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 flex-1 min-w-0 gap-1 sm:gap-2"
+            className="data-[state=active]:bg-background text-foreground text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 flex-1 min-w-0 gap-1 sm:gap-2"
           >
             <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
             <span className="hidden sm:inline">Comunicazioni</span>
@@ -37,7 +104,7 @@ export default function RevisioneAI() {
           </TabsTrigger>
           <TabsTrigger
             value="tasks"
-            className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 flex-1 min-w-0 gap-1 sm:gap-2"
+            className="data-[state=active]:bg-background text-foreground text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 flex-1 min-w-0 gap-1 sm:gap-2"
           >
             <CheckSquare className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
             <span className="hidden sm:inline">Task Proposte</span>
@@ -45,51 +112,22 @@ export default function RevisioneAI() {
           </TabsTrigger>
           <TabsTrigger
             value="deadlines"
-            className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 flex-1 min-w-0 gap-1 sm:gap-2"
+            className="data-[state=active]:bg-background text-foreground text-xs sm:text-sm px-2 sm:px-4 py-1.5 sm:py-2 flex-1 min-w-0 gap-1 sm:gap-2"
           >
             <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span className="hidden sm:inline">Scadenze</span>
-            <span className="sm:hidden">Scad.</span>
+            <span className="hidden sm:inline">Scadenze Proposte</span>
+            <span className="sm:hidden">Scadenze</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab 1: Communications Review */}
         <TabsContent value="communications" className="space-y-4">
-          <div className="card-g2">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Comunicazioni da Rivedere</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Email ricevute che richiedono l'assegnazione manuale a un progetto
-              </p>
-            </div>
-            <CommunicationsReview />
-          </div>
+          <CommunicationsReview />
         </TabsContent>
-
-        {/* Tab 2: Tasks Review */}
         <TabsContent value="tasks" className="space-y-4">
-          <div className="card-g2">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Task Proposte dall'AI</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Task suggerite automaticamente dall'analisi delle comunicazioni
-              </p>
-            </div>
-            <TasksReview />
-          </div>
+          <TasksReview />
         </TabsContent>
-
-        {/* Tab 3: Deadlines Review */}
         <TabsContent value="deadlines" className="space-y-4">
-          <div className="card-g2">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Scadenze Proposte dall'AI</h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Scadenze e milestone suggerite dall'analisi delle comunicazioni
-              </p>
-            </div>
-            <DeadlinesReview />
-          </div>
+          <DeadlinesReview />
         </TabsContent>
       </Tabs>
     </div>

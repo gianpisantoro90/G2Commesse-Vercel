@@ -1,3 +1,4 @@
+import { useLocation } from "wouter";
 import { Bell, CheckCheck, Clock, AlertCircle, FileText, Euro, Calendar, MessageSquare, Cloud, Info, AlertTriangle, XCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,13 +37,14 @@ const priorityColors = {
 
 export function NotificationCenter() {
   const { notifications, unreadCount, connected, markAsRead, markAllAsRead } = useNotifications();
+  const [, setLocation] = useLocation();
 
   const handleNotificationClick = (notification: any) => {
     markAsRead(notification.id);
 
-    // Navigate to action URL if present
+    // Navigate to action URL if present (SPA navigation)
     if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
+      setLocation(notification.actionUrl);
     }
   };
 

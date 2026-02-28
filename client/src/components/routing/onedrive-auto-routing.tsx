@@ -625,7 +625,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             onClick={() => handleModeChange("onedrive")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               mode === "onedrive"
-                ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
+                ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400"
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
             }`}
             data-testid="mode-toggle-onedrive"
@@ -637,7 +637,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             onClick={() => handleModeChange("upload")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               mode === "upload"
-                ? "bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm"
+                ? "bg-white dark:bg-gray-700 text-green-600 dark:text-green-400"
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
             }`}
             data-testid="mode-toggle-upload"

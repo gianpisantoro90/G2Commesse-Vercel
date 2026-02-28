@@ -286,7 +286,7 @@ export function BillingAlerts({
               return (
                 <div
                   key={alert.id}
-                  className={`p-3 rounded-lg border ${config.bgColor} ${config.borderColor} cursor-pointer hover:shadow-md transition-shadow`}
+                  className={`p-3 rounded-lg border ${config.bgColor} ${config.borderColor} cursor-pointer hover:opacity-80 transition-opacity`}
                   onClick={() => handleAction(alert)}
                   title={`Clicca per vedere ${alert.project?.code || 'la commessa'}`}
                 >

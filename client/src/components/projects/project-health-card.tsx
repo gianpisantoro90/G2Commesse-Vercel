@@ -127,7 +127,7 @@ export default function ProjectHealthCard({ projectId }: { projectId: string }) 
           <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Azioni consigliate</p>
           {health.recommendations.map((rec, i) => (
             <div key={i} className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400">
-              <ChevronRight className="w-3 h-3 mt-0.5 text-teal-500 shrink-0" />
+              <ChevronRight className="w-3 h-3 mt-0.5 text-primary shrink-0" />
               <span>{rec}</span>
             </div>
           ))}
