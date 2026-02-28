@@ -30,6 +30,7 @@ const TasksReview = lazy(() => import("@/components/ai-review/tasks-review").the
 const DeadlinesReview = lazy(() => import("@/components/ai-review/deadlines-review").then(m => ({ default: m.DeadlinesReview })));
 const StoragePanel = lazy(() => import("@/components/system/storage-panel"));
 const AiConfigPanelUnified = lazy(() => import("@/components/system/ai-config-panel-unified"));
+const AiFeatureConfigPanel = lazy(() => import("@/components/ai-assistant/ai-feature-config-panel"));
 const FolderConfigPanel = lazy(() => import("@/components/system/folder-config-panel"));
 const OneDrivePanel = lazy(() => import("@/components/system/onedrive-panel"));
 const UserManagementPanel = lazy(() => import("@/components/system/user-management-panel"));
@@ -367,7 +368,12 @@ export default function Dashboard() {
                       <StoragePanel />
                     </TabsContent>
                     <TabsContent value="ai" className={tabContentClass}>
-                      <AiConfigPanelUnified />
+                      <div className="space-y-8">
+                        <AiConfigPanelUnified />
+                        <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
+                          <AiFeatureConfigPanel />
+                        </div>
+                      </div>
                     </TabsContent>
                     <TabsContent value="onedrive-browser" className={tabContentClass}>
                       <OneDriveBrowser />
