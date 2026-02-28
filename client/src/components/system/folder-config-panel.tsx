@@ -237,7 +237,7 @@ export default function FolderConfigPanel() {
   const getFileIcon = (file: OneDriveFile) => {
     return file.folder ? 
       <Folder className="w-4 h-4 text-blue-500" /> : 
-      <FolderOpen className="w-4 h-4 text-gray-500" />;
+      <FolderOpen className="w-4 h-4 text-muted-foreground" />;
   };
 
   const getStatusIcon = () => {
@@ -251,7 +251,7 @@ export default function FolderConfigPanel() {
     if (rootConfig) {
       return "border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20";
     }
-    return "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800";
+    return "border-border bg-muted";
   };
 
   // Show OneDrive connection requirement first
@@ -261,8 +261,8 @@ export default function FolderConfigPanel() {
         <div className="flex items-center gap-3 mb-6">
           <span className="text-3xl">☁️</span>
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">Configurazione Cartelle OneDrive</h3>
-            <p className="text-gray-600 dark:text-gray-400">Configura la cartella radice OneDrive dove sono contenute tutte le commesse</p>
+            <h3 className="text-xl font-bold text-foreground">Configurazione Cartelle OneDrive</h3>
+            <p className="text-muted-foreground">Configura la cartella radice OneDrive dove sono contenute tutte le commesse</p>
           </div>
         </div>
 
@@ -289,22 +289,22 @@ export default function FolderConfigPanel() {
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">☁️</span>
         <div>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Configurazione Cartelle OneDrive</h3>
-          <p className="text-gray-600 dark:text-gray-400">Configura la cartella radice OneDrive dove sono contenute tutte le commesse G2</p>
+          <h3 className="text-xl font-bold text-foreground">Configurazione Cartelle OneDrive</h3>
+          <p className="text-muted-foreground">Configura la cartella radice OneDrive dove sono contenute tutte le commesse G2</p>
         </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Root Folder Configuration */}
-        <div className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <div className="bg-background border-2 border-border rounded-xl p-6">
+          <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <FolderOpen className="w-5 h-5" />
             Cartella Radice OneDrive
           </h4>
           
           <div className="space-y-4">
             <div>
-              <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <Label className="block text-sm font-medium text-foreground mb-2">
                 Cartella Configurata
               </Label>
               <div className={`p-3 border-2 rounded-lg ${getStatusColor()}`}>
@@ -316,10 +316,10 @@ export default function FolderConfigPanel() {
                 </div>
                 {rootConfig && (
                   <div className="text-sm mt-1 space-y-1">
-                    <p className="text-gray-600 dark:text-gray-400" data-testid="folder-path">
+                    <p className="text-muted-foreground" data-testid="folder-path">
                       📁 Percorso: {rootConfig.folderPath}
                     </p>
-                    <p className="text-gray-500 dark:text-gray-500" data-testid="last-updated">
+                    <p className="text-muted-foreground" data-testid="last-updated">
                       🕒 Configurata: {new Date(rootConfig.lastUpdated).toLocaleString('it-IT')}
                     </p>
                   </div>
@@ -353,18 +353,18 @@ export default function FolderConfigPanel() {
         </div>
 
         {/* Archive Folder Configuration */}
-        <div className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+        <div className="bg-background border-2 border-border rounded-xl p-6">
+          <h4 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Archive className="w-5 h-5" />
             Cartella Archivio
           </h4>
           
           <div className="space-y-4">
             <div>
-              <Label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <Label className="block text-sm font-medium text-foreground mb-2">
                 Cartella per Archivio Automatico
               </Label>
-              <div className={`p-3 border-2 rounded-lg ${archiveConfig ? "border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20" : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"}`}>
+              <div className={`p-3 border-2 rounded-lg ${archiveConfig ? "border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20" : "border-border bg-muted"}`}>
                 <div className="flex items-center gap-2">
                   {archiveConfig ? <Check className="w-5 h-5 text-green-600" /> : <Settings className="w-5 h-5 text-gray-400" />}
                   <span className="font-medium dark:text-white">
@@ -373,7 +373,7 @@ export default function FolderConfigPanel() {
                 </div>
                 {archiveConfig && (
                   <div className="text-sm mt-1 space-y-1">
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-muted-foreground">
                       📁 Percorso: {archiveConfig.folderPath}
                     </p>
                   </div>
@@ -409,8 +409,8 @@ export default function FolderConfigPanel() {
         {/* Information Panel */}
         <div className="space-y-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">ℹ️ Come Funziona</h4>
-            <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+            <h4 className="text-lg font-semibold text-foreground mb-4">ℹ️ Come Funziona</h4>
+            <div className="space-y-3 text-sm text-foreground">
               <p>
                 <strong>1. Cartella Radice:</strong> Dove sono organizzate tutte le commesse attive (In Corso).
               </p>
@@ -424,21 +424,21 @@ export default function FolderConfigPanel() {
           </div>
 
           {rootConfig && (
-            <div className="bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-6">
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📊 Stato Configurazione</h4>
+            <div className="bg-background border-2 border-border rounded-xl p-6">
+              <h4 className="text-lg font-semibold text-foreground mb-4">📊 Stato Configurazione</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Stato:</span>
+                  <span className="text-muted-foreground">Stato:</span>
                   <span className="font-medium text-green-600 dark:text-green-400" data-testid="config-status">Configurata</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Cartella:</span>
+                  <span className="text-muted-foreground">Cartella:</span>
                   <span className="font-medium dark:text-white" data-testid="configured-folder">
                     {rootConfig.folderName}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">ID OneDrive:</span>
+                  <span className="text-muted-foreground">ID OneDrive:</span>
                   <span className="font-medium dark:text-white text-xs" data-testid="folder-id">
                     {rootConfig.folderId.substring(0, 12)}...
                   </span>
@@ -451,9 +451,9 @@ export default function FolderConfigPanel() {
 
       {/* OneDrive Browser - Root Folder */}
       {showBrowser && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-background rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">☁️ Browser OneDrive - Cartella Radice</h4>
+            <h4 className="text-lg font-semibold text-foreground">☁️ Browser OneDrive - Cartella Radice</h4>
             <Button
               variant="outline"
               size="sm"
@@ -494,11 +494,11 @@ export default function FolderConfigPanel() {
           </Breadcrumb>
 
           {/* File/Folder List */}
-          <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 max-h-96 overflow-y-auto" data-testid="onedrive-browser">
+          <div className="border border-border rounded-lg p-4 bg-muted max-h-96 overflow-y-auto" data-testid="onedrive-browser">
             {isLoadingFiles ? (
               <div className="flex items-center justify-center py-8">
                 <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mr-2" />
-                <span className="text-gray-500 dark:text-gray-400">Caricamento...</span>
+                <span className="text-muted-foreground">Caricamento...</span>
               </div>
             ) : (
               <div className="space-y-2">
@@ -508,7 +508,7 @@ export default function FolderConfigPanel() {
                     className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                       selectedFolder?.id === folder.id
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                        : 'border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-700'
+                        : 'border-border hover:bg-muted'
                     }`}
                     onClick={() => handleFolderSelect(folder)}
                     onDoubleClick={() => handleFolderNavigate(folder)}
@@ -518,7 +518,7 @@ export default function FolderConfigPanel() {
                       {getFileIcon(folder)}
                       <div>
                         <div className="font-medium text-sm dark:text-white">{folder.name}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           Cartella • {new Date(folder.lastModified).toLocaleDateString('it-IT')}
                         </div>
                       </div>
@@ -532,8 +532,8 @@ export default function FolderConfigPanel() {
                   </div>
                 ))}
                 {currentFiles?.filter(file => file.folder).length === 0 && (
-                  <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                    <FolderOpen className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+                  <div className="text-center py-6 text-muted-foreground">
+                    <FolderOpen className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                     <p>Nessuna cartella trovata in questa posizione</p>
                   </div>
                 )}
@@ -542,10 +542,10 @@ export default function FolderConfigPanel() {
           </div>
 
           {/* Selection Actions */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t dark:border-gray-700">
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
             <div className="flex items-center gap-2">
               {selectedFolder && (
-                <span className="text-sm text-gray-600 dark:text-gray-400" data-testid="selected-folder-info">
+                <span className="text-sm text-muted-foreground" data-testid="selected-folder-info">
                   📁 Selezionata: {selectedFolder.name}
                 </span>
               )}
@@ -575,9 +575,9 @@ export default function FolderConfigPanel() {
 
       {/* OneDrive Browser - Archive Folder */}
       {showArchiveBrowser && (
-        <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-background rounded-xl border border-border p-6">
           <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">☁️ Browser OneDrive - Cartella Archivio</h4>
+            <h4 className="text-lg font-semibold text-foreground">☁️ Browser OneDrive - Cartella Archivio</h4>
             <Button
               variant="outline"
               size="sm"
@@ -618,11 +618,11 @@ export default function FolderConfigPanel() {
           </Breadcrumb>
 
           {/* File/Folder List */}
-          <div className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800 max-h-96 overflow-y-auto" data-testid="archive-onedrive-browser">
+          <div className="border border-border rounded-lg p-4 bg-muted max-h-96 overflow-y-auto" data-testid="archive-onedrive-browser">
             {isLoadingFiles ? (
               <div className="flex items-center justify-center py-8">
                 <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mr-2" />
-                <span className="text-gray-500 dark:text-gray-400">Caricamento...</span>
+                <span className="text-muted-foreground">Caricamento...</span>
               </div>
             ) : (
               <div className="space-y-2">
@@ -632,7 +632,7 @@ export default function FolderConfigPanel() {
                     className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                       selectedArchiveFolder?.id === folder.id
                         ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
-                        : 'border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-gray-700'
+                        : 'border-border hover:bg-muted'
                     }`}
                     onClick={() => setSelectedArchiveFolder(folder)}
                     onDoubleClick={() => {
@@ -647,7 +647,7 @@ export default function FolderConfigPanel() {
                       {getFileIcon(folder)}
                       <div>
                         <div className="font-medium text-sm dark:text-white">{folder.name}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           Cartella • {new Date(folder.lastModified).toLocaleDateString('it-IT')}
                         </div>
                       </div>
@@ -661,8 +661,8 @@ export default function FolderConfigPanel() {
                   </div>
                 ))}
                 {currentFiles?.filter(file => file.folder).length === 0 && (
-                  <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-                    <FolderOpen className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
+                  <div className="text-center py-6 text-muted-foreground">
+                    <FolderOpen className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
                     <p>Nessuna cartella trovata in questa posizione</p>
                   </div>
                 )}
@@ -671,10 +671,10 @@ export default function FolderConfigPanel() {
           </div>
 
           {/* Selection Actions */}
-          <div className="flex items-center justify-between mt-4 pt-4 border-t dark:border-gray-700">
+          <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
             <div className="flex items-center gap-2">
               {selectedArchiveFolder && (
-                <span className="text-sm text-gray-600 dark:text-gray-400" data-testid="selected-archive-folder-info">
+                <span className="text-sm text-muted-foreground" data-testid="selected-archive-folder-info">
                   📁 Selezionata: {selectedArchiveFolder.name}
                 </span>
               )}

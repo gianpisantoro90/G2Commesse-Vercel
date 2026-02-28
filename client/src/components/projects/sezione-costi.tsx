@@ -385,8 +385,8 @@ export default function SezioneCosti() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Analisi Costi</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Monitoraggio costi e margini per commessa</p>
+          <h2 className="text-2xl font-bold text-foreground">Analisi Costi</h2>
+          <p className="text-muted-foreground mt-1">Monitoraggio costi e margini per commessa</p>
         </div>
         <Button onClick={() => openAddCostDialog()}>
           <Plus className="w-4 h-4 mr-2" />
@@ -605,28 +605,28 @@ export default function SezioneCosti() {
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="card-g2">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Ricavi Totali</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{formatCurrency(globalStats.ricaviPrevisti)}</p>
-          <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+          <p className="text-sm text-muted-foreground mb-1">Ricavi Totali</p>
+          <p className="text-3xl font-bold text-foreground mb-3">{formatCurrency(globalStats.ricaviPrevisti)}</p>
+          <div className="text-xs text-muted-foreground space-y-1">
             <div className="flex justify-between"><span>Fatturato:</span><span className="font-medium text-blue-600 dark:text-blue-400">{formatCurrency(globalStats.ricaviFatturati)}</span></div>
             <div className="flex justify-between"><span>Incassato:</span><span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(globalStats.ricaviIncassati)}</span></div>
           </div>
         </div>
 
         <div className="card-g2">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Costi Totali</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{formatCurrency(globalStats.costiTotali)}</p>
-          <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+          <p className="text-sm text-muted-foreground mb-1">Costi Totali</p>
+          <p className="text-3xl font-bold text-foreground mb-3">{formatCurrency(globalStats.costiTotali)}</p>
+          <div className="text-xs text-muted-foreground space-y-1">
             <div className="flex justify-between"><span>Personale:</span><span className="font-medium">{formatCurrency(globalStats.costiPersonale)}</span></div>
             <div className="flex justify-between"><span>Altri:</span><span className="font-medium">{formatCurrency(globalStats.costiEsterni)}</span></div>
           </div>
         </div>
 
         <div className="card-g2">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Margine Operativo</p>
+          <p className="text-sm text-muted-foreground mb-1">Margine Operativo</p>
           <p className={`text-3xl font-bold mb-3 ${getMargineColor(globalStats.marginePercent)}`}>{formatCurrency(globalStats.margine)}</p>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-600 dark:text-gray-400">Percentuale:</span>
+            <span className="text-xs text-muted-foreground">Percentuale:</span>
             <span className={`font-bold flex items-center gap-1 ${getMargineColor(globalStats.marginePercent)}`}>
               {globalStats.marginePercent >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
               {globalStats.marginePercent.toFixed(1)}%
@@ -635,9 +635,9 @@ export default function SezioneCosti() {
         </div>
 
         <div className="card-g2">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Gestione Ore</p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white mb-3">{globalStats.oreLavorate}h</p>
-          <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+          <p className="text-sm text-muted-foreground mb-1">Gestione Ore</p>
+          <p className="text-3xl font-bold text-foreground mb-3">{globalStats.oreLavorate}h</p>
+          <div className="text-xs text-muted-foreground space-y-1">
             <div className="flex justify-between"><span>Assegnate:</span><span className="font-medium">{globalStats.oreAssegnate}h</span></div>
             <div className="flex justify-between"><span>Efficienza:</span><span className={`font-bold ${globalStats.efficienzaOre <= 100 ? 'text-green-600' : 'text-orange-600'}`}>{globalStats.efficienzaOre.toFixed(1)}%</span></div>
           </div>
@@ -646,7 +646,7 @@ export default function SezioneCosti() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-gray-100 dark:bg-gray-800">
+        <TabsList className="bg-muted">
           <TabsTrigger value="panoramica"><BarChartIcon className="w-4 h-4 mr-1" />Panoramica</TabsTrigger>
           <TabsTrigger value="dettaglio"><Euro className="w-4 h-4 mr-1" />Dettaglio Commesse</TabsTrigger>
         </TabsList>
@@ -665,7 +665,7 @@ export default function SezioneCosti() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-center text-gray-500 py-8">Nessun costo registrato</p>
+                <p className="text-center text-muted-foreground py-8">Nessun costo registrato</p>
               )}
             </div>
 
@@ -701,7 +701,7 @@ export default function SezioneCosti() {
                   <div key={item.project.id} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
                     <div>
                       <div className="font-medium">{item.project.code}</div>
-                      <div className="text-xs text-gray-500">{item.project.client}</div>
+                      <div className="text-xs text-muted-foreground">{item.project.client}</div>
                     </div>
                     <div className="text-right">
                       <div className="font-bold text-red-600 dark:text-red-400">{formatCurrency(item.margine)}</div>

@@ -375,7 +375,7 @@ export default function ClientsTable() {
         </div>
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex gap-4 items-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+            <div key={i} className="flex gap-4 items-center p-4 bg-card rounded-lg border border-border">
               <Skeleton className="h-6 w-16" />
               <Skeleton className="h-6 w-48 flex-1" />
               <Skeleton className="h-6 w-32" />
@@ -391,17 +391,17 @@ export default function ClientsTable() {
   return (
     <div data-testid="clients-table">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Anagrafica Clienti</h3>
+        <h3 className="text-lg font-semibold text-foreground">Anagrafica Clienti</h3>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <div className="relative flex-1 sm:flex-none">
             <Input
               placeholder="Cerca clienti..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white w-full"
+              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-background w-full"
               data-testid="search-clients"
             />
-            <span className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 text-lg">🔍</span>
+            <span className="absolute left-3 top-2.5 text-muted-foreground text-lg">🔍</span>
           </div>
           <div className="flex gap-2 sm:gap-3">
             <Button
@@ -427,7 +427,7 @@ export default function ClientsTable() {
       </div>
       
       {filteredClients.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-12 text-muted-foreground">
           <div className="text-4xl mb-2">👥</div>
           <p className="text-lg font-medium">
             {searchTerm ? "Nessun cliente trovato" : "Nessun cliente presente"}
@@ -444,7 +444,7 @@ export default function ClientsTable() {
               {paginatedClients.map((client) => (
                 <div
                   key={client.id}
-                  className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-4"
+                  className="bg-card rounded-md border border-border p-4"
                   data-testid={`client-card-${client.id}`}
                 >
                   {/* Header: Sigla + Projects Count */}
@@ -467,15 +467,15 @@ export default function ClientsTable() {
                   </div>
 
                   {/* Name */}
-                  <div className="font-medium text-gray-900 dark:text-white mb-1">{client.name}</div>
+                  <div className="font-medium text-foreground mb-1">{client.name}</div>
                   {client.formaGiuridica && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    <div className="text-xs text-muted-foreground mb-2">
                       {client.formaGiuridica.replace(/_/g, ' ')}
                     </div>
                   )}
 
                   {/* Contact Info */}
-                  <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-2 border-t border-border">
                     {client.city && <span>📍 {client.city}</span>}
                     {client.email && <span>✉️ {client.email}</span>}
                     {client.telefono && <span>📞 {client.telefono}</span>}
@@ -487,38 +487,38 @@ export default function ClientsTable() {
           /* DESKTOP VIEW - Table Layout */
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+              <thead className="bg-muted">
                 <tr>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tl-lg">Sigla</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Ragione Sociale</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Email</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Telefono</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">Città</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm">N. Commesse</th>
-                  <th className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tr-lg">Azioni</th>
+                  <th className="text-left py-4 px-4 font-semibold text-foreground text-sm rounded-tl-lg">Sigla</th>
+                  <th className="text-left py-4 px-4 font-semibold text-foreground text-sm">Ragione Sociale</th>
+                  <th className="text-left py-4 px-4 font-semibold text-foreground text-sm">Email</th>
+                  <th className="text-left py-4 px-4 font-semibold text-foreground text-sm">Telefono</th>
+                  <th className="text-left py-4 px-4 font-semibold text-foreground text-sm">Città</th>
+                  <th className="text-left py-4 px-4 font-semibold text-foreground text-sm">N. Commesse</th>
+                  <th className="text-left py-4 px-4 font-semibold text-foreground text-sm rounded-tr-lg">Azioni</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-border">
                 {paginatedClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <tr key={client.id} className="hover:bg-muted transition-colors">
                     <td className="py-4 px-4 font-mono text-sm font-semibold text-primary" data-testid={`client-sigla-${client.id}`}>
                       {client.sigla}
                     </td>
-                    <td className="py-4 px-4 text-sm dark:text-gray-300" data-testid={`client-name-${client.id}`}>
+                    <td className="py-4 px-4 text-sm dark:text-foreground" data-testid={`client-name-${client.id}`}>
                       <div className="font-semibold">{client.name}</div>
                       {client.formaGiuridica && (
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <div className="text-xs text-muted-foreground mt-1">
                           {client.formaGiuridica.replace(/_/g, ' ')}
                         </div>
                       )}
                     </td>
-                    <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`client-email-${client.id}`}>
+                    <td className="py-4 px-4 text-sm text-muted-foreground" data-testid={`client-email-${client.id}`}>
                       {client.email || "-"}
                     </td>
-                    <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`client-telefono-${client.id}`}>
+                    <td className="py-4 px-4 text-sm text-muted-foreground" data-testid={`client-telefono-${client.id}`}>
                       {client.telefono || "-"}
                     </td>
-                    <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`client-city-${client.id}`}>
+                    <td className="py-4 px-4 text-sm text-muted-foreground" data-testid={`client-city-${client.id}`}>
                       {client.city || "-"}
                     </td>
                     <td className="py-4 px-4" data-testid={`client-projects-count-${client.id}`}>
@@ -576,15 +576,15 @@ export default function ClientsTable() {
           {/* Pagination Controls */}
           <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm">
             <div className="flex items-center gap-4">
-              <span className="text-gray-600 dark:text-gray-400" data-testid="clients-count">
+              <span className="text-muted-foreground" data-testid="clients-count">
                 Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, filteredClients.length)}</strong> di <strong>{filteredClients.length}</strong> clienti
                 {filteredClients.length !== clients.length && (
-                  <span className="text-gray-500 ml-1">({clients.length} totali)</span>
+                  <span className="text-muted-foreground ml-1">({clients.length} totali)</span>
                 )}
               </span>
               
               <div className="flex items-center gap-2">
-                <label htmlFor="clients-items-per-page" className="text-gray-600 dark:text-gray-400">
+                <label htmlFor="clients-items-per-page" className="text-muted-foreground">
                   Elementi per pagina:
                 </label>
                 <Select
@@ -607,7 +607,7 @@ export default function ClientsTable() {
             </div>
             
             <div className="flex items-center gap-3">
-              <span className="text-gray-600 dark:text-gray-400 text-sm">
+              <span className="text-muted-foreground text-sm">
                 Pagina <strong>{currentPage}</strong> di <strong>{totalPages || 1}</strong>
               </span>
               <div className="flex gap-2">
@@ -784,7 +784,7 @@ export default function ClientsTable() {
                 {selectedClientProjects.map((project) => (
                   <div 
                     key={project.id} 
-                    className="flex justify-between items-center p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="flex justify-between items-center p-4 border border-border rounded-lg hover:bg-muted"
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
@@ -801,10 +801,10 @@ export default function ClientsTable() {
                           {project.status}
                         </span>
                       </div>
-                      <div className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="mt-1 text-sm text-muted-foreground">
                         {project.object}
                       </div>
-                      <div className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                      <div className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
                         {project.city} • {project.year} • Template: {project.template}
                       </div>
                     </div>
@@ -812,7 +812,7 @@ export default function ClientsTable() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="text-center py-8 text-muted-foreground">
                 <div className="text-3xl mb-2">📋</div>
                 <p>Nessuna commessa trovata per questo cliente</p>
               </div>
@@ -837,11 +837,11 @@ export default function ClientsTable() {
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(handleEditSubmit)} className="space-y-6">
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
-                  <TabsTrigger value="general" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Generali</TabsTrigger>
-                  <TabsTrigger value="address" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Indirizzo</TabsTrigger>
-                  <TabsTrigger value="contacts" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Contatti</TabsTrigger>
-                  <TabsTrigger value="referente" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">Referente</TabsTrigger>
+                <TabsList className="bg-muted w-full flex-wrap h-auto gap-1 p-1">
+                  <TabsTrigger value="general" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-card dark:data-[state=active]:bg-card text-foreground">Generali</TabsTrigger>
+                  <TabsTrigger value="address" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-card dark:data-[state=active]:bg-card text-foreground">Indirizzo</TabsTrigger>
+                  <TabsTrigger value="contacts" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-card dark:data-[state=active]:bg-card text-foreground">Contatti</TabsTrigger>
+                  <TabsTrigger value="referente" className="flex-1 min-w-[70px] text-xs sm:text-sm data-[state=active]:bg-card dark:data-[state=active]:bg-card text-foreground">Referente</TabsTrigger>
                 </TabsList>
 
                 {/* Tab Generali */}
@@ -1158,19 +1158,19 @@ export default function ClientsTable() {
             <AlertDialogDescription className="space-y-2">
               <div>Sei sicuro di voler eliminare questo cliente?</div>
               {clientToDelete && (
-                <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                  <div className="font-semibold text-sm mb-1 dark:text-gray-200">
+                <div className="mt-3 p-3 bg-muted rounded-lg border border-border">
+                  <div className="font-semibold text-sm mb-1 dark:text-foreground">
                     {clientToDelete.name}
                   </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                  <div className="text-xs text-muted-foreground">
                     Sigla: <span className="font-mono font-semibold">{clientToDelete.sigla}</span>
                   </div>
                   {clientToDelete.city && (
-                    <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                       Città: {clientToDelete.city}
                     </div>
                   )}
-                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                  <div className="text-xs text-muted-foreground dark:text-muted-foreground mt-1">
                     Commesse: {clientToDelete.projectsCount || 0}
                   </div>
                 </div>

@@ -153,7 +153,7 @@ export function BillingConfig() {
       <CardContent className="space-y-6">
         {/* Soglie Alert */}
         <div className="space-y-4">
-          <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Soglie Alert (giorni)</h4>
+          <h4 className="font-medium text-sm text-foreground">Soglie Alert (giorni)</h4>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
@@ -170,9 +170,9 @@ export function BillingConfig() {
                   onChange={(e) => handleChange('alert_completata_giorni', parseInt(e.target.value) || 15)}
                   className="w-24"
                 />
-                <span className="text-sm text-gray-500">giorni</span>
+                <span className="text-sm text-muted-foreground">giorni</span>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Alert se completata ma non fatturata dopo N giorni
               </p>
             </div>
@@ -191,9 +191,9 @@ export function BillingConfig() {
                   onChange={(e) => handleChange('alert_scadenza_fattura_giorni', parseInt(e.target.value) || 30)}
                   className="w-24"
                 />
-                <span className="text-sm text-gray-500">giorni</span>
+                <span className="text-sm text-muted-foreground">giorni</span>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Scadenza default fattura dopo emissione
               </p>
             </div>
@@ -212,9 +212,9 @@ export function BillingConfig() {
                   onChange={(e) => handleChange('alert_pagamento_giorni', parseInt(e.target.value) || 60)}
                   className="w-24"
                 />
-                <span className="text-sm text-gray-500">giorni</span>
+                <span className="text-sm text-muted-foreground">giorni</span>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Alert se fattura emessa ma non pagata dopo N giorni
               </p>
             </div>
@@ -223,13 +223,13 @@ export function BillingConfig() {
 
         {/* Automazioni */}
         <div className="space-y-4 pt-4 border-t">
-          <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Automazioni</h4>
+          <h4 className="font-medium text-sm text-foreground">Automazioni</h4>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="auto_sync">Sincronizzazione prestazioni</Label>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Sincronizza automaticamente le prestazioni da metadata a tabella
                 </p>
               </div>
@@ -243,7 +243,7 @@ export function BillingConfig() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="auto_data">Data inizio automatica</Label>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Imposta automaticamente la data inizio commessa alla creazione
                 </p>
               </div>
@@ -258,7 +258,7 @@ export function BillingConfig() {
             <div className="flex items-center justify-between pt-2 border-t">
               <div className="space-y-0.5">
                 <Label>Sincronizza prestazioni</Label>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Forza la sincronizzazione delle prestazioni da metadata per tutti i progetti
                 </p>
               </div>

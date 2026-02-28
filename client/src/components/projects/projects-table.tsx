@@ -353,7 +353,7 @@ export default function ProjectsTable() {
     const syncStatus = getSyncStatus(project.id);
     
     if (!isOneDriveConnected) {
-      return { status: 'disconnected', label: 'OneDrive non collegato', icon: '🔌', color: 'text-gray-500' };
+      return { status: 'disconnected', label: 'OneDrive non collegato', icon: '🔌', color: 'text-muted-foreground' };
     }
     
     if (syncStatus.status === 'pending') {
@@ -408,7 +408,7 @@ export default function ProjectsTable() {
         </div>
         <div className="space-y-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex gap-4 items-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+            <div key={i} className="flex gap-4 items-center p-4 bg-card rounded-lg border border-border">
               <Skeleton className="h-6 w-24" />
               <Skeleton className="h-6 w-32" />
               <Skeleton className="h-6 w-24" />
@@ -427,7 +427,7 @@ export default function ProjectsTable() {
     <div data-testid="projects-table">
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tutte le Commesse</h3>
+          <h3 className="text-lg font-semibold text-foreground">Tutte le Commesse</h3>
           <Button
             variant="outline"
             onClick={() => refetch()}
@@ -439,8 +439,8 @@ export default function ProjectsTable() {
         </div>
 
         {/* Column Toggle Buttons */}
-        <div className="flex gap-1.5 sm:gap-2 flex-wrap items-center mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
-          <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-400 font-medium mr-1 sm:mr-2">Opzioni:</span>
+        <div className="flex gap-1.5 sm:gap-2 flex-wrap items-center mb-4 pb-3 border-b border-border">
+          <span className="hidden sm:inline text-sm text-muted-foreground font-medium mr-1 sm:mr-2">Opzioni:</span>
           <Button
             size="default"
             variant={sortByStatus ? "default" : "outline"}
@@ -452,7 +452,7 @@ export default function ProjectsTable() {
             {sortByStatus ? "📊" : "📋"} <span className="hidden sm:inline">Ordina per</span> Stato
           </Button>
 
-          <span className="hidden sm:inline text-sm text-gray-600 dark:text-gray-400 font-medium mr-1 sm:mr-2 ml-2 sm:ml-4">Mostra:</span>
+          <span className="hidden sm:inline text-sm text-muted-foreground font-medium mr-1 sm:mr-2 ml-2 sm:ml-4">Mostra:</span>
           <Button
             size="default"
             variant={showTechInfo ? "default" : "outline"}
@@ -520,10 +520,10 @@ export default function ProjectsTable() {
               placeholder={isMobile ? "Cerca..." : "Cerca per codice, cliente, città, oggetto..."}
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-gray-800 dark:text-white"
+              className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-background"
               data-testid="search-projects"
             />
-            <span className="absolute left-3 top-2.5 text-gray-400 dark:text-gray-500 text-lg">🔍</span>
+            <span className="absolute left-3 top-2.5 text-muted-foreground text-lg">🔍</span>
           </div>
 
           <Select value={statusFilter} onValueChange={handleFilterChange(setStatusFilter)}>
@@ -574,7 +574,7 @@ export default function ProjectsTable() {
                 setSearchTerm("");
                 setCurrentPage(1);
               }}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
               data-testid="clear-filters"
             >
               ✕ Pulisci filtri
@@ -584,7 +584,7 @@ export default function ProjectsTable() {
       </div>
       
       {filteredProjects.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-12 text-muted-foreground">
           <div className="text-4xl mb-2">📁</div>
           <p className="text-lg font-medium">
             {searchTerm ? "Nessuna commessa trovata" : "Nessuna commessa presente"}
@@ -605,7 +605,7 @@ export default function ProjectsTable() {
                 return (
                   <div
                     key={project.id}
-                    className="bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 p-4"
+                    className="bg-card rounded-md border border-border p-4"
                     data-testid={`project-card-${project.id}`}
                   >
                     {/* Header: Code + Status */}
@@ -652,55 +652,55 @@ export default function ProjectsTable() {
 
                     {/* Client + City */}
                     <div className="mb-2">
-                      <div className="font-medium text-gray-900 dark:text-white">{project.client}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">📍 {project.city}</div>
+                      <div className="font-medium text-foreground">{project.client}</div>
+                      <div className="text-sm text-muted-foreground">📍 {project.city}</div>
                     </div>
 
                     {/* Object */}
-                    <div className="text-sm text-gray-700 dark:text-gray-300 mb-3 line-clamp-2">
+                    <div className="text-sm text-foreground mb-3 line-clamp-2">
                       {project.object}
                     </div>
 
                     {/* Info Row: Communication + Deadline */}
-                    <div className="flex gap-4 pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <div className="flex gap-4 pt-3 border-t border-border">
                       {/* Last Communication */}
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">💬 Comunicazione</div>
+                        <div className="text-xs text-muted-foreground mb-1">💬 Comunicazione</div>
                         {lastComm ? (
                           <div className="text-xs">
                             <span className="font-medium">{lastComm.direction === 'in' ? '📩' : '📤'}</span>
-                            <span className="text-gray-600 dark:text-gray-300 ml-1 truncate block">
+                            <span className="text-muted-foreground ml-1 truncate block">
                               {lastComm.subject?.substring(0, 30)}{lastComm.subject && lastComm.subject.length > 30 ? '...' : ''}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400 italic">Nessuna</span>
+                          <span className="text-xs text-muted-foreground italic">Nessuna</span>
                         )}
                       </div>
 
                       {/* Next Deadline */}
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">📅 Scadenza</div>
+                        <div className="text-xs text-muted-foreground mb-1">📅 Scadenza</div>
                         {nextDeadline ? (
                           <div className="text-xs">
                             <span className={`font-medium ${
-                              new Date(nextDeadline.dueDate) < new Date() ? 'text-red-600' : 'text-gray-700 dark:text-gray-300'
+                              new Date(nextDeadline.dueDate) < new Date() ? 'text-red-600' : 'text-foreground'
                             }`}>
                               {new Date(nextDeadline.dueDate).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
                             </span>
-                            <span className="text-gray-600 dark:text-gray-400 ml-1 truncate block">
+                            <span className="text-muted-foreground ml-1 truncate block">
                               {nextDeadline.title?.substring(0, 20)}{nextDeadline.title && nextDeadline.title.length > 20 ? '...' : ''}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-xs text-gray-400 italic">Nessuna</span>
+                          <span className="text-xs text-muted-foreground italic">Nessuna</span>
                         )}
                       </div>
                     </div>
 
                     {/* Fatturazione for Admin */}
                     {isAdmin && project.fatturato && (
-                      <div className="mt-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                      <div className="mt-2 pt-2 border-t border-border">
                         <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
                           ✓ Fatturato
                         </span>
@@ -720,11 +720,11 @@ export default function ProjectsTable() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px]" aria-label="Tabella delle commesse">
               <caption className="sr-only">Elenco di tutte le commesse con dettagli, stato e azioni</caption>
-              <thead className="bg-gray-50 dark:bg-gray-700">
+              <thead className="bg-muted">
                 <tr>
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tl-lg w-24 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-foreground text-sm rounded-tl-lg w-24 cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => handleSort("code")}
                     data-testid="sort-code"
                   >
@@ -735,7 +735,7 @@ export default function ProjectsTable() {
                   </th>
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-32 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-foreground text-sm w-32 cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => handleSort("client")}
                     data-testid="sort-client"
                   >
@@ -745,14 +745,14 @@ export default function ProjectsTable() {
                     </div>
                   </th>
                   {showTechInfo && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-28">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-28">
                       Tipo Rapporto
-                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Chi commissiona il lavoro a G2 Ingegneria">ⓘ</span>
+                      <span className="ml-1 text-xs text-muted-foreground cursor-help" title="Chi commissiona il lavoro a G2 Ingegneria">ⓘ</span>
                     </th>
                   )}
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-24 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-foreground text-sm w-24 cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => handleSort("city")}
                     data-testid="sort-city"
                   >
@@ -763,7 +763,7 @@ export default function ProjectsTable() {
                   </th>
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-40 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-foreground text-sm w-40 cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => handleSort("object")}
                     data-testid="sort-object"
                   >
@@ -774,17 +774,17 @@ export default function ProjectsTable() {
                   </th>
                   {showPrestazioni && (
                     <>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-48">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-48">
                         Prestazioni
-                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Tipologia di servizi professionali">ⓘ</span>
+                        <span className="ml-1 text-xs text-muted-foreground cursor-help" title="Tipologia di servizi professionali">ⓘ</span>
                       </th>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-40">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-40">
                         Livelli Progettazione
-                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Livelli di progettazione DM 17/06/2016">ⓘ</span>
+                        <span className="ml-1 text-xs text-muted-foreground cursor-help" title="Livelli di progettazione DM 17/06/2016">ⓘ</span>
                       </th>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-32">
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-32">
                         Classe DM 17/06/2016
-                        <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
+                        <span className="ml-1 text-xs text-muted-foreground cursor-help" title="Classificazione tariffa professionale">ⓘ</span>
                       </th>
                     </>
                   )}
@@ -792,7 +792,7 @@ export default function ProjectsTable() {
                     <>
                       <th 
                         scope="col" 
-                        className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-16 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                        className="text-left py-4 px-4 font-semibold text-foreground text-sm w-16 cursor-pointer hover:bg-muted transition-colors"
                         onClick={() => handleSort("year")}
                         data-testid="sort-year"
                       >
@@ -801,12 +801,12 @@ export default function ProjectsTable() {
                           <SortIcon field="year" />
                         </div>
                       </th>
-                      <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-20">Template</th>
+                      <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-20">Template</th>
                     </>
                   )}
                   <th 
                     scope="col" 
-                    className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-24 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    className="text-left py-4 px-4 font-semibold text-foreground text-sm w-24 cursor-pointer hover:bg-muted transition-colors"
                     onClick={() => handleSort("status")}
                     data-testid="sort-status"
                   >
@@ -816,46 +816,46 @@ export default function ProjectsTable() {
                     </div>
                   </th>
                   {showFatturazione && isAdmin && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-32">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-32">
                       Fatturazione
-                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Stato fatturazione e pagamento">ⓘ</span>
+                      <span className="ml-1 text-xs text-muted-foreground cursor-help" title="Stato fatturazione e pagamento">ⓘ</span>
                     </th>
                   )}
                   {showComunicazioni && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-48">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-48">
                       Ultima Comunicazione
-                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Ultima comunicazione relativa alla commessa">ⓘ</span>
+                      <span className="ml-1 text-xs text-muted-foreground cursor-help" title="Ultima comunicazione relativa alla commessa">ⓘ</span>
                     </th>
                   )}
                   {showScadenze && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-40">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-40">
                       Prossima Scadenza
-                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Prossima scadenza in programma">ⓘ</span>
+                      <span className="ml-1 text-xs text-muted-foreground cursor-help" title="Prossima scadenza in programma">ⓘ</span>
                     </th>
                   )}
                   {showOneDrive && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-48">OneDrive</th>
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-48">OneDrive</th>
                   )}
                   {showHealth && (
-                    <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm w-24">
+                    <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm w-24">
                       Salute
-                      <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 cursor-help" title="Score salute progetto calcolato dall'AI (0-100)">ⓘ</span>
+                      <span className="ml-1 text-xs text-muted-foreground cursor-help" title="Score salute progetto calcolato dall'AI (0-100)">ⓘ</span>
                     </th>
                   )}
-                  <th scope="col" className="text-left py-4 px-4 font-semibold text-gray-700 dark:text-gray-300 text-sm rounded-tr-lg w-32">Azioni</th>
+                  <th scope="col" className="text-left py-4 px-4 font-semibold text-foreground text-sm rounded-tr-lg w-32">Azioni</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              <tbody className="divide-y divide-border">
                 {paginatedProjects.map((project) => (
-                  <tr key={project.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                  <tr key={project.id} className="hover:bg-muted transition-colors">
                     <td className="py-4 px-4 font-mono text-sm font-semibold text-primary" data-testid={`project-code-${project.id}`}>
                       {project.code}
                     </td>
-                    <td className="py-4 px-4 text-sm dark:text-gray-300" data-testid={`project-client-${project.id}`}>
+                    <td className="py-4 px-4 text-sm dark:text-foreground" data-testid={`project-client-${project.id}`}>
                       <div>
                         <div className="font-medium">{project.client}</div>
                         {project.committenteFinale && project.tipoRapporto !== "diretto" && (
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          <div className="text-xs text-muted-foreground mt-0.5">
                             ↳ Per: {project.committenteFinale}
                           </div>
                         )}
@@ -877,10 +877,10 @@ export default function ProjectsTable() {
                         })()}
                       </td>
                     )}
-                    <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`project-city-${project.id}`}>
+                    <td className="py-4 px-4 text-sm text-muted-foreground" data-testid={`project-city-${project.id}`}>
                       {project.city}
                     </td>
-                    <td className="py-4 px-4 text-sm dark:text-gray-300" data-testid={`project-object-${project.id}`}>
+                    <td className="py-4 px-4 text-sm dark:text-foreground" data-testid={`project-object-${project.id}`}>
                       {project.object}
                     </td>
                     {showPrestazioni && (
@@ -901,7 +901,7 @@ export default function ProjectsTable() {
                               );
                             })}
                             {!(project.metadata as ProjectMetadata)?.prestazioni?.length && (
-                              <span className="text-xs text-gray-400 italic">Non specificate</span>
+                              <span className="text-xs text-muted-foreground italic">Non specificate</span>
                             )}
                           </div>
                         </td>
@@ -916,7 +916,7 @@ export default function ProjectsTable() {
                               );
 
                               if (livelliBadges.length === 0) {
-                                return <span className="text-xs text-gray-400 italic">-</span>;
+                                return <span className="text-xs text-muted-foreground italic">-</span>;
                               }
 
                               return livelliBadges.map((badge, index) => (
@@ -939,11 +939,11 @@ export default function ProjectsTable() {
                             return (
                               <div>
                                 <span className={`px-2 py-1 rounded text-xs font-mono font-bold ${
-                                  classeDM.isFormatted ? 'bg-gray-800 text-white dark:bg-gray-600' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                                  classeDM.isFormatted ? 'bg-foreground text-background dark:bg-muted' : 'bg-muted text-muted-foreground dark:bg-muted dark:text-foreground'
                                 }`}>
                                   {classeDM.classe}
                                 </span>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <div className="text-xs text-muted-foreground mt-1">
                                   {classeDM.importo}
                                 </div>
                               </div>
@@ -954,7 +954,7 @@ export default function ProjectsTable() {
                     )}
                     {showTechInfo && (
                       <>
-                        <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-400" data-testid={`project-year-${project.id}`}>
+                        <td className="py-4 px-4 text-sm text-muted-foreground" data-testid={`project-year-${project.id}`}>
                           20{project.year.toString().padStart(2, '0')}
                         </td>
                         <td className="py-4 px-4" data-testid={`project-template-${project.id}`}>
@@ -986,12 +986,12 @@ export default function ProjectsTable() {
                         {(() => {
                           const stats = prestazioniByProject[project.id];
                           if (!stats || stats.totale === 0) {
-                            return <span className="text-xs text-gray-400 dark:text-gray-500 italic">-</span>;
+                            return <span className="text-xs text-muted-foreground italic">-</span>;
                           }
                           return (
                             <div className="flex flex-col gap-1">
                               {/* Stato prestazioni */}
-                              <div className="text-xs text-gray-600 dark:text-gray-400">
+                              <div className="text-xs text-muted-foreground">
                                 {stats.totale} prest.
                               </div>
                               {/* Fatturate */}
@@ -1001,7 +1001,7 @@ export default function ProjectsTable() {
                                     {stats.fatturate} fatt.
                                   </span>
                                   {stats.importoFatturato > 0 && (
-                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                    <span className="text-xs text-muted-foreground">
                                       €{(stats.importoFatturato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
                                     </span>
                                   )}
@@ -1042,7 +1042,7 @@ export default function ProjectsTable() {
                         {(() => {
                           const lastComm = getLastCommunication(project.id);
                           if (!lastComm) {
-                            return <span className="text-xs text-gray-400 dark:text-gray-500 italic">Nessuna comunicazione</span>;
+                            return <span className="text-xs text-muted-foreground italic">Nessuna comunicazione</span>;
                           }
 
                           const commDate = new Date(lastComm.communicationDate);
@@ -1056,17 +1056,17 @@ export default function ProjectsTable() {
                             <div className="flex flex-col gap-1">
                               <div className="flex items-center gap-1">
                                 <span title={lastComm.direction === 'in' ? 'In entrata' : 'In uscita'}>{icon}</span>
-                                <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 rounded font-medium">
+                                <span className="text-xs px-1.5 py-0.5 bg-muted dark:text-foreground rounded font-medium">
                                   {typeLabel}
                                 </span>
                                 {lastComm.isImportant && (
                                   <span className="text-red-500 dark:text-red-400" title="Comunicazione importante">⚠️</span>
                                 )}
                               </div>
-                              <div className="text-xs text-gray-600 dark:text-gray-400 truncate max-w-[200px]" title={lastComm.subject}>
+                              <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={lastComm.subject}>
                                 {lastComm.subject}
                               </div>
-                              <div className="text-xs text-gray-400 dark:text-gray-500">
+                              <div className="text-xs text-muted-foreground">
                                 {commDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                               </div>
                             </div>
@@ -1079,7 +1079,7 @@ export default function ProjectsTable() {
                         {(() => {
                           const nextDeadline = getNextDeadline(project.id);
                           if (!nextDeadline) {
-                            return <span className="text-xs text-gray-400 dark:text-gray-500 italic">Nessuna scadenza</span>;
+                            return <span className="text-xs text-muted-foreground italic">Nessuna scadenza</span>;
                           }
 
                           const dueDate = new Date(nextDeadline.dueDate);
@@ -1087,7 +1087,7 @@ export default function ProjectsTable() {
                           const daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
                           const priorityConfig: Record<string, { color: string; icon: string }> = {
-                            low: { color: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300', icon: '🟢' },
+                            low: { color: 'bg-muted text-foreground dark:bg-muted dark:text-foreground', icon: '🟢' },
                             medium: { color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200', icon: '🟡' },
                             high: { color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200', icon: '🟠' },
                             urgent: { color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200', icon: '🔴' }
@@ -1113,10 +1113,10 @@ export default function ProjectsTable() {
                                      nextDeadline.priority === 'high' ? 'Alta' : 'Urgente'}
                                 </span>
                               </div>
-                              <div className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[180px]" title={nextDeadline.title}>
+                              <div className="text-xs font-medium text-foreground truncate max-w-[180px]" title={nextDeadline.title}>
                                 {nextDeadline.title}
                               </div>
-                              <div className={`text-xs font-medium ${daysUntil <= 7 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
+                              <div className={`text-xs font-medium ${daysUntil <= 7 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}`}>
                                 {dueDate.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                 {daysUntil <= 7 && <span className="ml-1">⚠️ {daysUntil}gg</span>}
                               </div>
@@ -1147,7 +1147,7 @@ export default function ProjectsTable() {
                                   >
                                     📁 {mapping.oneDriveFolderName}
                                   </button>
-                                  <span className="text-xs text-gray-500 dark:text-gray-400 truncate" title={mapping.oneDriveFolderPath}>
+                                  <span className="text-xs text-muted-foreground truncate" title={mapping.oneDriveFolderPath}>
                                     {mapping.oneDriveFolderPath}
                                   </span>
                                 </div>
@@ -1164,7 +1164,7 @@ export default function ProjectsTable() {
                                   >
                                     {isSyncing ? '🔄' : '⚙️'} Configura
                                   </Button>
-                                  <span className="text-xs text-gray-400 dark:text-gray-500 truncate">
+                                  <span className="text-xs text-muted-foreground truncate">
                                     Non configurato
                                   </span>
                                 </div>
@@ -1226,7 +1226,7 @@ export default function ProjectsTable() {
                           className={`min-w-[44px] min-h-[44px] p-3 rounded-lg transition-colors ${
                             project.creArchiviato
                               ? 'text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900'
-                              : 'text-gray-400 hover:bg-gray-50 dark:text-gray-500 dark:hover:bg-gray-800'
+                              : 'text-gray-400 hover:bg-muted dark:text-muted-foreground dark:hover:bg-muted'
                           }`}
                           title={project.creArchiviato
                             ? `CRE archiviato il ${project.creDataArchiviazione ? new Date(project.creDataArchiviazione).toLocaleDateString('it-IT') : ''} - clicca per rimuovere`
@@ -1260,15 +1260,15 @@ export default function ProjectsTable() {
           {/* Pagination Controls */}
           <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm">
             <div className="flex items-center gap-4">
-              <span className="text-gray-600 dark:text-gray-400" data-testid="projects-count">
+              <span className="text-muted-foreground" data-testid="projects-count">
                 Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, sortedProjects.length)}</strong> di <strong>{sortedProjects.length}</strong> commesse
                 {sortedProjects.length !== projects.length && (
-                  <span className="text-gray-500 dark:text-gray-500 ml-1">({projects.length} totali)</span>
+                  <span className="text-muted-foreground dark:text-muted-foreground ml-1">({projects.length} totali)</span>
                 )}
               </span>
               
               <div className="flex items-center gap-2">
-                <label htmlFor="items-per-page" className="text-gray-600 dark:text-gray-400">
+                <label htmlFor="items-per-page" className="text-muted-foreground">
                   Elementi per pagina:
                 </label>
                 <Select 
@@ -1291,7 +1291,7 @@ export default function ProjectsTable() {
             </div>
             
             <div className="flex items-center gap-3">
-              <span className="text-gray-600 dark:text-gray-400">
+              <span className="text-muted-foreground">
                 Pagina <strong>{currentPage}</strong> di <strong>{totalPages || 1}</strong>
               </span>
               <div className="flex gap-2">
@@ -1329,14 +1329,14 @@ export default function ProjectsTable() {
             <AlertDialogDescription className="space-y-2">
               <div>Sei sicuro di voler eliminare questa commessa?</div>
               {projectToDelete && (
-                <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="mt-3 p-3 bg-muted rounded-lg border border-border">
                   <div className="font-mono font-semibold text-primary text-sm mb-1">
                     {projectToDelete.code}
                   </div>
-                  <div className="text-sm text-gray-700 dark:text-gray-300">
+                  <div className="text-sm text-foreground">
                     <strong>{projectToDelete.client}</strong> - {projectToDelete.city}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <div className="text-xs text-muted-foreground mt-1">
                     {projectToDelete.object}
                   </div>
                 </div>

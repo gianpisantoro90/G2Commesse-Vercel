@@ -46,10 +46,10 @@ export default function EmailCheckerCard() {
           <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold text-foreground">
             Controllo Email
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-muted-foreground">
             Verifica manualmente i nuovi messaggi
           </p>
         </div>
@@ -79,7 +79,7 @@ export default function EmailCheckerCard() {
       </div>
 
       {/* Hint */}
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+      <p className="text-xs text-muted-foreground mt-4 pt-3 border-t border-border">
         💡 Il controllo è manuale. Clicca il tasto per verificare i nuovi messaggi.
       </p>
     </div>

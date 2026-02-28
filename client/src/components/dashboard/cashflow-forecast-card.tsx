@@ -50,12 +50,12 @@ function formatEuroCompact(cents: number): string {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-lg text-xs">
-      <p className="font-medium text-gray-900 dark:text-white mb-1.5">{label}</p>
+    <div className="bg-card border border-border rounded-lg p-3 shadow-lg text-xs">
+      <p className="font-medium text-foreground mb-1.5">{label}</p>
       {payload.map((entry: any, i: number) => (
         <div key={i} className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-          <span className="text-gray-600 dark:text-gray-400">{entry.name}:</span>
+          <span className="text-muted-foreground">{entry.name}:</span>
           <span className="font-medium">{formatEuro(entry.value)}</span>
         </div>
       ))}
@@ -112,8 +112,8 @@ export default function CashFlowForecastCard() {
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">Previsione Cash Flow</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <h3 className="font-semibold text-foreground">Previsione Cash Flow</h3>
+            <p className="text-xs text-muted-foreground">
               Prossimi {forecast.months.length} mesi (storico + previsione)
             </p>
           </div>
@@ -157,7 +157,7 @@ export default function CashFlowForecastCard() {
 
       {/* Chart */}
       <Tabs defaultValue="combined">
-        <TabsList className="bg-gray-100 dark:bg-gray-800">
+        <TabsList className="bg-muted">
           <TabsTrigger value="combined" className="text-xs">Combinato</TabsTrigger>
           <TabsTrigger value="detail" className="text-xs">Dettaglio</TabsTrigger>
         </TabsList>
@@ -197,10 +197,10 @@ export default function CashFlowForecastCard() {
             </ResponsiveContainer>
           </div>
           <div className="flex justify-center gap-4 mt-2">
-            <div className="flex items-center gap-1 text-[10px] text-gray-500">
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <div className="w-3 h-2 bg-green-500 rounded-sm" /> Storico
             </div>
-            <div className="flex items-center gap-1 text-[10px] text-gray-500">
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <div className="w-3 h-2 bg-green-500 rounded-sm opacity-50" /> Previsione
             </div>
           </div>
@@ -209,8 +209,8 @@ export default function CashFlowForecastCard() {
         <TabsContent value="detail" className="mt-3">
           <div className="space-y-2 max-h-[250px] overflow-y-auto">
             {forecast.months.map(month => (
-              <div key={month.month} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="w-16 text-xs font-medium text-gray-700 dark:text-gray-300">
+              <div key={month.month} className="flex items-center gap-3 p-2 bg-muted rounded-lg">
+                <div className="w-16 text-xs font-medium text-foreground">
                   {month.label}
                 </div>
                 <div className="flex-1">
@@ -221,20 +221,20 @@ export default function CashFlowForecastCard() {
                       = {month.saldoPrevisto >= 0 ? '+' : ''}{formatEuro(month.saldoPrevisto)}
                     </span>
                   </div>
-                  <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full bg-primary transition-all"
                       style={{ width: `${Math.round(month.confidence * 100)}%`, opacity: month.confidence }}
                     />
                   </div>
                 </div>
-                <div className="text-[10px] text-gray-400 w-12 text-right">
+                <div className="text-[10px] text-muted-foreground w-12 text-right">
                   {Math.round(month.confidence * 100)}%
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-[10px] text-gray-400 text-center mt-2">
+          <p className="text-[10px] text-muted-foreground text-center mt-2">
             La barra indica il livello di confidenza della previsione
           </p>
         </TabsContent>

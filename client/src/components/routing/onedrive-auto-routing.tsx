@@ -613,20 +613,20 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       <div className="flex items-center gap-3 mb-6">
         <span className="text-3xl">{mode === "onedrive" ? "☁️" : "📁"}</span>
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">🤖 Auto-Routing AI Unificato</h2>
-          <p className="text-gray-600 dark:text-gray-300">Sistema intelligente per classificazione automatica file da qualsiasi sorgente</p>
+          <h2 className="text-2xl font-bold text-foreground">🤖 Auto-Routing AI Unificato</h2>
+          <p className="text-muted-foreground">Sistema intelligente per classificazione automatica file da qualsiasi sorgente</p>
         </div>
       </div>
 
       {/* Mode Toggle */}
       <div className="flex justify-center mb-6">
-        <div className="bg-gray-100 dark:bg-gray-800 p-1 rounded-lg inline-flex">
+        <div className="bg-muted p-1 rounded-lg inline-flex">
           <button
             onClick={() => handleModeChange("onedrive")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               mode === "onedrive"
-                ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400"
-                : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                ? "bg-card text-blue-600 dark:text-blue-400"
+                : "text-muted-foreground hover:text-foreground"
             }`}
             data-testid="mode-toggle-onedrive"
           >
@@ -637,8 +637,8 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             onClick={() => handleModeChange("upload")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               mode === "upload"
-                ? "bg-white dark:bg-gray-700 text-green-600 dark:text-green-400"
-                : "text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white"
+                ? "bg-card text-green-600 dark:text-green-400"
+                : "text-muted-foreground hover:text-foreground"
             }`}
             data-testid="mode-toggle-upload"
           >
@@ -673,18 +673,18 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
-          <TabsTrigger value="scan" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-scan">
+        <TabsList className="bg-muted w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="scan" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-card text-foreground" data-testid="tab-scan">
             <FolderSearch className="w-4 h-4" />
             <span className="hidden sm:inline">1. {mode === "onedrive" ? "Scansiona Cartella" : "Carica File"}</span>
             <span className="sm:hidden">1. {mode === "onedrive" ? "Scansiona" : "Carica"}</span>
           </TabsTrigger>
-          <TabsTrigger value="select" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-select">
+          <TabsTrigger value="select" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-card text-foreground" data-testid="tab-select">
             <CheckCircle className="w-4 h-4" />
             <span className="hidden sm:inline">2. Seleziona File</span>
             <span className="sm:hidden">2. Seleziona</span>
           </TabsTrigger>
-          <TabsTrigger value="results" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white" data-testid="tab-results">
+          <TabsTrigger value="results" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-card text-foreground" data-testid="tab-results">
             <Brain className="w-4 h-4" />
             <span className="hidden sm:inline">3. Routing AI</span>
             <span className="sm:hidden">3. AI</span>
@@ -696,7 +696,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-4">
               <div>
-                <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                <Label className="block text-sm font-semibold text-foreground mb-2">
                   Progetto di Riferimento
                 </Label>
                 <ProjectCombobox
@@ -710,12 +710,12 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
               {mode === "upload" ? (
                 // Upload Mode: File Upload Section
                 <div>
-                  <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  <Label className="block text-sm font-semibold text-foreground mb-2">
                     Seleziona File dal Computer
                   </Label>
-                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
                     <Upload className="w-8 h-8 mx-auto mb-3 text-gray-400" />
-                    <p className="text-gray-600 dark:text-gray-300 mb-2">Trascina i file qui o clicca per selezionare</p>
+                    <p className="text-muted-foreground mb-2">Trascina i file qui o clicca per selezionare</p>
                     <input
                       type="file"
                       multiple
@@ -726,7 +726,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                     />
                     <label
                       htmlFor="file-upload"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-muted hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg cursor-pointer text-sm font-medium text-foreground transition-colors"
                     >
                       <FileText className="w-4 h-4" />
                       Sfoglia File
@@ -742,7 +742,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                 // OneDrive Mode: Original OneDrive scanning section
                 <>
                   <div>
-                    <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    <Label className="block text-sm font-semibold text-foreground mb-2">
                       Cartella OneDrive del Progetto
                     </Label>
                     {selectedProject ? (
@@ -756,12 +756,12 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                         </p>
                       </div>
                     ) : (
-                      <div className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+                      <div className="p-3 bg-muted border border-border rounded-lg">
                         <div className="flex items-center gap-2">
-                          <AlertCircle className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-600 dark:text-gray-300">Seleziona prima un progetto</span>
+                          <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Seleziona prima un progetto</span>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           La cartella OneDrive verrà selezionata automaticamente
                         </p>
                       </div>
@@ -842,7 +842,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         {/* Step 2: Select Files */}
         <TabsContent value="select" className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-foreground">
               File Trovati ({scannedFiles.length})
             </h3>
             <div className="flex gap-2">
@@ -875,16 +875,16 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                   className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                     selectedFiles.some(f => f.id === file.id)
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
-                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      : 'border-border hover:bg-muted'
                   }`}
                   onClick={() => handleFileSelect(file, !selectedFiles.some(f => f.id === file.id))}
                   data-testid={`file-item-${file.id}`}
                 >
                   <div className="flex items-center gap-3">
-                    <FileText className="w-5 h-5 text-gray-500" />
+                    <FileText className="w-5 h-5 text-muted-foreground" />
                     <div>
-                      <div className="font-medium text-gray-900 dark:text-white">{file.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="font-medium text-foreground">{file.name}</div>
+                      <div className="text-sm text-muted-foreground">
                         {(file.size / 1024).toFixed(1)} KB • {new Date(file.lastModified).toLocaleDateString('it-IT')}
                       </div>
                     </div>
@@ -896,8 +896,8 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
               <p>Nessun file trovato. Esegui prima una scansione.</p>
             </div>
           )}
@@ -929,7 +929,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         {/* Step 3: Routing Results */}
         <TabsContent value="results" className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-foreground">
               Risultati Routing AI ({routingResults.length})
             </h3>
             {routingResults.length > 0 && mode === "onedrive" && (
@@ -954,7 +954,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             )}
             {routingResults.length > 0 && mode === "upload" && (
               <div className="flex items-center gap-4">
-                <div className="flex-1 text-sm text-gray-600 dark:text-gray-300 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex-1 text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                   <div className="flex items-center gap-2">
                     <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <span className="font-medium text-blue-800 dark:text-blue-300">Carica su OneDrive:</span>
@@ -986,24 +986,24 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           {routingResults.length > 0 ? (
             <div className="space-y-4">
               {routingResults.map((result, index) => (
-                <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div key={index} className="border border-border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="font-medium text-gray-900 dark:text-white">{result.file.name}</div>
+                    <div className="font-medium text-foreground">{result.file.name}</div>
                     <Badge className={getConfidenceBadge(result.confidence)}>
                       {Math.round(result.confidence * 100)}% confidenza
                     </Badge>
                   </div>
                   
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  <div className="flex items-center text-sm text-muted-foreground mb-2">
                     <span>{result.file.path || result.file.parentPath}</span>
                     <ArrowRight className="w-4 h-4 mx-2" />
-                    <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                    <span className="font-mono bg-muted px-2 py-1 rounded">
                       {result.suggestedPath}
                     </span>
                   </div>
                   
                   {result.reasoning && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded mt-2">
+                    <div className="text-xs text-muted-foreground bg-muted p-2 rounded mt-2">
                       {result.reasoning}
                     </div>
                   )}
@@ -1011,8 +1011,8 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <Brain className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+            <div className="text-center py-8 text-muted-foreground">
+              <Brain className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
               <p>Nessun risultato. Esegui prima l'analisi AI.</p>
             </div>
           )}

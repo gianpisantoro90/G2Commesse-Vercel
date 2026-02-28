@@ -206,11 +206,11 @@ PROSPETTO FATTURA:
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Calculator className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             Calcolatore Parcella DM 17/06/2016
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Calcola automaticamente i compensi professionali secondo le tariffe DM 17/06/2016
           </p>
         </div>
@@ -234,9 +234,9 @@ PROSPETTO FATTURA:
           )}
           <span className="font-semibold">Dati Input</span>
         </div>
-        <ChevronRight className="text-gray-400 dark:text-gray-500" />
-        <div className={`flex items-center gap-2 ${currentStep === 'result' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`}>
-          <div className={`w-8 h-8 rounded-full ${currentStep === 'result' ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'} flex items-center justify-center font-bold`}>
+        <ChevronRight className="text-muted-foreground" />
+        <div className={`flex items-center gap-2 ${currentStep === 'result' ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}>
+          <div className={`w-8 h-8 rounded-full ${currentStep === 'result' ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'bg-muted text-muted-foreground'} flex items-center justify-center font-bold`}>
             2
           </div>
           <span className="font-semibold">Risultato</span>
@@ -248,21 +248,21 @@ PROSPETTO FATTURA:
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Left Column - Basic Data */}
           <div className="card-g2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Dati Base Commessa</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Inserisci l'importo lavori e la classificazione</p>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Dati Base Commessa</h3>
+            <p className="text-sm text-muted-foreground mb-4">Inserisci l'importo lavori e la classificazione</p>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="importo-opere" className="text-gray-700 dark:text-gray-300">Importo Opere (€) *</Label>
+                <Label htmlFor="importo-opere" className="text-foreground">Importo Opere (€) *</Label>
                 <Input
                   id="importo-opere"
                   type="number"
                   value={importoOpere}
                   onChange={(e) => setImportoOpere(e.target.value)}
                   placeholder="es. 500000"
-                  className="text-lg font-semibold dark:bg-gray-800 dark:border-gray-700"
+                  className="text-lg font-semibold dark:bg-background dark:border-border"
                 />
                 {importoOpere && parseFloat(importoOpere) > 0 && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     {formatEuro(parseFloat(importoOpere))}
                   </p>
                 )}
@@ -270,7 +270,7 @@ PROSPETTO FATTURA:
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="classe-dm" className="text-gray-700 dark:text-gray-300">Classe DM 17/06/2016</Label>
+                  <Label htmlFor="classe-dm" className="text-foreground">Classe DM 17/06/2016</Label>
                   <Button
                     type="button"
                     variant="ghost"
@@ -282,7 +282,7 @@ PROSPETTO FATTURA:
                   </Button>
                 </div>
                 <Select value={classeDM2016} onValueChange={setClasseDM2016}>
-                  <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-background dark:border-border">
                     <SelectValue placeholder="Seleziona classe..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -296,9 +296,9 @@ PROSPETTO FATTURA:
               </div>
 
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300">Complessità Opera *</Label>
+                <Label className="text-foreground">Complessità Opera *</Label>
                 <Select value={complessita} onValueChange={(value: any) => setComplessita(value)}>
-                  <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="dark:bg-background dark:border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -307,7 +307,7 @@ PROSPETTO FATTURA:
                     <SelectItem value="alta">🔴 Alta - Opera complessa</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-muted-foreground">
                   La complessità influenza le percentuali applicate
                 </p>
               </div>
@@ -316,8 +316,8 @@ PROSPETTO FATTURA:
 
           {/* Right Column - Prestazioni */}
           <div className="card-g2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Prestazioni Professionali *</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Seleziona i servizi da includere nel calcolo</p>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Prestazioni Professionali *</h3>
+            <p className="text-sm text-muted-foreground mb-4">Seleziona i servizi da includere nel calcolo</p>
             <div className="space-y-4">
               <div className="space-y-3">
                 {Object.entries(PRESTAZIONI_CONFIG).map(([id, config]) => (
@@ -330,7 +330,7 @@ PROSPETTO FATTURA:
                       />
                       <label
                         htmlFor={id}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 text-gray-700 dark:text-gray-300"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 text-foreground"
                       >
                         <span>{config.icon}</span>
                         <span>{config.label}</span>
@@ -340,7 +340,7 @@ PROSPETTO FATTURA:
                     {/* Livelli Progettazione (solo se progettazione selezionata) */}
                     {id === 'progettazione' && prestazioni.includes('progettazione') && (
                       <div className="ml-6 pl-4 border-l-2 border-blue-200 dark:border-blue-800 space-y-2">
-                        <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">Livelli di Progettazione:</p>
+                        <p className="text-xs text-muted-foreground font-medium">Livelli di Progettazione:</p>
                         {Object.entries(LIVELLO_PROGETTAZIONE_CONFIG).map(([livelloId, livelloConfig]) => (
                           <div key={livelloId} className="flex items-center space-x-2">
                             <Checkbox
@@ -350,7 +350,7 @@ PROSPETTO FATTURA:
                             />
                             <label
                               htmlFor={livelloId}
-                              className="text-xs leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-600 dark:text-gray-400"
+                              className="text-xs leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-muted-foreground"
                             >
                               {livelloConfig.icon} {livelloConfig.label}
                             </label>
@@ -362,7 +362,7 @@ PROSPETTO FATTURA:
                 ))}
               </div>
 
-              <Separator className="dark:bg-gray-700" />
+              <Separator className="dark:bg-border" />
 
               <Button
                 onClick={handleCalculate}
@@ -408,7 +408,7 @@ PROSPETTO FATTURA:
           {/* Dettaglio Compensi */}
           <div className="card-g2">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 Dettaglio Compensi per Prestazione
               </h3>
@@ -428,8 +428,8 @@ PROSPETTO FATTURA:
                 <div key={index} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">{dettaglio.prestazione}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="font-semibold text-foreground">{dettaglio.prestazione}</p>
+                      <p className="text-sm text-muted-foreground">
                         {dettaglio.percentuale.toFixed(2)}% su {formatEuro(calculationResult.importoBase)}
                       </p>
                     </div>
@@ -444,10 +444,10 @@ PROSPETTO FATTURA:
                 </div>
               ))}
 
-              <Separator className="dark:bg-gray-700" />
+              <Separator className="dark:bg-border" />
 
               <div className="flex items-center justify-between pt-2">
-                <p className="text-lg font-bold text-gray-900 dark:text-white">TOTALE COMPENSO PROFESSIONALE</p>
+                <p className="text-lg font-bold text-foreground">TOTALE COMPENSO PROFESSIONALE</p>
                 <p className="text-2xl font-bold text-green-700 dark:text-green-400">
                   {formatEuro(calculationResult.compensoTotale)}
                 </p>
@@ -458,77 +458,77 @@ PROSPETTO FATTURA:
           {/* Prospetto Fattura */}
           <div className="card-g2">
             <div className="mb-4">
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
                 <TrendingUp className="h-5 w-5 text-green-600 dark:text-green-400" />
                 Prospetto Fattura
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Calcolo con CPA, IVA e ritenuta d'acconto
               </p>
             </div>
             <div className="space-y-4">
               {/* Aliquote personalizzabili */}
-              <div className="grid gap-4 md:grid-cols-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="grid gap-4 md:grid-cols-3 p-4 bg-muted rounded-lg">
                 <div className="space-y-1">
-                  <Label htmlFor="cpa" className="text-xs text-gray-700 dark:text-gray-300">CPA (%)</Label>
+                  <Label htmlFor="cpa" className="text-xs text-foreground">CPA (%)</Label>
                   <Input
                     id="cpa"
                     type="number"
                     value={aliquotaCPA}
                     onChange={(e) => setAliquotaCPA(parseFloat(e.target.value) || 0)}
-                    className="h-8 dark:bg-gray-700 dark:border-gray-600"
+                    className="h-8 dark:bg-muted dark:border-border"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="iva" className="text-xs text-gray-700 dark:text-gray-300">IVA (%)</Label>
+                  <Label htmlFor="iva" className="text-xs text-foreground">IVA (%)</Label>
                   <Input
                     id="iva"
                     type="number"
                     value={aliquotaIVA}
                     onChange={(e) => setAliquotaIVA(parseFloat(e.target.value) || 0)}
-                    className="h-8 dark:bg-gray-700 dark:border-gray-600"
+                    className="h-8 dark:bg-muted dark:border-border"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="ritenuta" className="text-xs text-gray-700 dark:text-gray-300">Ritenuta (%)</Label>
+                  <Label htmlFor="ritenuta" className="text-xs text-foreground">Ritenuta (%)</Label>
                   <Input
                     id="ritenuta"
                     type="number"
                     value={aliquotaRitenuta}
                     onChange={(e) => setAliquotaRitenuta(parseFloat(e.target.value) || 0)}
-                    className="h-8 dark:bg-gray-700 dark:border-gray-600"
+                    className="h-8 dark:bg-muted dark:border-border"
                   />
                 </div>
               </div>
 
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-700 dark:text-gray-300">Compenso netto</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{formatEuro(fatturaResult.compensoNetto)}</span>
+                  <span className="text-foreground">Compenso netto</span>
+                  <span className="font-semibold text-foreground">{formatEuro(fatturaResult.compensoNetto)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">+ CPA {aliquotaCPA}%</span>
-                  <span className="text-gray-700 dark:text-gray-300">{formatEuro(fatturaResult.cpa)}</span>
+                  <span className="text-muted-foreground">+ CPA {aliquotaCPA}%</span>
+                  <span className="text-foreground">{formatEuro(fatturaResult.cpa)}</span>
                 </div>
-                <Separator className="dark:bg-gray-700" />
+                <Separator className="dark:bg-border" />
                 <div className="flex justify-between items-center font-medium">
-                  <span className="text-gray-700 dark:text-gray-300">Imponibile</span>
-                  <span className="text-gray-900 dark:text-white">{formatEuro(fatturaResult.imponibile)}</span>
+                  <span className="text-foreground">Imponibile</span>
+                  <span className="text-foreground">{formatEuro(fatturaResult.imponibile)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">+ IVA {aliquotaIVA}%</span>
-                  <span className="text-gray-700 dark:text-gray-300">{formatEuro(fatturaResult.iva)}</span>
+                  <span className="text-muted-foreground">+ IVA {aliquotaIVA}%</span>
+                  <span className="text-foreground">{formatEuro(fatturaResult.iva)}</span>
                 </div>
-                <Separator className="dark:bg-gray-700" />
+                <Separator className="dark:bg-border" />
                 <div className="flex justify-between items-center font-semibold text-lg">
-                  <span className="text-gray-900 dark:text-white">Totale con IVA</span>
+                  <span className="text-foreground">Totale con IVA</span>
                   <span className="text-blue-700 dark:text-blue-400">{formatEuro(fatturaResult.totaleConIVA)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">- Ritenuta d'acconto {aliquotaRitenuta}%</span>
+                  <span className="text-muted-foreground">- Ritenuta d'acconto {aliquotaRitenuta}%</span>
                   <span className="text-red-600 dark:text-red-400">-{formatEuro(fatturaResult.ritenutaAcconto)}</span>
                 </div>
-                <Separator className="border-2 dark:bg-gray-600" />
+                <Separator className="border-2 dark:bg-muted" />
                 <div className="flex justify-between items-center bg-green-50 dark:bg-green-950/30 p-4 rounded-lg">
                   <span className="text-xl font-bold text-green-900 dark:text-green-100">NETTO A PAGARE</span>
                   <span className="text-2xl font-bold text-green-700 dark:text-green-400">
@@ -541,9 +541,9 @@ PROSPETTO FATTURA:
 
           {/* Note */}
           {calculationResult.note.length > 0 && (
-            <Alert className="dark:bg-gray-800 dark:border-gray-700">
+            <Alert className="dark:bg-background dark:border-border">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="text-gray-700 dark:text-gray-300">
+              <AlertDescription className="text-foreground">
                 <ul className="list-disc list-inside space-y-1 text-sm">
                   {calculationResult.note.map((nota, index) => (
                     <li key={index}>{nota}</li>

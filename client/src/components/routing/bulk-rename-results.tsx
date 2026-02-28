@@ -30,13 +30,13 @@ export default function BulkRenameResults({ results, onClear }: BulkRenameResult
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+          <div className="bg-card p-4 rounded-lg border border-border">
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">{renamedCount}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">File rinominati</div>
+            <div className="text-sm text-muted-foreground">File rinominati</div>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700">
+          <div className="bg-card p-4 rounded-lg border border-border">
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{alreadyCorrectCount}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Già corretti</div>
+            <div className="text-sm text-muted-foreground">Già corretti</div>
           </div>
         </div>
 
@@ -50,12 +50,12 @@ export default function BulkRenameResults({ results, onClear }: BulkRenameResult
         )}
 
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-700 dark:text-gray-300">Dettagli operazione:</h4>
-          <div className="max-h-64 overflow-y-auto bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-3">
+          <h4 className="font-medium text-foreground">Dettagli operazione:</h4>
+          <div className="max-h-64 overflow-y-auto bg-card border border-border rounded-lg p-3">
             {results.map((item, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b dark:border-gray-700 last:border-b-0">
+              <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
                 <div className="text-sm">
-                  <div className="text-gray-600 dark:text-gray-400">{item.original}</div>
+                  <div className="text-muted-foreground">{item.original}</div>
                   {item.original !== item.renamed && (
                     <div className="text-green-600 dark:text-green-400 font-medium">→ {item.renamed}</div>
                   )}
@@ -76,11 +76,11 @@ export default function BulkRenameResults({ results, onClear }: BulkRenameResult
           </div>
         </div>
 
-        <div className="flex gap-3 pt-4 border-t dark:border-gray-700">
+        <div className="flex gap-3 pt-4 border-t border-border">
           <Button
             onClick={onClear}
             variant="outline"
-            className="px-6 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg font-semibold hover:bg-gray-50 dark:hover:bg-gray-700"
+            className="px-6 py-2 border-2 border-border text-foreground rounded-lg font-semibold hover:bg-muted"
             data-testid="clear-results-button"
           >
             🔄 Rinomina Altri File

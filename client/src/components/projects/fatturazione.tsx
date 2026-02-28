@@ -261,8 +261,8 @@ export default function Fatturazione() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Gestione Fatture</h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Emissione e tracciamento fatture per commessa</p>
+          <h2 className="text-2xl font-bold text-foreground">Gestione Fatture</h2>
+          <p className="text-muted-foreground mt-1">Emissione e tracciamento fatture per commessa</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
@@ -371,8 +371,8 @@ export default function Fatturazione() {
               </div>
 
               {/* Riepilogo */}
-              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                <div className="font-semibold text-sm text-gray-700">Riepilogo Fattura</div>
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <div className="font-semibold text-sm text-foreground">Riepilogo Fattura</div>
                 <div className="flex justify-between text-sm">
                   <span>Imponibile:</span>
                   <span>€{formData.importoNetto.toFixed(2)}</span>
@@ -413,20 +413,20 @@ export default function Fatturazione() {
       {/* Statistiche */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className="card-g2">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Fatture Totali</p>
+          <p className="text-sm font-medium text-muted-foreground mb-2">Fatture Totali</p>
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totale}</div>
+            <div className="text-2xl font-bold text-foreground">{stats.totale}</div>
             <FileText className="w-8 h-8 text-blue-500 dark:text-blue-400" />
           </div>
-          <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+          <div className="text-xs text-muted-foreground mt-2">
             <div>Emesse: {stats.emesse} | Pagate: {stats.pagate}</div>
           </div>
         </div>
 
         <div className="card-g2">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Importo Totale</p>
+          <p className="text-sm font-medium text-muted-foreground mb-2">Importo Totale</p>
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="text-2xl font-bold text-foreground">
               €{(stats.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
             </div>
             <Euro className="w-8 h-8 text-purple-500 dark:text-purple-400" />
@@ -434,7 +434,7 @@ export default function Fatturazione() {
         </div>
 
         <div className="card-g2">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Incassato</p>
+          <p className="text-sm font-medium text-muted-foreground mb-2">Incassato</p>
           <div className="flex items-center justify-between">
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               €{(stats.importoPagato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
@@ -444,7 +444,7 @@ export default function Fatturazione() {
         </div>
 
         <div className="card-g2">
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Da Incassare</p>
+          <p className="text-sm font-medium text-muted-foreground mb-2">Da Incassare</p>
           <div className="flex items-center justify-between">
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               €{(stats.importoDaPagare / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
@@ -456,16 +456,16 @@ export default function Fatturazione() {
 
       {/* Tabelle Fatture */}
       <Tabs defaultValue="all" className="w-full">
-        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
-          <TabsTrigger value="all" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+        <TabsList className="bg-muted w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="all" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-card dark:data-[state=active]:bg-card text-foreground">
             <span className="hidden sm:inline">Tutte le Fatture</span>
             <span className="sm:hidden">Tutte</span>
           </TabsTrigger>
-          <TabsTrigger value="by-project" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+          <TabsTrigger value="by-project" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-card dark:data-[state=active]:bg-card text-foreground">
             <span className="hidden sm:inline">Per Commessa</span>
             <span className="sm:hidden">Per Comm.</span>
           </TabsTrigger>
-          <TabsTrigger value="unpaid" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+          <TabsTrigger value="unpaid" className="flex-1 min-w-[100px] text-xs sm:text-sm data-[state=active]:bg-card dark:data-[state=active]:bg-card text-foreground">
             <span className="hidden sm:inline">Da Incassare</span>
             <span className="sm:hidden">Da Inc.</span>
           </TabsTrigger>
@@ -474,9 +474,9 @@ export default function Fatturazione() {
         <TabsContent value="all" className="space-y-4">
           <div className="card-g2">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Tutte le Fatture</h3>
+              <h3 className="text-lg font-semibold text-foreground">Tutte le Fatture</h3>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Mostra:</span>
+                <span className="text-sm text-muted-foreground">Mostra:</span>
                 <Select
                   value={itemsPerPage.toString()}
                   onValueChange={(v) => {
@@ -484,7 +484,7 @@ export default function Fatturazione() {
                     setCurrentPage(1);
                   }}
                 >
-                  <SelectTrigger className="w-20 dark:bg-gray-800 dark:border-gray-700">
+                  <SelectTrigger className="w-20 dark:bg-background dark:border-border">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -496,22 +496,22 @@ export default function Fatturazione() {
               </div>
             </div>
             {isLoading ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Caricamento...</p>
+              <p className="text-center text-muted-foreground py-8">Caricamento...</p>
             ) : invoices?.length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura emessa</p>
+              <p className="text-center text-muted-foreground py-8">Nessuna fattura emessa</p>
             ) : (
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b dark:border-gray-700">
-                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">N. Fattura</th>
-                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Commessa</th>
-                        <th className="text-left py-3 px-4 text-gray-700 dark:text-gray-300">Data Emissione</th>
-                        <th className="text-right py-3 px-4 text-gray-700 dark:text-gray-300">Importo</th>
-                        <th className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">Stato</th>
-                        <th className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">Scadenza</th>
-                        <th className="text-center py-3 px-4 text-gray-700 dark:text-gray-300">Azioni</th>
+                      <tr className="border-b dark:border-border">
+                        <th className="text-left py-3 px-4 text-foreground">N. Fattura</th>
+                        <th className="text-left py-3 px-4 text-foreground">Commessa</th>
+                        <th className="text-left py-3 px-4 text-foreground">Data Emissione</th>
+                        <th className="text-right py-3 px-4 text-foreground">Importo</th>
+                        <th className="text-center py-3 px-4 text-foreground">Stato</th>
+                        <th className="text-center py-3 px-4 text-foreground">Scadenza</th>
+                        <th className="text-center py-3 px-4 text-foreground">Azioni</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -520,18 +520,18 @@ export default function Fatturazione() {
                         const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
 
                         return (
-                          <tr key={invoice.id} className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">{invoice.numeroFattura}</td>
+                          <tr key={invoice.id} className="border-b dark:border-border hover:bg-muted">
+                            <td className="py-3 px-4 font-medium text-foreground">{invoice.numeroFattura}</td>
                             <td className="py-3 px-4">
                               <div className="text-sm">
-                                <div className="font-medium text-gray-900 dark:text-white">{project?.code}</div>
-                                <div className="text-gray-500 dark:text-gray-400 truncate max-w-xs">{project?.object}</div>
+                                <div className="font-medium text-foreground">{project?.code}</div>
+                                <div className="text-muted-foreground truncate max-w-xs">{project?.object}</div>
                               </div>
                             </td>
-                            <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                            <td className="py-3 px-4 text-sm text-foreground">
                               {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
                             </td>
-                            <td className="py-3 px-4 text-right font-semibold text-gray-900 dark:text-white">
+                            <td className="py-3 px-4 text-right font-semibold text-foreground">
                               €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                             </td>
                             <td className="py-3 px-4 text-center">
@@ -540,7 +540,7 @@ export default function Fatturazione() {
                                 <span className="ml-1">{statoConfig?.label}</span>
                               </Badge>
                             </td>
-                            <td className="py-3 px-4 text-center text-sm text-gray-900 dark:text-white">
+                            <td className="py-3 px-4 text-center text-sm text-foreground">
                               {invoice.scadenzaPagamento
                                 ? format(new Date(invoice.scadenzaPagamento), 'dd/MM/yyyy', { locale: it })
                                 : '-'}
@@ -586,8 +586,8 @@ export default function Fatturazione() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-gray-700">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center justify-between pt-4 mt-4 border-t dark:border-border">
+                    <span className="text-sm text-muted-foreground">
                       Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, invoices?.length || 0)}</strong> di <strong>{invoices?.length || 0}</strong> fatture
                     </span>
                     <div className="flex gap-2">
@@ -622,12 +622,12 @@ export default function Fatturazione() {
             <div key={group.project.id} className="card-g2">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{group.project.code}</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{group.project.object}</p>
+                  <h3 className="text-lg font-semibold text-foreground">{group.project.code}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{group.project.object}</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Fatturato Totale</div>
-                  <div className="text-xl font-bold text-gray-900 dark:text-white">
+                  <div className="text-sm text-muted-foreground">Fatturato Totale</div>
+                  <div className="text-xl font-bold text-foreground">
                     €{(group.totaleFatturato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
                   </div>
                 </div>
@@ -636,10 +636,10 @@ export default function Fatturazione() {
                 {group.invoices.map(invoice => {
                   const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
                   return (
-                    <div key={invoice.id} className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <div key={invoice.id} className="flex items-center justify-between p-3 border dark:border-border rounded-lg hover:bg-muted">
                       <div>
-                        <div className="font-semibold text-gray-900 dark:text-white">{invoice.numeroFattura}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="font-semibold text-foreground">{invoice.numeroFattura}</div>
+                        <div className="text-sm text-muted-foreground">
                           {format(new Date(invoice.dataEmissione), 'dd MMMM yyyy', { locale: it })}
                         </div>
                       </div>
@@ -648,7 +648,7 @@ export default function Fatturazione() {
                           {statoConfig?.label}
                         </Badge>
                         <div className="text-right">
-                          <div className="font-bold text-gray-900 dark:text-white">
+                          <div className="font-bold text-foreground">
                             €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                           </div>
                         </div>
@@ -690,7 +690,7 @@ export default function Fatturazione() {
           ))}
           {groupedInvoices.length === 0 && (
             <div className="card-g2 p-8">
-              <p className="text-center text-gray-500 dark:text-gray-400">Nessuna fattura emessa</p>
+              <p className="text-center text-muted-foreground">Nessuna fattura emessa</p>
             </div>
           )}
         </TabsContent>
@@ -698,7 +698,7 @@ export default function Fatturazione() {
         <TabsContent value="unpaid" className="space-y-4">
           <div className="card-g2">
             {invoices?.filter(i => i.stato !== 'pagata').length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-8">Nessuna fattura da incassare</p>
+              <p className="text-center text-muted-foreground py-8">Nessuna fattura da incassare</p>
             ) : (
               <div className="space-y-3">
                 {invoices?.filter(i => i.stato !== 'pagata').map(invoice => {
@@ -706,18 +706,18 @@ export default function Fatturazione() {
                   const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
 
                   return (
-                    <div key={invoice.id} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <div key={invoice.id} className="flex items-center justify-between p-4 border dark:border-border rounded-lg hover:bg-muted">
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
-                          <div className="font-semibold text-gray-900 dark:text-white">{invoice.numeroFattura}</div>
+                          <div className="font-semibold text-foreground">{invoice.numeroFattura}</div>
                           <Badge className={statoConfig?.color}>
                             {statoConfig?.label}
                           </Badge>
                         </div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                        <div className="text-sm text-muted-foreground mt-1">
                           {project?.code} - {project?.object}
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        <div className="text-xs text-muted-foreground mt-1">
                           Emessa: {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
                           {invoice.scadenzaPagamento && (
                             <> | Scadenza: {format(new Date(invoice.scadenzaPagamento), 'dd/MM/yyyy', { locale: it })}</>
@@ -726,7 +726,7 @@ export default function Fatturazione() {
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <div className="text-xl font-bold text-gray-900 dark:text-white">
+                          <div className="text-xl font-bold text-foreground">
                             €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                           </div>
                         </div>

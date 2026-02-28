@@ -230,13 +230,13 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 
             {/* SEZIONE 1: Dati Base */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="border border-border rounded-lg overflow-hidden">
               <button
                 type="button"
                 onClick={() => toggleSection('base')}
-                className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted transition-colors"
               >
-                <span className="font-semibold text-gray-900 dark:text-white text-sm">Dati Base Commessa</span>
+                <span className="font-semibold text-foreground text-sm">Dati Base Commessa</span>
                 {expandedSections.base ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
 
@@ -343,7 +343,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                       <FormItem>
                         <FormLabel>
                           Oggetto (Abbreviato)
-                          <span className="ml-1 text-xs text-gray-500 font-normal">Per cartelle e tabella</span>
+                          <span className="ml-1 text-xs text-muted-foreground font-normal">Per cartelle e tabella</span>
                         </FormLabel>
                         <FormControl>
                           <Input {...field} placeholder="Es. Ristrutturazione edificio" />
@@ -360,7 +360,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                       <FormItem>
                         <FormLabel>
                           Oggetto Completo
-                          <span className="ml-1 text-xs text-gray-500 font-normal">Descrizione estesa per CRE</span>
+                          <span className="ml-1 text-xs text-muted-foreground font-normal">Descrizione estesa per CRE</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -445,13 +445,13 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
             </div>
 
             {/* SEZIONE 2: Dati Contratto */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="border border-border rounded-lg overflow-hidden">
               <button
                 type="button"
                 onClick={() => toggleSection('contratto')}
-                className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted transition-colors"
               >
-                <span className="font-semibold text-gray-900 dark:text-white text-sm">Dati Contratto (per CRE)</span>
+                <span className="font-semibold text-foreground text-sm">Dati Contratto (per CRE)</span>
                 {expandedSections.contratto ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
 
@@ -491,13 +491,13 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
             </div>
 
             {/* SEZIONE 3: Prestazioni Professionali */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="border border-border rounded-lg overflow-hidden">
               <button
                 type="button"
                 onClick={() => toggleSection('prestazioni')}
-                className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted transition-colors"
               >
-                <span className="font-semibold text-gray-900 dark:text-white text-sm">Prestazioni Professionali</span>
+                <span className="font-semibold text-foreground text-sm">Prestazioni Professionali</span>
                 {expandedSections.prestazioni ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
 
@@ -505,12 +505,12 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                 <div className="p-4 space-y-4">
                   {/* Tipologia Prestazioni */}
                   <div>
-                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 block">
+                    <Label className="text-sm font-medium text-foreground mb-3 block">
                       Tipologia Prestazioni
                     </Label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {prestazioniList.map(({ id, config }) => (
-                        <div key={id} className="flex items-center space-x-2 p-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <div key={id} className="flex items-center space-x-2 p-2 border border-border rounded-lg hover:bg-muted">
                           <Checkbox
                             id={`edit-prestazione-${id}`}
                             checked={prestazioniData.prestazioni?.includes(id) || false}
@@ -528,12 +528,12 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                   {/* Livello Progettazione - condizionale */}
                   {showLivelloProgettazione && (
                     <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      <Label className="text-sm font-medium text-foreground mb-2 block">
                         Livello Progettazione
                       </Label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {livelliProgettazioneList.map(({ id, config }) => (
-                          <div key={id} className="flex items-center space-x-2 p-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg">
+                          <div key={id} className="flex items-center space-x-2 p-2 bg-card border border-blue-200 dark:border-blue-700 rounded-lg">
                             <Checkbox
                               id={`edit-livello-${id}`}
                               checked={prestazioniData.livelloProgettazione?.includes(id) || false}
@@ -552,20 +552,20 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
             </div>
 
             {/* SEZIONE 4: Classificazioni DM 17/06/2016 */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="border border-border rounded-lg overflow-hidden">
               <button
                 type="button"
                 onClick={() => toggleSection('classificazioni')}
-                className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted transition-colors"
               >
-                <span className="font-semibold text-gray-900 dark:text-white text-sm">Classificazioni DM 17/06/2016</span>
+                <span className="font-semibold text-foreground text-sm">Classificazioni DM 17/06/2016</span>
                 {expandedSections.classificazioni ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
 
               {expandedSections.classificazioni && (
                 <div className="p-4 space-y-3">
                   <div className="flex justify-between items-center">
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       Categorie con importi
                     </p>
                     <Button
@@ -583,7 +583,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                   <div className="space-y-2">
                     {prestazioniData.classificazioniDM2016 && prestazioniData.classificazioniDM2016.length > 0 ? (
                       prestazioniData.classificazioniDM2016.map((classificazione, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-2 p-2 bg-muted rounded-lg border border-border">
                           {/* Dropdown Categoria */}
                           <div>
                             <Select
@@ -677,7 +677,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-4 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                      <div className="text-center py-4 text-muted-foreground border border-dashed border-border rounded-lg">
                         <p className="text-xs">Nessuna classificazione</p>
                       </div>
                     )}
@@ -685,13 +685,13 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
 
                   {/* Totale Importi */}
                   {prestazioniData.classificazioniDM2016 && prestazioniData.classificazioniDM2016.length > 0 && (
-                    <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-1">
+                    <div className="pt-2 border-t border-border space-y-1">
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Totale Opere:</span>
+                        <span className="text-muted-foreground">Totale Opere:</span>
                         <span className="font-semibold">{formatImporto(importoTotaleOpere)}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Totale Servizio:</span>
+                        <span className="text-muted-foreground">Totale Servizio:</span>
                         <span className="font-semibold text-primary">{formatImporto(importoTotaleServizio)}</span>
                       </div>
                     </div>
@@ -702,13 +702,13 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
 
             {/* SEZIONE 5: Salute Progetto (AI) */}
             {project && (
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <div className="border border-border rounded-lg overflow-hidden">
                 <button
                   type="button"
                   onClick={() => toggleSection('health')}
-                  className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted transition-colors"
                 >
-                  <span className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                  <span className="font-semibold text-foreground text-sm flex items-center gap-2">
                     🩺 Salute Progetto (AI)
                   </span>
                   {expandedSections.health ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}

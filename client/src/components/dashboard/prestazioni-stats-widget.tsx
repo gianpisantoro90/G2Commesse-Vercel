@@ -39,8 +39,8 @@ export default function PrestazioniStatsWidget() {
   if (error || !stats) {
     return (
       <div className="card-g2" data-testid="prestazioni-stats-error">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Stato Prestazioni</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Impossibile caricare le statistiche</p>
+        <h3 className="text-lg font-semibold text-foreground">Stato Prestazioni</h3>
+        <p className="text-sm text-muted-foreground mt-1">Impossibile caricare le statistiche</p>
       </div>
     );
   }
@@ -49,12 +49,12 @@ export default function PrestazioniStatsWidget() {
   if (stats.totale === 0) {
     return (
       <div className="card-g2" data-testid="prestazioni-stats-empty">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
           Stato Prestazioni
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Riepilogo fatturazione e pagamento prestazioni</p>
-        <div className="text-center py-6 text-gray-500 dark:text-gray-400 mt-4">
+        <p className="text-sm text-muted-foreground mt-1">Riepilogo fatturazione e pagamento prestazioni</p>
+        <div className="text-center py-6 text-muted-foreground mt-4">
           <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
           <p>Nessuna prestazione registrata</p>
           <p className="text-sm">Inizia aggiungendo prestazioni ai tuoi progetti</p>
@@ -70,7 +70,7 @@ export default function PrestazioniStatsWidget() {
     <div className={`card-g2 ${hasAlerts ? "border-amber-500/50" : ""}`} data-testid="prestazioni-stats-widget">
       {/* Header */}
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" />
           Stato Prestazioni
           {hasAlerts && (
@@ -80,7 +80,7 @@ export default function PrestazioniStatsWidget() {
             </Badge>
           )}
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Riepilogo fatturazione e pagamento prestazioni</p>
+        <p className="text-sm text-muted-foreground mt-1">Riepilogo fatturazione e pagamento prestazioni</p>
       </div>
 
       {/* Content */}
@@ -140,8 +140,8 @@ export default function PrestazioniStatsWidget() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-            <div className="p-1.5 rounded-md bg-gray-100 dark:bg-gray-800">
-              <Clock className="h-3.5 w-3.5 text-gray-600" />
+            <div className="p-1.5 rounded-md bg-muted">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Da iniziare</p>
@@ -198,11 +198,11 @@ export default function PrestazioniStatsWidget() {
           <div className="grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-xs text-muted-foreground">Previsto</p>
-              <p className="font-medium text-sm text-gray-900 dark:text-white">{formatCurrency(stats.importoTotalePrevisto)}</p>
+              <p className="font-medium text-sm text-foreground">{formatCurrency(stats.importoTotalePrevisto)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Fatturato</p>
-              <p className="font-medium text-sm text-gray-900 dark:text-white">{formatCurrency(stats.importoTotaleFatturato)}</p>
+              <p className="font-medium text-sm text-foreground">{formatCurrency(stats.importoTotaleFatturato)}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Incassato</p>

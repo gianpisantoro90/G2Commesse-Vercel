@@ -357,17 +357,17 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
   return (
     <div className="card-g2" data-testid="new-project-form">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Crea Nuova Commessa</h2>
+      <h2 className="text-2xl font-bold text-foreground mb-6">Crea Nuova Commessa</h2>
 
       <form className="space-y-4">
         {/* SEZIONE 1: Dati Base */}
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection('base')}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center justify-between p-4 bg-muted hover:bg-muted transition-colors"
           >
-            <span className="font-semibold text-gray-900 dark:text-white">Dati Base Commessa</span>
+            <span className="font-semibold text-foreground">Dati Base Commessa</span>
             {expandedSections.base ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
 
@@ -375,7 +375,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             <div className="p-4 space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="client" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Label htmlFor="client" className="block text-sm font-semibold text-foreground mb-2">
                     Cliente *
                   </Label>
                   <ClientCombobox
@@ -391,7 +391,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="city" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Label htmlFor="city" className="block text-sm font-semibold text-foreground mb-2">
                     Città *
                   </Label>
                   <Input
@@ -410,9 +410,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {/* Tipo Rapporto */}
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Label className="block text-sm font-semibold text-foreground mb-2">
                     Tipo Rapporto *
-                    <span className="ml-1 text-xs text-gray-500 dark:text-gray-400 font-normal">Chi commissiona a G2?</span>
+                    <span className="ml-1 text-xs text-muted-foreground font-normal">Chi commissiona a G2?</span>
                   </Label>
                   <Select
                     onValueChange={(value) => form.setValue("tipoRapporto", value as TipoRapportoType)}
@@ -435,7 +435,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                 {/* Committente Finale - condizionale */}
                 {form.watch("tipoRapporto") && form.watch("tipoRapporto") !== "diretto" && (
                   <div>
-                    <Label htmlFor="committente-finale" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <Label htmlFor="committente-finale" className="block text-sm font-semibold text-foreground mb-2">
                       Committente Finale
                     </Label>
                     <Input
@@ -450,9 +450,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
               {/* Oggetto */}
               <div>
-                <Label htmlFor="object" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <Label htmlFor="object" className="block text-sm font-semibold text-foreground mb-2">
                   Oggetto Commessa (Abbreviato) *
-                  <span className="ml-1 text-xs text-gray-500 font-normal">Per cartelle e tabella</span>
+                  <span className="ml-1 text-xs text-muted-foreground font-normal">Per cartelle e tabella</span>
                 </Label>
                 <Input
                   id="object"
@@ -465,9 +465,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
               {/* Oggetto Completo */}
               <div>
-                <Label htmlFor="oggettoCompleto" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <Label htmlFor="oggettoCompleto" className="block text-sm font-semibold text-foreground mb-2">
                   Oggetto Completo
-                  <span className="ml-1 text-xs text-gray-500 font-normal">Descrizione estesa per CRE</span>
+                  <span className="ml-1 text-xs text-muted-foreground font-normal">Descrizione estesa per CRE</span>
                 </Label>
                 <Input
                   id="oggettoCompleto"
@@ -480,7 +480,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {/* Anno, Template, Stato */}
               <div className="grid gap-4 md:grid-cols-3">
                 <div>
-                  <Label htmlFor="year" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Label htmlFor="year" className="block text-sm font-semibold text-foreground mb-2">
                     Anno (AA) *
                   </Label>
                   <Input
@@ -495,7 +495,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   />
                 </div>
                 <div>
-                  <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Label className="block text-sm font-semibold text-foreground mb-2">
                     Template Progetto *
                   </Label>
                   <Select
@@ -512,7 +512,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   </Select>
                 </div>
                 <div>
-                  <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Label className="block text-sm font-semibold text-foreground mb-2">
                     Stato Commessa *
                   </Label>
                   <Select
@@ -533,7 +533,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
               {/* Codice Commessa */}
               <div>
-                <Label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                <Label className="block text-sm font-semibold text-foreground mb-2">
                   Codice Commessa
                 </Label>
                 <div className="flex gap-3">
@@ -541,7 +541,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                     readOnly
                     value={generatedCode}
                     placeholder="Generato automaticamente..."
-                    className="flex-1 input-g2 bg-gray-50 text-gray-600 font-mono"
+                    className="flex-1 input-g2 bg-muted text-muted-foreground font-mono"
                     data-testid="input-generated-code"
                   />
                   <Button
@@ -560,13 +560,13 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         </div>
 
         {/* SEZIONE 2: Dati Contratto */}
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection('contratto')}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center justify-between p-4 bg-muted hover:bg-muted transition-colors"
           >
-            <span className="font-semibold text-gray-900 dark:text-white">Dati Contratto (per CRE)</span>
+            <span className="font-semibold text-foreground">Dati Contratto (per CRE)</span>
             {expandedSections.contratto ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
 
@@ -574,9 +574,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             <div className="p-4 space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label htmlFor="cig" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Label htmlFor="cig" className="block text-sm font-semibold text-foreground mb-2">
                     CIG
-                    <span className="ml-1 text-xs text-gray-500 font-normal">Codice Identificativo Gara</span>
+                    <span className="ml-1 text-xs text-muted-foreground font-normal">Codice Identificativo Gara</span>
                   </Label>
                   <Input
                     id="cig"
@@ -586,9 +586,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   />
                 </div>
                 <div>
-                  <Label htmlFor="numeroContratto" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  <Label htmlFor="numeroContratto" className="block text-sm font-semibold text-foreground mb-2">
                     N. Contratto
-                    <span className="ml-1 text-xs text-gray-500 font-normal">Numero contratto/accordo</span>
+                    <span className="ml-1 text-xs text-muted-foreground font-normal">Numero contratto/accordo</span>
                   </Label>
                   <Input
                     id="numeroContratto"
@@ -603,13 +603,13 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         </div>
 
         {/* SEZIONE 3: Prestazioni Professionali */}
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection('prestazioni')}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center justify-between p-4 bg-muted hover:bg-muted transition-colors"
           >
-            <span className="font-semibold text-gray-900 dark:text-white">Prestazioni Professionali</span>
+            <span className="font-semibold text-foreground">Prestazioni Professionali</span>
             {expandedSections.prestazioni ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
 
@@ -617,12 +617,12 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             <div className="p-4 space-y-4">
               {/* Tipologia Prestazioni */}
               <div>
-                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 block">
+                <Label className="text-sm font-semibold text-foreground mb-3 block">
                   Tipologia Prestazioni
                 </Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {prestazioniList.map(({ id, config }) => (
-                    <div key={id} className="flex items-center space-x-2 p-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <div key={id} className="flex items-center space-x-2 p-2 border border-border rounded-lg hover:bg-muted">
                       <Checkbox
                         id={`prestazione-${id}`}
                         checked={prestazioniData.prestazioni?.includes(id) || false}
@@ -640,12 +640,12 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               {/* Livello Progettazione - condizionale */}
               {showLivelloProgettazione && (
                 <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 block">
+                  <Label className="text-sm font-semibold text-foreground mb-3 block">
                     Livello Progettazione
                   </Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {livelliProgettazioneList.map(({ id, config }) => (
-                      <div key={id} className="flex items-center space-x-2 p-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg">
+                      <div key={id} className="flex items-center space-x-2 p-2 bg-card border border-blue-200 dark:border-blue-700 rounded-lg">
                         <Checkbox
                           id={`livello-${id}`}
                           checked={prestazioniData.livelloProgettazione?.includes(id) || false}
@@ -664,20 +664,20 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         </div>
 
         {/* SEZIONE 4: Classificazioni DM 17/06/2016 */}
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <div className="border border-border rounded-lg overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection('classificazioni')}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="w-full flex items-center justify-between p-4 bg-muted hover:bg-muted transition-colors"
           >
-            <span className="font-semibold text-gray-900 dark:text-white">Classificazioni DM 17/06/2016</span>
+            <span className="font-semibold text-foreground">Classificazioni DM 17/06/2016</span>
             {expandedSections.classificazioni ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
 
           {expandedSections.classificazioni && (
             <div className="p-4 space-y-4">
               <div className="flex justify-between items-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   Aggiungi una o più categorie con i rispettivi importi
                 </p>
                 <Button
@@ -695,7 +695,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               <div className="space-y-3">
                 {prestazioniData.classificazioniDM2016 && prestazioniData.classificazioniDM2016.length > 0 ? (
                   prestazioniData.classificazioniDM2016.map((classificazione, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 p-3 bg-muted rounded-lg border border-border">
                       {/* Dropdown Categoria */}
                       <div className="space-y-1">
                         <Label className="text-xs font-medium">Classe e Categoria</Label>
@@ -837,7 +837,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-6 text-gray-500 dark:text-gray-400 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                  <div className="text-center py-6 text-muted-foreground border border-dashed border-border rounded-lg">
                     <p className="text-sm">Nessuna classificazione aggiunta</p>
                     <p className="text-xs mt-1">Clicca "Aggiungi" per inserire una categoria</p>
                   </div>
@@ -846,13 +846,13 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
               {/* Totale Importi */}
               {prestazioniData.classificazioniDM2016 && prestazioniData.classificazioniDM2016.length > 0 && (
-                <div className="pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                <div className="pt-3 border-t border-border space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Importo Totale Opere:</span>
-                    <span className="text-lg font-bold text-gray-900 dark:text-white">{formatImporto(importoTotaleOpere)}</span>
+                    <span className="text-sm font-medium text-foreground">Importo Totale Opere:</span>
+                    <span className="text-lg font-bold text-foreground">{formatImporto(importoTotaleOpere)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-foreground">
                       Importo Totale Servizio:
                       <span className="ml-1 text-gray-400 text-[10px]">per CRE</span>
                     </span>
@@ -1018,18 +1018,18 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                   classificazioniDM2016: [],
                 });
               }}
-              className="px-8 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+              className="px-8 py-3 border-2 border-border text-foreground rounded-xl font-semibold hover:bg-muted transition-colors disabled:opacity-50"
             >
               Cancella
             </Button>
           </div>
 
-          <div className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4 text-sm text-muted-foreground">
             <p className="mb-2">
-              <strong className="text-gray-900 dark:text-white">Crea Commessa OneDrive:</strong> Crea la commessa con cartella OneDrive automatica
+              <strong className="text-foreground">Crea Commessa OneDrive:</strong> Crea la commessa con cartella OneDrive automatica
             </p>
             <p>
-              <strong className="text-gray-900 dark:text-white">Crea Commessa:</strong> Crea solo la commessa nel database
+              <strong className="text-foreground">Crea Commessa:</strong> Crea solo la commessa nel database
             </p>
           </div>
         </div>

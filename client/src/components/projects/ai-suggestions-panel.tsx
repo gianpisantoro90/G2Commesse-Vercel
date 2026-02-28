@@ -102,7 +102,7 @@ export function AISuggestionsPanel({
     if (confidence >= 0.9) return "bg-green-100 text-green-800 border-green-300";
     if (confidence >= 0.7) return "bg-yellow-100 text-yellow-800 border-yellow-300";
     if (confidence >= 0.5) return "bg-orange-100 text-orange-800 border-orange-300";
-    return "bg-gray-100 text-gray-800 border-gray-300";
+    return "bg-muted text-foreground border-border";
   };
 
   const getConfidenceIcon = (confidence: number) => {
@@ -117,7 +117,7 @@ export function AISuggestionsPanel({
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Suggerimenti AI</h3>
+            <h3 className="text-lg font-semibold text-foreground">Suggerimenti AI</h3>
           </div>
           {hasMatches && (
             <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
@@ -125,7 +125,7 @@ export function AISuggestionsPanel({
             </Badge>
           )}
         </div>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-sm text-muted-foreground mt-2">
           {hasMatches
             ? "L'AI ha identificato possibili commesse correlate a questa email"
             : "Nessuna commessa correlata trovata automaticamente"}
@@ -135,15 +135,15 @@ export function AISuggestionsPanel({
       <div className="space-y-4">
         {/* Summary */}
         {aiSuggestions.summary && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-purple-200 dark:border-purple-800">
-            <p className="text-sm text-gray-700 dark:text-gray-300 italic">"{aiSuggestions.summary}"</p>
+          <div className="bg-card rounded-lg p-3 border border-purple-200 dark:border-purple-800">
+            <p className="text-sm text-foreground italic">"{aiSuggestions.summary}"</p>
           </div>
         )}
 
         {/* Project Matches */}
         {hasMatches && (
           <div className="space-y-3">
-            <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+            <h4 className="font-medium text-sm text-foreground flex items-center gap-2">
               <Info className="h-4 w-4" />
               Commesse Suggerite (ordinate per rilevanza)
             </h4>
@@ -154,7 +154,7 @@ export function AISuggestionsPanel({
                 className={`rounded-lg border p-4 transition-all ${
                   selectedMatchIndex === index
                     ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950/30'
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                    : 'hover:bg-muted bg-card border-border'
                 } ${
                   currentProjectId === match.projectId
                     ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
@@ -167,7 +167,7 @@ export function AISuggestionsPanel({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         {getConfidenceIcon(match.confidence)}
-                        <h5 className="font-semibold text-gray-900 dark:text-white">
+                        <h5 className="font-semibold text-foreground">
                           {match.projectCode}
                         </h5>
                         <Badge
@@ -186,9 +186,9 @@ export function AISuggestionsPanel({
                   </div>
 
                   {/* Reasoning */}
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded p-3">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
-                      <strong className="text-gray-900 dark:text-white">Perché questo match:</strong>{" "}
+                  <div className="bg-muted rounded p-3">
+                    <p className="text-sm text-foreground">
+                      <strong className="text-foreground">Perché questo match:</strong>{" "}
                       {match.reasoning}
                     </p>
                   </div>
@@ -196,7 +196,7 @@ export function AISuggestionsPanel({
                   {/* Matched Fields */}
                   {match.matchedFields && match.matchedFields.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      <span className="text-xs text-gray-500">Campi matched:</span>
+                      <span className="text-xs text-muted-foreground">Campi matched:</span>
                       {match.matchedFields.map((field) => (
                         <Badge
                           key={field}
@@ -252,28 +252,28 @@ export function AISuggestionsPanel({
           aiSuggestions.extractedData?.amounts?.length ||
           aiSuggestions.extractedData?.actionItems?.length) && (
           <div className="space-y-2 pt-2 border-t border-purple-200 dark:border-purple-800">
-            <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Informazioni Estratte</h4>
+            <h4 className="font-medium text-sm text-foreground">Informazioni Estratte</h4>
 
             {aiSuggestions.extractedData.deadlines && aiSuggestions.extractedData.deadlines.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
-                <strong className="text-gray-900 dark:text-white">📅 Scadenze:</strong>{" "}
-                <span className="text-gray-700 dark:text-gray-300">{aiSuggestions.extractedData.deadlines.join(", ")}</span>
+              <div className="bg-card rounded p-2 text-sm">
+                <strong className="text-foreground">📅 Scadenze:</strong>{" "}
+                <span className="text-foreground">{aiSuggestions.extractedData.deadlines.join(", ")}</span>
               </div>
             )}
 
             {aiSuggestions.extractedData.amounts && aiSuggestions.extractedData.amounts.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
-                <strong className="text-gray-900 dark:text-white">💰 Importi:</strong>{" "}
-                <span className="text-gray-700 dark:text-gray-300">{aiSuggestions.extractedData.amounts.join(", ")}</span>
+              <div className="bg-card rounded p-2 text-sm">
+                <strong className="text-foreground">💰 Importi:</strong>{" "}
+                <span className="text-foreground">{aiSuggestions.extractedData.amounts.join(", ")}</span>
               </div>
             )}
 
             {aiSuggestions.extractedData.actionItems && aiSuggestions.extractedData.actionItems.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded p-2 text-sm">
-                <strong className="text-gray-900 dark:text-white">✓ Azioni da fare:</strong>
+              <div className="bg-card rounded p-2 text-sm">
+                <strong className="text-foreground">✓ Azioni da fare:</strong>
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   {aiSuggestions.extractedData.actionItems.map((item, i) => (
-                    <li key={i} className="text-gray-700 dark:text-gray-300">{item}</li>
+                    <li key={i} className="text-foreground">{item}</li>
                   ))}
                 </ul>
               </div>
@@ -284,7 +284,7 @@ export function AISuggestionsPanel({
         {/* Tags */}
         {aiSuggestions.suggestedTags && aiSuggestions.suggestedTags.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400">Tag suggeriti:</span>
+            <span className="text-xs text-muted-foreground">Tag suggeriti:</span>
             {aiSuggestions.suggestedTags.map((tag) => (
               <Badge key={tag} variant="outline" className="text-xs">
                 {tag}

@@ -392,7 +392,7 @@ export default function OneDriveBrowser() {
     return (
       <div key={node.file.id} style={{ marginLeft: `${depth * 16}px` }}>
         <div 
-          className="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded cursor-pointer"
+          className="flex items-center gap-2 py-1 px-2 hover:bg-muted rounded cursor-pointer"
           onClick={() => navigateToFolder(nodePath)}
           data-testid={`tree-node-${node.file.id}`}
         >
@@ -441,9 +441,9 @@ export default function OneDriveBrowser() {
   return (
     <div className="max-w-7xl space-y-6" data-testid="onedrive-browser">
       {/* Header with search */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+      <div className="bg-background rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">☁️ Browser OneDrive</h3>
+          <h3 className="text-2xl font-bold text-foreground">☁️ Browser OneDrive</h3>
           <Button 
             variant="outline" 
             size="sm" 
@@ -508,7 +508,7 @@ export default function OneDriveBrowser() {
         {/* Tree navigation sidebar */}
         <div className="lg:col-span-1">
           <div className="card-g2">
-            <h4 className="text-sm font-medium flex items-center gap-2 text-gray-900 dark:text-white pb-3">
+            <h4 className="text-sm font-medium flex items-center gap-2 text-foreground pb-3">
               <FolderOpen className="w-4 h-4" />
               Cartelle
             </h4>
@@ -521,7 +521,7 @@ export default function OneDriveBrowser() {
         {/* Main content area */}
         <div className="lg:col-span-3">
           <div className="card-g2">
-            <h4 className="text-sm font-medium flex items-center gap-2 text-gray-900 dark:text-white pb-3">
+            <h4 className="text-sm font-medium flex items-center gap-2 text-foreground pb-3">
               {searchQuery ? (
                 <>
                   <Search className="w-4 h-4" />
@@ -538,14 +538,14 @@ export default function OneDriveBrowser() {
               {isLoadingFiles || isSearching ? (
                 <div className="flex items-center justify-center py-8">
                   <RefreshCw className="w-6 h-6 animate-spin text-gray-400 mr-2" />
-                  <span className="text-gray-500 dark:text-gray-400">Caricamento...</span>
+                  <span className="text-muted-foreground">Caricamento...</span>
                 </div>
               ) : (
                 <div className="space-y-2" data-testid="file-list">
                   {(searchQuery ? searchResults : currentFiles)?.map((file) => (
                     <div
                       key={file.id}
-                      className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+                      className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted cursor-pointer transition-colors"
                       onClick={() => handleFileClick(file)}
                       data-testid={`file-item-${file.id}`}
                     >
@@ -553,7 +553,7 @@ export default function OneDriveBrowser() {
                         {getFileIcon(file)}
                         <div className="min-w-0 flex-1">
                           <div className="font-medium text-sm truncate dark:text-white">{file.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-3">
+                          <div className="text-xs text-muted-foreground flex items-center gap-3">
                             <span className="flex items-center gap-1">
                               <HardDrive className="w-3 h-3" />
                               {formatFileSize(file.size)}
@@ -596,11 +596,11 @@ export default function OneDriveBrowser() {
                               </DialogHeader>
                               <div className="mt-4">
                                 {previewContent ? (
-                                  <pre className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-sm overflow-auto max-h-96 whitespace-pre-wrap dark:text-gray-200" data-testid={`text-preview-content-${file.id}`}>
+                                  <pre className="bg-muted p-4 rounded-lg text-sm overflow-auto max-h-96 whitespace-pre-wrap text-foreground" data-testid={`text-preview-content-${file.id}`}>
                                     {previewContent}
                                   </pre>
                                 ) : (
-                                  <div className="text-center py-8 text-gray-500 dark:text-gray-400" data-testid={`text-preview-unavailable-${file.id}`}>
+                                  <div className="text-center py-8 text-muted-foreground" data-testid={`text-preview-unavailable-${file.id}`}>
                                     <File className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
                                     <p>Anteprima non disponibile per questo tipo di file</p>
                                   </div>
@@ -631,15 +631,15 @@ export default function OneDriveBrowser() {
                               </DialogHeader>
                               <div className="space-y-4 mt-4">
                                 <div>
-                                  <label className="text-sm font-medium dark:text-gray-200">Cartella OneDrive:</label>
-                                  <div className="mt-1 p-2 bg-gray-50 dark:bg-gray-800 rounded flex items-center gap-2" data-testid={`text-selected-folder-${linkingFile?.id}`}>
+                                  <label className="text-sm font-medium text-foreground">Cartella OneDrive:</label>
+                                  <div className="mt-1 p-2 bg-muted rounded flex items-center gap-2" data-testid={`text-selected-folder-${linkingFile?.id}`}>
                                     <Folder className="w-4 h-4 text-blue-500" />
                                     {linkingFile?.name}
                                   </div>
                                 </div>
                                 
                                 <div>
-                                  <label className="text-sm font-medium dark:text-gray-200">Seleziona progetto:</label>
+                                  <label className="text-sm font-medium text-foreground">Seleziona progetto:</label>
                                   <Select value={selectedProject} onValueChange={setSelectedProject}>
                                     <SelectTrigger data-testid={`select-project-${linkingFile?.id}`}>
                                       <SelectValue placeholder="Scegli un progetto..." />
@@ -693,7 +693,7 @@ export default function OneDriveBrowser() {
                   ))}
                   
                   {(searchQuery ? searchResults : currentFiles)?.length === 0 && (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400" data-testid={searchQuery ? "text-empty-search" : "text-empty-folder"}>
+                    <div className="text-center py-8 text-muted-foreground" data-testid={searchQuery ? "text-empty-search" : "text-empty-folder"}>
                       <Folder className="w-12 h-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" />
                       <p>
                         {searchQuery 

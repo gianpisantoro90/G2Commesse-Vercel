@@ -623,7 +623,7 @@ export function CommunicationsReview() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <FolderOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    <h4 className="font-semibold text-gray-900 dark:text-white">Assegna a Commessa</h4>
+                    <h4 className="font-semibold text-foreground">Assegna a Commessa</h4>
                   </div>
 
                   <div className="relative">
@@ -651,7 +651,7 @@ export function CommunicationsReview() {
                             className={`p-3 rounded-lg cursor-pointer transition-all ${
                               selectedProjectId === project.id.toString()
                                 ? "bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-500"
-                                : "hover:bg-gray-100 dark:hover:bg-gray-800 border border-transparent"
+                                : "hover:bg-muted border border-transparent"
                             }`}
                             data-testid={`project-option-${project.id}`}
                           >
@@ -665,10 +665,10 @@ export function CommunicationsReview() {
                                     <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
                                   )}
                                 </div>
-                                <p className="text-sm font-medium text-gray-900 dark:text-white mt-1 truncate">
+                                <p className="text-sm font-medium text-foreground mt-1 truncate">
                                   {project.client}
                                 </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                <p className="text-xs text-muted-foreground truncate">
                                   {project.object}
                                 </p>
                               </div>

@@ -64,8 +64,8 @@ export function ProjectCombobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "w-full justify-between bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white",
-            !selectedProject && "text-gray-500 dark:text-gray-400",
+            "w-full justify-between bg-card border-border text-foreground",
+            !selectedProject && "text-muted-foreground",
             className
           )}
         >
@@ -77,16 +77,16 @@ export function ProjectCombobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" align="start">
-        <Command className="bg-white dark:bg-gray-800">
+      <PopoverContent className="w-[400px] p-0 bg-card border-border" align="start">
+        <Command className="bg-card">
           <CommandInput
             placeholder="Cerca per codice o oggetto..."
             value={searchQuery}
             onValueChange={setSearchQuery}
-            className="text-gray-900 dark:text-white"
+            className="text-foreground"
           />
           <CommandList>
-            <CommandEmpty className="text-gray-600 dark:text-gray-400">
+            <CommandEmpty className="text-muted-foreground">
               Nessun progetto trovato
             </CommandEmpty>
             <CommandGroup>
@@ -98,7 +98,7 @@ export function ProjectCombobox({
                   setOpen(false);
                   setSearchQuery("");
                 }}
-                className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="text-foreground hover:bg-muted"
               >
                 <Check
                   className={cn(
@@ -119,7 +119,7 @@ export function ProjectCombobox({
                     setOpen(false);
                     setSearchQuery("");
                   }}
-                  className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="text-foreground hover:bg-muted"
                 >
                   <Check
                     className={cn(
@@ -130,12 +130,12 @@ export function ProjectCombobox({
                   <div className="flex flex-col overflow-hidden">
                     <span className="font-medium">{project.code}</span>
                     {project.object && (
-                      <span className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                      <span className="text-xs text-muted-foreground truncate">
                         {project.object}
                       </span>
                     )}
                     {project.client && (
-                      <span className="text-xs text-gray-500 dark:text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         Cliente: {project.client}
                       </span>
                     )}

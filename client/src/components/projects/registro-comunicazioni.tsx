@@ -129,13 +129,13 @@ const TYPE_CONFIG = {
   raccomandata: { label: 'Raccomandata', icon: <FileText className="h-4 w-4" />, color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
   telefono: { label: 'Telefonata', icon: <Phone className="h-4 w-4" />, color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' },
   meeting: { label: 'Riunione', icon: <Users className="h-4 w-4" />, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300' },
-  nota_interna: { label: 'Nota Interna', icon: <MessageSquare className="h-4 w-4" />, color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' }
+  nota_interna: { label: 'Nota Interna', icon: <MessageSquare className="h-4 w-4" />, color: 'bg-muted text-foreground dark:bg-background dark:text-foreground' }
 };
 
 const DIRECTION_CONFIG = {
   outgoing: { label: 'Inviato', icon: <Send className="h-3 w-3" />, color: 'text-blue-600' },
   incoming: { label: 'Ricevuto', icon: <Download className="h-3 w-3" />, color: 'text-green-600' },
-  internal: { label: 'Interno', icon: <MessageSquare className="h-3 w-3" />, color: 'text-gray-600' }
+  internal: { label: 'Interno', icon: <MessageSquare className="h-3 w-3" />, color: 'text-muted-foreground' }
 };
 
 function CommunicationForm({
@@ -389,7 +389,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
                   </Badge>
                 )}
               </div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{comm.subject}</h4>
+              <h4 className="font-semibold text-foreground mb-1">{comm.subject}</h4>
 
               {/* AI Summary if available */}
               {comm.aiSuggestions?.summary && (
@@ -402,7 +402,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
               )}
 
               {comm.body && (
-                <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{comm.body}</p>
+                <p className="text-sm text-muted-foreground line-clamp-3">{comm.body}</p>
               )}
 
               {/* AI Extracted Data */}
@@ -411,7 +411,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
                   {comm.aiSuggestions.extractedData.actionItems && comm.aiSuggestions.extractedData.actionItems.length > 0 && (
                     <div className="text-xs">
                       <span className="font-medium text-orange-700">Azioni:</span>
-                      <ul className="list-disc list-inside ml-2 text-gray-600">
+                      <ul className="list-disc list-inside ml-2 text-muted-foreground">
                         {comm.aiSuggestions.extractedData.actionItems.map((item, i) => (
                           <li key={i}>{item}</li>
                         ))}
@@ -421,13 +421,13 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
                   {comm.aiSuggestions.extractedData.deadlines && comm.aiSuggestions.extractedData.deadlines.length > 0 && (
                     <div className="text-xs">
                       <span className="font-medium text-red-700">Scadenze:</span>
-                      <span className="ml-1 text-gray-600">{comm.aiSuggestions.extractedData.deadlines.join(', ')}</span>
+                      <span className="ml-1 text-muted-foreground">{comm.aiSuggestions.extractedData.deadlines.join(', ')}</span>
                     </div>
                   )}
                   {comm.aiSuggestions.extractedData.amounts && comm.aiSuggestions.extractedData.amounts.length > 0 && (
                     <div className="text-xs">
                       <span className="font-medium text-green-700">Importi:</span>
-                      <span className="ml-1 text-gray-600">{comm.aiSuggestions.extractedData.amounts.join(', ')}</span>
+                      <span className="ml-1 text-muted-foreground">{comm.aiSuggestions.extractedData.amounts.join(', ')}</span>
                     </div>
                   )}
                 </div>
@@ -468,8 +468,8 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
 
           {/* Email HTML Preview */}
           {showEmailPreview && comm.emailHtml && (
-            <div className="border rounded p-3 bg-gray-50 max-h-64 overflow-y-auto">
-              <div className="text-xs text-gray-500 mb-2 flex items-center gap-2">
+            <div className="border rounded p-3 bg-muted max-h-64 overflow-y-auto">
+              <div className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
                 <Mail className="h-3 w-3" />
                 Anteprima Email HTML
               </div>
@@ -481,7 +481,7 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
           )}
 
           {(comm.recipient || comm.sender) && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted-foreground">
               {comm.direction === 'outgoing' && `A: ${comm.recipient}`}
               {comm.direction === 'incoming' && `Da: ${comm.sender}`}
             </div>
@@ -498,12 +498,12 @@ function CommunicationCard({ comm, onEdit, onDelete, onSendEmail }: {
           )}
 
           {comm.projectCode && (
-            <div className="text-xs text-gray-500 pt-2 border-t">
+            <div className="text-xs text-muted-foreground pt-2 border-t">
               📁 {comm.projectCode} - {comm.projectClient}
             </div>
           )}
 
-          <div className="flex items-center gap-4 text-xs text-gray-500 pt-2 border-t flex-wrap">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t flex-wrap">
             <div className="flex items-center gap-1">
               <Calendar className="h-3 w-3" />
               {format(new Date(comm.communicationDate), 'dd MMM yyyy', { locale: it })}
@@ -881,11 +881,11 @@ export default function RegistroComunicazioni() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-blue-600" />
             Registro Comunicazioni
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Traccia tutte le comunicazioni per ogni commessa
           </p>
         </div>
@@ -914,8 +914,8 @@ export default function RegistroComunicazioni() {
         <div className="card-g2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Totali</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{totalComms}</p>
+              <p className="text-sm text-muted-foreground">Totali</p>
+              <p className="text-2xl font-bold text-foreground">{totalComms}</p>
             </div>
             <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
           </div>
@@ -924,7 +924,7 @@ export default function RegistroComunicazioni() {
         <div className="card-g2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Importanti</p>
+              <p className="text-sm text-muted-foreground">Importanti</p>
               <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{importantComms}</p>
             </div>
             <Star className="h-8 w-8 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />
@@ -934,7 +934,7 @@ export default function RegistroComunicazioni() {
         <div className="card-g2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Inviate</p>
+              <p className="text-sm text-muted-foreground">Inviate</p>
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{outgoingComms}</p>
             </div>
             <ArrowUp className="h-8 w-8 text-blue-600 dark:text-blue-400" />
@@ -944,7 +944,7 @@ export default function RegistroComunicazioni() {
         <div className="card-g2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Ricevute</p>
+              <p className="text-sm text-muted-foreground">Ricevute</p>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">{incomingComms}</p>
             </div>
             <ArrowDown className="h-8 w-8 text-green-600 dark:text-green-400" />
@@ -958,18 +958,18 @@ export default function RegistroComunicazioni() {
           <div className="flex gap-4 flex-wrap">
             <div className="flex-1 min-w-[250px]">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Cerca per oggetto o contenuto..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 dark:bg-gray-800 dark:border-gray-700"
+                  className="pl-10 dark:bg-background dark:border-border"
                 />
               </div>
             </div>
 
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-full sm:w-[180px] dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger className="w-full sm:w-[180px] dark:bg-background dark:border-border">
                 <SelectValue placeholder="Tipo..." />
               </SelectTrigger>
               <SelectContent>
@@ -983,7 +983,7 @@ export default function RegistroComunicazioni() {
             </Select>
 
             <Select value={filterDirection} onValueChange={setFilterDirection}>
-              <SelectTrigger className="w-full sm:w-[150px] dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger className="w-full sm:w-[150px] dark:bg-background dark:border-border">
                 <SelectValue placeholder="Direzione..." />
               </SelectTrigger>
               <SelectContent>
@@ -1009,7 +1009,7 @@ export default function RegistroComunicazioni() {
               checked={showImportantOnly}
               onCheckedChange={(checked) => setShowImportantOnly(!!checked)}
             />
-            <label htmlFor="important-only" className="text-sm font-medium flex items-center gap-1 text-gray-700 dark:text-gray-300">
+            <label htmlFor="important-only" className="text-sm font-medium flex items-center gap-1 text-foreground">
               <Star className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
               Solo importanti
             </label>
@@ -1064,9 +1064,9 @@ export default function RegistroComunicazioni() {
           <div>
             {filteredComms.length === 0 ? (
               <div className="text-center py-12">
-                <MessageSquare className="h-16 w-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
-                <p className="text-gray-500 dark:text-gray-400">Nessuna comunicazione trovata</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Registra la prima comunicazione per iniziare</p>
+                <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Nessuna comunicazione trovata</p>
+                <p className="text-sm text-muted-foreground mt-1">Registra la prima comunicazione per iniziare</p>
               </div>
             ) : (
               <Table>
@@ -1264,7 +1264,7 @@ export default function RegistroComunicazioni() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-muted-foreground">
               Pagina <strong>{currentPage}</strong> di <strong>{totalPages}</strong> ({startIndex + 1}-{Math.min(endIndex, filteredComms.length)} di {filteredComms.length})
             </div>
             <div className="flex items-center gap-2">
@@ -1376,7 +1376,7 @@ export default function RegistroComunicazioni() {
                     <h4 className="font-medium text-sm mb-2 text-orange-700 dark:text-orange-400">Azioni</h4>
                     <ul className="list-disc list-inside text-sm space-y-1">
                       {selectedComm.aiSuggestions.extractedData.actionItems.map((item, i) => (
-                        <li key={i} className="text-gray-700 dark:text-gray-300">{item}</li>
+                        <li key={i} className="text-foreground">{item}</li>
                       ))}
                     </ul>
                   </div>
@@ -1385,7 +1385,7 @@ export default function RegistroComunicazioni() {
                  selectedComm.aiSuggestions.extractedData.deadlines.length > 0 && (
                   <div className="border rounded p-3">
                     <h4 className="font-medium text-sm mb-2 text-red-700 dark:text-red-400">Scadenze</h4>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="text-sm text-foreground">
                       {selectedComm.aiSuggestions.extractedData.deadlines.join(', ')}
                     </p>
                   </div>
@@ -1394,7 +1394,7 @@ export default function RegistroComunicazioni() {
                  selectedComm.aiSuggestions.extractedData.amounts.length > 0 && (
                   <div className="border rounded p-3">
                     <h4 className="font-medium text-sm mb-2 text-green-700 dark:text-green-400">Importi</h4>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="text-sm text-foreground">
                       {selectedComm.aiSuggestions.extractedData.amounts.join(', ')}
                     </p>
                   </div>

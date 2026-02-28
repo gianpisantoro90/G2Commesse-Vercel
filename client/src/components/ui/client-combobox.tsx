@@ -62,8 +62,8 @@ export function ClientCombobox({
           aria-expanded={open}
           disabled={disabled}
           className={cn(
-            "w-full justify-between bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white",
-            !selectedClient && "text-gray-500 dark:text-gray-400",
+            "w-full justify-between bg-card border-border text-foreground",
+            !selectedClient && "text-muted-foreground",
             className
           )}
         >
@@ -75,16 +75,16 @@ export function ClientCombobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[400px] p-0 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" align="start">
-        <Command className="bg-white dark:bg-gray-800">
+      <PopoverContent className="w-[400px] p-0 bg-card border-border" align="start">
+        <Command className="bg-card">
           <CommandInput
             placeholder="Cerca per nome, sigla o città..."
             value={searchQuery}
             onValueChange={setSearchQuery}
-            className="text-gray-900 dark:text-white"
+            className="text-foreground"
           />
           <CommandList>
-            <CommandEmpty className="text-gray-600 dark:text-gray-400">
+            <CommandEmpty className="text-muted-foreground">
               Nessun cliente trovato
             </CommandEmpty>
             <CommandGroup>
@@ -97,7 +97,7 @@ export function ClientCombobox({
                     setOpen(false);
                     setSearchQuery("");
                   }}
-                  className="text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="text-foreground hover:bg-muted"
                 >
                   <Check
                     className={cn(
@@ -107,7 +107,7 @@ export function ClientCombobox({
                   />
                   <div className="flex flex-col overflow-hidden">
                     <span className="font-medium">{client.name}</span>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                    <span className="text-xs text-muted-foreground">
                       {client.sigla}
                       {client.city && ` • ${client.city}`}
                     </span>

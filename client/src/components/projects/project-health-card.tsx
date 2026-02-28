@@ -42,10 +42,10 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-xs">
-        <span className="text-gray-600 dark:text-gray-400">{label}</span>
+        <span className="text-muted-foreground">{label}</span>
         <span className="font-medium">{score}%</span>
       </div>
-      <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${score}%` }} />
       </div>
     </div>
@@ -71,7 +71,7 @@ export default function ProjectHealthCard({ projectId }: { projectId: string }) 
 
   if (error || !health) {
     return (
-      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg text-center text-sm text-gray-500">
+      <div className="p-4 bg-muted rounded-lg text-center text-sm text-muted-foreground">
         Impossibile calcolare la salute del progetto
       </div>
     );
@@ -82,10 +82,10 @@ export default function ProjectHealthCard({ projectId }: { projectId: string }) 
   return (
     <div className="space-y-4">
       {/* Overall Score */}
-      <div className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+      <div className="flex items-center gap-4 p-3 bg-muted rounded-lg">
         <div className="relative w-16 h-16">
           <svg width={64} height={64} className="-rotate-90">
-            <circle cx={32} cy={32} r={28} fill="none" stroke="currentColor" strokeWidth="5" className="text-gray-200 dark:text-gray-700" />
+            <circle cx={32} cy={32} r={28} fill="none" stroke="currentColor" strokeWidth="5" className="text-muted" />
             <circle
               cx={32} cy={32} r={28}
               fill="none"
@@ -102,10 +102,10 @@ export default function ProjectHealthCard({ projectId }: { projectId: string }) 
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-gray-900 dark:text-white">Salute Progetto</span>
+            <span className="font-semibold text-foreground">Salute Progetto</span>
             <Badge variant={risk.badge}>{health.riskLevel.toUpperCase()}</Badge>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Aggiornato: {new Date(health.lastUpdated).toLocaleString('it-IT')}
           </p>
         </div>
@@ -114,7 +114,7 @@ export default function ProjectHealthCard({ projectId }: { projectId: string }) 
       {/* Component Scores */}
       <div className="space-y-2">
         {health.components.map(comp => (
-          <div key={comp.name} className="p-2 bg-white dark:bg-gray-900 rounded border border-gray-100 dark:border-gray-800">
+          <div key={comp.name} className="p-2 bg-background rounded border border-border">
             <ScoreBar score={comp.score} label={comp.name} />
             <p className="text-[10px] text-gray-400 mt-1">{comp.details}</p>
           </div>
@@ -124,9 +124,9 @@ export default function ProjectHealthCard({ projectId }: { projectId: string }) 
       {/* Recommendations */}
       {health.recommendations.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Azioni consigliate</p>
+          <p className="text-xs font-medium text-foreground">Azioni consigliate</p>
           {health.recommendations.map((rec, i) => (
-            <div key={i} className="flex items-start gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+            <div key={i} className="flex items-start gap-1.5 text-xs text-muted-foreground">
               <ChevronRight className="w-3 h-3 mt-0.5 text-primary shrink-0" />
               <span>{rec}</span>
             </div>

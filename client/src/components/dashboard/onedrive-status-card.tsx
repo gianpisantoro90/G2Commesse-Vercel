@@ -100,7 +100,7 @@ export default function OneDriveStatusCard() {
     if (syncStats.errors > 0) return "text-yellow-600";
     if (syncStats.pending > 0) return "text-blue-600";
     if (syncStats.synced === syncStats.total && syncStats.total > 0) return "text-green-600";
-    return "text-gray-600";
+    return "text-muted-foreground";
   };
 
   return (
@@ -108,7 +108,7 @@ export default function OneDriveStatusCard() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           {getConnectionStatusIcon()}
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">OneDrive Status</h3>
+          <h3 className="text-lg font-semibold text-foreground">OneDrive Status</h3>
         </div>
         {getConnectionStatusBadge()}
       </div>
@@ -134,8 +134,8 @@ export default function OneDriveStatusCard() {
             </p>
           </div>
         ) : (
-          <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
+          <div className="p-3 bg-muted rounded-lg">
+            <div className="flex items-center space-x-2 text-foreground">
               <Clock className="h-4 w-4" />
               <span>Caricamento informazioni utente...</span>
             </div>
@@ -196,23 +196,23 @@ export default function OneDriveStatusCard() {
         {/* Sync Statistics */}
         {isConnected && (
           <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="text-center p-3 bg-muted rounded-lg">
               <div className="text-2xl font-bold text-primary" data-testid="sync-stats-total">
                 {syncStats.total}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">Progetti Totali</div>
+              <div className="text-sm text-muted-foreground">Progetti Totali</div>
             </div>
-            <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="text-center p-3 bg-muted rounded-lg">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="sync-stats-synced">
                 {syncStats.synced}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">Sincronizzati</div>
+              <div className="text-sm text-muted-foreground">Sincronizzati</div>
             </div>
           </div>
         )}
 
         {/* Health Indicator */}
-        <div className="p-3 border-l-4 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
+        <div className="p-3 border-l-4 border-border bg-muted">
           <div className={`font-medium ${getHealthColor()}`}>
             {getHealthIndicator()}
           </div>
@@ -302,7 +302,7 @@ export default function OneDriveStatusCard() {
 
         {/* Auto-sync status */}
         {isConnected && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+          <div className="text-xs text-muted-foreground text-center">
             Auto-sync: {autoSyncEnabled ? '✅ Attivo' : '❌ Disattivo'}
           </div>
         )}

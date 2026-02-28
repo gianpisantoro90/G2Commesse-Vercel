@@ -91,7 +91,7 @@ const ALERT_TYPE_CONFIG = {
 };
 
 const PRIORITY_CONFIG = {
-  low: { label: 'Bassa', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
+  low: { label: 'Bassa', color: 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground' },
   medium: { label: 'Media', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400' },
   high: { label: 'Alta', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-400' },
   urgent: { label: 'Urgente', color: 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400' },
@@ -270,7 +270,7 @@ export function BillingAlerts({
 
         {/* Alert List */}
         {alerts.length === 0 ? (
-          <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-6 text-muted-foreground">
             <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
             <p>Nessun alert attivo</p>
             <p className="text-sm">Tutto in ordine!</p>
@@ -297,10 +297,10 @@ export function BillingAlerts({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium text-gray-900 dark:text-white">
+                          <span className="font-medium text-foreground">
                             {alert.project?.code || 'N/A'}
                           </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             {alert.project?.client}
                           </span>
                           <Badge className={priorityConfig.color} variant="outline">
@@ -308,14 +308,14 @@ export function BillingAlerts({
                           </Badge>
                         </div>
 
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
+                        <div className="text-sm text-muted-foreground mt-0.5">
                           {alert.prestazione && (
                             <span className="inline-flex items-center gap-1">
                               <span className="font-medium">
                                 {PRESTAZIONE_LABELS[alert.prestazione.tipo] || alert.prestazione.tipo}
                               </span>
                               {alert.prestazione.livelloProgettazione && (
-                                <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                                <span className="text-xs bg-muted px-1 rounded">
                                   {alert.prestazione.livelloProgettazione.toUpperCase()}
                                 </span>
                               )}
@@ -327,7 +327,7 @@ export function BillingAlerts({
                           {alert.invoice && (
                             <span className="inline-flex items-center gap-1">
                               <span className="font-medium">Fatt. {alert.invoice.numeroFattura}</span>
-                              <span className="font-medium text-gray-900 dark:text-white">
+                              <span className="font-medium text-foreground">
                                 {(alert.invoice.importoTotale / 100).toLocaleString('it-IT', {
                                   style: 'currency',
                                   currency: 'EUR'
@@ -341,7 +341,7 @@ export function BillingAlerts({
                         </div>
 
                         {!compact && alert.message && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">
+                          <p className="text-xs text-muted-foreground mt-1 truncate">
                             {alert.message}
                           </p>
                         )}

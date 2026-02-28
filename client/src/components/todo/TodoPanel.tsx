@@ -30,7 +30,7 @@ const statusIcons = {
 };
 
 const statusIconColors = {
-  pending: "text-gray-500 dark:text-gray-400",
+  pending: "text-muted-foreground",
   in_progress: "text-blue-600 dark:text-blue-400",
   completed: "text-green-600 dark:text-green-400",
   cancelled: "text-red-600 dark:text-red-400",
@@ -214,8 +214,8 @@ export default function TodoPanel() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">To Do</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">To Do</h1>
+          <p className="text-muted-foreground mt-1">
             Gestisci le tue task e assegnazioni
           </p>
         </div>
@@ -226,10 +226,10 @@ export default function TodoPanel() {
               Nuova Task
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background">
             <DialogHeader>
-              <DialogTitle className="text-gray-900 dark:text-white">Crea Nuova Task</DialogTitle>
-              <DialogDescription className="text-gray-600 dark:text-gray-400">
+              <DialogTitle className="text-foreground">Crea Nuova Task</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
                 Compila i dettagli per creare una nuova task
               </DialogDescription>
             </DialogHeader>
@@ -248,15 +248,15 @@ export default function TodoPanel() {
       {/* Stats Cards */}
       <div className="grid gap-4 grid-cols-3 mb-6">
         <div className="card-g2 p-4">
-          <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Le Mie Task</p>
-          <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">{counts.myTasks}</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">Le Mie Task</p>
+          <p className="text-xl sm:text-2xl font-bold text-foreground">{counts.myTasks}</p>
         </div>
         <div className="card-g2 p-4">
-          <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Scadute</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">Scadute</p>
           <p className="text-xl sm:text-2xl font-bold text-red-600 dark:text-red-400">{counts.overdue}</p>
         </div>
         <div className="card-g2 p-4">
-          <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Alta Priorità</p>
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-1">Alta Priorità</p>
           <p className="text-xl sm:text-2xl font-bold text-orange-600 dark:text-orange-400">{counts.highPriority}</p>
         </div>
       </div>
@@ -267,8 +267,8 @@ export default function TodoPanel() {
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Task</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <h3 className="text-lg font-semibold text-foreground">Task</h3>
+              <p className="text-sm text-muted-foreground">
                 Visualizza e gestisci le task
               </p>
             </div>
@@ -284,35 +284,35 @@ export default function TodoPanel() {
               className="text-sm"
             />
             <Select value={filterStatus || "all"} onValueChange={handleFilterChange(setFilterStatus)}>
-              <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
+              <SelectTrigger className="w-full bg-card border-border text-foreground text-sm">
                 <SelectValue placeholder="Tutti gli stati" />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                <SelectItem value="all" className="text-gray-900 dark:text-white">Tutti gli stati</SelectItem>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="all" className="text-foreground">Tutti gli stati</SelectItem>
                 {Object.entries(statusLabels).map(([key, label]) => key && key.trim() !== '' ? (
-                  <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
+                  <SelectItem key={key} value={key} className="text-foreground">{label}</SelectItem>
                 ) : null)}
               </SelectContent>
             </Select>
             <Select value={filterPriority || "all"} onValueChange={handleFilterChange(setFilterPriority)}>
-              <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
+              <SelectTrigger className="w-full bg-card border-border text-foreground text-sm">
                 <SelectValue placeholder="Tutte le priorità" />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                <SelectItem value="all" className="text-gray-900 dark:text-white">Tutte le priorità</SelectItem>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="all" className="text-foreground">Tutte le priorità</SelectItem>
                 {Object.entries(priorityLabels).map(([key, label]) => key && key.trim() !== '' ? (
-                  <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
+                  <SelectItem key={key} value={key} className="text-foreground">{label}</SelectItem>
                 ) : null)}
               </SelectContent>
             </Select>
             <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
-              <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm">
+              <SelectTrigger className="w-full bg-card border-border text-foreground text-sm">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                <SelectItem value="10" className="text-gray-900 dark:text-white">10 per pagina</SelectItem>
-                <SelectItem value="25" className="text-gray-900 dark:text-white">25 per pagina</SelectItem>
-                <SelectItem value="50" className="text-gray-900 dark:text-white">50 per pagina</SelectItem>
+              <SelectContent className="bg-card border-border">
+                <SelectItem value="10" className="text-foreground">10 per pagina</SelectItem>
+                <SelectItem value="25" className="text-foreground">25 per pagina</SelectItem>
+                <SelectItem value="50" className="text-foreground">50 per pagina</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -321,17 +321,17 @@ export default function TodoPanel() {
         {/* Task content */}
         <div className="overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-gray-100 dark:bg-gray-800 mb-4 w-full flex-wrap h-auto gap-1 p-1">
-              <TabsTrigger value="all" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+            <TabsList className="bg-muted mb-4 w-full flex-wrap h-auto gap-1 p-1">
+              <TabsTrigger value="all" className="data-[state=active]:bg-card text-foreground text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
                 <span className="truncate">Tutte</span>
                 <span className="ml-1 tabular-nums">({filteredTasks.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="my" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+              <TabsTrigger value="my" className="data-[state=active]:bg-card text-foreground text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
                 <span className="hidden sm:inline">Le Mie Task</span>
                 <span className="sm:hidden">Mie</span>
                 <span className="ml-1 tabular-nums">({tasks.filter(t => t.assignedToId === user?.id).length})</span>
               </TabsTrigger>
-              <TabsTrigger value="created" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
+              <TabsTrigger value="created" className="data-[state=active]:bg-card text-foreground text-xs sm:text-sm px-2 sm:px-3 py-1.5 flex-1 min-w-0">
                 <span className="hidden sm:inline">Create da Me</span>
                 <span className="sm:hidden">Create</span>
                 <span className="ml-1 tabular-nums">({tasks.filter(t => t.createdById === user?.id).length})</span>
@@ -340,11 +340,11 @@ export default function TodoPanel() {
 
             <TabsContent value={activeTab}>
               {tasksLoading ? (
-                <div className="text-center py-8 text-gray-600 dark:text-gray-400">
+                <div className="text-center py-8 text-muted-foreground">
                   Caricamento task...
                 </div>
               ) : filteredTasks.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-8 text-muted-foreground">
                   <div className="text-4xl mb-2">✅</div>
                   <p>Nessuna task trovata</p>
                   <p className="text-sm">Crea una nuova task per iniziare</p>
@@ -364,10 +364,10 @@ export default function TodoPanel() {
                       return (
                         <div
                           key={task.id}
-                          className={`rounded-lg border border-gray-200 dark:border-gray-700 transition-colors ${
+                          className={`rounded-lg border border-border transition-colors ${
                             isCompleted
                               ? 'bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30'
-                              : 'hover:bg-gray-50 dark:hover:bg-gray-800'
+                              : 'hover:bg-muted'
                           }`}
                           data-testid={`task-item-${task.id}`}
                         >
@@ -391,7 +391,7 @@ export default function TodoPanel() {
                             {/* Task info */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <h4 className="font-semibold text-gray-900 dark:text-white truncate max-w-md">{task.title}</h4>
+                                <h4 className="font-semibold text-foreground truncate max-w-md">{task.title}</h4>
                                 <PriorityBadge priority={task.priority as "high" | "medium" | "low"} />
                                 {task.notes && task.notes.trim() !== '' && (
                                   <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800">
@@ -406,7 +406,7 @@ export default function TodoPanel() {
                                   </Badge>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 flex-wrap">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
                                 <span className="font-mono text-xs">{getProjectName(task.projectId)}</span>
                                 <span>•</span>
                                 <span>{getUserName(task.assignedToId)}</span>
@@ -427,9 +427,9 @@ export default function TodoPanel() {
                               {hasDescription && (
                                 <button
                                   onClick={(e) => toggleTaskExpansion(task.id, e)}
-                                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+                                  className="p-1 hover:bg-muted rounded transition-colors"
                                 >
-                                  {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-600 dark:text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />}
+                                  {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
                                 </button>
                               )}
                             </div>
@@ -437,9 +437,9 @@ export default function TodoPanel() {
 
                           {/* Expandable description */}
                           {hasDescription && isExpanded && (
-                            <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800">
-                              <div className="mt-3 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                                <p className="font-medium text-gray-900 dark:text-white mb-1">Descrizione:</p>
+                            <div className="px-4 pb-4 border-t border-border">
+                              <div className="mt-3 text-sm text-foreground whitespace-pre-wrap bg-muted p-3 rounded-lg">
+                                <p className="font-medium text-foreground mb-1">Descrizione:</p>
                                 {task.description}
                               </div>
                             </div>
@@ -464,7 +464,7 @@ export default function TodoPanel() {
                           className={`rounded-lg p-4 cursor-pointer transition-colors ${
                             isCompleted
                               ? 'bg-green-50 dark:bg-green-900/20'
-                              : 'bg-gray-50 dark:bg-gray-800'
+                              : 'bg-muted'
                           }`}
                           data-testid={`task-item-mobile-${task.id}`}
                         >
@@ -481,8 +481,8 @@ export default function TodoPanel() {
                               <StatusIcon className={`w-5 h-5 ${statusColor}`} />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-sm text-gray-900 dark:text-white line-clamp-2">{task.title}</h4>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 font-mono mt-1">
+                              <h4 className="font-medium text-sm text-foreground line-clamp-2">{task.title}</h4>
+                              <p className="text-xs text-muted-foreground font-mono mt-1">
                                 {getProjectName(task.projectId)}
                               </p>
                             </div>
@@ -501,14 +501,14 @@ export default function TodoPanel() {
                           </div>
 
                           {/* Info grid */}
-                          <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-gray-200 dark:border-gray-700">
+                          <div className="grid grid-cols-2 gap-2 text-xs pt-3 border-t border-border">
                             <div>
-                              <p className="font-medium text-gray-700 dark:text-gray-300 mb-0.5">Assegnato</p>
-                              <p className="text-gray-600 dark:text-gray-400 truncate">{getUserName(task.assignedToId)}</p>
+                              <p className="font-medium text-foreground mb-0.5">Assegnato</p>
+                              <p className="text-muted-foreground truncate">{getUserName(task.assignedToId)}</p>
                             </div>
                             <div>
-                              <p className="font-medium text-gray-700 dark:text-gray-300 mb-0.5">Scadenza</p>
-                              <p className={`${overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-600 dark:text-gray-400'}`}>
+                              <p className="font-medium text-foreground mb-0.5">Scadenza</p>
+                              <p className={`${overdueTask ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-muted-foreground'}`}>
                                 {task.dueDate ? format(new Date(task.dueDate), 'dd/MM/yyyy', { locale: it }) : '-'}
                               </p>
                             </div>
@@ -520,8 +520,8 @@ export default function TodoPanel() {
 
                   {/* Pagination Controls */}
                   {totalPages > 1 && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border mt-4">
+                      <div className="text-sm text-muted-foreground">
                         Mostrando {startIndex + 1}-{Math.min(endIndex, filteredTasks.length)} di {filteredTasks.length} task
                       </div>
                       <div className="flex items-center gap-2">
@@ -530,16 +530,16 @@ export default function TodoPanel() {
                           size="sm"
                           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                           disabled={currentPage === 1}
-                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                          className="bg-card border-border text-foreground"
                         >
                           <ChevronLeft className="h-4 w-4" />
                           <span className="hidden sm:inline ml-1">Precedente</span>
                         </Button>
                         <div className="flex items-center gap-1 px-2">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          <span className="text-sm font-medium text-foreground">
                             {currentPage}
                           </span>
-                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-sm text-muted-foreground">
                             / {totalPages}
                           </span>
                         </div>
@@ -548,7 +548,7 @@ export default function TodoPanel() {
                           size="sm"
                           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                           disabled={currentPage === totalPages}
-                          className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                          className="bg-card border-border text-foreground"
                         >
                           <span className="hidden sm:inline mr-1">Successivo</span>
                           <ChevronRight className="h-4 w-4" />
@@ -566,10 +566,10 @@ export default function TodoPanel() {
       {/* Task Detail Dialog */}
       {selectedTask && (
         <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-background">
             <DialogHeader>
-              <DialogTitle className="text-gray-900 dark:text-white">Dettagli Task</DialogTitle>
-              <DialogDescription className="text-gray-600 dark:text-gray-400">
+              <DialogTitle className="text-foreground">Dettagli Task</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
                 Visualizza e modifica i dettagli della task
               </DialogDescription>
             </DialogHeader>
@@ -647,9 +647,9 @@ function CreateTaskForm({
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-900 dark:text-white">Titolo *</FormLabel>
+              <FormLabel className="text-foreground">Titolo *</FormLabel>
               <FormControl>
-                <Input {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="input-task-title" />
+                <Input {...field} className="bg-card border-border text-foreground" data-testid="input-task-title" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -661,9 +661,9 @@ function CreateTaskForm({
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-900 dark:text-white">Descrizione</FormLabel>
+              <FormLabel className="text-foreground">Descrizione</FormLabel>
               <FormControl>
-                <Textarea {...field} value={field.value || ''} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" rows={3} data-testid="textarea-task-description" />
+                <Textarea {...field} value={field.value || ''} className="bg-card border-border text-foreground" rows={3} data-testid="textarea-task-description" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -676,7 +676,7 @@ function CreateTaskForm({
             name="projectId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
+                <FormLabel className="text-foreground">Progetto</FormLabel>
                 <FormControl>
                   <ProjectCombobox
                     projects={projects}
@@ -696,17 +696,17 @@ function CreateTaskForm({
             name="assignedToId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-900 dark:text-white">Assegna a</FormLabel>
+                <FormLabel className="text-foreground">Assegna a</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
                   <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-task-assignee">
+                    <SelectTrigger className="bg-card border-border text-foreground" data-testid="select-task-assignee">
                       <SelectValue placeholder="Seleziona utente" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                    <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
+                  <SelectContent className="bg-card border-border">
+                    <SelectItem value="none" className="text-foreground">Non assegnata</SelectItem>
                     {availableUsers.map(u => u.id && u.id.trim() !== '' ? (
-                      <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
+                      <SelectItem key={u.id} value={u.id} className="text-foreground">{u.fullName}</SelectItem>
                     ) : null)}
                   </SelectContent>
                 </Select>
@@ -722,16 +722,16 @@ function CreateTaskForm({
             name="priority"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-900 dark:text-white">Priorità</FormLabel>
+                <FormLabel className="text-foreground">Priorità</FormLabel>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-task-priority">
+                    <SelectTrigger className="bg-card border-border text-foreground" data-testid="select-task-priority">
                       <SelectValue />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <SelectContent className="bg-card border-border">
                     {Object.entries(priorityLabels).map(([key, label]) => (
-                      <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
+                      <SelectItem key={key} value={key} className="text-foreground">{label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -745,14 +745,14 @@ function CreateTaskForm({
             name="dueDate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-900 dark:text-white">Scadenza</FormLabel>
+                <FormLabel className="text-foreground">Scadenza</FormLabel>
                 <FormControl>
                   <Input
                     type="date"
                     {...field}
                     value={field.value && field.value !== null ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
                     onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-                    className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    className="bg-card border-border text-foreground"
                     data-testid="input-task-duedate"
                   />
                 </FormControl>
@@ -844,41 +844,41 @@ function TaskDetailForm({
 
         {/* Non-admin view: Show read-only fields for non-editable data */}
         {!canEditAllFields && (
-          <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
             <div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Titolo</h3>
-              <p className="text-gray-900 dark:text-white">{task.title}</p>
+              <h3 className="text-sm font-medium text-foreground mb-1">Titolo</h3>
+              <p className="text-foreground">{task.title}</p>
             </div>
 
             {task.description && (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrizione</h3>
-                <p className="text-gray-900 dark:text-white whitespace-pre-wrap">{task.description}</p>
+                <h3 className="text-sm font-medium text-foreground mb-1">Descrizione</h3>
+                <p className="text-foreground whitespace-pre-wrap">{task.description}</p>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Progetto</h3>
-                <p className="text-gray-900 dark:text-white">{projectName}</p>
+                <h3 className="text-sm font-medium text-foreground mb-1">Progetto</h3>
+                <p className="text-foreground">{projectName}</p>
               </div>
 
               <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assegnata a</h3>
-                <p className="text-gray-900 dark:text-white">{assignedUserName}</p>
+                <h3 className="text-sm font-medium text-foreground mb-1">Assegnata a</h3>
+                <p className="text-foreground">{assignedUserName}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priorità</h3>
-                <p className="text-gray-900 dark:text-white">{priorityLabels[task.priority as keyof typeof priorityLabels]}</p>
+                <h3 className="text-sm font-medium text-foreground mb-1">Priorità</h3>
+                <p className="text-foreground">{priorityLabels[task.priority as keyof typeof priorityLabels]}</p>
               </div>
 
               {task.dueDate && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Scadenza</h3>
-                  <p className="text-gray-900 dark:text-white">{format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}</p>
+                  <h3 className="text-sm font-medium text-foreground mb-1">Scadenza</h3>
+                  <p className="text-foreground">{format(new Date(task.dueDate), 'dd MMM yyyy', { locale: it })}</p>
                 </div>
               )}
             </div>
@@ -893,9 +893,9 @@ function TaskDetailForm({
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-900 dark:text-white">Titolo</FormLabel>
+                  <FormLabel className="text-foreground">Titolo</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="input-edit-task-title" />
+                    <Input {...field} className="bg-card border-border text-foreground" data-testid="input-edit-task-title" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -907,9 +907,9 @@ function TaskDetailForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-900 dark:text-white">Descrizione</FormLabel>
+                  <FormLabel className="text-foreground">Descrizione</FormLabel>
                   <FormControl>
-                    <Textarea {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" rows={3} data-testid="textarea-edit-task-description" />
+                    <Textarea {...field} className="bg-card border-border text-foreground" rows={3} data-testid="textarea-edit-task-description" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -924,16 +924,16 @@ function TaskDetailForm({
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-900 dark:text-white">Stato</FormLabel>
+              <FormLabel className="text-foreground">Stato</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
-                  <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-status">
+                  <SelectTrigger className="bg-card border-border text-foreground" data-testid="select-edit-task-status">
                     <SelectValue />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <SelectContent className="bg-card border-border">
                   {Object.entries(statusLabels).map(([key, label]) => (
-                    <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
+                    <SelectItem key={key} value={key} className="text-foreground">{label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -948,12 +948,12 @@ function TaskDetailForm({
           name="notes"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-900 dark:text-white">Note</FormLabel>
-              <FormDescription className="text-gray-600 dark:text-gray-400">
+              <FormLabel className="text-foreground">Note</FormLabel>
+              <FormDescription className="text-muted-foreground">
                 Aggiungi note o commenti per questa task
               </FormDescription>
               <FormControl>
-                <Textarea {...field} className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" rows={4} placeholder="Scrivi le tue note qui..." data-testid="textarea-task-notes" />
+                <Textarea {...field} className="bg-card border-border text-foreground" rows={4} placeholder="Scrivi le tue note qui..." data-testid="textarea-task-notes" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -968,16 +968,16 @@ function TaskDetailForm({
               name="priority"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-900 dark:text-white">Priorità</FormLabel>
+                  <FormLabel className="text-foreground">Priorità</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-priority">
+                      <SelectTrigger className="bg-card border-border text-foreground" data-testid="select-edit-task-priority">
                         <SelectValue />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                    <SelectContent className="bg-card border-border">
                       {Object.entries(priorityLabels).map(([key, label]) => (
-                        <SelectItem key={key} value={key} className="text-gray-900 dark:text-white">{label}</SelectItem>
+                        <SelectItem key={key} value={key} className="text-foreground">{label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -992,7 +992,7 @@ function TaskDetailForm({
                 name="projectId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-900 dark:text-white">Progetto</FormLabel>
+                    <FormLabel className="text-foreground">Progetto</FormLabel>
                     <FormControl>
                       <ProjectCombobox
                         projects={projects}
@@ -1012,17 +1012,17 @@ function TaskDetailForm({
                 name="assignedToId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-900 dark:text-white">Assegna a</FormLabel>
+                    <FormLabel className="text-foreground">Assegna a</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value && field.value !== '' ? field.value : undefined}>
                       <FormControl>
-                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white" data-testid="select-edit-task-assignee">
+                        <SelectTrigger className="bg-card border-border text-foreground" data-testid="select-edit-task-assignee">
                           <SelectValue placeholder="Seleziona utente" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                        <SelectItem value="none" className="text-gray-900 dark:text-white">Non assegnata</SelectItem>
+                      <SelectContent className="bg-card border-border">
+                        <SelectItem value="none" className="text-foreground">Non assegnata</SelectItem>
                         {users.map(u => u.id && u.id.trim() !== '' ? (
-                          <SelectItem key={u.id} value={u.id} className="text-gray-900 dark:text-white">{u.fullName}</SelectItem>
+                          <SelectItem key={u.id} value={u.id} className="text-foreground">{u.fullName}</SelectItem>
                         ) : null)}
                       </SelectContent>
                     </Select>
@@ -1037,14 +1037,14 @@ function TaskDetailForm({
               name="dueDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-gray-900 dark:text-white">Scadenza</FormLabel>
+                  <FormLabel className="text-foreground">Scadenza</FormLabel>
                   <FormControl>
                     <Input
                       type="date"
                       {...field}
                       value={field.value && field.value !== null ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
                       onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
-                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      className="bg-card border-border text-foreground"
                       data-testid="input-edit-task-duedate"
                     />
                   </FormControl>
@@ -1056,7 +1056,7 @@ function TaskDetailForm({
         )}
 
         {/* Task Meta */}
-        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="text-sm text-muted-foreground space-y-1 pt-4 border-t border-border">
           {task.createdAt && <p>Creata il: {format(new Date(task.createdAt), 'dd MMM yyyy HH:mm', { locale: it })}</p>}
           {task.updatedAt && <p>Ultima modifica: {format(new Date(task.updatedAt), 'dd MMM yyyy HH:mm', { locale: it })}</p>}
           {task.completedAt && (

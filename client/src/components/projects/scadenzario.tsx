@@ -69,7 +69,7 @@ interface Deadline {
 }
 
 const PRIORITY_CONFIG = {
-  low: { label: 'Bassa', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300', icon: '🟢' },
+  low: { label: 'Bassa', color: 'bg-muted text-foreground dark:bg-background dark:text-foreground', icon: '🟢' },
   medium: { label: 'Media', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', icon: '🟡' },
   high: { label: 'Alta', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300', icon: '🟠' },
   urgent: { label: 'Urgente', color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', icon: '🔴' }
@@ -239,15 +239,15 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
                   {typeConfig.icon} {typeConfig.label}
                 </Badge>
               </div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{deadline.title}</h4>
+              <h4 className="font-semibold text-foreground mb-1">{deadline.title}</h4>
               {deadline.description && (
-                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{deadline.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2">{deadline.description}</p>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1 text-gray-600">
+            <div className="flex items-center gap-1 text-muted-foreground">
               <CalendarIcon className="h-4 w-4" />
               <span>{format(new Date(deadline.dueDate), 'dd MMM yyyy', { locale: it })}</span>
             </div>
@@ -255,7 +255,7 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
               <div className={`flex items-center gap-1 ${
                 isOverdue ? 'text-red-600' :
                 isUpcoming ? 'text-orange-600' :
-                'text-gray-600'
+                'text-muted-foreground'
               }`}>
                 <Clock className="h-4 w-4" />
                 <span>
@@ -266,12 +266,12 @@ function DeadlineCard({ deadline, onComplete, onDelete, onEdit }: {
           </div>
 
           {deadline.projectCode && (
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               📁 {deadline.projectCode} - {deadline.projectClient}
             </div>
           )}
 
-          <div className="flex items-center gap-2 pt-2 border-t dark:border-gray-700">
+          <div className="flex items-center gap-2 pt-2 border-t dark:border-border">
             {deadline.status === 'pending' && (
               <Button
                 size="sm"
@@ -474,11 +474,11 @@ export default function Scadenzario() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <CalendarClock className="h-6 w-6 text-blue-600" />
             Scadenzario Commesse
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Gestisci scadenze, milestone e notifiche per le tue commesse
           </p>
         </div>
@@ -551,9 +551,9 @@ export default function Scadenzario() {
       <div className="card-g2">
         <div className="flex flex-col sm:flex-row gap-4 flex-wrap items-end">
           <div className="flex-1 min-w-[200px]">
-            <Label className="text-sm mb-2 block text-gray-700 dark:text-gray-300">Stato</Label>
+            <Label className="text-sm mb-2 block text-foreground">Stato</Label>
             <Select value={filterStatus} onValueChange={(v) => handleFilterChange('status', v)}>
-              <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger className="dark:bg-background dark:border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -566,9 +566,9 @@ export default function Scadenzario() {
           </div>
 
           <div className="flex-1 min-w-[200px]">
-            <Label className="text-sm mb-2 block text-gray-700 dark:text-gray-300">Priorità</Label>
+            <Label className="text-sm mb-2 block text-foreground">Priorità</Label>
             <Select value={filterPriority} onValueChange={(v) => handleFilterChange('priority', v)}>
-              <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger className="dark:bg-background dark:border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -582,7 +582,7 @@ export default function Scadenzario() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Label className="text-sm text-gray-600 dark:text-gray-400">Mostra:</Label>
+            <Label className="text-sm text-muted-foreground">Mostra:</Label>
             <Select
               value={itemsPerPage.toString()}
               onValueChange={(v) => {
@@ -590,7 +590,7 @@ export default function Scadenzario() {
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger className="w-20 dark:bg-gray-800 dark:border-gray-700">
+              <SelectTrigger className="w-20 dark:bg-background dark:border-border">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -607,7 +607,7 @@ export default function Scadenzario() {
       <div className="space-y-4">
         {/* Counter */}
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600 dark:text-gray-400">
+          <span className="text-sm text-muted-foreground">
             Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, filteredDeadlines.length)}</strong> di <strong>{filteredDeadlines.length}</strong> scadenze
           </span>
         </div>
@@ -615,9 +615,9 @@ export default function Scadenzario() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {paginatedDeadlines.length === 0 ? (
             <div className="col-span-full text-center py-12">
-              <CalendarClock className="h-16 w-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">Nessuna scadenza trovata</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Crea la prima scadenza per iniziare</p>
+              <CalendarClock className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Nessuna scadenza trovata</p>
+              <p className="text-sm text-muted-foreground mt-1">Crea la prima scadenza per iniziare</p>
             </div>
           ) : (
             paginatedDeadlines.map((deadline) => (
@@ -635,7 +635,7 @@ export default function Scadenzario() {
         {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-muted-foreground">
               Pagina <strong>{currentPage}</strong> di <strong>{totalPages}</strong>
             </div>
             <div className="flex items-center gap-2">

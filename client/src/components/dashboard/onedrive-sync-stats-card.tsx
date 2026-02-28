@@ -106,11 +106,11 @@ export default function OneDriveSyncStatsCard() {
   if (!isConnected) {
     return (
       <div className="card-g2" data-testid="onedrive-sync-stats-card">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-lg font-semibold text-foreground mb-4">
           📊 Statistiche Sincronizzazione
         </h3>
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <Database className="h-12 w-12 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
+        <div className="text-center py-8 text-muted-foreground">
+          <Database className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
           <p className="text-lg font-medium">OneDrive Disconnesso</p>
           <p className="text-sm">Connetti OneDrive per visualizzare le statistiche</p>
         </div>
@@ -123,7 +123,7 @@ export default function OneDriveSyncStatsCard() {
   return (
     <div className="card-g2" data-testid="onedrive-sync-stats-card">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-foreground">
           📊 Statistiche Sincronizzazione
         </h3>
         <Badge className={healthBadge.color}>
@@ -137,7 +137,7 @@ export default function OneDriveSyncStatsCard() {
           <div className={`text-3xl font-bold mb-1 ${getHealthColor(healthScore)}`} data-testid="health-score">
             {healthScore}%
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Salute Generale Sistema</div>
+          <div className="text-sm text-muted-foreground">Salute Generale Sistema</div>
           <Progress value={healthScore} className="mt-2 h-2" />
         </div>
 
@@ -151,7 +151,7 @@ export default function OneDriveSyncStatsCard() {
               {syncStats.synced}
             </div>
             <div className="text-xs text-blue-700 dark:text-blue-300">di {syncStats.total}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Progetti Sincronizzati</div>
+            <div className="text-sm text-muted-foreground">Progetti Sincronizzati</div>
           </div>
 
           <div className="text-center p-3 bg-green-50 dark:bg-green-950/50 rounded-lg">
@@ -161,7 +161,7 @@ export default function OneDriveSyncStatsCard() {
             <div className="text-xl font-bold text-green-600 dark:text-green-400" data-testid="files-indexed">
               {totalFiles.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">File Totali</div>
+            <div className="text-sm text-muted-foreground">File Totali</div>
           </div>
         </div>
 
@@ -169,8 +169,8 @@ export default function OneDriveSyncStatsCard() {
         <div className="space-y-3">
           <div>
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-gray-600 dark:text-gray-400">Progetti Sincronizzati</span>
-              <span className="font-medium text-gray-900 dark:text-white">{syncProgress}%</span>
+              <span className="text-muted-foreground">Progetti Sincronizzati</span>
+              <span className="font-medium text-foreground">{syncProgress}%</span>
             </div>
             <Progress value={syncProgress} className="h-2" />
           </div>
@@ -178,8 +178,8 @@ export default function OneDriveSyncStatsCard() {
           {indexingProgress > 0 && (
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600 dark:text-gray-400">File Indicizzati</span>
-                <span className="font-medium text-gray-900 dark:text-white">{indexingProgress}%</span>
+                <span className="text-muted-foreground">File Indicizzati</span>
+                <span className="font-medium text-foreground">{indexingProgress}%</span>
               </div>
               <Progress value={indexingProgress} className="h-2" />
             </div>
@@ -188,41 +188,41 @@ export default function OneDriveSyncStatsCard() {
 
         {/* Status Indicators */}
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+          <div className="p-2 bg-muted rounded">
             <div className="flex items-center justify-center mb-1">
               {syncStats.pending > 0 ? (
                 <RotateCw className="h-4 w-4 text-blue-500 animate-spin" />
               ) : (
-                <CheckCircle2 className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
               )}
             </div>
-            <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <div className="text-xs font-medium text-muted-foreground">
               {syncStats.pending} Pending
             </div>
           </div>
 
-          <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+          <div className="p-2 bg-muted rounded">
             <div className="flex items-center justify-center mb-1">
               {syncStats.errors > 0 ? (
                 <AlertCircle className="h-4 w-4 text-red-500" />
               ) : (
-                <CheckCircle2 className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
               )}
             </div>
-            <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <div className="text-xs font-medium text-muted-foreground">
               {syncStats.errors} Errori
             </div>
           </div>
 
-          <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+          <div className="p-2 bg-muted rounded">
             <div className="flex items-center justify-center mb-1">
               {autoSyncEnabled ? (
                 <TrendingUp className="h-4 w-4 text-green-500" />
               ) : (
-                <Clock className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                <Clock className="h-4 w-4 text-muted-foreground" />
               )}
             </div>
-            <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+            <div className="text-xs font-medium text-muted-foreground">
               Auto-Sync
             </div>
           </div>
@@ -230,7 +230,7 @@ export default function OneDriveSyncStatsCard() {
 
         {/* Last Activity */}
         {indexStats?.lastIndexed && (
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+          <div className="text-xs text-muted-foreground text-center p-2 bg-muted rounded">
             <Clock className="h-3 w-3 inline mr-1" />
             Ultimo aggiornamento: {new Date(indexStats.lastIndexed).toLocaleString('it-IT')}
           </div>

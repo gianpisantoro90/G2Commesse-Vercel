@@ -71,7 +71,7 @@ function ScoreRing({ score, size = 64 }: { score: number; size?: number }) {
         <circle
           cx={size / 2} cy={size / 2} r={radius}
           fill="none" stroke="currentColor" strokeWidth="4"
-          className="text-gray-200 dark:text-gray-700"
+          className="text-border"
         />
         <circle
           cx={size / 2} cy={size / 2} r={radius}
@@ -141,8 +141,8 @@ export default function AiInsightsCard() {
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
           <div>
-            <h3 className="font-semibold text-gray-900 dark:text-white">Intelligence AI</h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <h3 className="font-semibold text-foreground">Intelligence AI</h3>
+            <p className="text-xs text-muted-foreground">
               {insightsData?.generatedAt
                 ? `Aggiornato: ${new Date(insightsData.generatedAt).toLocaleString('it-IT')}`
                 : 'Analisi in corso...'}
@@ -162,13 +162,13 @@ export default function AiInsightsCard() {
       {/* Health Summary Metrics */}
       {healthData && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <div className="text-center p-3 bg-muted rounded-lg">
             <ScoreRing score={healthData.averageScore} size={52} />
-            <p className="text-xs text-gray-500 mt-1">Score Medio</p>
+            <p className="text-xs text-muted-foreground mt-1">Score Medio</p>
           </div>
-          <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{healthData.totalActive}</p>
-            <p className="text-xs text-gray-500">Progetti Attivi</p>
+          <div className="text-center p-3 bg-muted rounded-lg">
+            <p className="text-2xl font-bold text-foreground">{healthData.totalActive}</p>
+            <p className="text-xs text-muted-foreground">Progetti Attivi</p>
           </div>
           <div className="text-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
             <p className="text-2xl font-bold text-red-600">{healthData.criticalProjects}</p>
@@ -184,14 +184,14 @@ export default function AiInsightsCard() {
       {/* Top At-Risk Projects */}
       {topProjects.length > 0 && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Progetti piu' a rischio</h4>
+          <h4 className="text-sm font-medium text-foreground mb-2">Progetti piu' a rischio</h4>
           <div className="space-y-2">
             {topProjects.map(project => (
-              <div key={project.projectCode} className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div key={project.projectCode} className="flex items-center gap-3 p-2 bg-muted rounded-lg">
                 <ScoreRing score={project.overallScore} size={36} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-sm font-medium text-gray-900 dark:text-white">{project.projectCode}</span>
+                    <span className="font-mono text-sm font-medium text-foreground">{project.projectCode}</span>
                     <Badge variant={
                       project.riskLevel === 'critico' ? 'destructive' :
                       project.riskLevel === 'alto' ? 'default' : 'secondary'
@@ -199,10 +199,10 @@ export default function AiInsightsCard() {
                       {project.riskLevel}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500 truncate">{project.client}</p>
+                  <p className="text-xs text-muted-foreground truncate">{project.client}</p>
                 </div>
                 {project.recommendations[0] && (
-                  <p className="text-xs text-gray-400 hidden lg:block max-w-[200px] truncate">
+                  <p className="text-xs text-muted-foreground hidden lg:block max-w-[200px] truncate">
                     {project.recommendations[0]}
                   </p>
                 )}
@@ -215,7 +215,7 @@ export default function AiInsightsCard() {
       {/* Urgent & High Priority Insights */}
       {(urgentInsights.length > 0 || highInsights.length > 0) && (
         <div>
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <h4 className="text-sm font-medium text-foreground mb-2">
             Alert prioritari ({urgentInsights.length + highInsights.length})
           </h4>
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -235,8 +235,8 @@ export default function AiInsightsCard() {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">{insight.description}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground line-clamp-2">{insight.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                         <ChevronRight className="w-3 h-3" />
                         {insight.actionSuggestion}
                       </p>
@@ -257,7 +257,7 @@ export default function AiInsightsCard() {
 
       {/* Empty state */}
       {insights.length === 0 && !insightsLoading && (
-        <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+        <div className="text-center py-6 text-muted-foreground">
           <Brain className="h-10 w-10 mx-auto mb-2 opacity-30" />
           <p className="text-sm">Nessun alert attivo. Tutti i progetti sono in buono stato!</p>
         </div>

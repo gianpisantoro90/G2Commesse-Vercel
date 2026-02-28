@@ -137,18 +137,18 @@ export default function OneDrivePanel() {
 
   return (
     <div className="max-w-4xl" data-testid="onedrive-panel">
-      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">☁️ Integrazione OneDrive</h3>
+      <h3 className="text-2xl font-bold text-foreground mb-6">☁️ Integrazione OneDrive</h3>
       
       {/* Connection Status */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+      <div className="bg-background rounded-xl border border-border p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${isConnected ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
               {isConnected ? <Cloud className="w-5 h-5 text-green-600 dark:text-green-400" /> : <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />}
             </div>
             <div>
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Stato Connessione</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <h4 className="text-lg font-semibold text-foreground">Stato Connessione</h4>
+              <p className="text-sm text-muted-foreground">
                 {isConnected ? (
                   <>✅ Connesso a OneDrive</>
                 ) : (
@@ -180,8 +180,8 @@ export default function OneDrivePanel() {
       </div>
 
       {/* Settings */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
-        <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">⚙️ Mappatura Cartelle OneDrive</h4>
+      <div className="bg-background rounded-xl border border-border p-6 mb-6">
+        <h4 className="text-lg font-semibold text-foreground mb-4">⚙️ Mappatura Cartelle OneDrive</h4>
 
         <div className="space-y-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-4">
@@ -201,8 +201,8 @@ export default function OneDrivePanel() {
 
           <div className="flex items-center justify-between">
             <div>
-              <div className="font-medium text-gray-900 dark:text-white">Sincronizzazione Automatica</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Mappa automaticamente progetti a cartelle OneDrive esistenti</div>
+              <div className="font-medium text-foreground">Sincronizzazione Automatica</div>
+              <div className="text-sm text-muted-foreground">Mappa automaticamente progetti a cartelle OneDrive esistenti</div>
             </div>
             <Switch
               checked={autoSyncEnabled}

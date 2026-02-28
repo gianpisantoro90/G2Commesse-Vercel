@@ -151,17 +151,17 @@ export default function AiFeatureConfigPanel() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Settings2 className="w-6 h-6" />
           Configurazione AI Avanzata
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Configura provider e modello AI per ogni funzionalita', soglie di auto-approvazione e monitoraggio feedback.
         </p>
       </div>
 
       <Tabs defaultValue="features" className="space-y-4">
-        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
+        <TabsList className="bg-muted w-full flex-wrap h-auto gap-1 p-1">
           <TabsTrigger value="features" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm">
             <Brain className="w-4 h-4" />
             <span className="hidden sm:inline">Routing per Feature</span>
@@ -198,20 +198,20 @@ export default function AiFeatureConfigPanel() {
                       <Icon className="h-5 w-5 text-primary shrink-0" />
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">{feature.name}</p>
+                          <p className="font-medium text-foreground text-sm">{feature.name}</p>
                           <Switch
                             checked={config.enabled}
                             onCheckedChange={(checked) => updateFeatureConfig(feature.id, { enabled: checked })}
                           />
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{feature.desc}</p>
+                        <p className="text-xs text-muted-foreground">{feature.desc}</p>
                       </div>
                     </div>
 
                     {config.enabled && (
                       <div className="flex gap-3 flex-1">
                         <div className="flex-1 min-w-[140px]">
-                          <Label className="text-xs text-gray-500">Provider</Label>
+                          <Label className="text-xs text-muted-foreground">Provider</Label>
                           <Select
                             value={config.provider}
                             onValueChange={(v: 'anthropic' | 'deepseek') => {
@@ -229,7 +229,7 @@ export default function AiFeatureConfigPanel() {
                           </Select>
                         </div>
                         <div className="flex-1 min-w-[160px]">
-                          <Label className="text-xs text-gray-500">Modello</Label>
+                          <Label className="text-xs text-muted-foreground">Modello</Label>
                           <Select
                             value={config.model}
                             onValueChange={(v) => updateFeatureConfig(feature.id, { model: v })}
@@ -269,8 +269,8 @@ export default function AiFeatureConfigPanel() {
           <div className="card-g2 p-4 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-gray-900 dark:text-white">Auto-Approvazione</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Applica automaticamente suggerimenti ad alta confidenza</p>
+                <p className="font-semibold text-foreground">Auto-Approvazione</p>
+                <p className="text-sm text-muted-foreground">Applica automaticamente suggerimenti ad alta confidenza</p>
               </div>
               <Switch
                 checked={autoApproval.enabled}
@@ -329,13 +329,13 @@ export default function AiFeatureConfigPanel() {
               {/* Per-type breakdown */}
               {Object.keys(feedbackStats.byType).length > 0 && (
                 <div className="card-g2 p-4">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Dettaglio per tipo</h3>
+                  <h3 className="font-semibold text-foreground mb-3">Dettaglio per tipo</h3>
                   <div className="space-y-2">
                     {Object.entries(feedbackStats.byType).map(([type, stats]) => {
                       const total = stats.approved + stats.dismissed + stats.corrected;
                       const rate = total > 0 ? (stats.approved / total * 100).toFixed(0) : 0;
                       return (
-                        <div key={type} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                        <div key={type} className="flex items-center justify-between p-2 bg-muted rounded">
                           <span className="text-sm font-medium capitalize">{type.replace('_', ' ')}</span>
                           <div className="flex items-center gap-3">
                             <Badge variant="secondary" className="text-xs">{total} feedback</Badge>
@@ -349,7 +349,7 @@ export default function AiFeatureConfigPanel() {
               )}
 
               {feedbackStats.totalFeedback === 0 && (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div className="text-center py-8 text-muted-foreground">
                   <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-30" />
                   <p className="font-medium">Nessun feedback registrato</p>
                   <p className="text-sm">Le statistiche appariranno quando inizierai a revisionare i suggerimenti AI nella pagina Revisione AI.</p>
@@ -357,7 +357,7 @@ export default function AiFeatureConfigPanel() {
               )}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               <p>Caricamento statistiche...</p>
             </div>
           )}
@@ -382,8 +382,8 @@ function ThresholdSlider({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-900 dark:text-white">{label}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
+          <p className="text-sm font-medium text-foreground">{label}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
         <Badge variant={value >= 0.95 ? "default" : "secondary"} className="text-sm font-mono">
           {(value * 100).toFixed(0)}%
@@ -397,7 +397,7 @@ function ThresholdSlider({
         step={5}
         className="w-full"
       />
-      <div className="flex justify-between text-[10px] text-gray-400">
+      <div className="flex justify-between text-[10px] text-muted-foreground">
         <span>50% (molte auto-approvazioni)</span>
         <span>100% (solo match perfetti)</span>
       </div>
@@ -408,8 +408,8 @@ function ThresholdSlider({
 function StatCard({ label, value, color }: { label: string; value: string | number; color?: string }) {
   return (
     <div className="card-g2 p-3 text-center">
-      <p className={`text-2xl font-bold ${color || 'text-gray-900 dark:text-white'}`}>{value}</p>
-      <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+      <p className={`text-2xl font-bold ${color || 'text-foreground'}`}>{value}</p>
+      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }

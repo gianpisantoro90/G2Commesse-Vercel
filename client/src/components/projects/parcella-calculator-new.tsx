@@ -143,11 +143,11 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Calculator className="w-6 h-6" />
             Calcolatore Parcella Professionale
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1 font-mono text-sm">
+          <p className="text-muted-foreground mt-1 font-mono text-sm">
             CP = ∑(V × G × Q × P) | DM 17/06/2016 + D.Lgs. 36/2023
           </p>
         </div>
@@ -164,7 +164,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
           <div key={step} className="flex items-center flex-1">
             <div className={`flex-1 h-2 rounded-full ${
               currentStep === step ? 'bg-secondary' :
-              index < ['categoria', 'prestazioni', 'calcolo', 'risultato'].indexOf(currentStep) ? 'bg-secondary/50' : 'bg-gray-200 dark:bg-gray-700'
+              index < ['categoria', 'prestazioni', 'calcolo', 'risultato'].indexOf(currentStep) ? 'bg-secondary/50' : 'bg-muted'
             }`} />
           </div>
         ))}
@@ -271,7 +271,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
 
                     return (
                       <div key={fase}>
-                        <h4 className="font-semibold text-sm text-gray-700 dark:text-gray-300 mb-3">
+                        <h4 className="font-semibold text-sm text-foreground mb-3">
                           {titolo}
                           <Badge variant="outline" className="ml-2 text-xs">
                             {prestazioniApplicabili.length} prestazioni
@@ -282,7 +282,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                             const Q = categoriaSelezionata ? prestazione.Q[categoriaSelezionata.categoria] : undefined;
 
                             return (
-                              <label key={prestazione.codice} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                              <label key={prestazione.codice} className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted cursor-pointer">
                                 <Checkbox
                                   checked={prestazioni[prestazione.codice] || false}
                                   onCheckedChange={() => handlePrestazioneToggle(prestazione.codice)}
@@ -294,7 +294,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                                       {prestazione.codice}
                                     </Badge>
                                     {Q !== undefined && (
-                                      <span className="text-xs text-gray-600 dark:text-gray-400">
+                                      <span className="text-xs text-muted-foreground">
                                         Q = {Q.toFixed(3)}
                                       </span>
                                     )}
@@ -343,7 +343,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                     <Label htmlFor="spese-accessorie" className="text-sm font-medium">
                       Includi Spese Accessorie
                     </Label>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       10-25% del compenso base (secondo DM 17/06/2016)
                     </p>
                   </div>
@@ -360,7 +360,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                     <Label htmlFor="bim-toggle" className="text-sm font-medium">
                       Metodologia BIM Obbligatoria
                     </Label>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       Incremento compenso (D.Lgs. 36/2023 - Nuovo Codice Appalti)
                     </p>
                   </div>
@@ -385,7 +385,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       step="5"
                       className="max-w-xs"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Incremento indicativo: 10% (DM 17/06/2016)</p>
+                    <p className="text-xs text-muted-foreground mt-1">Incremento indicativo: 10% (DM 17/06/2016)</p>
                   </div>
                 )}
               </div>
@@ -405,7 +405,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       max="100"
                       step="0.1"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Cassa Previdenziale (di solito 4%)</p>
+                    <p className="text-xs text-muted-foreground mt-1">Cassa Previdenziale (di solito 4%)</p>
                   </div>
 
                   <div>
@@ -419,7 +419,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       max="100"
                       step="1"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Di solito 22%</p>
+                    <p className="text-xs text-muted-foreground mt-1">Di solito 22%</p>
                   </div>
 
                   <div>
@@ -433,7 +433,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       max="100"
                       step="1"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Di solito 20%</p>
+                    <p className="text-xs text-muted-foreground mt-1">Di solito 20%</p>
                   </div>
                 </div>
               </div>
@@ -506,7 +506,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                 </CardHeader>
                 <CardContent>
                   <ScrollArea className="h-[300px]">
-                    <pre className="text-xs font-mono whitespace-pre-wrap text-gray-800 dark:text-gray-200">
+                    <pre className="text-xs font-mono whitespace-pre-wrap text-foreground">
                       {risultatoParcella.dettagliCalcolo.passaggi.join('\n')}
                     </pre>
                   </ScrollArea>
@@ -521,17 +521,17 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {risultatoParcella.prestazioni.map((prest, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <div key={i} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted">
                       <div className="flex-1">
                         <div className="font-medium">{prest.descrizione}</div>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge variant="outline" className="text-xs">
                             {prest.codice}
                           </Badge>
-                          <span className="text-xs text-gray-600 dark:text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             Q = {prest.Q.toFixed(3)}
                           </span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                          <span className="text-xs text-muted-foreground">
                             ({prest.percentualeEffettiva.toFixed(2)}%)
                           </span>
                         </div>

@@ -184,30 +184,30 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
                 <Building2 className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold">Committente</h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+              <div className="bg-muted rounded-lg p-4 space-y-2 text-sm">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-gray-500">Denominazione:</span>
+                    <span className="text-muted-foreground">Denominazione:</span>
                     <p className="font-medium">{preview.committente.denominazione || "- -"}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Indirizzo:</span>
+                    <span className="text-muted-foreground">Indirizzo:</span>
                     <p className="font-medium">{preview.committente.indirizzo || "- -"}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">C.F.:</span>
+                    <span className="text-muted-foreground">C.F.:</span>
                     <p className="font-medium">{preview.committente.codiceFiscale || "- -"}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">P.IVA:</span>
+                    <span className="text-muted-foreground">P.IVA:</span>
                     <p className="font-medium">{preview.committente.partitaIva || "- -"}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Resp. Procedimento:</span>
+                    <span className="text-muted-foreground">Resp. Procedimento:</span>
                     <p className="font-medium">{preview.committente.responsabileProcedimento || "- -"}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Qualifica:</span>
+                    <span className="text-muted-foreground">Qualifica:</span>
                     <p className="font-medium">{preview.committente.qualifica || "- -"}</p>
                   </div>
                 </div>
@@ -222,18 +222,18 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
                 <Briefcase className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold">Opera/Intervento</h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+              <div className="bg-muted rounded-lg p-4 space-y-2 text-sm">
                 <div>
-                  <span className="text-gray-500">Oggetto:</span>
+                  <span className="text-muted-foreground">Oggetto:</span>
                   <p className="font-medium">{preview.opera.oggetto || "- -"}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="text-gray-500">CIG:</span>
+                    <span className="text-muted-foreground">CIG:</span>
                     <p className="font-medium">{preview.opera.cig || "- -"}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">N. Contratto:</span>
+                    <span className="text-muted-foreground">N. Contratto:</span>
                     <p className="font-medium">{preview.opera.numeroContratto || "- -"}</p>
                   </div>
                 </div>
@@ -248,14 +248,14 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
                 <Calendar className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold">Periodo di Esecuzione</h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 text-sm">
+              <div className="bg-muted rounded-lg p-4 text-sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-gray-500">Data Inizio:</span>
+                    <span className="text-muted-foreground">Data Inizio:</span>
                     <p className="font-medium">{preview.opera.dataInizio}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Data Fine:</span>
+                    <span className="text-muted-foreground">Data Fine:</span>
                     <p className="font-medium">{preview.opera.dataFine}</p>
                   </div>
                 </div>
@@ -270,7 +270,7 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
                 <Briefcase className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold">Tipologia del Servizio</h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 text-sm">
+              <div className="bg-muted rounded-lg p-4 text-sm">
                 {preview.servizio.tipologie.length > 0 ? (
                   <ul className="space-y-1">
                     {preview.servizio.tipologie.map((t, i) => (
@@ -281,7 +281,7 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-gray-500 italic">Nessuna prestazione specificata</p>
+                  <p className="text-muted-foreground italic">Nessuna prestazione specificata</p>
                 )}
               </div>
             </div>
@@ -294,14 +294,14 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
                 <Euro className="h-4 w-4 text-primary" />
                 <h3 className="font-semibold">Importi</h3>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 text-sm">
+              <div className="bg-muted rounded-lg p-4 text-sm">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="text-gray-500">Importo Totale Opere:</span>
+                    <span className="text-muted-foreground">Importo Totale Opere:</span>
                     <p className="font-semibold text-lg">{formatCurrency(preview.servizio.importoTotaleOpere)}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Importo Totale Servizio:</span>
+                    <span className="text-muted-foreground">Importo Totale Servizio:</span>
                     <p className="font-semibold text-lg text-primary">{formatCurrency(preview.servizio.importoTotaleServizio)}</p>
                   </div>
                 </div>
@@ -316,7 +316,7 @@ export default function CREGenerator({ project, children }: CREGeneratorProps) {
               {preview.classificazioni.length > 0 ? (
                 <div className="border rounded-lg overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-100">
+                    <thead className="bg-muted">
                       <tr>
                         <th className="px-3 py-2 text-left">ID. Opere</th>
                         <th className="px-3 py-2 text-center">Grado G</th>

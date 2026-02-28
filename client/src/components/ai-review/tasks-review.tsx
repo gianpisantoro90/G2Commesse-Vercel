@@ -204,11 +204,11 @@ export function TasksReview() {
               <div className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       {comm.subject}
                     </h3>
-                    <div className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="mt-2 space-y-1 text-sm text-muted-foreground">
                       <div className="flex items-center gap-2">
                         <User className="h-3 w-3" />
                         Da: {comm.sender}

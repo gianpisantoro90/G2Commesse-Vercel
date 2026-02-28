@@ -44,7 +44,7 @@ export default function StatsCard() {
 
   return (
     <div className="card-g2" data-testid="stats-card">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stato Archivio</h3>
+      <h3 className="text-lg font-semibold text-foreground mb-4">Stato Archivio</h3>
       <div className="grid grid-cols-1 gap-3 mb-6">
         <div className="flex items-center justify-between p-3 status-card-success border rounded-lg">
           <div>
@@ -75,15 +75,15 @@ export default function StatsCard() {
         </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
-          <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Clienti Totali</div>
+        <div className="p-3 bg-muted border border-border rounded-lg text-center">
+          <div className="text-xs text-muted-foreground mb-1">Clienti Totali</div>
           <div className="text-2xl font-bold text-primary" data-testid="stat-clients">
             {totalClients}
           </div>
         </div>
-        <div className="p-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg text-center">
-          <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Totale Commesse</div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white" data-testid="stat-projects-total">
+        <div className="p-3 bg-muted border border-border rounded-lg text-center">
+          <div className="text-xs text-muted-foreground mb-1">Totale Commesse</div>
+          <div className="text-2xl font-bold text-foreground" data-testid="stat-projects-total">
             {totalProjects}
           </div>
         </div>

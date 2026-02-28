@@ -145,17 +145,17 @@ export default function AiChatWidget() {
             <div className="space-y-4 py-8">
               <div className="text-center space-y-2">
                 <Bot className="h-12 w-12 mx-auto text-blue-300 dark:text-blue-800" />
-                <h3 className="font-semibold text-gray-700 dark:text-gray-300">Ciao! Sono l'assistente AI di G2</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <h3 className="font-semibold text-foreground">Ciao! Sono l'assistente AI di G2</h3>
+                <p className="text-sm text-muted-foreground">
                   Posso aiutarti con informazioni su progetti, fatturazione, scadenze e comunicazioni.
                 </p>
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Suggerimenti rapidi</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Suggerimenti rapidi</p>
                 {quickPrompts.map((prompt, i) => (
                   <button
                     key={i}
-                    className="w-full text-left text-sm p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
+                    className="w-full text-left text-sm p-3 rounded-lg border border-border hover:bg-muted transition-colors text-foreground"
                     onClick={() => {
                       setInput(prompt);
                       inputRef.current?.focus();
@@ -174,7 +174,7 @@ export default function AiChatWidget() {
                   <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                     msg.role === 'user'
                       ? 'bg-blue-700 text-white'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+                      : 'bg-muted text-foreground'
                   }`}>
                     {msg.role === 'assistant' ? (
                       <div className="prose prose-sm dark:prose-invert max-w-none [&_p]:my-1 [&_ul]:my-1 [&_li]:my-0.5 [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-sm">
@@ -183,7 +183,7 @@ export default function AiChatWidget() {
                     ) : (
                       <p className="whitespace-pre-wrap">{msg.content}</p>
                     )}
-                    <p className={`text-[10px] mt-1 ${msg.role === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>
+                    <p className={`text-[10px] mt-1 ${msg.role === 'user' ? 'text-blue-200' : 'text-muted-foreground'}`}>
                       {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -191,7 +191,7 @@ export default function AiChatWidget() {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-3">
+                  <div className="bg-muted rounded-lg px-4 py-3">
                     <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                   </div>
                 </div>
@@ -202,7 +202,7 @@ export default function AiChatWidget() {
         </ScrollArea>
 
         {/* Input Area */}
-        <div className="px-4 py-3 border-t bg-white dark:bg-gray-900">
+        <div className="px-4 py-3 border-t bg-background">
           <div className="flex gap-2">
             <textarea
               ref={inputRef}
@@ -210,7 +210,7 @@ export default function AiChatWidget() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Scrivi un messaggio..."
-              className="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-white"
+              className="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-lg border border-border bg-muted px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground"
               rows={1}
               disabled={isLoading}
             />
@@ -223,7 +223,7 @@ export default function AiChatWidget() {
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
-          <p className="text-[10px] text-gray-400 mt-1 text-center">
+          <p className="text-[10px] text-muted-foreground mt-1 text-center">
             Shift+Invio per andare a capo
           </p>
         </div>
@@ -241,7 +241,7 @@ function AiMarkdown({ content }: { content: string }) {
     // Italic
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
     // Inline code
-    .replace(/`(.*?)`/g, '<code class="bg-gray-200 dark:bg-gray-700 px-1 rounded text-xs">$1</code>')
+    .replace(/`(.*?)`/g, '<code class="bg-muted px-1 rounded text-xs">$1</code>')
     // Headers
     .replace(/^### (.*$)/gm, '<h3>$1</h3>')
     .replace(/^## (.*$)/gm, '<h2>$1</h2>')

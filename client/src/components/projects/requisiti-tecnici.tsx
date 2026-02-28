@@ -253,10 +253,10 @@ export default function RequisitiTecnici() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl font-bold text-foreground">
             Requisiti Tecnici
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Riepilogo delle categorie opere e importi accumulati (DM 17/06/2016)
           </p>
         </div>
@@ -274,7 +274,7 @@ export default function RequisitiTecnici() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Ricerca */}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 Ricerca
               </label>
               <Input
@@ -286,7 +286,7 @@ export default function RequisitiTecnici() {
 
             {/* Stato commessa */}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 Stato Commessa
               </label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -304,7 +304,7 @@ export default function RequisitiTecnici() {
 
             {/* Macro-categoria */}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 Macro-Categoria
               </label>
               <Select value={macroCategoriaFilter} onValueChange={setMacroCategoriaFilter}>
@@ -324,7 +324,7 @@ export default function RequisitiTecnici() {
 
             {/* Range importo */}
             <div>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+              <label className="text-sm font-medium text-foreground mb-1 block">
                 Range Importo Opere
               </label>
               <Select value={rangeImportoFilter} onValueChange={setRangeImportoFilter}>
@@ -360,7 +360,7 @@ export default function RequisitiTecnici() {
             <div className="text-2xl font-bold text-primary">
               {totaliGlobali.numeroCommesse}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Commesse</p>
+            <p className="text-sm text-muted-foreground">Commesse</p>
           </CardContent>
         </Card>
         <Card>
@@ -368,7 +368,7 @@ export default function RequisitiTecnici() {
             <div className="text-2xl font-bold text-green-600">
               {formatCurrency(totaliGlobali.totaleImportoOpere)}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Importo Opere</p>
+            <p className="text-sm text-muted-foreground">Importo Opere</p>
           </CardContent>
         </Card>
         <Card>
@@ -376,7 +376,7 @@ export default function RequisitiTecnici() {
             <div className="text-2xl font-bold text-blue-600">
               {formatCurrency(totaliGlobali.totaleImportoServizi)}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Importo Servizi</p>
+            <p className="text-sm text-muted-foreground">Importo Servizi</p>
           </CardContent>
         </Card>
         <Card>
@@ -384,7 +384,7 @@ export default function RequisitiTecnici() {
             <div className="text-2xl font-bold text-purple-600">
               {totaliGlobali.numeroClassificazioni}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Classificazioni</p>
+            <p className="text-sm text-muted-foreground">Classificazioni</p>
           </CardContent>
         </Card>
       </div>
@@ -395,13 +395,13 @@ export default function RequisitiTecnici() {
           <CardTitle>Riepilogo per Categoria</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+          <div className="divide-y divide-border">
             {aggregatoPerMacroCategoria.map((macro) => (
               <div key={macro.macroCategoria.id}>
                 {/* Riga Macro-Categoria */}
                 <div
                   onClick={() => toggleMacro(macro.macroCategoria.id)}
-                  className={`flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
+                  className={`flex items-center justify-between p-4 hover:bg-muted cursor-pointer transition-colors ${
                     macro.numeroCommesse === 0 ? "opacity-50" : ""
                   }`}
                 >
@@ -413,10 +413,10 @@ export default function RequisitiTecnici() {
                     )}
                     <span className="text-2xl">{macro.macroCategoria.emoji}</span>
                     <div>
-                      <div className="font-semibold text-gray-900 dark:text-white">
+                      <div className="font-semibold text-foreground">
                         {macro.macroCategoria.id} - {macro.macroCategoria.nome}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="text-sm text-muted-foreground">
                         {macro.numeroCommesse} commesse · {macro.numeroCategorie} categorie
                       </div>
                     </div>
@@ -433,9 +433,9 @@ export default function RequisitiTecnici() {
 
                 {/* Dettaglio Categorie */}
                 {expandedMacro.includes(macro.macroCategoria.id) && (
-                  <div className="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700">
+                  <div className="bg-muted/50 border-t border-border">
                     {macro.categorie.length === 0 ? (
-                      <div className="p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                      <div className="p-4 text-center text-muted-foreground text-sm">
                         Nessuna commessa in questa categoria
                       </div>
                     ) : (
@@ -444,7 +444,7 @@ export default function RequisitiTecnici() {
                           {/* Riga Categoria Specifica */}
                           <div
                             onClick={() => toggleCategoria(cat.codice)}
-                            className="flex items-center justify-between p-3 pl-12 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                            className="flex items-center justify-between p-3 pl-12 hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
                           >
                             <div className="flex items-center gap-2">
                               {expandedCategorie.includes(cat.codice) ? (
@@ -453,15 +453,15 @@ export default function RequisitiTecnici() {
                                 <ChevronRight className="w-4 h-4 text-gray-400" />
                               )}
                               <div>
-                                <div className="font-medium text-gray-800 dark:text-gray-200">
+                                <div className="font-medium text-foreground">
                                   {cat.codice}
                                   {cat.categoria && (
-                                    <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                                    <span className="ml-2 text-sm font-normal text-muted-foreground">
                                       {cat.categoria.descrizione}
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                <div className="text-xs text-muted-foreground">
                                   {cat.numeroCommesse} commesse
                                   {cat.categoria && ` · G = ${cat.categoria.G}`}
                                 </div>
@@ -479,26 +479,26 @@ export default function RequisitiTecnici() {
 
                           {/* Dettaglio Commesse */}
                           {expandedCategorie.includes(cat.codice) && (
-                            <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                            <div className="bg-background border-t border-border">
                               <table className="w-full text-sm">
                                 <thead>
-                                  <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800">
-                                    <th className="text-left p-2 pl-16 font-medium text-gray-600 dark:text-gray-400">
+                                  <tr className="border-b border-border bg-muted">
+                                    <th className="text-left p-2 pl-16 font-medium text-muted-foreground">
                                       Commessa
                                     </th>
-                                    <th className="text-left p-2 font-medium text-gray-600 dark:text-gray-400">
+                                    <th className="text-left p-2 font-medium text-muted-foreground">
                                       Cliente
                                     </th>
-                                    <th className="text-center p-2 font-medium text-gray-600 dark:text-gray-400">
+                                    <th className="text-center p-2 font-medium text-muted-foreground">
                                       Anno
                                     </th>
-                                    <th className="text-center p-2 font-medium text-gray-600 dark:text-gray-400">
+                                    <th className="text-center p-2 font-medium text-muted-foreground">
                                       Stato
                                     </th>
-                                    <th className="text-right p-2 font-medium text-gray-600 dark:text-gray-400">
+                                    <th className="text-right p-2 font-medium text-muted-foreground">
                                       Importo Opere
                                     </th>
-                                    <th className="text-right p-2 pr-4 font-medium text-gray-600 dark:text-gray-400">
+                                    <th className="text-right p-2 pr-4 font-medium text-muted-foreground">
                                       Importo Servizi
                                     </th>
                                   </tr>
@@ -507,15 +507,15 @@ export default function RequisitiTecnici() {
                                   {cat.commesse.map((c, idx) => (
                                     <tr
                                       key={`${c.projectId}-${idx}`}
-                                      className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                      className="border-b border-border hover:bg-muted/50"
                                     >
                                       <td className="p-2 pl-16 font-mono text-primary">
                                         {c.projectCode}
                                       </td>
-                                      <td className="p-2 text-gray-700 dark:text-gray-300">
+                                      <td className="p-2 text-foreground">
                                         {c.projectClient}
                                       </td>
-                                      <td className="p-2 text-center text-gray-600 dark:text-gray-400">
+                                      <td className="p-2 text-center text-muted-foreground">
                                         {c.projectYear}
                                       </td>
                                       <td className="p-2 text-center">
@@ -525,7 +525,7 @@ export default function RequisitiTecnici() {
                                               ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
                                               : c.projectStatus === "sospesa"
                                               ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                              : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                                              : "bg-muted text-foreground dark:bg-muted dark:text-foreground"
                                           }`}
                                         >
                                           {c.projectStatus}
@@ -555,7 +555,7 @@ export default function RequisitiTecnici() {
       </Card>
 
       {/* Nota informativa */}
-      <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+      <div className="text-sm text-muted-foreground text-center">
         I dati sono aggregati dalle classificazioni DM 17/06/2016 inserite nelle singole commesse.
         <br />
         Per modificare le classificazioni, accedi alla scheda della commessa e modifica le prestazioni/DM2016.

@@ -127,15 +127,15 @@ export default function EconomicDashboardCard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <DollarSign className="h-5 w-5 text-green-600 dark:text-green-400" />
             Dashboard Economica
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Panoramica economica delle commesse attive e concluse
           </p>
         </div>
-        <Badge variant="outline" className="text-xs px-3 py-1 border-gray-300 dark:border-gray-600">
+        <Badge variant="outline" className="text-xs px-3 py-1 border-border">
           {projectsWithEconomicData.length} commesse valorizzate
         </Badge>
       </div>
@@ -143,17 +143,17 @@ export default function EconomicDashboardCard() {
       {/* Content */}
       <div>
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
-            <TabsTrigger value="overview" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+          <TabsList className="bg-muted w-full flex-wrap h-auto gap-1 p-1">
+            <TabsTrigger value="overview" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-card text-foreground">
               <Target className="h-4 w-4" />
               <span className="hidden sm:inline">Panoramica</span>
               <span className="sm:hidden">KPI</span>
             </TabsTrigger>
-            <TabsTrigger value="charts" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <TabsTrigger value="charts" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-card text-foreground">
               <BarChart3 className="h-4 w-4" />
               Grafici
             </TabsTrigger>
-            <TabsTrigger value="top-projects" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+            <TabsTrigger value="top-projects" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-card text-foreground">
               <Briefcase className="h-4 w-4" />
               <span className="hidden sm:inline">Top Commesse</span>
               <span className="sm:hidden">Top</span>
@@ -220,43 +220,43 @@ export default function EconomicDashboardCard() {
 
             {/* Metriche Secondarie */}
             <div className="grid gap-4 md:grid-cols-3">
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+              <div className="p-4 rounded-xl bg-muted border border-border">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
                   Importo Previsto Totale
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-foreground">
                   {formatImporto(totalImportoPrevisto)}
                 </p>
                 <Progress value={totalImportoPrevisto > 0 ? (importoServiziIncassati / totalImportoPrevisto) * 100 : 0} className="mt-3 h-2" />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {prestazioniStats?.totale || 0} prestazioni totali
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+              <div className="p-4 rounded-xl bg-muted border border-border">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
                   Da Incassare
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-foreground">
                   {formatImporto((prestazioniStats?.importoDaIncassare || 0) / 100)}
                 </p>
                 <Progress value={totalImportoServizi > 0 ? ((prestazioniStats?.importoDaIncassare || 0) / 100 / totalImportoServizi) * 100 : 0} className="mt-3 h-2 [&>div]:bg-purple-500" />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {prestazioniStats?.fatturateNonPagate || 0} fatture in attesa
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">
+              <div className="p-4 rounded-xl bg-muted border border-border">
+                <p className="text-sm font-medium text-muted-foreground mb-2">
                   Tasso Incasso
                 </p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-2xl font-bold text-foreground">
                   {prestazioniStats && prestazioniStats.importoTotaleFatturato > 0
                     ? ((prestazioniStats.importoTotalePagato / prestazioniStats.importoTotaleFatturato) * 100).toFixed(1)
                     : 0}%
                 </p>
                 <Progress value={prestazioniStats && prestazioniStats.importoTotaleFatturato > 0 ? (prestazioniStats.importoTotalePagato / prestazioniStats.importoTotaleFatturato) * 100 : 0} className="mt-3 h-2 [&>div]:bg-green-500" />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-muted-foreground mt-2">
                   {formatImporto(importoServiziIncassati)} su {formatImporto(totalImportoServizi)} fatturato
                 </p>
               </div>
@@ -267,13 +267,13 @@ export default function EconomicDashboardCard() {
           <TabsContent value="charts" className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
               {/* Grafico Distribuzione per Anno */}
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+              <div className="p-4 rounded-xl bg-muted border border-border">
                 <div className="mb-4">
-                  <h4 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                     <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     Distribuzione Annuale Compensi
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Andamento compensi professionali per anno
                   </p>
                 </div>
@@ -307,13 +307,13 @@ export default function EconomicDashboardCard() {
               </div>
 
               {/* Grafico Distribuzione per Stato */}
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+              <div className="p-4 rounded-xl bg-muted border border-border">
                 <div className="mb-4">
-                  <h4 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                     <PieChartIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
                     Distribuzione per Stato
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     Ripartizione compensi per stato commessa
                   </p>
                 </div>
@@ -341,14 +341,14 @@ export default function EconomicDashboardCard() {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="mt-4 space-y-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-4 space-y-2 pt-4 border-t border-border">
                   {statusData.map((item, index) => (
                     <div key={index} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span className="text-gray-700 dark:text-gray-300">{item.name}</span>
+                        <span className="text-foreground">{item.name}</span>
                       </div>
-                      <div className="font-medium text-gray-900 dark:text-white">
+                      <div className="font-medium text-foreground">
                         {formatImporto(item.value)} ({item.count})
                       </div>
                     </div>
@@ -360,21 +360,21 @@ export default function EconomicDashboardCard() {
 
           {/* Top Commesse */}
           <TabsContent value="top-projects" className="space-y-4">
-            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+            <div className="p-4 rounded-xl bg-muted border border-border">
               <div className="mb-4">
-                <h4 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                   Top 5 Commesse per Importo Opere
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Commesse con il maggiore importo lavori
                 </p>
               </div>
               <div>
                 <div className="space-y-4">
                   {topProjectsByValue.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                      <AlertCircle className="h-12 w-12 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+                    <div className="text-center py-8 text-muted-foreground">
+                      <AlertCircle className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
                       <p>Nessuna commessa con dati economici disponibili</p>
                     </div>
                   ) : (
@@ -396,19 +396,19 @@ export default function EconomicDashboardCard() {
                                 {index + 1}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-gray-900 dark:text-white truncate" title={`${project.code} - ${project.object}`}>
+                                <div className="font-semibold text-foreground truncate" title={`${project.code} - ${project.object}`}>
                                   {project.code}
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                <div className="text-sm text-muted-foreground truncate">
                                   {project.client} - {project.city}
                                 </div>
                               </div>
                             </div>
                             <div className="text-right flex-shrink-0 ml-4">
-                              <div className="font-bold text-gray-900 dark:text-white">
+                              <div className="font-bold text-foreground">
                                 {formatImporto(importoOpere)}
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                              <div className="text-xs text-muted-foreground">
                                 {percentage.toFixed(1)}% del totale
                               </div>
                             </div>

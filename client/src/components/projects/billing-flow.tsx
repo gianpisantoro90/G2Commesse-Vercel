@@ -72,11 +72,11 @@ const PRESTAZIONE_CONFIG: Record<string, { label: string; color: string }> = {
   contabilita: { label: "Contabilità", color: "bg-green-500" },
   collaudo: { label: "Collaudo", color: "bg-yellow-500" },
   perizia: { label: "Perizia", color: "bg-pink-500" },
-  pratiche: { label: "Pratiche", color: "bg-gray-500" },
+  pratiche: { label: "Pratiche", color: "bg-muted0" },
 };
 
 const STATO_CONFIG: Record<string, { label: string; color: string; bgColor: string; position: number }> = {
-  da_iniziare: { label: "Da iniziare", color: "text-gray-500", bgColor: "bg-gray-200", position: 0 },
+  da_iniziare: { label: "Da iniziare", color: "text-muted-foreground", bgColor: "bg-muted", position: 0 },
   in_corso: { label: "In corso", color: "text-blue-600", bgColor: "bg-blue-500", position: 1 },
   completata: { label: "Completata", color: "text-amber-600", bgColor: "bg-amber-500", position: 2 },
   fatturata: { label: "Fatturata", color: "text-purple-600", bgColor: "bg-purple-500", position: 3 },
@@ -84,7 +84,7 @@ const STATO_CONFIG: Record<string, { label: string; color: string; bgColor: stri
 };
 
 const INVOICE_STATO_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
-  bozza: { label: "Bozza", color: "text-gray-600", bgColor: "bg-gray-100 dark:bg-gray-800" },
+  bozza: { label: "Bozza", color: "text-muted-foreground", bgColor: "bg-muted" },
   emessa: { label: "Emessa", color: "text-yellow-600", bgColor: "bg-yellow-100 dark:bg-yellow-900/30" },
   scaduta: { label: "Scaduta", color: "text-red-600", bgColor: "bg-red-100 dark:bg-red-900/30" },
   pagata: { label: "Pagata", color: "text-green-600", bgColor: "bg-green-100 dark:bg-green-900/30" },
@@ -735,11 +735,11 @@ export default function BillingFlow() {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Euro className="w-7 h-7" />
             Fatturazione
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-muted-foreground mt-1">
             Gestione completa prestazioni e fatture
           </p>
         </div>
@@ -766,19 +766,19 @@ export default function BillingFlow() {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-6">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Fatturato</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                <p className="text-sm text-muted-foreground">Fatturato</p>
+                <p className="text-2xl font-bold text-foreground">
                   {formatCurrency(globalStats.fatturato)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Incassato</p>
+                <p className="text-sm text-muted-foreground">Incassato</p>
                 <p className="text-2xl font-bold text-green-600">
                   {formatCurrency(globalStats.incassato)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Da incassare</p>
+                <p className="text-sm text-muted-foreground">Da incassare</p>
                 <p className="text-2xl font-bold text-amber-600">
                   {formatCurrency(globalStats.daIncassare)}
                 </p>
@@ -791,7 +791,7 @@ export default function BillingFlow() {
                   <span>Incassato</span>
                   <span>{globalStats.percentualeIncassato}%</span>
                 </div>
-                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="h-3 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-green-500 rounded-full transition-all"
                     style={{ width: `${globalStats.percentualeIncassato}%` }}
@@ -810,7 +810,7 @@ export default function BillingFlow() {
 
           {/* Alert breakdown - cliccabile per mostrare dettagli */}
           {globalStats.totalAlerts > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="mt-4 pt-4 border-t border-border">
               <div className="flex flex-wrap gap-2 items-center">
                 {globalStats.prestazioniDaFatturare > 0 && (
                   <Button
@@ -854,7 +854,7 @@ export default function BillingFlow() {
                     {globalStats.pagamentiInRitardo} in ritardo
                   </Button>
                 )}
-                <span className="text-xs text-gray-500 ml-2">
+                <span className="text-xs text-muted-foreground ml-2">
                   {showAlertDetails ? "Clicca per chiudere" : "Clicca per dettagli"}
                 </span>
               </div>
@@ -910,29 +910,29 @@ export default function BillingFlow() {
                             <Icon className={cn("w-4 h-4 shrink-0", typeConfig.color)} />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium text-gray-900 dark:text-white">
+                                <span className="font-medium text-foreground">
                                   {alert.projectCode}
                                 </span>
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-muted-foreground">
                                   {alert.projectClient}
                                 </span>
                               </div>
                               {alert.projectObject && (
-                                <div className="text-xs text-gray-600 dark:text-gray-400 truncate" title={alert.projectObject}>
+                                <div className="text-xs text-muted-foreground truncate" title={alert.projectObject}>
                                   {alert.projectObject}
                                 </div>
                               )}
-                              <div className="text-xs text-gray-500 mt-0.5">
+                              <div className="text-xs text-muted-foreground mt-0.5">
                                 {alert.type === 'da_fatturare' && prestazioneLabel && (
                                   <span>
                                     <span className="font-medium">{prestazioneLabel}</span>
                                     {alert.prestazionelivello && (
-                                      <span className="ml-1 bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                                      <span className="ml-1 bg-muted px-1 rounded">
                                         {alert.prestazionelivello.toUpperCase()}
                                       </span>
                                     )}
                                     {(alert.importoPrevisto ?? 0) > 0 && (
-                                      <span className="ml-1 text-gray-500">
+                                      <span className="ml-1 text-muted-foreground">
                                         ({formatCurrency(alert.importoPrevisto ?? 0)})
                                       </span>
                                     )}
@@ -942,7 +942,7 @@ export default function BillingFlow() {
                                   <span>
                                     <span className="font-medium">Fatt. {alert.invoiceNumero}</span>
                                     {(alert.invoiceImporto ?? 0) > 0 && (
-                                      <span className="ml-1 font-medium text-gray-900 dark:text-white">
+                                      <span className="ml-1 font-medium text-foreground">
                                         {formatCurrency(alert.invoiceImporto ?? 0)}
                                       </span>
                                     )}
@@ -972,11 +972,11 @@ export default function BillingFlow() {
       <Card>
         <CardContent className="pt-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Riepilogo Prestazioni
             </h3>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted-foreground">
               {allPrestazioni.length} prestazioni totali
             </span>
           </div>
@@ -1027,19 +1027,19 @@ export default function BillingFlow() {
               className={cn(
                 "p-3 rounded-lg border cursor-pointer transition-all",
                 showStatusDetails === 'da_iniziare'
-                  ? "bg-gray-100 dark:bg-gray-800 border-gray-400 ring-2 ring-gray-400"
-                  : "bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 hover:border-gray-400"
+                  ? "bg-muted border-gray-400 ring-2 ring-gray-400"
+                  : "bg-muted/50 border-border hover:border-gray-400"
               )}
               onClick={() => setShowStatusDetails(showStatusDetails === 'da_iniziare' ? null : 'da_iniziare')}
             >
               <div className="flex items-center gap-2 mb-1">
-                <Circle className="w-4 h-4 text-gray-500" />
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Da iniziare</span>
+                <Circle className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground">Da iniziare</span>
               </div>
-              <div className="text-xl font-bold text-gray-900 dark:text-white">
+              <div className="text-xl font-bold text-foreground">
                 {prestazioniByStatus.da_iniziare.count}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-muted-foreground">
                 {formatCurrency(prestazioniByStatus.da_iniziare.importo)}
               </div>
             </div>
@@ -1145,9 +1145,9 @@ export default function BillingFlow() {
 
           {/* Dettagli stato selezionato */}
           {showStatusDetails && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="mt-4 pt-4 border-t border-border">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-gray-900 dark:text-white">
+                <h4 className="font-medium text-foreground">
                   Dettaglio: {STATO_CONFIG[showStatusDetails]?.label || showStatusDetails}
                 </h4>
                 <Button
@@ -1187,24 +1187,24 @@ export default function BillingFlow() {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium text-gray-900 dark:text-white">
+                                <span className="font-medium text-foreground">
                                   {item.projectCode}
                                 </span>
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-muted-foreground">
                                   {item.projectClient}
                                 </span>
                               </div>
                               {item.projectObject && (
-                                <div className="text-xs text-gray-600 dark:text-gray-400 truncate" title={item.projectObject}>
+                                <div className="text-xs text-muted-foreground truncate" title={item.projectObject}>
                                   {item.projectObject}
                                 </div>
                               )}
-                              <div className="text-xs text-gray-500 mt-0.5">
+                              <div className="text-xs text-muted-foreground mt-0.5">
                                 <span className="font-medium">
                                   {PRESTAZIONE_CONFIG[item.tipo]?.label || item.tipo}
                                 </span>
                                 {item.livello && (
-                                  <span className="ml-1 bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                                  <span className="ml-1 bg-muted px-1 rounded">
                                     {item.livello.toUpperCase()}
                                   </span>
                                 )}
@@ -1227,7 +1227,7 @@ export default function BillingFlow() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-500 italic text-center py-4">
+                    <div className="text-sm text-muted-foreground italic text-center py-4">
                       Nessuna prestazione completata
                     </div>
                   )
@@ -1237,7 +1237,7 @@ export default function BillingFlow() {
                     (prestazioniByStatus[showStatusDetails as keyof typeof prestazioniByStatus]?.items || []).map((item: any, idx: number) => (
                       <div
                         key={idx}
-                        className="p-2 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 cursor-pointer hover:opacity-80 transition-opacity"
+                        className="p-2 rounded-lg border bg-muted border-border cursor-pointer hover:opacity-80 transition-opacity"
                         onClick={() => {
                           handleSearchChange(item.projectCode);
                           setShowStatusDetails(null);
@@ -1246,24 +1246,24 @@ export default function BillingFlow() {
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-gray-900 dark:text-white">
+                              <span className="font-medium text-foreground">
                                 {item.projectCode}
                               </span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-muted-foreground">
                                 {item.projectClient}
                               </span>
                             </div>
                             {item.projectObject && (
-                              <div className="text-xs text-gray-600 dark:text-gray-400 truncate" title={item.projectObject}>
+                              <div className="text-xs text-muted-foreground truncate" title={item.projectObject}>
                                 {item.projectObject}
                               </div>
                             )}
-                            <div className="text-xs text-gray-500 mt-0.5">
+                            <div className="text-xs text-muted-foreground mt-0.5">
                               <span className="font-medium">
                                 {PRESTAZIONE_CONFIG[item.tipo]?.label || item.tipo}
                               </span>
                               {item.livello && (
-                                <span className="ml-1 bg-gray-200 dark:bg-gray-700 px-1 rounded">
+                                <span className="ml-1 bg-muted px-1 rounded">
                                   {item.livello.toUpperCase()}
                                 </span>
                               )}
@@ -1279,7 +1279,7 @@ export default function BillingFlow() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-500 italic text-center py-4">
+                    <div className="text-sm text-muted-foreground italic text-center py-4">
                       Nessuna prestazione in questo stato
                     </div>
                   )
@@ -1297,7 +1297,7 @@ export default function BillingFlow() {
             className="flex items-center justify-between cursor-pointer"
             onClick={() => setShowInvoiceManager(!showInvoiceManager)}
           >
-            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="font-semibold text-foreground flex items-center gap-2">
               <Euro className="w-4 h-4" />
               Gestione Fatture
               <Badge variant="outline" className="ml-2">
@@ -1364,7 +1364,7 @@ export default function BillingFlow() {
               {/* Lista fatture */}
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {filteredInvoices.length === 0 ? (
-                  <div className="text-sm text-gray-500 italic text-center py-4">
+                  <div className="text-sm text-muted-foreground italic text-center py-4">
                     Nessuna fattura trovata
                   </div>
                 ) : (
@@ -1394,7 +1394,7 @@ export default function BillingFlow() {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-gray-900 dark:text-white">
+                              <span className="font-medium text-foreground">
                                 {invoice.numeroFattura}
                               </span>
                               <Badge className={cn("text-xs", statoConfig.color, statoConfig.bgColor)}>
@@ -1416,27 +1416,27 @@ export default function BillingFlow() {
                             </div>
 
                             <div className="flex items-center gap-2 mt-1 text-sm">
-                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                              <span className="font-medium text-foreground">
                                 {invoice.project?.code || "N/A"}
                               </span>
-                              <span className="text-gray-500">
+                              <span className="text-muted-foreground">
                                 {invoice.project?.client}
                               </span>
                             </div>
 
                             {invoice.project?.object && (
-                              <div className="text-xs text-gray-500 truncate mt-0.5" title={invoice.project.object}>
+                              <div className="text-xs text-muted-foreground truncate mt-0.5" title={invoice.project.object}>
                                 {invoice.project.object}
                               </div>
                             )}
 
-                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                               <span>Emessa: {formatDate(invoice.dataEmissione)}</span>
                               {invoice.stato === "pagata" && invoice.dataPagamento && (
                                 <span className="text-green-600">Pagata: {formatDate(invoice.dataPagamento)}</span>
                               )}
                               {prestLabel && (
-                                <span className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                                <span className="bg-muted px-1.5 py-0.5 rounded">
                                   {prestLabel}
                                 </span>
                               )}
@@ -1444,10 +1444,10 @@ export default function BillingFlow() {
                           </div>
 
                           <div className="text-right shrink-0">
-                            <div className="font-bold text-gray-900 dark:text-white">
+                            <div className="font-bold text-foreground">
                               {formatCurrency(invoice.importoTotale)}
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               Netto: {formatCurrency(invoice.importoNetto)}
                             </div>
                             <div className="flex gap-1 mt-2 justify-end">
@@ -1548,7 +1548,7 @@ export default function BillingFlow() {
       <div className="space-y-4">
         {filteredProjects.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center text-gray-500">
+            <CardContent className="py-12 text-center text-muted-foreground">
               <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>Nessuna commessa con prestazioni o fatture</p>
             </CardContent>
@@ -1818,7 +1818,7 @@ export default function BillingFlow() {
             </div>
 
             {/* Totals preview */}
-            <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+            <div className="bg-muted p-4 rounded-lg">
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <span>Imponibile:</span>
                 <span className="text-right">{formatCurrency(calculateInvoiceTotals().imponibile)}</span>
@@ -1927,17 +1927,17 @@ function ProjectBillingCard({
   return (
     <div className={cn(
       "border rounded-lg overflow-hidden",
-      hasAlerts ? "border-amber-500/50" : "border-gray-200 dark:border-gray-700"
+      hasAlerts ? "border-amber-500/50" : "border-border"
     )}>
       {/* Header Commessa */}
-      <div className="bg-gray-50 dark:bg-gray-800/50 px-4 py-3">
+      <div className="bg-muted/50 px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-gray-500" />
-              <span className="font-bold text-gray-900 dark:text-white">{project.code}</span>
+              <FileText className="w-5 h-5 text-muted-foreground" />
+              <span className="font-bold text-foreground">{project.code}</span>
             </div>
-            <span className="text-gray-600 dark:text-gray-400">{project.client}</span>
+            <span className="text-muted-foreground">{project.client}</span>
             {hasAlerts && (
               <Badge variant="destructive" className="text-xs">
                 <AlertTriangle className="w-3 h-3 mr-1" />
@@ -1952,13 +1952,13 @@ function ProjectBillingCard({
           </span>
           <span>
             Fatt: <strong className="text-purple-600">{formatCurrency(project.totals.fatturato)}</strong>
-            <span className="text-gray-500 ml-1">({project.totals.percentualeFatturato}%)</span>
+            <span className="text-muted-foreground ml-1">({project.totals.percentualeFatturato}%)</span>
           </span>
           <span>
             Inc: <strong className="text-green-600">{formatCurrency(project.totals.incassato)}</strong>
-            <span className="text-gray-500 ml-1">({project.totals.percentualeIncassato}%)</span>
+            <span className="text-muted-foreground ml-1">({project.totals.percentualeIncassato}%)</span>
           </span>
-          <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-green-500 rounded-full"
               style={{ width: `${project.totals.percentualeIncassato}%` }}
@@ -1967,14 +1967,14 @@ function ProjectBillingCard({
         </div>
       </div>
       {project.object && (
-        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 truncate" title={project.object}>
+        <div className="text-sm text-muted-foreground mt-1 truncate" title={project.object}>
           {project.object}
         </div>
       )}
     </div>
 
       {/* Prestazioni */}
-      <div className="divide-y divide-gray-100 dark:divide-gray-800">
+      <div className="divide-y divide-border">
         {project.prestazioni.map((prestazione) => (
           <PrestazioneRow
             key={prestazione.id}
@@ -2047,7 +2047,7 @@ function PrestazioneRow({
   const [targetStato, setTargetStato] = useState<string | null>(null);
   const [statoDate, setStatoDate] = useState(new Date().toISOString().split("T")[0]);
 
-  const config = PRESTAZIONE_CONFIG[prestazione.tipo] || { label: prestazione.tipo, color: "bg-gray-500" };
+  const config = PRESTAZIONE_CONFIG[prestazione.tipo] || { label: prestazione.tipo, color: "bg-muted0" };
   const statoConfig = STATO_CONFIG[prestazione.stato] || STATO_CONFIG.da_iniziare;
 
   const isCompletedLongAgo = prestazione.stato === "completata" && getDaysSince(prestazione.dataCompletamento) >= 15;
@@ -2081,7 +2081,7 @@ function PrestazioneRow({
       <div className="col-span-2">
         <div className="flex items-center gap-2 group">
           <div className={cn("w-2 h-2 rounded-full", config.color)} />
-          <span className="font-medium text-gray-900 dark:text-white">{config.label}</span>
+          <span className="font-medium text-foreground">{config.label}</span>
           {/* Delete button - visible on hover */}
           <Button
             size="sm"
@@ -2098,13 +2098,13 @@ function PrestazioneRow({
           </Button>
         </div>
         {prestazione.livelloProgettazione && (
-          <span className="text-xs text-gray-500 ml-4">{prestazione.livelloProgettazione.toUpperCase()}</span>
+          <span className="text-xs text-muted-foreground ml-4">{prestazione.livelloProgettazione.toUpperCase()}</span>
         )}
-        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <div className="text-sm text-muted-foreground mt-1">
           {formatCurrency(prestazione.importoPrevisto || 0)}
         </div>
         {/* Date info */}
-        <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+        <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
           {prestazione.dataInizio && <div>Inizio: {formatDate(prestazione.dataInizio)}</div>}
           {prestazione.dataCompletamento && <div>Fine: {formatDate(prestazione.dataCompletamento)}</div>}
         </div>
@@ -2157,7 +2157,7 @@ function PrestazioneRow({
 
         {/* Date picker dialog for stato change */}
         {showDatePicker && targetStato && (
-          <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded border">
+          <div className="mt-2 p-2 bg-muted rounded border">
             <div className="text-xs font-medium mb-1">
               Cambia a: {STATO_CONFIG[targetStato]?.label}
             </div>
@@ -2189,7 +2189,7 @@ function PrestazioneRow({
       {/* Fatture */}
       <div className="col-span-6">
         {prestazione.invoices.length === 0 ? (
-          <div className="text-sm text-gray-400 italic">
+          <div className="text-sm text-muted-foreground italic">
             Nessuna fattura
           </div>
         ) : (
@@ -2250,14 +2250,14 @@ function DirectInvoiceRow({
       <div className="col-span-2">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-gray-400" />
-          <span className="font-medium text-gray-500 italic">Fattura diretta</span>
+          <span className="font-medium text-muted-foreground italic">Fattura diretta</span>
         </div>
-        <div className="text-xs text-gray-400 ml-4">Non collegata a prestazione</div>
+        <div className="text-xs text-muted-foreground ml-4">Non collegata a prestazione</div>
       </div>
 
       {/* Workflow Timeline (empty) */}
       <div className="col-span-4">
-        <div className="h-6 flex items-center text-gray-400 text-sm">
+        <div className="h-6 flex items-center text-muted-foreground text-sm">
           —
         </div>
       </div>
@@ -2300,7 +2300,7 @@ function WorkflowTimeline({ stato }: { stato: string }) {
                 "w-3 h-3 rounded-full border-2 transition-all",
                 isCompleted
                   ? cn(config.bgColor, "border-transparent")
-                  : "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600",
+                  : "bg-muted border-border",
                 isCurrent && "ring-2 ring-offset-1 ring-blue-400"
               )}
             />
@@ -2311,7 +2311,7 @@ function WorkflowTimeline({ stato }: { stato: string }) {
                   "w-8 h-0.5",
                   index < currentIndex
                     ? "bg-green-500"
-                    : "bg-gray-200 dark:bg-gray-700"
+                    : "bg-muted"
                 )}
               />
             )}
@@ -2352,11 +2352,11 @@ function InvoiceCard({
     if (invoice.scadenzaPagamento) {
       const days = getDaysSince(invoice.scadenzaPagamento);
       if (days > 0) return { label: `Scaduta ${days}gg`, color: "text-red-600" };
-      if (days < 0) return { label: `Scade tra ${Math.abs(days)}gg`, color: "text-gray-500" };
+      if (days < 0) return { label: `Scade tra ${Math.abs(days)}gg`, color: "text-muted-foreground" };
       return { label: "Scade oggi", color: "text-amber-600" };
     }
     const daysSinceEmission = getDaysSince(invoice.dataEmissione);
-    return { label: `${daysSinceEmission}gg fa`, color: "text-gray-500" };
+    return { label: `${daysSinceEmission}gg fa`, color: "text-muted-foreground" };
   }, [invoice, isPaid, getDaysSince]);
 
   return (
@@ -2368,7 +2368,7 @@ function InvoiceCard({
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <FileText className="w-4 h-4 text-gray-500" />
+            <FileText className="w-4 h-4 text-muted-foreground" />
             <span className="font-medium">{invoice.numeroFattura}</span>
             {invoice.tipoFattura && invoice.tipoFattura !== "unica" && (
               <Badge variant="outline" className="text-xs">
@@ -2382,7 +2382,7 @@ function InvoiceCard({
             </Badge>
           </div>
 
-          <div className="mt-1 text-sm text-gray-600 dark:text-gray-400 flex flex-wrap gap-x-3 gap-y-1">
+          <div className="mt-1 text-sm text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
             <span>Emessa: {formatDate(invoice.dataEmissione)}</span>
             {isPaid && invoice.dataPagamento && (
               <span>Pagata: {formatDate(invoice.dataPagamento)}</span>
@@ -2392,22 +2392,22 @@ function InvoiceCard({
             )}
           </div>
 
-          <div className="mt-2 grid grid-cols-4 gap-2 text-xs text-gray-600 dark:text-gray-400">
+          <div className="mt-2 grid grid-cols-4 gap-2 text-xs text-muted-foreground">
             <div>
-              <span className="block text-gray-400">Imponibile</span>
+              <span className="block text-muted-foreground">Imponibile</span>
               <span>{formatCurrency(invoice.importoNetto)}</span>
             </div>
             <div>
-              <span className="block text-gray-400">Cassa</span>
+              <span className="block text-muted-foreground">Cassa</span>
               <span>{formatCurrency(invoice.cassaPrevidenziale || 0)}</span>
             </div>
             <div>
-              <span className="block text-gray-400">IVA</span>
+              <span className="block text-muted-foreground">IVA</span>
               <span>{formatCurrency(invoice.importoIVA)}</span>
             </div>
             <div>
-              <span className="block text-gray-400">Totale</span>
-              <span className="font-bold text-gray-900 dark:text-white">
+              <span className="block text-muted-foreground">Totale</span>
+              <span className="font-bold text-foreground">
                 {formatCurrency(invoice.importoTotale)}
               </span>
             </div>

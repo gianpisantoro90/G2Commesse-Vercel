@@ -161,11 +161,11 @@ export default function AiConfigPanelUnified() {
     <div className="space-y-6">
       {/* Header Section */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Brain className="w-6 h-6" />
           Gestione AI Integrata
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-muted-foreground">
           Configura i provider AI per routing intelligente e revisioni comunicazioni automatiche
         </p>
       </div>
@@ -199,13 +199,13 @@ export default function AiConfigPanelUnified() {
       </div>
 
       <Tabs defaultValue="provider" className="space-y-4">
-        <TabsList className="bg-gray-100 dark:bg-gray-800 w-full flex-wrap h-auto gap-1 p-1">
-          <TabsTrigger value="provider" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+        <TabsList className="bg-muted w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="provider" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-card text-foreground">
             <Zap className="w-4 h-4" />
             <span className="hidden sm:inline">Provider AI</span>
             <span className="sm:hidden">Provider</span>
           </TabsTrigger>
-          <TabsTrigger value="review" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 text-gray-900 dark:text-white">
+          <TabsTrigger value="review" className="flex-1 min-w-[100px] flex items-center justify-center gap-2 text-xs sm:text-sm data-[state=active]:bg-card text-foreground">
             <Settings className="w-4 h-4" />
             <span className="hidden sm:inline">Revisioni Email</span>
             <span className="sm:hidden">Revisioni</span>
@@ -218,7 +218,7 @@ export default function AiConfigPanelUnified() {
             {/* Provider Selection */}
             <div className="card-g2">
               <div className="pb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <Brain className="w-5 h-5" />
                   Seleziona Provider
                 </h3>
@@ -228,9 +228,9 @@ export default function AiConfigPanelUnified() {
                   <div key={key} className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     selectedProvider === key
                       ? 'border-primary bg-primary/5 dark:bg-primary/10'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                      : 'border-border hover:border-gray-300 dark:hover:border-gray-500'
                   }`} onClick={() => setSelectedProvider(key as any)}>
-                    <p className="font-semibold text-gray-900 dark:text-white">{provider.name}</p>
+                    <p className="font-semibold text-foreground">{provider.name}</p>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {provider.features.map((f, i) => (
                         <Badge key={i} variant="secondary" className="text-xs">{f}</Badge>
@@ -244,40 +244,40 @@ export default function AiConfigPanelUnified() {
             {/* API Configuration Form */}
             <div className="card-g2">
               <div className="pb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Configurazione</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Inserisci le credenziali API</p>
+                <h3 className="text-lg font-semibold text-foreground">Configurazione</h3>
+                <p className="text-sm text-muted-foreground mt-1">Inserisci le credenziali API</p>
               </div>
               <div>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   {/* API Key Input */}
                   <div className="space-y-2">
-                    <Label className="text-gray-900 dark:text-white">API Key</Label>
+                    <Label className="text-foreground">API Key</Label>
                     <div className="relative">
                       <Input
                         type={showApiKey ? "text" : "password"}
                         placeholder="sk-... o your-api-key"
                         {...form.register("apiKey")}
-                        className="pr-10 dark:bg-gray-800 dark:border-gray-700"
+                        className="pr-10"
                       />
                       <button
                         type="button"
                         onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-3 top-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                       >
                         {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">🔒 Salvato localmente e crittografato</p>
+                    <p className="text-xs text-muted-foreground">🔒 Salvato localmente e crittografato</p>
                   </div>
 
                   {/* Model Selection */}
                   <div className="space-y-2">
-                    <Label className="text-gray-900 dark:text-white">Modello AI</Label>
+                    <Label className="text-foreground">Modello AI</Label>
                     <Select
                       value={form.watch("model")}
                       onValueChange={(value) => form.setValue("model", value)}
                     >
-                      <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -312,8 +312,8 @@ export default function AiConfigPanelUnified() {
         <TabsContent value="review">
           <div className="card-g2">
             <div className="pb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Revisioni Comunicazioni</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Configurazione analisi email e comunicazioni</p>
+              <h3 className="text-lg font-semibold text-foreground">Revisioni Comunicazioni</h3>
+              <p className="text-sm text-muted-foreground mt-1">Configurazione analisi email e comunicazioni</p>
             </div>
             <div className="space-y-4">
               <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">

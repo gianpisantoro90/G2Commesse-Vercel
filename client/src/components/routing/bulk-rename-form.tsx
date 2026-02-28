@@ -431,7 +431,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           {/* Pre-filled project folder path */}
           {selectedFolderPath && (
             <div className="space-y-2">
-              <Label className="text-xs text-gray-600 dark:text-gray-400">Cartella commessa mappata:</Label>
+              <Label className="text-xs text-muted-foreground">Cartella commessa mappata:</Label>
               <div className="p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <div className="flex items-center gap-2">
                   <span className="text-blue-600">📁</span>
@@ -443,7 +443,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           
           {/* OneDrive folder browser */}
           <div className="space-y-2">
-            <Label className="text-xs text-gray-600 dark:text-gray-400">Oppure sfoglia OneDrive:</Label>
+            <Label className="text-xs text-muted-foreground">Oppure sfoglia OneDrive:</Label>
             <Dialog open={showFolderPicker} onOpenChange={setShowFolderPicker}>
               <DialogTrigger asChild>
                 <Button
@@ -489,7 +489,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                     {isLoadingBrowse ? (
                       <div className="flex items-center justify-center py-8">
                         <RefreshCw className="w-6 h-6 animate-spin text-gray-400 dark:text-gray-500 mr-2" />
-                        <span className="text-gray-500 dark:text-gray-400">Caricamento...</span>
+                        <span className="text-muted-foreground">Caricamento...</span>
                       </div>
                     ) : (
                       <div className="space-y-1 p-2">
@@ -503,7 +503,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                             return (
                               <div
                                 key={folder.id}
-                                className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                                className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted cursor-pointer transition-colors"
                                 data-testid={`folder-item-${folder.id}`}
                               >
                                 <div
@@ -512,8 +512,8 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                                 >
                                   <FolderOpen className="w-5 h-5 text-blue-500" />
                                   <div className="min-w-0 flex-1">
-                                    <div className="font-medium text-sm truncate text-gray-900 dark:text-white">{folder.name}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    <div className="font-medium text-sm truncate text-foreground">{folder.name}</div>
+                                    <div className="text-xs text-muted-foreground">
                                       {folderPath}
                                     </div>
                                   </div>
@@ -530,7 +530,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                             );
                           })}
                         {browseFiles.filter(file => file.folder).length === 0 && !isLoadingBrowse && (
-                          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                          <div className="text-center py-8 text-muted-foreground">
                             Nessuna cartella trovata
                           </div>
                         )}
@@ -559,7 +559,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
 
           {/* Custom folder path input */}
           <div className="space-y-2">
-            <Label className="text-xs text-gray-600 dark:text-gray-400">Oppure inserisci percorso personalizzato:</Label>
+            <Label className="text-xs text-muted-foreground">Oppure inserisci percorso personalizzato:</Label>
             <Input
               placeholder="/percorso/cartella/onedrive"
               value={customFolderPath}
@@ -589,7 +589,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
             )}
           </Button>
           
-          <p className="text-xs text-gray-600 dark:text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Il sistema scansionerà ricorsivamente la cartella OneDrive e i file verranno rinominati direttamente nel cloud
           </p>
         </div>
@@ -597,13 +597,13 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         {/* Preview */}
         {renamePreview.length > 0 && (
           <div className="space-y-3">
-            <h4 className="font-medium text-gray-700 dark:text-gray-300">Anteprima rinominazione:</h4>
+            <h4 className="font-medium text-foreground">Anteprima rinominazione:</h4>
             <div className="grid grid-cols-3 gap-2 text-xs font-semibold mb-2">
               <div className="text-green-600 dark:text-green-400">✓ Già corretti: {renamePreview.filter(r => r.original === r.renamed).length}</div>
               <div className="text-blue-600 dark:text-blue-400">🔄 Da rinominare: {renamePreview.filter(r => r.original !== r.renamed).length}</div>
-              <div className="text-gray-600 dark:text-gray-400">📁 Totale: {renamePreview.length}</div>
+              <div className="text-muted-foreground">📁 Totale: {renamePreview.length}</div>
             </div>
-            <div className="max-h-64 overflow-y-auto bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-3">
+            <div className="max-h-64 overflow-y-auto bg-card border border-border rounded-lg p-3">
               {renamePreview.map((item, index) => (
                 <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
                   <div className="text-sm flex-1">
