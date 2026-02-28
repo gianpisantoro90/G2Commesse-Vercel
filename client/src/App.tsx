@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
 import { LoginPage } from "@/pages/LoginPage";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, AuthProvider } from "@/hooks/useAuth";
 import { ErrorBoundary } from "@/components/error-boundary";
 import AiChatWidget from "@/components/ai-assistant/ai-chat-widget";
 import AppLayout from "@/components/layout/app-layout";
@@ -76,7 +76,10 @@ function HashRedirector() {
 
 // Admin-only route wrapper
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  if (isLoading) {
+    return <PageFallback />;
+  }
   if (user?.role !== "admin") {
     return <Redirect to="/" />;
   }
@@ -171,7 +174,9 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <AppContent />
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>

@@ -104,8 +104,8 @@ export async function generateCashFlowForecast(
 
     // Actual costs in this month
     const monthCosts = costs.filter(c => {
-      if (!c.dataRegistrazione) return false;
-      const d = new Date(c.dataRegistrazione);
+      if (!c.data) return false;
+      const d = new Date(c.data);
       return d >= mDate && d <= mEnd;
     });
     const uscite = monthCosts.reduce((s, c) => s + (c.importo || 0), 0);

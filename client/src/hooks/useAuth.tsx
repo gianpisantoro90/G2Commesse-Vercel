@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface User {
@@ -8,12 +8,23 @@ interface User {
   role: 'admin' | 'user';
 }
 
-export function useAuth() {
+interface AuthContextValue {
+  isAuthenticated: boolean;
+  user: User | null;
+  isLoading: boolean;
+  login: (userData?: User) => void;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const response = await apiRequest("GET", "/api/auth/status");
       const result = await response.json();
@@ -26,41 +37,42 @@ export function useAuth() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const login = (userData?: User) => {
+  const login = useCallback((userData?: User) => {
     setIsAuthenticated(true);
     if (userData) {
       setUser(userData);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await apiRequest("POST", "/api/auth/logout");
-      setIsAuthenticated(false);
-      setUser(null);
-      // Force reload to show login page
-      window.location.href = "/";
     } catch (error) {
       console.error("Logout error:", error);
+    } finally {
       setIsAuthenticated(false);
       setUser(null);
-      // Force reload even on error
       window.location.href = "/";
     }
-  };
+  }, []);
 
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
-  return {
-    isAuthenticated,
-    user,
-    isLoading,
-    login,
-    logout,
-    checkAuth
-  };
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, user, isLoading, login, logout, checkAuth }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 }
