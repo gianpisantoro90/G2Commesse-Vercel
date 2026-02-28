@@ -229,7 +229,7 @@ export function BillingConfig() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="auto_sync">Sincronizzazione prestazioni</Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Sincronizza automaticamente le prestazioni da metadata a tabella
                 </p>
               </div>
@@ -243,7 +243,7 @@ export function BillingConfig() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="auto_data">Data inizio automatica</Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Imposta automaticamente la data inizio commessa alla creazione
                 </p>
               </div>
@@ -258,7 +258,7 @@ export function BillingConfig() {
             <div className="flex items-center justify-between pt-2 border-t">
               <div className="space-y-0.5">
                 <Label>Sincronizza prestazioni</Label>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Forza la sincronizzazione delle prestazioni da metadata per tutti i progetti
                 </p>
               </div>
