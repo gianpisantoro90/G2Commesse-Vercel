@@ -63,6 +63,10 @@ export const QK = {
   // AI
   aiSuggestedTasks: ["/api/ai/suggested-tasks"] as const,
   aiSuggestedDeadlines: ["/api/ai/suggested-deadlines"] as const,
+  aiProjectHealth: ["/api/ai/project-health"] as const,
+  aiProjectHealthDetail: (id: string) => [`/api/ai/project-health/${id}`] as const,
+  aiInsights: ["/api/ai/insights"] as const,
+  aiFeedbackStats: ["/api/ai/feedback-stats"] as const,
 
   // System
   systemConfig: ["/api/system-config"] as const,

@@ -4316,4 +4316,114 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // ============================================
+  // PROJECT HEALTH & PROACTIVE INSIGHTS
+  // ============================================
+
+  // Get health for all active projects
+  app.get("/api/ai/project-health", async (req, res) => {
+    try {
+      const { calculateAllProjectsHealth } = await import("./lib/ai-project-health");
+      const summary = await calculateAllProjectsHealth(storage);
+      res.json(summary);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      logger.error('Project health calculation error', { error: msg });
+      res.status(500).json({ message: `Errore nel calcolo salute progetti: ${msg}` });
+    }
+  });
+
+  // Get health for a single project
+  app.get("/api/ai/project-health/:id", async (req, res) => {
+    try {
+      const { calculateProjectHealth } = await import("./lib/ai-project-health");
+      const health = await calculateProjectHealth(req.params.id, storage);
+      res.json(health);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      res.status(500).json({ message: `Errore nel calcolo salute progetto: ${msg}` });
+    }
+  });
+
+  // Generate AI insights for health summary (requires AI API call)
+  app.post("/api/ai/project-health/insights", async (req, res) => {
+    try {
+      const { calculateAllProjectsHealth, generateHealthInsights } = await import("./lib/ai-project-health");
+      const summary = await calculateAllProjectsHealth(storage);
+
+      const aiConfigData = await storage.getSystemConfig('ai_config');
+      const globalConfig = aiConfigData?.value as any;
+      const featureConfigsData = await storage.getSystemConfig('ai_feature_configs');
+      const featureConfigs = (featureConfigsData?.value || []) as any[];
+
+      const insights = await generateHealthInsights(summary, storage, globalConfig, featureConfigs);
+      res.json({ summary, insights });
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      logger.error('AI health insights error', { error: msg });
+      res.status(500).json({ message: `Errore nella generazione insights AI: ${msg}` });
+    }
+  });
+
+  // Get proactive insights (from cache or generate fresh)
+  app.get("/api/ai/insights", async (req, res) => {
+    try {
+      const cached = await storage.getSystemConfig('ai_proactive_insights');
+      const data = cached?.value as any;
+
+      // Return cached if fresh (less than 1 hour old)
+      if (data?.generatedAt) {
+        const age = Date.now() - new Date(data.generatedAt).getTime();
+        if (age < 3600000) { // 1 hour
+          return res.json(data);
+        }
+      }
+
+      // Generate fresh
+      const { refreshInsights } = await import("./lib/ai-proactive-alerts");
+      const insights = await refreshInsights(storage);
+      const result = {
+        insights: insights.slice(0, 50),
+        generatedAt: new Date().toISOString(),
+        totalActive: insights.length,
+      };
+      res.json(result);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      logger.error('Proactive insights error', { error: msg });
+      res.status(500).json({ message: `Errore nella generazione insights: ${msg}` });
+    }
+  });
+
+  // Manually refresh proactive insights
+  app.post("/api/ai/insights/refresh", async (req, res) => {
+    try {
+      const { refreshInsights } = await import("./lib/ai-proactive-alerts");
+      const insights = await refreshInsights(storage);
+      res.json({
+        insights: insights.slice(0, 50),
+        generatedAt: new Date().toISOString(),
+        totalActive: insights.length,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel refresh degli insights" });
+    }
+  });
+
+  // Dismiss an insight
+  app.post("/api/ai/insights/:id/dismiss", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const cached = await storage.getSystemConfig('ai_proactive_insights');
+      const data = cached?.value as any;
+      if (data?.insights) {
+        data.insights = data.insights.filter((i: any) => i.id !== id);
+        await storage.setSystemConfig('ai_proactive_insights', data);
+      }
+      res.json({ message: "Insight archiviato" });
+    } catch (error) {
+      res.status(500).json({ message: "Errore nell'archiviazione insight" });
+    }
+  });
+
 }

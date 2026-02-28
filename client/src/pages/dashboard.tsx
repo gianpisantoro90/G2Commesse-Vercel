@@ -11,6 +11,7 @@ import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
 import PrestazioniStatsWidget from "@/components/dashboard/prestazioni-stats-widget";
+import AiInsightsCard from "@/components/dashboard/ai-insights-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { type Project } from "@shared/schema";
 
@@ -136,6 +137,7 @@ export default function Dashboard() {
             {/* Dashboard Panel */}
             {activeTab === "dashboard" && (
               <div className="space-y-6" id="tabpanel-dashboard" role="tabpanel" aria-labelledby="tab-dashboard" data-testid="dashboard-panel">
+                {isAdmin && <AiInsightsCard />}
                 {isAdmin && <EconomicDashboardCard />}
                 {isAdmin && (
                   <div className="grid gap-6 lg:grid-cols-2">

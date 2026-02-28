@@ -23,6 +23,7 @@ import { CATEGORIE_DM2016 } from "@/lib/parcella-calculator";
 import { ClientCombobox } from "@/components/ui/client-combobox";
 import { ChevronDown, ChevronUp, Plus, Trash2, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import ProjectHealthCard from "./project-health-card";
 
 interface EditProjectFormProps {
   project: Project;
@@ -36,6 +37,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
     contratto: false,
     prestazioni: false,
     classificazioni: false,
+    health: false,
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -697,6 +699,27 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                 </div>
               )}
             </div>
+
+            {/* SEZIONE 5: Salute Progetto (AI) */}
+            {project && (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => toggleSection('health')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <span className="font-semibold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                    🩺 Salute Progetto (AI)
+                  </span>
+                  {expandedSections.health ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.health && (
+                  <div className="p-4">
+                    <ProjectHealthCard projectId={project.id} />
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Buttons */}
             <div className="flex justify-end gap-3 pt-4 border-t">
