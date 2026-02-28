@@ -4426,4 +4426,22 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
+  // ============================================
+  // CASH FLOW FORECAST
+  // ============================================
+
+  // Get cash flow forecast
+  app.get("/api/ai/cashflow-forecast", async (req, res) => {
+    try {
+      const months = parseInt(req.query.months as string) || 6;
+      const { generateCashFlowForecast } = await import("./lib/ai-cashflow-forecast");
+      const forecast = await generateCashFlowForecast(storage, Math.min(months, 12));
+      res.json(forecast);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      logger.error('Cash flow forecast error', { error: msg });
+      res.status(500).json({ message: `Errore nella previsione cash flow: ${msg}` });
+    }
+  });
+
 }
