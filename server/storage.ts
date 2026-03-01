@@ -1,7 +1,35 @@
 import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectSAL, type InsertProjectSAL, type ProjectChangelog, type InsertProjectChangelog, type ProjectBudget, type InsertProjectBudget, type ProjectCost, type InsertProjectCost, type ProjectResource, type InsertProjectResource, type SavedFilter, type InsertSavedFilter, type BillingAlert, type InsertBillingAlert, type BillingConfig as BillingConfigType } from "@shared/schema";
 import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectSAL, projectChangelog, projectBudget, projectCosts, projectResources, savedFilters, billingAlerts, billingConfig } from "@shared/schema";
-import { eq, sql, or } from "drizzle-orm";
+import { eq, sql, or, and, desc, asc, ilike } from "drizzle-orm";
 import { randomUUID } from "crypto";
+import { type PaginationParams, type PaginatedResponse, buildPaginatedResponse } from "@shared/pagination";
+
+// Extended pagination params for each entity
+export interface ProjectPaginationParams extends PaginationParams {
+  status?: string;
+  year?: string;
+  creFilter?: string; // 'archiviato' | 'non_archiviato'
+}
+export interface CommunicationPaginationParams extends PaginationParams {
+  projectId?: string;
+  type?: string;
+  direction?: string;
+  importantOnly?: boolean;
+}
+export interface ClientPaginationParams extends PaginationParams {}
+export interface TaskPaginationParams extends PaginationParams {
+  projectId?: string;
+  assignedTo?: string;
+  createdBy?: string;
+  status?: string;
+}
+export interface InvoicePaginationParams extends PaginationParams {
+  projectId?: string;
+}
+export interface PrestazionePaginationParams extends PaginationParams {
+  projectId?: string;
+  stato?: string;
+}
 
 // Use serverless database for now (local fix will be in exported version)
 import { db, pool } from "./db";
@@ -176,9 +204,55 @@ export interface IStorage {
   getBillingConfig(): Promise<Record<string, number>>;
   setBillingConfig(key: string, value: number): Promise<void>;
 
+  // Paginated queries
+  getProjectsPaginated(params: ProjectPaginationParams): Promise<PaginatedResponse<Project>>;
+  getCommunicationsPaginated(params: CommunicationPaginationParams): Promise<PaginatedResponse<Communication>>;
+  getClientsPaginated(params: ClientPaginationParams): Promise<PaginatedResponse<Client>>;
+  getTasksPaginated(params: TaskPaginationParams): Promise<PaginatedResponse<Task>>;
+  getInvoicesPaginated(params: InvoicePaginationParams): Promise<PaginatedResponse<ProjectInvoice>>;
+  getPrestazioniPaginated(params: PrestazionePaginationParams): Promise<PaginatedResponse<ProjectPrestazione>>;
+
   // Connection and migrations (optional - only implemented by database storages)
   testConnection?(): Promise<boolean>;
   runMigrations?(): Promise<void>;
+}
+
+/**
+ * Generic in-memory pagination helper.
+ * Used by MemStorage (and as fallback) to paginate arrays.
+ */
+function paginateArray<T>(
+  items: T[],
+  params: PaginationParams,
+  searchFn?: (item: T, search: string) => boolean,
+  sortableFields?: Record<string, (item: T) => any>
+): PaginatedResponse<T> {
+  let filtered = items;
+
+  // Apply search filter
+  if (params.search && searchFn) {
+    const searchLower = params.search.toLowerCase();
+    filtered = filtered.filter(item => searchFn(item, searchLower));
+  }
+
+  // Apply sorting
+  if (params.sortField && sortableFields && sortableFields[params.sortField]) {
+    const getter = sortableFields[params.sortField];
+    const dir = params.sortOrder === 'desc' ? -1 : 1;
+    filtered = [...filtered].sort((a, b) => {
+      const aVal = getter(a) ?? '';
+      const bVal = getter(b) ?? '';
+      if (aVal < bVal) return -1 * dir;
+      if (aVal > bVal) return 1 * dir;
+      return 0;
+    });
+  }
+
+  const total = filtered.length;
+  const offset = (params.page - 1) * params.pageSize;
+  const data = filtered.slice(offset, offset + params.pageSize);
+
+  return buildPaginatedResponse(data, total, params);
 }
 
 export class MemStorage implements IStorage {
@@ -1346,6 +1420,70 @@ export class MemStorage implements IStorage {
 
   private generateSafeAcronym(text: string): string {
     return (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
+  }
+
+  // Paginated queries (MemStorage - uses generic paginateArray helper)
+  async getProjectsPaginated(params: ProjectPaginationParams): Promise<PaginatedResponse<Project>> {
+    let items = Array.from(this.projects.values());
+    if (params.status && params.status !== 'all') items = items.filter(p => p.status === params.status);
+    if (params.year && params.year !== 'all') items = items.filter(p => p.year === parseInt(params.year!));
+    if (params.creFilter === 'archiviato') items = items.filter(p => p.creArchiviato);
+    if (params.creFilter === 'non_archiviato') items = items.filter(p => !p.creArchiviato);
+    return paginateArray(items, params,
+      (p, s) => p.code.toLowerCase().includes(s) || p.client.toLowerCase().includes(s) || p.object.toLowerCase().includes(s) || p.city.toLowerCase().includes(s),
+      { code: p => p.code, client: p => p.client, year: p => p.year, status: p => p.status, object: p => p.object }
+    );
+  }
+
+  async getCommunicationsPaginated(params: CommunicationPaginationParams): Promise<PaginatedResponse<Communication>> {
+    let items = Array.from(this.communications.values());
+    if (params.projectId && params.projectId !== 'all') items = items.filter(c => c.projectId === params.projectId);
+    if (params.type && params.type !== 'all') items = items.filter(c => c.type === params.type);
+    if (params.direction && params.direction !== 'all') items = items.filter(c => c.direction === params.direction);
+    if (params.importantOnly) items = items.filter(c => c.isImportant);
+    return paginateArray(items, params,
+      (c, s) => c.subject.toLowerCase().includes(s) || (c.sender || '').toLowerCase().includes(s),
+      { subject: c => c.subject, communicationDate: c => c.communicationDate, type: c => c.type }
+    );
+  }
+
+  async getClientsPaginated(params: ClientPaginationParams): Promise<PaginatedResponse<Client>> {
+    const items = Array.from(this.clients.values());
+    return paginateArray(items, params,
+      (c, s) => c.name.toLowerCase().includes(s) || c.sigla.toLowerCase().includes(s),
+      { name: c => c.name, sigla: c => c.sigla }
+    );
+  }
+
+  async getTasksPaginated(params: TaskPaginationParams): Promise<PaginatedResponse<Task>> {
+    let items = Array.from(this.tasks.values());
+    if (params.projectId) items = items.filter(t => t.projectId === params.projectId);
+    if (params.assignedTo) items = items.filter(t => t.assignedToId === params.assignedTo);
+    if (params.createdBy) items = items.filter(t => t.createdById === params.createdBy);
+    if (params.status) items = items.filter(t => t.status === params.status);
+    return paginateArray(items, params,
+      (t, s) => t.title.toLowerCase().includes(s),
+      { title: t => t.title, dueDate: t => t.dueDate, priority: t => t.priority, status: t => t.status }
+    );
+  }
+
+  async getInvoicesPaginated(params: InvoicePaginationParams): Promise<PaginatedResponse<ProjectInvoice>> {
+    let items = Array.from(this.invoices.values());
+    if (params.projectId) items = items.filter(i => i.projectId === params.projectId);
+    return paginateArray(items, params,
+      (i, s) => i.numeroFattura.toLowerCase().includes(s),
+      { numeroFattura: i => i.numeroFattura, dataEmissione: i => i.dataEmissione, importoTotale: i => i.importoTotale }
+    );
+  }
+
+  async getPrestazioniPaginated(params: PrestazionePaginationParams): Promise<PaginatedResponse<ProjectPrestazione>> {
+    let items = Array.from(this.prestazioni.values());
+    if (params.projectId) items = items.filter(p => p.projectId === params.projectId);
+    if (params.stato) items = items.filter(p => p.stato === params.stato);
+    return paginateArray(items, params,
+      (p, s) => p.tipo.toLowerCase().includes(s) || (p.descrizione || '').toLowerCase().includes(s),
+      { tipo: p => p.tipo, stato: p => p.stato, dataInizio: p => p.dataInizio }
+    );
   }
 }
 
@@ -2992,6 +3130,179 @@ export class DatabaseStorage implements IStorage {
   private generateSafeAcronym(text: string): string {
     return (text || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
   }
+
+  // Paginated queries (DatabaseStorage - uses SQL LIMIT/OFFSET + COUNT)
+  async getProjectsPaginated(params: ProjectPaginationParams): Promise<PaginatedResponse<Project>> {
+    const conditions: any[] = [];
+    if (params.status && params.status !== 'all') {
+      conditions.push(eq(projects.status, params.status));
+    }
+    if (params.year && params.year !== 'all') {
+      conditions.push(eq(projects.year, parseInt(params.year)));
+    }
+    if (params.creFilter === 'archiviato') {
+      conditions.push(eq(projects.creArchiviato, true));
+    } else if (params.creFilter === 'non_archiviato') {
+      conditions.push(eq(projects.creArchiviato, false));
+    }
+    if (params.search) {
+      const pattern = `%${params.search}%`;
+      conditions.push(or(
+        ilike(projects.code, pattern),
+        ilike(projects.client, pattern),
+        ilike(projects.object, pattern),
+        ilike(projects.city, pattern)
+      ));
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Status priority sort (in corso=1, conclusa=2, sospesa=3)
+    const statusPriorityExpr = sql`CASE WHEN ${projects.status} = 'in corso' THEN 1 WHEN ${projects.status} = 'conclusa' THEN 2 WHEN ${projects.status} = 'sospesa' THEN 3 ELSE 4 END`;
+
+    const projectSortFields: Record<string, any> = {
+      code: projects.code, client: projects.client, year: projects.year,
+      status: projects.status, object: projects.object, city: projects.city,
+    };
+
+    // Default: status priority + code. With explicit sortField: status priority + user sort.
+    const userSortCol = projectSortFields[params.sortField || ''] || projects.code;
+    const userOrderDir = params.sortOrder === 'desc' ? desc(userSortCol) : asc(userSortCol);
+
+    const [{ count: total }] = await db.select({ count: sql<number>`count(*)::int` }).from(projects).where(where);
+    const data = await db.select().from(projects).where(where)
+      .orderBy(asc(statusPriorityExpr), userOrderDir)
+      .limit(params.pageSize).offset((params.page - 1) * params.pageSize);
+
+    return buildPaginatedResponse(data, total, params);
+  }
+
+  async getCommunicationsPaginated(params: CommunicationPaginationParams): Promise<PaginatedResponse<Communication>> {
+    const conditions: any[] = [];
+    if (params.projectId && params.projectId !== 'all') conditions.push(eq(communications.projectId, params.projectId));
+    if (params.type && params.type !== 'all') conditions.push(eq(communications.type, params.type));
+    if (params.direction && params.direction !== 'all') conditions.push(eq(communications.direction, params.direction));
+    if (params.importantOnly) conditions.push(eq(communications.isImportant, true));
+    if (params.search) {
+      const pattern = `%${params.search}%`;
+      conditions.push(or(
+        ilike(communications.subject, pattern),
+        ilike(communications.sender, pattern),
+        ilike(communications.recipient, pattern)
+      ));
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const commSortFields: Record<string, any> = {
+      subject: communications.subject, communicationDate: communications.communicationDate,
+      type: communications.type, sender: communications.sender,
+    };
+    const sortCol = commSortFields[params.sortField || ''] || communications.communicationDate;
+    const orderDir = params.sortOrder === 'desc' ? desc(sortCol) : asc(sortCol);
+
+    const [{ count: total }] = await db.select({ count: sql<number>`count(*)::int` }).from(communications).where(where);
+    const data = await db.select().from(communications).where(where).orderBy(orderDir)
+      .limit(params.pageSize).offset((params.page - 1) * params.pageSize);
+
+    return buildPaginatedResponse(data, total, params);
+  }
+
+  async getClientsPaginated(params: ClientPaginationParams): Promise<PaginatedResponse<Client>> {
+    const conditions: any[] = [];
+    if (params.search) {
+      const pattern = `%${params.search}%`;
+      conditions.push(or(
+        ilike(clients.sigla, pattern),
+        ilike(clients.name, pattern)
+      ));
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const clientSortFields: Record<string, any> = {
+      name: clients.name, sigla: clients.sigla,
+    };
+    const sortCol = clientSortFields[params.sortField || ''] || clients.name;
+    const orderDir = params.sortOrder === 'desc' ? desc(sortCol) : asc(sortCol);
+
+    const [{ count: total }] = await db.select({ count: sql<number>`count(*)::int` }).from(clients).where(where);
+    const data = await db.select().from(clients).where(where).orderBy(orderDir)
+      .limit(params.pageSize).offset((params.page - 1) * params.pageSize);
+
+    return buildPaginatedResponse(data, total, params);
+  }
+
+  async getTasksPaginated(params: TaskPaginationParams): Promise<PaginatedResponse<Task>> {
+    const conditions: any[] = [];
+    if (params.projectId) conditions.push(eq(tasks.projectId, params.projectId));
+    if (params.assignedTo) conditions.push(eq(tasks.assignedToId, params.assignedTo));
+    if (params.createdBy) conditions.push(eq(tasks.createdById, params.createdBy));
+    if (params.status) conditions.push(eq(tasks.status, params.status));
+    if (params.search) {
+      conditions.push(ilike(tasks.title, `%${params.search}%`));
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const taskSortFields: Record<string, any> = {
+      title: tasks.title, dueDate: tasks.dueDate, priority: tasks.priority,
+      status: tasks.status, createdAt: tasks.createdAt,
+    };
+    const sortCol = taskSortFields[params.sortField || ''] || tasks.createdAt;
+    const orderDir = params.sortOrder === 'desc' ? desc(sortCol) : asc(sortCol);
+
+    const [{ count: total }] = await db.select({ count: sql<number>`count(*)::int` }).from(tasks).where(where);
+    const data = await db.select().from(tasks).where(where).orderBy(orderDir)
+      .limit(params.pageSize).offset((params.page - 1) * params.pageSize);
+
+    return buildPaginatedResponse(data, total, params);
+  }
+
+  async getInvoicesPaginated(params: InvoicePaginationParams): Promise<PaginatedResponse<ProjectInvoice>> {
+    const conditions: any[] = [];
+    if (params.projectId) conditions.push(eq(projectInvoices.projectId, params.projectId));
+    if (params.search) {
+      conditions.push(ilike(projectInvoices.numeroFattura, `%${params.search}%`));
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const invoiceSortFields: Record<string, any> = {
+      numeroFattura: projectInvoices.numeroFattura, dataEmissione: projectInvoices.dataEmissione,
+      importoTotale: projectInvoices.importoTotale, stato: projectInvoices.stato,
+    };
+    const sortCol = invoiceSortFields[params.sortField || ''] || projectInvoices.dataEmissione;
+    const orderDir = params.sortOrder === 'desc' ? desc(sortCol) : asc(sortCol);
+
+    const [{ count: total }] = await db.select({ count: sql<number>`count(*)::int` }).from(projectInvoices).where(where);
+    const data = await db.select().from(projectInvoices).where(where).orderBy(orderDir)
+      .limit(params.pageSize).offset((params.page - 1) * params.pageSize);
+
+    return buildPaginatedResponse(data, total, params);
+  }
+
+  async getPrestazioniPaginated(params: PrestazionePaginationParams): Promise<PaginatedResponse<ProjectPrestazione>> {
+    const conditions: any[] = [];
+    if (params.projectId) conditions.push(eq(projectPrestazioni.projectId, params.projectId));
+    if (params.stato) conditions.push(eq(projectPrestazioni.stato, params.stato));
+    if (params.search) {
+      const pattern = `%${params.search}%`;
+      conditions.push(or(
+        ilike(projectPrestazioni.tipo, pattern),
+        ilike(projectPrestazioni.descrizione, pattern)
+      ));
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const prestSortFields: Record<string, any> = {
+      tipo: projectPrestazioni.tipo, stato: projectPrestazioni.stato,
+      dataInizio: projectPrestazioni.dataInizio,
+    };
+    const sortCol = prestSortFields[params.sortField || ''] || projectPrestazioni.tipo;
+    const orderDir = params.sortOrder === 'desc' ? desc(sortCol) : asc(sortCol);
+
+    const [{ count: total }] = await db.select({ count: sql<number>`count(*)::int` }).from(projectPrestazioni).where(where);
+    const data = await db.select().from(projectPrestazioni).where(where).orderBy(orderDir)
+      .limit(params.pageSize).offset((params.page - 1) * params.pageSize);
+
+    return buildPaginatedResponse(data, total, params);
+  }
 }
 
 // Use database storage in production, file storage for local development
@@ -3510,6 +3821,26 @@ class FallbackStorage implements IStorage {
 
   async clearAllData(): Promise<void> {
     return this.executeWithFallback(storage => storage.clearAllData());
+  }
+
+  // Paginated queries (FallbackStorage - delegates to underlying storage)
+  async getProjectsPaginated(params: ProjectPaginationParams): Promise<PaginatedResponse<Project>> {
+    return this.executeWithFallback(storage => storage.getProjectsPaginated(params));
+  }
+  async getCommunicationsPaginated(params: CommunicationPaginationParams): Promise<PaginatedResponse<Communication>> {
+    return this.executeWithFallback(storage => storage.getCommunicationsPaginated(params));
+  }
+  async getClientsPaginated(params: ClientPaginationParams): Promise<PaginatedResponse<Client>> {
+    return this.executeWithFallback(storage => storage.getClientsPaginated(params));
+  }
+  async getTasksPaginated(params: TaskPaginationParams): Promise<PaginatedResponse<Task>> {
+    return this.executeWithFallback(storage => storage.getTasksPaginated(params));
+  }
+  async getInvoicesPaginated(params: InvoicePaginationParams): Promise<PaginatedResponse<ProjectInvoice>> {
+    return this.executeWithFallback(storage => storage.getInvoicesPaginated(params));
+  }
+  async getPrestazioniPaginated(params: PrestazionePaginationParams): Promise<PaginatedResponse<ProjectPrestazione>> {
+    return this.executeWithFallback(storage => storage.getPrestazioniPaginated(params));
   }
 }
 
