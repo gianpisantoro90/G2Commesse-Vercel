@@ -60,14 +60,13 @@ import { it } from "date-fns/locale";
 import { BillingConfig } from "./billing-config";
 import { QK } from "@/lib/query-utils";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
-
-interface BillingConfigData {
-  alert_completata_giorni: number;
-  alert_scadenza_fattura_giorni: number;
-  alert_pagamento_giorni: number;
-  auto_sync_prestazioni: number;
-  auto_data_inizio: number;
-}
+import {
+  calcProjectBillingTotals,
+  calcBillingAlerts,
+  calcInvoiceAmounts,
+  formatCentesimi,
+  type BillingConfigData,
+} from "@/lib/billing-calculations";
 
 // ============================================
 // CONFIGURAZIONI
@@ -198,51 +197,19 @@ export default function BillingFlow() {
         // Direct invoices (not linked to prestazioni)
         const directInvoices = projectInvoices.filter((i) => !i.prestazioneId);
 
-        // Calculate totals
-        const budget = projectPrestazioni.reduce((sum, p) => sum + (p.importoPrevisto || 0), 0);
-        const fatturato = projectInvoices.reduce((sum, i) => sum + i.importoTotale, 0);
-        const incassato = projectInvoices
-          .filter((i) => i.stato === "pagata")
-          .reduce((sum, i) => sum + i.importoTotale, 0);
-        const daIncassare = fatturato - incassato;
-
-        // Calculate alerts
-        const now = new Date();
-        const prestazioniDaFatturare = projectPrestazioni.filter((p) => {
-          if (p.stato !== "completata" || !p.dataCompletamento) return false;
-          const daysSinceCompletion = Math.floor(
-            (now.getTime() - new Date(p.dataCompletamento).getTime()) / (1000 * 60 * 60 * 24)
-          );
-          return daysSinceCompletion >= sogliaCompletata;
-        }).length;
-
-        const fattureScadute = projectInvoices.filter((i) => i.stato === "scaduta").length;
-
-        const pagamentiInRitardo = projectInvoices.filter((i) => {
-          if (i.stato === "pagata") return false;
-          const daysSinceEmission = Math.floor(
-            (now.getTime() - new Date(i.dataEmissione).getTime()) / (1000 * 60 * 60 * 24)
-          );
-          return daysSinceEmission >= sogliaPagamento;
-        }).length;
+        // Calculate totals and alerts using centralized utility
+        const totals = calcProjectBillingTotals(projectPrestazioni, projectInvoices);
+        const alerts = calcBillingAlerts(
+          projectPrestazioni, projectInvoices,
+          sogliaCompletata, sogliaPagamento
+        );
 
         return {
           ...project,
           prestazioni: prestazioniWithInvoices,
           directInvoices,
-          totals: {
-            budget,
-            fatturato,
-            incassato,
-            daIncassare,
-            percentualeFatturato: budget > 0 ? Math.round((fatturato / budget) * 100) : 0,
-            percentualeIncassato: fatturato > 0 ? Math.round((incassato / fatturato) * 100) : 0,
-          },
-          alerts: {
-            prestazioniDaFatturare,
-            fattureScadute,
-            pagamentiInRitardo,
-          },
+          totals,
+          alerts,
         };
       })
       .filter((p) => p.prestazioni.length > 0 || p.directInvoices.length > 0)
@@ -621,13 +588,20 @@ export default function BillingFlow() {
   };
 
   const calculateInvoiceTotals = () => {
-    const imponibile = invoiceForm.imponibile * 100;
-    const cassa = Math.round(imponibile * (invoiceForm.cassaPercentuale / 100));
-    const baseIva = imponibile + cassa;
-    const iva = Math.round(baseIva * (invoiceForm.ivaPercentuale / 100));
-    const totale = baseIva + iva;
-    const ritenuta = invoiceForm.ritenuta * 100;
-    return { imponibile, cassa, iva, totale, ritenuta, netto: totale - ritenuta };
+    const result = calcInvoiceAmounts({
+      imponibile: invoiceForm.imponibile,
+      cassaPercentuale: invoiceForm.cassaPercentuale,
+      ivaPercentuale: invoiceForm.ivaPercentuale,
+      ritenuta: invoiceForm.ritenuta,
+    });
+    return {
+      imponibile: result.imponibile,
+      cassa: result.cassaPrevidenziale,
+      iva: result.importoIVA,
+      totale: result.importoTotale,
+      ritenuta: result.ritenuta,
+      netto: result.nettoPagare,
+    };
   };
 
   const openInvoiceDialog = (project: Project, prestazione?: PrestazioneWithInvoices, invoice?: ProjectInvoice) => {

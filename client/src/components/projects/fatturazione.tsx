@@ -15,6 +15,7 @@ import { type Project } from "@shared/schema";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
+import { calcInvoiceStats } from "@/lib/billing-calculations";
 
 interface ProjectInvoice {
   id: string;
@@ -225,28 +226,19 @@ export default function Fatturazione() {
     });
   };
 
-  // Calcola statistiche
-  const stats = {
-    totale: invoices?.length || 0,
-    emesse: invoices?.filter(i => i.stato === 'emessa').length || 0,
-    pagate: invoices?.filter(i => i.stato === 'pagata').length || 0,
-    scadute: invoices?.filter(i => i.stato === 'scaduta').length || 0,
-    importoTotale: invoices?.reduce((sum, i) => sum + i.importoTotale, 0) || 0,
-    importoPagato: invoices?.filter(i => i.stato === 'pagata').reduce((sum, i) => sum + i.importoTotale, 0) || 0,
-    importoDaPagare: invoices?.filter(i => i.stato !== 'pagata').reduce((sum, i) => sum + i.importoTotale, 0) || 0
-  };
+  // Calcola statistiche usando utility centralizzata
+  const stats = calcInvoiceStats(invoices || []);
 
   const groupedInvoices = projects?.map(project => {
     const projectInvoices = invoices?.filter(i => i.projectId === project.id) || [];
-    const totaleFatturato = projectInvoices.reduce((sum, i) => sum + i.importoTotale, 0);
-    const totalePagato = projectInvoices.filter(i => i.stato === 'pagata').reduce((sum, i) => sum + i.importoTotale, 0);
+    const projectStats = calcInvoiceStats(projectInvoices);
 
     return {
       project,
       invoices: projectInvoices,
-      totaleFatturato,
-      totalePagato,
-      totaleInSospeso: totaleFatturato - totalePagato
+      totaleFatturato: projectStats.importoTotale,
+      totalePagato: projectStats.importoPagato,
+      totaleInSospeso: projectStats.importoDaPagare,
     };
   }).filter(group => group.invoices.length > 0) || [];
 
@@ -415,7 +407,7 @@ export default function Fatturazione() {
         <div className="card-g2">
           <p className="text-sm font-medium text-muted-foreground mb-2">Fatture Totali</p>
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-foreground">{stats.totale}</div>
+            <div className="text-2xl font-bold text-foreground">{stats.count}</div>
             <FileText className="w-8 h-8 text-blue-500 dark:text-blue-400" />
           </div>
           <div className="text-xs text-muted-foreground mt-2">
