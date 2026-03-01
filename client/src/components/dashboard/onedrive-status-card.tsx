@@ -6,17 +6,19 @@ import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { useToast } from "@/hooks/use-toast";
 import oneDriveService from "@/lib/onedrive-service";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Cloud, CloudOff, RefreshCw, Settings, User, AlertTriangle, CheckCircle, Clock, FolderOpen } from "lucide-react";
 
 export default function OneDriveStatusCard() {
   const [isSyncingManually, setIsSyncingManually] = useState(false);
   const { toast } = useToast();
-  const { 
-    isConnected, 
-    syncAllProjects, 
-    isSyncingAll, 
-    autoSyncEnabled, 
-    getOverallSyncStats 
+  const [, navigate] = useLocation();
+  const {
+    isConnected,
+    syncAllProjects,
+    isSyncingAll,
+    autoSyncEnabled,
+    getOverallSyncStats
   } = useOneDriveSync();
 
   // Get user info when connected
@@ -170,20 +172,7 @@ export default function OneDriveStatusCard() {
                   size="sm"
                   variant="outline"
                   className="text-amber-700 border-amber-300 hover:bg-amber-100"
-                  onClick={() => {
-                    // Navigate to OneDrive configuration
-                    const systemTab = document.querySelector('[data-testid="tab-sistema"]') as HTMLElement;
-                    const oneDriveTab = document.querySelector('[data-testid="tab-onedrive"]') as HTMLElement;
-                    
-                    if (systemTab) {
-                      systemTab.click();
-                      setTimeout(() => {
-                        if (oneDriveTab) {
-                          oneDriveTab.click();
-                        }
-                      }, 100);
-                    }
-                  }}
+                  onClick={() => navigate("/sistema/onedrive")}
                   data-testid="button-configure-root"
                 >
                   Configura
@@ -254,20 +243,7 @@ export default function OneDriveStatusCard() {
               <Button
                 variant="ghost"
                 className="w-full text-sm"
-                onClick={() => {
-                  // Navigate to OneDrive settings
-                  const systemTab = document.querySelector('[data-testid="tab-sistema"]') as HTMLElement;
-                  const oneDriveTab = document.querySelector('[data-testid="tab-onedrive"]') as HTMLElement;
-                  
-                  if (systemTab) {
-                    systemTab.click();
-                    setTimeout(() => {
-                      if (oneDriveTab) {
-                        oneDriveTab.click();
-                      }
-                    }, 100);
-                  }
-                }}
+                onClick={() => navigate("/sistema/onedrive")}
                 data-testid="button-onedrive-settings"
               >
                 <Settings className="h-4 w-4 mr-2" />
@@ -278,20 +254,7 @@ export default function OneDriveStatusCard() {
             <Button
               variant="outline"
               className="w-full"
-              onClick={() => {
-                // Navigate to OneDrive configuration
-                const systemTab = document.querySelector('[data-testid="tab-sistema"]') as HTMLElement;
-                const oneDriveTab = document.querySelector('[data-testid="tab-onedrive"]') as HTMLElement;
-                
-                if (systemTab) {
-                  systemTab.click();
-                  setTimeout(() => {
-                    if (oneDriveTab) {
-                      oneDriveTab.click();
-                    }
-                  }, 100);
-                }
-              }}
+              onClick={() => navigate("/sistema/onedrive")}
               data-testid="button-setup-onedrive"
             >
               <Cloud className="h-4 w-4 mr-2" />

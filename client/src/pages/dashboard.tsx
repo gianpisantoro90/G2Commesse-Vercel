@@ -4,6 +4,7 @@ import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
+import UserSummaryCard from "@/components/dashboard/user-summary-card";
 
 import AiInsightsCard from "@/components/dashboard/ai-insights-card";
 import CashFlowForecastCard from "@/components/dashboard/cashflow-forecast-card";
@@ -19,6 +20,7 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground">Panoramica generale del sistema</p>
       </div>
 
+      <UserSummaryCard />
       {isAdmin && <AiInsightsCard />}
       {isAdmin && <EconomicDashboardCard />}
       {isAdmin && <CashFlowForecastCard />}

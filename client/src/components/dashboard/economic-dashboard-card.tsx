@@ -68,13 +68,6 @@ export default function EconomicDashboardCard() {
     ? prestazioniStats.importoTotalePagato / 100
     : 0;
 
-  const projectsInCorso = projects.filter(p => p.status === "in corso");
-  const projectsConcluse = projects.filter(p => p.status === "conclusa");
-
-  const averageImportoServizio = prestazioniStats && prestazioniStats.totale > 0
-    ? totalImportoPrevisto / prestazioniStats.totale
-    : 0;
-
   // Dati per grafico distribuzione per anno (basato su progetti con importo opere)
   const yearlyData = projects.reduce((acc, project) => {
     const year = `20${project.year.toString().padStart(2, '0')}`;

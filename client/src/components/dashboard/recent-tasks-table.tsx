@@ -4,7 +4,8 @@ import { type Task, type Project, type User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { TaskStatusBadge, PriorityBadge } from "@/components/ui/status-badge";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertTriangle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { QK } from "@/lib/query-utils";
 
 export default function RecentTasksTable() {
@@ -43,6 +44,12 @@ export default function RecentTasksTable() {
     if (!date) return "-";
     const d = new Date(date);
     return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const isOverdue = (task: Task) => {
+    if (!task.dueDate) return false;
+    if (task.status === "completed" || task.status === "cancelled") return false;
+    return new Date(task.dueDate) < new Date();
   };
 
   return (
@@ -96,7 +103,15 @@ export default function RecentTasksTable() {
                       <TaskStatusBadge status={task.status as "completed" | "in_progress" | "cancelled" | "pending"} />
                     </td>
                     <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-muted-foreground" data-testid={`task-due-${task.id}`}>
-                      {formatDate(task.dueDate)}
+                      <div className="flex items-center gap-1.5">
+                        {formatDate(task.dueDate)}
+                        {isOverdue(task) && (
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                            <AlertTriangle className="h-3 w-3 mr-0.5" />
+                            Scaduto
+                          </Badge>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -125,7 +140,14 @@ export default function RecentTasksTable() {
                   </div>
                   <div className="min-w-0">
                     <div className="font-medium text-foreground mb-1">Scadenza</div>
-                    <div className="text-red-600 dark:text-red-400 font-medium">{formatDate(task.dueDate)}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={isOverdue(task) ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"}>{formatDate(task.dueDate)}</span>
+                      {isOverdue(task) && (
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                          Scaduto
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
