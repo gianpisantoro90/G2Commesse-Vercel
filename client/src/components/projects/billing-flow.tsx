@@ -58,7 +58,16 @@ import {
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { BillingConfig } from "./billing-config";
+import { QK } from "@/lib/query-utils";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
+
+interface BillingConfigData {
+  alert_completata_giorni: number;
+  alert_scadenza_fattura_giorni: number;
+  alert_pagamento_giorni: number;
+  auto_sync_prestazioni: number;
+  auto_data_inizio: number;
+}
 
 // ============================================
 // CONFIGURAZIONI
@@ -166,6 +175,13 @@ export default function BillingFlow() {
     queryKey: ["/api/invoices"],
   });
 
+  // Fetch billing config thresholds
+  const { data: billingConfig } = useQuery<BillingConfigData>({
+    queryKey: QK.billingConfig,
+  });
+  const sogliaCompletata = billingConfig?.alert_completata_giorni ?? 15;
+  const sogliaPagamento = billingConfig?.alert_pagamento_giorni ?? 60;
+
   // Combine data
   const projectsWithBilling = useMemo((): ProjectWithBilling[] => {
     return projects
@@ -197,7 +213,7 @@ export default function BillingFlow() {
           const daysSinceCompletion = Math.floor(
             (now.getTime() - new Date(p.dataCompletamento).getTime()) / (1000 * 60 * 60 * 24)
           );
-          return daysSinceCompletion >= 15;
+          return daysSinceCompletion >= sogliaCompletata;
         }).length;
 
         const fattureScadute = projectInvoices.filter((i) => i.stato === "scaduta").length;
@@ -207,7 +223,7 @@ export default function BillingFlow() {
           const daysSinceEmission = Math.floor(
             (now.getTime() - new Date(i.dataEmissione).getTime()) / (1000 * 60 * 60 * 24)
           );
-          return daysSinceEmission >= 60;
+          return daysSinceEmission >= sogliaPagamento;
         }).length;
 
         return {
@@ -241,7 +257,7 @@ export default function BillingFlow() {
         const codeB = b.code || "";
         return codeB.localeCompare(codeA, undefined, { numeric: true });
       });
-  }, [projects, allPrestazioni, allInvoices]);
+  }, [projects, allPrestazioni, allInvoices, sogliaCompletata, sogliaPagamento]);
 
   // Global stats
   const globalStats = useMemo(() => {
@@ -283,13 +299,13 @@ export default function BillingFlow() {
     }> = [];
 
     projectsWithBilling.forEach((project) => {
-      // Prestazioni da fatturare (completate da più di 15 giorni senza fattura)
+      // Prestazioni da fatturare (completate da più della soglia configurata senza fattura)
       project.prestazioni.forEach((prest) => {
         if (prest.stato === "completata" && prest.dataCompletamento) {
           const daysSinceCompletion = Math.floor(
             (now.getTime() - new Date(prest.dataCompletamento).getTime()) / (1000 * 60 * 60 * 24)
           );
-          if (daysSinceCompletion >= 15) {
+          if (daysSinceCompletion >= sogliaCompletata) {
             details.push({
               type: 'da_fatturare',
               projectId: project.id,
@@ -326,14 +342,14 @@ export default function BillingFlow() {
           });
         });
 
-      // Pagamenti in ritardo (emesse da più di 60 giorni, non pagate)
+      // Pagamenti in ritardo (emesse da più della soglia configurata, non pagate)
       allInvoices
         .filter((inv) => inv.projectId === project.id && inv.stato !== "pagata" && inv.stato !== "scaduta")
         .forEach((invoice) => {
           const daysSinceEmission = Math.floor(
             (now.getTime() - new Date(invoice.dataEmissione).getTime()) / (1000 * 60 * 60 * 24)
           );
-          if (daysSinceEmission >= 60) {
+          if (daysSinceEmission >= sogliaPagamento) {
             details.push({
               type: 'ritardo',
               projectId: project.id,
@@ -351,7 +367,7 @@ export default function BillingFlow() {
 
     // Ordina per gravità (più giorni di ritardo prima)
     return details.sort((a, b) => b.daysOverdue - a.daysOverdue);
-  }, [projectsWithBilling, allInvoices]);
+  }, [projectsWithBilling, allInvoices, sogliaCompletata, sogliaPagamento]);
 
   // Riepilogo prestazioni per stato
   const prestazioniByStatus = useMemo(() => {

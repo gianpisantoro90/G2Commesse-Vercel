@@ -81,7 +81,23 @@ export default function CashFlowForecastCard() {
   }
 
   if (!forecast) {
-    return null;
+    return (
+      <div className="card-g2">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">Previsione Cash Flow</h3>
+        </div>
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <DollarSign className="w-10 h-10 text-muted-foreground/40 mb-3" />
+          <p className="text-sm text-muted-foreground">
+            Dati insufficienti per generare la previsione del cash flow.
+          </p>
+          <p className="text-xs text-muted-foreground/70 mt-1">
+            Aggiungi prestazioni e fatture per abilitare le previsioni.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // Combine historical + forecast for the chart
