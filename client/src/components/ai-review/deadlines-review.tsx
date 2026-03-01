@@ -522,7 +522,7 @@ export function DeadlinesReview() {
               variant="outline"
               className="w-full sm:w-auto"
               onClick={() => {
-                if (selectedComm) {
+                if (selectedComm && window.confirm("Sei sicuro di voler rifiutare questa scadenza suggerita? L'azione non è reversibile.")) {
                   dismissDeadline.mutate({
                     communicationId: selectedComm.comm.id,
                     deadlineIndex: selectedComm.deadlineIndex

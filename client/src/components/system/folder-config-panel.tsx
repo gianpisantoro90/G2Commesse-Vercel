@@ -18,7 +18,8 @@ interface OneDriveRootConfig {
 }
 
 export default function FolderConfigPanel() {
-  const [currentPath, setCurrentPath] = useState("/");
+  const [rootBrowserPath, setRootBrowserPath] = useState("/");
+  const [archiveBrowserPath, setArchiveBrowserPath] = useState("/");
   const [selectedFolder, setSelectedFolder] = useState<OneDriveFile | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [showBrowser, setShowBrowser] = useState(false);
@@ -51,19 +52,23 @@ export default function FolderConfigPanel() {
     isResetting: isResettingArchive,
   } = useOneDriveArchiveConfig();
 
+  // Active browser path - use the correct one based on which browser is open
+  const currentPath = showArchiveBrowser ? archiveBrowserPath : rootBrowserPath;
+  const setCurrentPath = showArchiveBrowser ? setArchiveBrowserPath : setRootBrowserPath;
+
   // Auto-navigate to configured root folder when opening browser
   useEffect(() => {
-    if (showBrowser && rootConfig && currentPath === '/') {
-      setCurrentPath(rootConfig.folderPath);
+    if (showBrowser && rootConfig && rootBrowserPath === '/') {
+      setRootBrowserPath(rootConfig.folderPath);
     }
-  }, [showBrowser, rootConfig]);
+  }, [showBrowser, rootConfig, rootBrowserPath]);
 
   // Auto-navigate to configured archive folder when opening archive browser
   useEffect(() => {
-    if (showArchiveBrowser && archiveConfig && currentPath === '/') {
-      setCurrentPath(archiveConfig.folderPath);
+    if (showArchiveBrowser && archiveConfig && archiveBrowserPath === '/') {
+      setArchiveBrowserPath(archiveConfig.folderPath);
     }
-  }, [showArchiveBrowser, archiveConfig]);
+  }, [showArchiveBrowser, archiveConfig, archiveBrowserPath]);
 
   // Get current folder files for browsing
   const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles } = useQuery({

@@ -8,14 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Settings, Save, RefreshCw, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface BillingConfigData {
-  alert_completata_giorni: number;
-  alert_scadenza_fattura_giorni: number;
-  alert_pagamento_giorni: number;
-  auto_sync_prestazioni: number;
-  auto_data_inizio: number;
-}
+import { type BillingConfigData } from "@/lib/billing-calculations";
 
 export function BillingConfig() {
   const { toast } = useToast();

@@ -68,9 +68,6 @@ export default function EconomicDashboardCard() {
     ? prestazioniStats.importoTotalePagato / 100
     : 0;
 
-  const projectsInCorso = projects.filter(p => p.status === "in corso");
-  const projectsConcluse = projects.filter(p => p.status === "conclusa");
-
   const averageImportoServizio = prestazioniStats && prestazioniStats.totale > 0
     ? totalImportoPrevisto / prestazioniStats.totale
     : 0;

@@ -258,34 +258,39 @@ class NotificationService {
         const deadlineDate = new Date(deadline.dueDate);
         const daysUntil = Math.ceil((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-        // TODO: Send notification at configured interval
-        // Need to determine which user(s) should receive deadline notifications (project manager, admins, etc.)
-        // if (deadline.notifyDaysBefore === daysUntil && daysUntil > 0) {
-        //   const project = await storage.getProject(deadline.projectId);
-        //
-        //   this.sendNotification({
-        //     userId: '<project-manager-or-admin-id>',
-        //     type: 'deadline',
-        //     title: `Scadenza in ${daysUntil} giorni`,
-        //     message: `${deadline.title} - ${project?.code || 'Progetto'}`,
-        //     priority: deadline.priority as any,
-        //     projectId: parseInt(deadline.projectId),
-        //     actionUrl: `/progetti/${deadline.projectId}?tab=scadenzario`
-        //   });
-        // }
+        // Notify admins when deadline is approaching within notifyDaysBefore range
+        if (daysUntil > 0 && daysUntil <= deadline.notifyDaysBefore) {
+          const project = await storage.getProject(deadline.projectId);
+          const users = await storage.getAllUsers();
+          const admins = users.filter((u: any) => u.role === 'admin');
 
-        // TODO: Urgent notification for overdue
-        // if (daysUntil < 0 && deadline.status === 'pending') {
-        //   this.sendNotification({
-        //     userId: '<project-manager-or-admin-id>',
-        //     type: 'deadline',
-        //     title: 'Scadenza superata!',
-        //     message: `${deadline.title} era prevista per ${deadlineDate.toLocaleDateString('it-IT')}`,
-        //     priority: 'urgent',
-        //     projectId: parseInt(deadline.projectId),
-        //     actionUrl: `/progetti/${deadline.projectId}?tab=scadenzario`
-        //   });
-        // }
+          for (const admin of admins) {
+            this.sendNotification({
+              userId: admin.id,
+              type: 'deadline',
+              title: `Scadenza in ${daysUntil} giorn${daysUntil === 1 ? 'o' : 'i'}`,
+              message: `${deadline.title} - ${project?.code || 'Progetto'}`,
+              priority: deadline.priority as any,
+            });
+          }
+        }
+
+        // Urgent notification for overdue deadlines
+        if (daysUntil < 0 && deadline.status === 'pending') {
+          const project = await storage.getProject(deadline.projectId);
+          const users = await storage.getAllUsers();
+          const admins = users.filter((u: any) => u.role === 'admin');
+
+          for (const admin of admins) {
+            this.sendNotification({
+              userId: admin.id,
+              type: 'deadline',
+              title: 'Scadenza superata!',
+              message: `${deadline.title} era prevista per ${deadlineDate.toLocaleDateString('it-IT')} - ${project?.code || 'Progetto'}`,
+              priority: 'urgent' as any,
+            });
+          }
+        }
       }
     } catch (error) {
       logger.error('Error checking deadlines', { error });

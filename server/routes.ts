@@ -3199,18 +3199,25 @@ export async function registerRoutes(app: Express): Promise<void> {
         alerts = await storage.getBillingAlerts(projectId);
       }
 
-      // Arricchisci gli alert con informazioni sul progetto
-      const enrichedAlerts = await Promise.all(alerts.map(async (alert) => {
-        const project = await storage.getProject(alert.projectId);
-        let prestazione = null;
-        let invoice = null;
+      // Batch-load related entities to avoid N+1 queries
+      const projectIds = [...new Set(alerts.map(a => a.projectId))];
+      const prestazioneIds = [...new Set(alerts.filter(a => a.prestazioneId).map(a => a.prestazioneId!))];
+      const invoiceIds = [...new Set(alerts.filter(a => a.invoiceId).map(a => a.invoiceId!))];
 
-        if (alert.prestazioneId) {
-          prestazione = await storage.getPrestazione(alert.prestazioneId);
-        }
-        if (alert.invoiceId) {
-          invoice = await storage.getInvoice(alert.invoiceId);
-        }
+      const [allProjects, allPrestazioni, allInvoices] = await Promise.all([
+        Promise.all(projectIds.map(id => storage.getProject(id))),
+        Promise.all(prestazioneIds.map(id => storage.getPrestazione(id))),
+        Promise.all(invoiceIds.map(id => storage.getInvoice(id))),
+      ]);
+
+      const projectMap = new Map(allProjects.filter(Boolean).map(p => [p!.id, p!]));
+      const prestazioneMap = new Map(allPrestazioni.filter(Boolean).map(p => [p!.id, p!]));
+      const invoiceMap = new Map(allInvoices.filter(Boolean).map(i => [i!.id, i!]));
+
+      const enrichedAlerts = alerts.map((alert) => {
+        const project = projectMap.get(alert.projectId);
+        const prestazione = alert.prestazioneId ? prestazioneMap.get(alert.prestazioneId) : null;
+        const invoice = alert.invoiceId ? invoiceMap.get(alert.invoiceId) : null;
 
         return {
           ...alert,
@@ -3233,7 +3240,7 @@ export async function registerRoutes(app: Express): Promise<void> {
             stato: invoice.stato,
           } : null,
         };
-      }));
+      });
 
       res.json(enrichedAlerts);
     } catch (error) {

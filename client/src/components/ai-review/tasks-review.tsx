@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QK } from "@/lib/query-utils";
+import { getQueryFn } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -59,11 +60,13 @@ export function TasksReview() {
   // Fetch communications with suggested tasks
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
     queryKey: QK.aiSuggestedTasks,
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   // Fetch users for assignment
   const { data: users = [] } = useQuery<any[]>({
     queryKey: QK.users,
+    queryFn: getQueryFn({ on401: "throw" }),
   });
 
   // Approve task mutation
@@ -302,7 +305,11 @@ export function TasksReview() {
                             variant="outline"
                             size="sm"
                             className="flex-1 sm:flex-initial"
-                            onClick={() => dismissTask.mutate({ communicationId: comm.id, taskIndex })}
+                            onClick={() => {
+                              if (window.confirm("Sei sicuro di voler rifiutare questo task suggerito? L'azione non è reversibile.")) {
+                                dismissTask.mutate({ communicationId: comm.id, taskIndex });
+                              }
+                            }}
                             disabled={dismissTask.isPending}
                           >
                             <XCircle className="h-4 w-4 sm:mr-1" />

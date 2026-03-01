@@ -201,7 +201,11 @@ export function CommunicationsReview() {
     if (event) {
       event.stopPropagation();
     }
-    
+
+    if (!window.confirm("Sei sicuro di voler ignorare questa comunicazione? L'azione non è reversibile.")) {
+      return;
+    }
+
     try {
       await dismissMutation.mutateAsync(communicationId);
       // Close dialog only after mutation completes successfully

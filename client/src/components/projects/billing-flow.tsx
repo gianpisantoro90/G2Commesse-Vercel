@@ -58,7 +58,15 @@ import {
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { BillingConfig } from "./billing-config";
+import { QK } from "@/lib/query-utils";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
+import {
+  calcProjectBillingTotals,
+  calcBillingAlerts,
+  calcInvoiceAmounts,
+  formatCentesimi,
+  type BillingConfigData,
+} from "@/lib/billing-calculations";
 
 // ============================================
 // CONFIGURAZIONI
@@ -166,6 +174,13 @@ export default function BillingFlow() {
     queryKey: ["/api/invoices"],
   });
 
+  // Fetch billing config thresholds
+  const { data: billingConfig } = useQuery<BillingConfigData>({
+    queryKey: QK.billingConfig,
+  });
+  const sogliaCompletata = billingConfig?.alert_completata_giorni ?? 15;
+  const sogliaPagamento = billingConfig?.alert_pagamento_giorni ?? 60;
+
   // Combine data
   const projectsWithBilling = useMemo((): ProjectWithBilling[] => {
     return projects
@@ -182,51 +197,19 @@ export default function BillingFlow() {
         // Direct invoices (not linked to prestazioni)
         const directInvoices = projectInvoices.filter((i) => !i.prestazioneId);
 
-        // Calculate totals
-        const budget = projectPrestazioni.reduce((sum, p) => sum + (p.importoPrevisto || 0), 0);
-        const fatturato = projectInvoices.reduce((sum, i) => sum + i.importoTotale, 0);
-        const incassato = projectInvoices
-          .filter((i) => i.stato === "pagata")
-          .reduce((sum, i) => sum + i.importoTotale, 0);
-        const daIncassare = fatturato - incassato;
-
-        // Calculate alerts
-        const now = new Date();
-        const prestazioniDaFatturare = projectPrestazioni.filter((p) => {
-          if (p.stato !== "completata" || !p.dataCompletamento) return false;
-          const daysSinceCompletion = Math.floor(
-            (now.getTime() - new Date(p.dataCompletamento).getTime()) / (1000 * 60 * 60 * 24)
-          );
-          return daysSinceCompletion >= 15;
-        }).length;
-
-        const fattureScadute = projectInvoices.filter((i) => i.stato === "scaduta").length;
-
-        const pagamentiInRitardo = projectInvoices.filter((i) => {
-          if (i.stato === "pagata") return false;
-          const daysSinceEmission = Math.floor(
-            (now.getTime() - new Date(i.dataEmissione).getTime()) / (1000 * 60 * 60 * 24)
-          );
-          return daysSinceEmission >= 60;
-        }).length;
+        // Calculate totals and alerts using centralized utility
+        const totals = calcProjectBillingTotals(projectPrestazioni, projectInvoices);
+        const alerts = calcBillingAlerts(
+          projectPrestazioni, projectInvoices,
+          sogliaCompletata, sogliaPagamento
+        );
 
         return {
           ...project,
           prestazioni: prestazioniWithInvoices,
           directInvoices,
-          totals: {
-            budget,
-            fatturato,
-            incassato,
-            daIncassare,
-            percentualeFatturato: budget > 0 ? Math.round((fatturato / budget) * 100) : 0,
-            percentualeIncassato: fatturato > 0 ? Math.round((incassato / fatturato) * 100) : 0,
-          },
-          alerts: {
-            prestazioniDaFatturare,
-            fattureScadute,
-            pagamentiInRitardo,
-          },
+          totals,
+          alerts,
         };
       })
       .filter((p) => p.prestazioni.length > 0 || p.directInvoices.length > 0)
@@ -241,7 +224,7 @@ export default function BillingFlow() {
         const codeB = b.code || "";
         return codeB.localeCompare(codeA, undefined, { numeric: true });
       });
-  }, [projects, allPrestazioni, allInvoices]);
+  }, [projects, allPrestazioni, allInvoices, sogliaCompletata, sogliaPagamento]);
 
   // Global stats
   const globalStats = useMemo(() => {
@@ -283,13 +266,13 @@ export default function BillingFlow() {
     }> = [];
 
     projectsWithBilling.forEach((project) => {
-      // Prestazioni da fatturare (completate da più di 15 giorni senza fattura)
+      // Prestazioni da fatturare (completate da più della soglia configurata senza fattura)
       project.prestazioni.forEach((prest) => {
         if (prest.stato === "completata" && prest.dataCompletamento) {
           const daysSinceCompletion = Math.floor(
             (now.getTime() - new Date(prest.dataCompletamento).getTime()) / (1000 * 60 * 60 * 24)
           );
-          if (daysSinceCompletion >= 15) {
+          if (daysSinceCompletion >= sogliaCompletata) {
             details.push({
               type: 'da_fatturare',
               projectId: project.id,
@@ -326,14 +309,14 @@ export default function BillingFlow() {
           });
         });
 
-      // Pagamenti in ritardo (emesse da più di 60 giorni, non pagate)
+      // Pagamenti in ritardo (emesse da più della soglia configurata, non pagate)
       allInvoices
         .filter((inv) => inv.projectId === project.id && inv.stato !== "pagata" && inv.stato !== "scaduta")
         .forEach((invoice) => {
           const daysSinceEmission = Math.floor(
             (now.getTime() - new Date(invoice.dataEmissione).getTime()) / (1000 * 60 * 60 * 24)
           );
-          if (daysSinceEmission >= 60) {
+          if (daysSinceEmission >= sogliaPagamento) {
             details.push({
               type: 'ritardo',
               projectId: project.id,
@@ -351,7 +334,7 @@ export default function BillingFlow() {
 
     // Ordina per gravità (più giorni di ritardo prima)
     return details.sort((a, b) => b.daysOverdue - a.daysOverdue);
-  }, [projectsWithBilling, allInvoices]);
+  }, [projectsWithBilling, allInvoices, sogliaCompletata, sogliaPagamento]);
 
   // Riepilogo prestazioni per stato
   const prestazioniByStatus = useMemo(() => {
@@ -605,13 +588,20 @@ export default function BillingFlow() {
   };
 
   const calculateInvoiceTotals = () => {
-    const imponibile = invoiceForm.imponibile * 100;
-    const cassa = Math.round(imponibile * (invoiceForm.cassaPercentuale / 100));
-    const baseIva = imponibile + cassa;
-    const iva = Math.round(baseIva * (invoiceForm.ivaPercentuale / 100));
-    const totale = baseIva + iva;
-    const ritenuta = invoiceForm.ritenuta * 100;
-    return { imponibile, cassa, iva, totale, ritenuta, netto: totale - ritenuta };
+    const result = calcInvoiceAmounts({
+      imponibile: invoiceForm.imponibile,
+      cassaPercentuale: invoiceForm.cassaPercentuale,
+      ivaPercentuale: invoiceForm.ivaPercentuale,
+      ritenuta: invoiceForm.ritenuta,
+    });
+    return {
+      imponibile: result.imponibile,
+      cassa: result.cassaPrevidenziale,
+      iva: result.importoIVA,
+      totale: result.importoTotale,
+      ritenuta: result.ritenuta,
+      netto: result.nettoPagare,
+    };
   };
 
   const openInvoiceDialog = (project: Project, prestazione?: PrestazioneWithInvoices, invoice?: ProjectInvoice) => {

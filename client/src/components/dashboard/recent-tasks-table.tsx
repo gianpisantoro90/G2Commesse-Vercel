@@ -4,8 +4,9 @@ import { type Task, type Project, type User } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { TaskStatusBadge, PriorityBadge } from "@/components/ui/status-badge";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 import { QK } from "@/lib/query-utils";
+import { cn } from "@/lib/utils";
 
 export default function RecentTasksTable() {
   const { user } = useAuth();
@@ -43,6 +44,11 @@ export default function RecentTasksTable() {
     if (!date) return "-";
     const d = new Date(date);
     return d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const isOverdue = (task: Task) => {
+    if (!task.dueDate || task.status === "completed" || task.status === "cancelled") return false;
+    return new Date(task.dueDate) < new Date();
   };
 
   return (
@@ -95,8 +101,14 @@ export default function RecentTasksTable() {
                     <td className="py-3 px-2 sm:px-4" data-testid={`task-status-${task.id}`}>
                       <TaskStatusBadge status={task.status as "completed" | "in_progress" | "cancelled" | "pending"} />
                     </td>
-                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-muted-foreground" data-testid={`task-due-${task.id}`}>
-                      {formatDate(task.dueDate)}
+                    <td className={cn(
+                      "py-3 px-2 sm:px-4 text-xs sm:text-sm",
+                      isOverdue(task) ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"
+                    )} data-testid={`task-due-${task.id}`}>
+                      <span className="flex items-center gap-1">
+                        {isOverdue(task) && <AlertTriangle className="h-3 w-3" />}
+                        {formatDate(task.dueDate)}
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -125,7 +137,12 @@ export default function RecentTasksTable() {
                   </div>
                   <div className="min-w-0">
                     <div className="font-medium text-foreground mb-1">Scadenza</div>
-                    <div className="text-red-600 dark:text-red-400 font-medium">{formatDate(task.dueDate)}</div>
+                    <div className={cn(
+                      isOverdue(task) ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"
+                    )}>
+                      {isOverdue(task) && <AlertTriangle className="h-3 w-3 inline mr-1" />}
+                      {formatDate(task.dueDate)}
+                    </div>
                   </div>
                 </div>
               </div>
