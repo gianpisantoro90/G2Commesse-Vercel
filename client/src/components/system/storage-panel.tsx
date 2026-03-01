@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -146,14 +147,8 @@ export default function StoragePanel() {
           <div className="bg-background rounded-lg p-4 text-center">
             <div className="text-2xl mb-2">🔄</div>
             <div className="font-semibold text-foreground mb-1">Backup Auto</div>
-            <div className="text-sm text-muted-foreground mb-3">Configura backup automatico</div>
-            <Button
-              disabled
-              className="w-full px-3 py-2 border-2 border-border text-foreground rounded-lg font-medium cursor-not-allowed opacity-50"
-              data-testid="configure-backup"
-            >
-              Configura
-            </Button>
+            <div className="text-sm text-muted-foreground mb-3">Funzionalità in fase di sviluppo</div>
+            <Badge variant="outline" className="text-xs">Prossimamente</Badge>
           </div>
         </div>
       </div>
