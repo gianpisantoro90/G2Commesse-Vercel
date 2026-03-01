@@ -305,7 +305,11 @@ export function TasksReview() {
                             variant="outline"
                             size="sm"
                             className="flex-1 sm:flex-initial"
-                            onClick={() => dismissTask.mutate({ communicationId: comm.id, taskIndex })}
+                            onClick={() => {
+                              if (window.confirm("Sei sicuro di voler rifiutare questo task suggerito? L'azione non è reversibile.")) {
+                                dismissTask.mutate({ communicationId: comm.id, taskIndex });
+                              }
+                            }}
                             disabled={dismissTask.isPending}
                           >
                             <XCircle className="h-4 w-4 sm:mr-1" />
