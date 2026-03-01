@@ -9,7 +9,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useLocalStorage } from "@/hooks/use-local-storage";
 import { testClaudeConnection } from "@/lib/ai-router";
 import { Eye, EyeOff, Check, AlertTriangle, Zap, Brain, Settings } from "lucide-react";
 import { z } from "zod";
@@ -52,14 +51,16 @@ export default function AiConfigPanelUnified() {
   const [selectedProvider, setSelectedProvider] = useState<'anthropic' | 'deepseek'>('anthropic');
   const { toast } = useToast();
 
-  const [aiConfig, setAiConfig] = useLocalStorage("ai_config", {
-    apiKey: "",
-    model: "claude-sonnet-4-20250514",
-  });
+  // Only store model preference locally (no API key in localStorage)
+  const [savedModel, setSavedModel] = useState("claude-sonnet-4-20250514");
+  const [hasServerKey, setHasServerKey] = useState(false);
 
   const form = useForm<AiConfigForm>({
     resolver: zodResolver(aiConfigSchema),
-    defaultValues: aiConfig,
+    defaultValues: {
+      apiKey: "",
+      model: savedModel,
+    },
   });
 
   useEffect(() => {
@@ -69,28 +70,26 @@ export default function AiConfigPanelUnified() {
         if (response.ok) {
           const { value } = await response.json();
           if (value) {
-            const mergedConfig = {
-              apiKey: aiConfig.apiKey || '',
-              model: value.model || aiConfig.model,
-            };
-            setAiConfig(mergedConfig);
-            form.reset(mergedConfig);
-            if (mergedConfig.apiKey) checkAiStatus();
+            const model = value.model || savedModel;
+            setSavedModel(model);
+            form.reset({ apiKey: "", model });
+            // Server has a key if the config exists (apiKey is stripped from response)
+            setHasServerKey(true);
+            checkAiStatus();
             return;
           }
         }
       } catch (error) {
         // Could not load server config
       }
-      if (aiConfig.apiKey) checkAiStatus();
     };
     loadServerConfig();
   }, []);
 
   const checkAiStatus = async () => {
-    if (!aiConfig.apiKey) return;
     try {
-      const connected = await testClaudeConnection(aiConfig.apiKey, aiConfig.model);
+      // Use 'server-managed' to test with the key stored server-side
+      const connected = await testClaudeConnection('server-managed', savedModel);
       setIsConnected(connected);
       if (connected) setLastSync(new Date().toLocaleString("it-IT"));
     } catch (error) {
@@ -100,14 +99,16 @@ export default function AiConfigPanelUnified() {
 
   const handleTestConnection = async () => {
     const apiKey = form.getValues("apiKey");
-    if (!apiKey) {
+    // Allow testing with new key or existing server-managed key
+    const keyToTest = apiKey || (hasServerKey ? 'server-managed' : '');
+    if (!keyToTest) {
       toast({ title: "API Key mancante", description: "Inserire prima l'API Key", variant: "destructive" });
       return;
     }
     setIsTesting(true);
     try {
       const model = form.getValues("model");
-      const connected = await testClaudeConnection(apiKey, model);
+      const connected = await testClaudeConnection(keyToTest, model);
       setIsConnected(connected);
       if (connected) {
         setLastSync(new Date().toLocaleString("it-IT"));
@@ -125,7 +126,9 @@ export default function AiConfigPanelUnified() {
 
   const onSubmit = async (data: AiConfigForm) => {
     try {
-      setAiConfig(data);
+      // Save model preference locally (no API key in localStorage)
+      setSavedModel(data.model);
+
       const modelToProvider: Record<string, 'anthropic' | 'deepseek'> = {
         'claude-4-20250514': 'anthropic',
         'claude-sonnet-4-20250514': 'anthropic',
@@ -134,6 +137,8 @@ export default function AiConfigPanelUnified() {
         'deepseek-reasoner': 'deepseek',
         'deepseek-chat': 'deepseek',
       };
+
+      // Send API key to server only (never store in localStorage)
       const configToSave = {
         ...data,
         provider: modelToProvider[data.model] || 'anthropic',
@@ -145,10 +150,14 @@ export default function AiConfigPanelUnified() {
         body: JSON.stringify({ key: 'ai_config', value: configToSave }),
       });
       if (!response.ok) throw new Error('Errore nel salvataggio');
-      toast({ title: "✅ Salvato", description: "Configurazione AI salvata con successo" });
-      if (data.apiKey) checkAiStatus();
+
+      setHasServerKey(true);
+      // Clear the apiKey field after saving (it's now server-side only)
+      form.setValue("apiKey", "");
+      toast({ title: "Salvato", description: "Configurazione AI salvata sul server" });
+      checkAiStatus();
     } catch (error) {
-      toast({ title: "❌ Errore", description: "Errore nel salvataggio", variant: "destructive" });
+      toast({ title: "Errore", description: "Errore nel salvataggio", variant: "destructive" });
     }
   };
 
@@ -267,7 +276,7 @@ export default function AiConfigPanelUnified() {
                         {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
-                    <p className="text-xs text-muted-foreground">🔒 Salvato localmente e crittografato</p>
+                    <p className="text-xs text-muted-foreground">🔒 Salvato in modo sicuro sul server</p>
                   </div>
 
                   {/* Model Selection */}
