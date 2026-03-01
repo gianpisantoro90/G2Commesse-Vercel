@@ -977,16 +977,11 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(404).json({ message: "Errore nell'aggiornamento delle prestazioni" });
       }
 
-      // BILLING AUTOMATION: Sincronizza prestazioni da metadata verso tabella project_prestazioni
-      try {
-        const syncResult = await billingAutomationService.syncPrestazioniFromMetadata(
-          req.params.id,
-          updatedMetadata
-        );
-      } catch (syncError) {
-        console.error(`⚠️ Error syncing prestazioni (non-blocking):`, syncError);
-        // Non blocchiamo l'operazione principale se la sync fallisce
-      }
+      // BILLING AUTOMATION: Sync prestazioni table from metadata (blocking — table is source of truth)
+      await billingAutomationService.syncPrestazioniFromMetadata(
+        req.params.id,
+        updatedMetadata
+      );
 
       // Restituisci il progetto aggiornato (con eventuali date aggiornate)
       const finalProject = await storage.getProject(req.params.id);
@@ -1694,7 +1689,10 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Use server-side API key when client signals 'server-managed' or sends no key
       if (!apiKey || apiKey === 'server-managed') {
-        apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
+        // Check user-saved config in system_config table first, then env vars
+        const aiConfig = await storage.getSystemConfig('ai_config');
+        const savedKey = (aiConfig?.value as any)?.apiKey;
+        apiKey = savedKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
         if (!apiKey) {
           return res.status(400).json({ message: "API Key non configurata sul server" });
         }
@@ -1768,7 +1766,9 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Use server-side API key when client signals 'server-managed' or sends no key
       if (!apiKey || apiKey === 'server-managed') {
-        apiKey = process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
+        const aiConfig = await storage.getSystemConfig('ai_config');
+        const savedKey = (aiConfig?.value as any)?.apiKey;
+        apiKey = savedKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
         if (!apiKey) {
           return res.status(400).json({ message: "API Key non configurata sul server" });
         }
@@ -3719,84 +3719,11 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Helper function: Update project dates from prestazioni
-  async function updateProjectDatesFromPrestazioni(projectId: string) {
-    try {
-      const prestazioni = await storage.getPrestazioniByProject(projectId);
-
-      let dataInizioCommessa = null;
-      let dataFineCommessa = null;
-
-      if (prestazioni.length > 0) {
-        // Get MIN(dataInizio)
-        const prestazioniConDataInizio = prestazioni.filter(p => p.dataInizio);
-        if (prestazioniConDataInizio.length > 0) {
-          const minDate = prestazioniConDataInizio.reduce((min, p) => {
-            const pDate = new Date(p.dataInizio!);
-            return pDate < min ? pDate : min;
-          }, new Date(prestazioniConDataInizio[0].dataInizio!));
-          dataInizioCommessa = minDate;
-        }
-
-        // Get MAX(dataCompletamento)
-        const prestazioniConDataFine = prestazioni.filter(p => p.dataCompletamento);
-        if (prestazioniConDataFine.length > 0) {
-          const maxDate = prestazioniConDataFine.reduce((max, p) => {
-            const pDate = new Date(p.dataCompletamento!);
-            return pDate > max ? pDate : max;
-          }, new Date(prestazioniConDataFine[0].dataCompletamento!));
-          dataFineCommessa = maxDate;
-        }
-      }
-
-      // Update project with derived dates
-      await storage.updateProject(projectId, {
-        dataInizioCommessa,
-        dataFineCommessa,
-      } as any);
-    } catch (error) {
-      console.error('Error updating project dates from prestazioni:', error);
-      // Don't throw - this is a background operation
-    }
-  }
-
-  // Helper function: Sync metadata.prestazioni with actual prestazioni records
-  async function syncProjectMetadataPrestazioni(projectId: string) {
-    try {
-      const prestazioni = await storage.getPrestazioniByProject(projectId);
-      const project = await storage.getProject(projectId);
-
-      if (!project) return;
-
-      // Extract unique prestazioni types from records
-      const prestazioniTypes = new Set<string>();
-      const livelloProgettazione = new Set<string>();
-
-      for (const prest of prestazioni) {
-        prestazioniTypes.add(prest.tipo);
-
-        // If tipo is 'progettazione', also collect livelli
-        if (prest.tipo === 'progettazione' && prest.livelloProgettazione) {
-          livelloProgettazione.add(prest.livelloProgettazione);
-        }
-      }
-
-      // Update project metadata
-      const currentMetadata = (project.metadata || {}) as any;
-      const updatedMetadata = {
-        ...currentMetadata,
-        prestazioni: Array.from(prestazioniTypes),
-        livelloProgettazione: livelloProgettazione.size > 0 ? Array.from(livelloProgettazione) : currentMetadata.livelloProgettazione,
-      };
-
-      await storage.updateProject(projectId, {
-        metadata: updatedMetadata,
-      });
-    } catch (error) {
-      console.error('Error syncing project metadata prestazioni:', error);
-      // Don't throw - this is a background operation
-    }
-  }
+  // NOTE: Date derivation and metadata sync are handled by:
+  // - billingAutomationService.updateProjectDatesFromPrestazioni() — derives project dates from prestazioni
+  // - storage.syncMetadataFromPrestazioni() — syncs metadata.prestazioni from table (called by createPrestazione/deletePrestazione)
+  // - billingAutomationService.syncPrestazioniFromMetadata() — syncs table from metadata (called on edit-project-form save)
+  // The projectPrestazioni TABLE is the single source of truth.
 
   // Create a new prestazione
   app.post("/api/projects/:projectId/prestazioni", async (req, res) => {
@@ -3805,11 +3732,11 @@ export async function registerRoutes(app: Express): Promise<void> {
         ...req.body,
         projectId: req.params.projectId,
       });
+      // createPrestazione auto-syncs metadata via storage.syncMetadataFromPrestazioni
       const prestazione = await storage.createPrestazione(data);
 
-      // Update project dates and metadata automatically
-      await updateProjectDatesFromPrestazioni(req.params.projectId);
-      await syncProjectMetadataPrestazioni(req.params.projectId);
+      // Update project dates from prestazioni (single source: billingAutomationService)
+      await billingAutomationService.updateProjectDatesFromPrestazioni(req.params.projectId);
 
       res.status(201).json(prestazione);
     } catch (error) {
@@ -3852,9 +3779,8 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(404).json({ message: "Prestazione non trovata" });
       }
 
-      // Update project dates and metadata automatically
-      await updateProjectDatesFromPrestazioni(updated.projectId);
-      await syncProjectMetadataPrestazioni(updated.projectId);
+      // Sync project dates and metadata (single source: billingAutomationService + storage)
+      await billingAutomationService.updateProjectDatesFromPrestazioni(updated.projectId);
 
       res.json(updated);
     } catch (error) {
@@ -3911,9 +3837,8 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(404).json({ message: "Prestazione non trovata" });
       }
 
-      // Update project dates and metadata automatically
-      await updateProjectDatesFromPrestazioni(updated.projectId);
-      await syncProjectMetadataPrestazioni(updated.projectId);
+      // Sync project dates and metadata (single source: billingAutomationService + storage)
+      await billingAutomationService.updateProjectDatesFromPrestazioni(updated.projectId);
 
       res.json(updated);
     } catch (error) {

@@ -27,81 +27,54 @@ export interface LearnedPattern {
 }
 
 class AIFileRouter {
-  private apiKey: string | null = null;
   private currentModel: string = 'claude-sonnet-4-20250514';
   private learnedPatterns: Record<string, string> = {};
   private isInitialized = false;
+  private serverKeyAvailable = false;
 
   constructor() {
+    // Remove legacy localStorage API key (migrated to server-side storage)
+    try { localStorage.removeItem('ai_config'); } catch { /* noop */ }
     this.loadConfiguration();
   }
 
   private loadConfiguration(): void {
-    // Load AI configuration from localStorage
-    try {
-      const storedConfig = localStorage.getItem('ai_config');
-      
-      if (storedConfig) {
-        let config;
-        
-        // Parse configuration (handle different storage formats)
-        if (storedConfig.startsWith('{')) {
-          config = JSON.parse(storedConfig);
-        } else {
-          try {
-            const decoded = atob(storedConfig);
-            config = JSON.parse(decoded);
-          } catch (error) {
-            // Config decoding failed, trying as JSON
-            config = JSON.parse(storedConfig);
-          }
-        }
-        
-        // Store the API key directly
-        this.apiKey = config.apiKey || null;
-        
-        // Store model preference for routing
-        this.currentModel = config.model || 'claude-sonnet-4-20250514';
-        
-        
-      } else {
-        this.apiKey = null;
-        this.currentModel = 'claude-sonnet-4-20250514';
-      }
-    } catch (error) {
-      console.error('Error loading AI config:', error);
-      this.apiKey = null;
-      this.currentModel = 'claude-sonnet-4-20250514';
-    }
-    
+    // Load model preference from server config (no API key on client)
+    this.loadServerConfig();
+
     // Load learned patterns
     this.learnedPatterns = localStorageHelpers.loadLearnedPatterns();
     this.isInitialized = true;
   }
 
+  private async loadServerConfig(): Promise<void> {
+    try {
+      const response = await fetch('/api/system-config/ai_config', { credentials: 'include' });
+      if (response.ok) {
+        const { value } = await response.json();
+        if (value) {
+          this.currentModel = value.model || 'claude-sonnet-4-20250514';
+          this.serverKeyAvailable = true;
+          return;
+        }
+      }
+    } catch {
+      // Could not load server config
+    }
+    this.currentModel = 'claude-sonnet-4-20250514';
+    this.serverKeyAvailable = false;
+  }
+
   // Test AI API connection via backend proxy
   async testConnection(apiKey?: string, model?: string): Promise<boolean> {
-    const keyToTest = apiKey || this.apiKey;
+    // Use provided key, or fall back to 'server-managed' if server has a key
+    const keyToTest = apiKey || (this.serverKeyAvailable ? 'server-managed' : null);
     if (!keyToTest) {
-      console.error('AI API test failed: No API key provided');
+      console.error('AI API test failed: No API key configured');
       return false;
     }
 
-    
-    // Get current model from localStorage if not provided
-    let modelToTest = model;
-    if (!modelToTest) {
-      try {
-        const storedConfig = localStorage.getItem('ai_config');
-        if (storedConfig) {
-          const config = JSON.parse(storedConfig);
-          modelToTest = config.model || 'claude-sonnet-4-20250514';
-        }
-      } catch (error) {
-        // Could not load model from config
-        modelToTest = 'claude-sonnet-4-20250514';
-      }
-    }
+    const modelToTest = model || this.currentModel;
     
     try {
       const response = await fetch('/api/test-claude', {
@@ -156,14 +129,12 @@ class AIFileRouter {
       return { ...learnedResult, method: 'learned' };
     }
 
-    // Force AI routing - prioritize user-configured key over environment
-    let activeApiKey = this.apiKey;
-    let keySource = 'user-configured';
-    
-    // Only fall back to environment API key if user hasn't configured one
+    // Use server-managed key (API key is stored server-side only)
+    let activeApiKey: string | null = this.serverKeyAvailable ? 'server-managed' : null;
+
+    // Fall back to environment API key check if no user-configured key
     if (!activeApiKey) {
       activeApiKey = await this.getEnvironmentApiKey();
-      keySource = 'environment';
     }
     
     if (activeApiKey) {
@@ -248,7 +219,7 @@ class AIFileRouter {
     template: string,
     apiKeyOverride?: string
   ): Promise<RoutingResult> {
-    const activeApiKey = apiKeyOverride || this.apiKey;
+    const activeApiKey = apiKeyOverride || (this.serverKeyAvailable ? 'server-managed' : null);
     if (!activeApiKey) {
       throw new Error('API Key non configurata');
     }
@@ -674,7 +645,7 @@ SOPRALLUOGHI/ - Report sopralluoghi`;
   } {
     return {
       learnedPatternsCount: Object.keys(this.learnedPatterns).length,
-      aiEnabled: !!this.apiKey,
+      aiEnabled: this.serverKeyAvailable,
       totalRoutings: 0, // Could be tracked in future
     };
   }
