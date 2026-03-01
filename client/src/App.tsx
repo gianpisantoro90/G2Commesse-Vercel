@@ -30,6 +30,7 @@ const StoragePage = lazy(() => import("@/pages/sistema/storage"));
 const AiConfigPage = lazy(() => import("@/pages/sistema/ai-config"));
 const OneDriveBrowserPage = lazy(() => import("@/pages/sistema/onedrive-browser"));
 const OneDriveConfigPage = lazy(() => import("@/pages/sistema/onedrive-config"));
+const RoutingPage = lazy(() => import("@/pages/routing"));
 
 function LoadingScreen() {
   return (
@@ -107,6 +108,9 @@ function AuthenticatedRouter() {
           <Route path="/scadenze" component={ScadenzePage} />
           <Route path="/fatturazione">
             <AdminRoute><FatturazionePage /></AdminRoute>
+          </Route>
+          <Route path="/routing">
+            <AdminRoute><RoutingPage /></AdminRoute>
           </Route>
           <Route path="/revisione-ai">
             <AdminRoute><RevisioneAI /></AdminRoute>

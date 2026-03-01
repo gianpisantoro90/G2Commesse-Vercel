@@ -22,6 +22,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  FolderSearch,
 } from "lucide-react";
 import logoUrl from "@assets/G2 - Logo_1755532156423.png";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,6 +66,7 @@ const gestioneNavItems = [
   { title: "Calc. Parcella", url: "/parcella", icon: Calculator },
   { title: "Requisiti Tecnici", url: "/requisiti", icon: Award },
   { title: "Fatturazione", url: "/fatturazione", icon: Receipt },
+  { title: "Routing File", url: "/routing", icon: FolderSearch },
 ];
 
 const aiSubItems = [
