@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QK } from "@/lib/query-utils";
+import { usePaginatedQuery } from "@/lib/use-paginated-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -52,19 +53,21 @@ export default function ProjectsTable() {
   const isMobile = useIsMobile();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [creFilter, setCreFilter] = useState<string>("all"); // 'all', 'archiviato', 'non_archiviato'
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
-
   // Sorting state
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
-  const [sortByStatus, setSortByStatus] = useState(true);
+
+  // Debounce search term for server-side queries (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Column visibility toggles
   const [showTechInfo, setShowTechInfo] = useState(false);
@@ -78,7 +81,38 @@ export default function ProjectsTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: projects = [], isLoading, refetch } = useQuery<Project[]>({
+  // Server-side pagination filters
+  const filters = useMemo(() => ({
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    year: yearFilter !== 'all' ? yearFilter : undefined,
+    creFilter: creFilter !== 'all' ? creFilter : undefined,
+  }), [statusFilter, yearFilter, creFilter]);
+
+  const {
+    data: paginatedProjects,
+    total: totalProjects,
+    page: currentPage,
+    pageSize: itemsPerPage,
+    totalPages,
+    setPage: setCurrentPage,
+    nextPage,
+    prevPage,
+    changePageSize,
+    resetPage,
+    isLoading,
+    isFetching,
+    refetch,
+  } = usePaginatedQuery<Project>({
+    basePath: '/api/projects',
+    defaultPageSize: 10,
+    filters,
+    search: debouncedSearch || undefined,
+    sortField: sortField || undefined,
+    sortOrder,
+  });
+
+  // Also fetch all projects (unpaginated) for year dropdown options
+  const { data: allProjectsForYears = [] } = useQuery<Project[]>({
     queryKey: QK.projects,
   });
 
@@ -193,19 +227,22 @@ export default function ProjectsTable() {
     });
   };
 
-  // Get unique years from projects
-  const availableYears = Array.from(new Set(projects.map(p => p.year))).sort((a, b) => b - a);
+  // Get unique years from all projects (unpaginated query)
+  const availableYears = Array.from(new Set(allProjectsForYears.map(p => p.year))).sort((a, b) => b - a);
 
-  // Handle column sorting
+  // Pagination calculations for display
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalProjects);
+
+  // Handle column sorting (server-side)
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      // Toggle sort order if clicking same field
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
-      // Set new field and default to ascending
       setSortField(field);
       setSortOrder("asc");
     }
+    resetPage();
   };
 
   // Sort icon component
@@ -213,99 +250,15 @@ export default function ProjectsTable() {
     if (sortField !== field) {
       return <ArrowUpDown className="h-4 w-4 ml-1 inline-block text-gray-400" />;
     }
-    return sortOrder === "asc" 
+    return sortOrder === "asc"
       ? <ArrowUp className="h-4 w-4 ml-1 inline-block text-primary" />
       : <ArrowDown className="h-4 w-4 ml-1 inline-block text-primary" />;
   };
 
-  const filteredProjects = projects.filter(project => {
-    // Text search filter
-    const matchesSearch = searchTerm === "" ||
-      project.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.object.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Status filter
-    const matchesStatus = statusFilter === "all" || project.status === statusFilter;
-
-    // Year filter
-    const matchesYear = yearFilter === "all" || project.year === parseInt(yearFilter);
-
-    // CRE filter
-    const matchesCre = creFilter === "all" ||
-      (creFilter === "archiviato" && project.creArchiviato) ||
-      (creFilter === "non_archiviato" && !project.creArchiviato);
-
-    return matchesSearch && matchesStatus && matchesYear && matchesCre;
-  });
-
-  // Sort filtered projects
-  const sortedProjects = [...filteredProjects].sort((a, b) => {
-    // Primary sort: status priority (if enabled)
-    if (sortByStatus) {
-      const statusPriority = {
-        'in corso': 1,
-        'conclusa': 2,
-        'sospesa': 3
-      };
-      
-      const aStatusPriority = statusPriority[a.status as keyof typeof statusPriority] || 999;
-      const bStatusPriority = statusPriority[b.status as keyof typeof statusPriority] || 999;
-      
-      if (aStatusPriority !== bStatusPriority) {
-        return aStatusPriority - bStatusPriority;
-      }
-    }
-
-    // Secondary sort: user-selected field
-    if (!sortField) return 0;
-
-    let aValue: string | number = "";
-    let bValue: string | number = "";
-
-    switch (sortField) {
-      case "code":
-        aValue = a.code;
-        bValue = b.code;
-        break;
-      case "client":
-        aValue = a.client.toLowerCase();
-        bValue = b.client.toLowerCase();
-        break;
-      case "city":
-        aValue = a.city.toLowerCase();
-        bValue = b.city.toLowerCase();
-        break;
-      case "object":
-        aValue = a.object.toLowerCase();
-        bValue = b.object.toLowerCase();
-        break;
-      case "year":
-        aValue = a.year;
-        bValue = b.year;
-        break;
-      case "status":
-        aValue = a.status;
-        bValue = b.status;
-        break;
-    }
-
-    if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-    return 0;
-  });
-
-  // Pagination calculations
-  const totalPages = Math.ceil(sortedProjects.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedProjects = sortedProjects.slice(startIndex, endIndex);
-
   // Reset to page 1 when filters change
   const handleFilterChange = (setter: (value: any) => void) => (value: any) => {
     setter(value);
-    setCurrentPage(1);
+    resetPage();
   };
 
   const handleDeleteProject = (project: Project) => {
@@ -441,18 +394,7 @@ export default function ProjectsTable() {
         {/* Column Toggle Buttons */}
         <div className="flex gap-1.5 sm:gap-2 flex-wrap items-center mb-4 pb-3 border-b border-border">
           <span className="hidden sm:inline text-sm text-muted-foreground font-medium mr-1 sm:mr-2">Opzioni:</span>
-          <Button
-            size="default"
-            variant={sortByStatus ? "default" : "outline"}
-            onClick={() => setSortByStatus(!sortByStatus)}
-            className="text-xs min-h-[40px] sm:min-h-[44px] h-auto py-1.5 sm:py-2 px-2 sm:px-3"
-            title={sortByStatus ? "Ordinamento per stato attivo (In corso → Sospesa → Conclusa)" : "Ordina per stato"}
-            data-testid="toggle-sort-by-status"
-          >
-            {sortByStatus ? "📊" : "📋"} <span className="hidden sm:inline">Ordina per</span> Stato
-          </Button>
-
-          <span className="hidden sm:inline text-sm text-muted-foreground font-medium mr-1 sm:mr-2 ml-2 sm:ml-4">Mostra:</span>
+          <span className="hidden sm:inline text-sm text-muted-foreground font-medium mr-1 sm:mr-2">Mostra:</span>
           <Button
             size="default"
             variant={showTechInfo ? "default" : "outline"}
@@ -519,7 +461,7 @@ export default function ProjectsTable() {
             <Input
               placeholder={isMobile ? "Cerca..." : "Cerca per codice, cliente, città, oggetto..."}
               value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => { setSearchTerm(e.target.value); resetPage(); }}
               className="pl-10 pr-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-background"
               data-testid="search-projects"
             />
@@ -572,7 +514,7 @@ export default function ProjectsTable() {
                 setYearFilter("all");
                 setCreFilter("all");
                 setSearchTerm("");
-                setCurrentPage(1);
+                resetPage();
               }}
               className="text-muted-foreground hover:text-foreground dark:hover:text-foreground"
               data-testid="clear-filters"
@@ -583,7 +525,7 @@ export default function ProjectsTable() {
         </div>
       </div>
       
-      {filteredProjects.length === 0 ? (
+      {totalProjects === 0 && !isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
           <div className="text-4xl mb-2">📁</div>
           <p className="font-medium">
@@ -1261,21 +1203,18 @@ export default function ProjectsTable() {
           <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm">
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground" data-testid="projects-count">
-                Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, sortedProjects.length)}</strong> di <strong>{sortedProjects.length}</strong> commesse
-                {sortedProjects.length !== projects.length && (
-                  <span className="text-muted-foreground dark:text-muted-foreground ml-1">({projects.length} totali)</span>
-                )}
+                Mostrando <strong>{totalProjects > 0 ? startIndex + 1 : 0}</strong>-<strong>{endIndex}</strong> di <strong>{totalProjects}</strong> commesse
+                {isFetching && <span className="ml-2 text-xs animate-pulse">Caricamento...</span>}
               </span>
-              
+
               <div className="flex items-center gap-2">
                 <label htmlFor="items-per-page" className="text-muted-foreground">
                   Elementi per pagina:
                 </label>
-                <Select 
-                  value={itemsPerPage.toString()} 
+                <Select
+                  value={itemsPerPage.toString()}
                   onValueChange={(value) => {
-                    setItemsPerPage(parseInt(value) as 10 | 25 | 50);
-                    setCurrentPage(1);
+                    changePageSize(parseInt(value) as 10 | 25 | 50);
                   }}
                 >
                   <SelectTrigger id="items-per-page" className="w-20" data-testid="items-per-page-select">
@@ -1289,7 +1228,7 @@ export default function ProjectsTable() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">
                 Pagina <strong>{currentPage}</strong> di <strong>{totalPages || 1}</strong>
@@ -1298,7 +1237,7 @@ export default function ProjectsTable() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onClick={prevPage}
                   disabled={currentPage === 1}
                   data-testid="prev-page"
                 >
@@ -1308,7 +1247,7 @@ export default function ProjectsTable() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  onClick={nextPage}
                   disabled={currentPage === totalPages || totalPages === 0}
                   data-testid="next-page"
                 >

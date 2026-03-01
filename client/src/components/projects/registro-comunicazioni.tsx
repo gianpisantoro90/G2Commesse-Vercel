@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { usePaginatedQuery } from "@/lib/use-paginated-query";
 import DOMPurify from "dompurify";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -652,30 +653,62 @@ export default function RegistroComunicazioni() {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [replyToComm, setReplyToComm] = useState<Communication | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterDirection, setFilterDirection] = useState<string>('all');
   const [filterProject, setFilterProject] = useState<string>('all');
   const [showImportantOnly, setShowImportantOnly] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [selectedComm, setSelectedComm] = useState<Communication | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  
+
   // Sorting states
   type SortField = 'subject' | 'type' | 'projectCode' | 'communicationDate';
   const [sortField, setSortField] = useState<SortField>('communicationDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
+  // Debounce search term (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
-  const { data: allCommunications = [], isLoading: commsLoading, error: commsError } = useQuery<Communication[]>({
-    queryKey: ["/api/communications"],
+  // Server-side paginated communications
+  const commFilters = useMemo(() => ({
+    projectId: filterProject !== 'all' ? filterProject : undefined,
+    type: filterType !== 'all' ? filterType : undefined,
+    direction: filterDirection !== 'all' ? filterDirection : undefined,
+    importantOnly: showImportantOnly ? 'true' : undefined,
+  }), [filterProject, filterType, filterDirection, showImportantOnly]);
+
+  const {
+    data: rawPaginatedComms,
+    total: totalComms,
+    page: currentPage,
+    pageSize,
+    totalPages,
+    setPage: setCurrentPage,
+    nextPage,
+    prevPage,
+    changePageSize,
+    resetPage,
+    isLoading: commsLoading,
+    isFetching: commsFetching,
+    refetch: refetchComms,
+  } = usePaginatedQuery<Communication>({
+    basePath: '/api/communications',
+    defaultPageSize: 10,
+    filters: commFilters,
+    search: debouncedSearch || undefined,
+    sortField: sortField === 'projectCode' ? 'subject' : sortField, // projectCode is client-side enriched
+    sortOrder,
   });
 
-  // Enrich communications with project data
-  const communications = (allCommunications || []).map(comm => {
+  // Enrich paginated communications with project data
+  const paginatedComms = (rawPaginatedComms || []).map(comm => {
     const project = (projects || []).find(p => p.id === comm.projectId);
     return {
       ...comm,
@@ -806,7 +839,7 @@ export default function RegistroComunicazioni() {
     }
   };
 
-  // Sorting handlers
+  // Sorting handlers (server-side)
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -814,6 +847,7 @@ export default function RegistroComunicazioni() {
       setSortField(field);
       setSortOrder("asc");
     }
+    resetPage();
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -825,58 +859,19 @@ export default function RegistroComunicazioni() {
       : <ArrowDown className="h-4 w-4 ml-1 inline-block text-primary" />;
   };
 
-  // Filtra comunicazioni
-  const filteredComms = communications.filter(c => {
-    if (searchTerm && !c.subject.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !c.body?.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    if (filterType !== 'all' && c.type !== filterType) return false;
-    if (filterDirection !== 'all' && c.direction !== filterDirection) return false;
-    if (filterProject !== 'all' && c.projectId !== filterProject) return false;
-    if (showImportantOnly && !c.isImportant) return false;
-    return true;
-  });
-
-  // Sort communications
-  const sortedComms = [...filteredComms].sort((a, b) => {
-    let compareValue = 0;
-    
-    switch (sortField) {
-      case 'subject':
-        compareValue = a.subject.localeCompare(b.subject);
-        break;
-      case 'type':
-        compareValue = a.type.localeCompare(b.type);
-        break;
-      case 'projectCode':
-        compareValue = (a.projectCode || '').localeCompare(b.projectCode || '');
-        break;
-      case 'communicationDate':
-        compareValue = new Date(a.communicationDate).getTime() - new Date(b.communicationDate).getTime();
-        break;
-    }
-    
-    return sortOrder === 'asc' ? compareValue : -compareValue;
-  });
-
-  // Pagination logic
-  const totalPages = Math.ceil(sortedComms.length / pageSize);
+  // Pagination display calculations
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
-  const paginatedComms = sortedComms.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + pageSize, totalComms);
 
   // Reset to page 1 when page size changes
   const handlePageSizeChange = (newSize: string) => {
-    setPageSize(parseInt(newSize));
-    setCurrentPage(1);
+    changePageSize(parseInt(newSize) as 10 | 25 | 50);
   };
 
-  // Stats
-  const totalComms = communications.length;
-  const importantComms = communications.filter(c => c.isImportant).length;
-  const outgoingComms = communications.filter(c => c.direction === 'outgoing').length;
-  const incomingComms = communications.filter(c => c.direction === 'incoming').length;
+  // Stats (from paginated data - totalComms is the server-side filtered total)
+  const importantComms = paginatedComms.filter(c => c.isImportant).length;
+  const outgoingComms = paginatedComms.filter(c => c.direction === 'outgoing').length;
+  const incomingComms = paginatedComms.filter(c => c.direction === 'incoming').length;
 
   return (
     <div className="space-y-6">
@@ -963,13 +958,13 @@ export default function RegistroComunicazioni() {
                 <Input
                   placeholder="Cerca per oggetto o contenuto..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => { setSearchTerm(e.target.value); resetPage(); }}
                   className="pl-10 dark:bg-background dark:border-border"
                 />
               </div>
             </div>
 
-            <Select value={filterType} onValueChange={setFilterType}>
+            <Select value={filterType} onValueChange={(v) => { setFilterType(v); resetPage(); }}>
               <SelectTrigger className="w-full sm:w-[180px] dark:bg-background dark:border-border">
                 <SelectValue placeholder="Tipo..." />
               </SelectTrigger>
@@ -983,7 +978,7 @@ export default function RegistroComunicazioni() {
               </SelectContent>
             </Select>
 
-            <Select value={filterDirection} onValueChange={setFilterDirection}>
+            <Select value={filterDirection} onValueChange={(v) => { setFilterDirection(v); resetPage(); }}>
               <SelectTrigger className="w-full sm:w-[150px] dark:bg-background dark:border-border">
                 <SelectValue placeholder="Direzione..." />
               </SelectTrigger>
@@ -998,7 +993,7 @@ export default function RegistroComunicazioni() {
             <ProjectCombobox
               projects={projects || []}
               value={filterProject === "all" ? null : filterProject}
-              onValueChange={(val) => setFilterProject(val || "all")}
+              onValueChange={(val) => { setFilterProject(val || "all"); resetPage(); }}
               placeholder="Commessa..."
               className="w-full sm:w-[200px]"
             />
@@ -1008,7 +1003,7 @@ export default function RegistroComunicazioni() {
             <Checkbox
               id="important-only"
               checked={showImportantOnly}
-              onCheckedChange={(checked) => setShowImportantOnly(!!checked)}
+              onCheckedChange={(checked) => { setShowImportantOnly(!!checked); resetPage(); }}
             />
             <label htmlFor="important-only" className="text-sm font-medium flex items-center gap-1 text-foreground">
               <Star className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
@@ -1024,7 +1019,7 @@ export default function RegistroComunicazioni() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Badge variant="secondary" className="text-base py-1.5 px-3">
-              {filteredComms.length} comunicazion{filteredComms.length === 1 ? "e" : "i"}
+              {totalComms} comunicazion{totalComms === 1 ? "e" : "i"}
             </Badge>
             {selectedIds.size > 0 && (
               <Badge variant="destructive" className="text-base py-1.5 px-3">
@@ -1063,7 +1058,7 @@ export default function RegistroComunicazioni() {
         {/* Table */}
         <div className="card-g2 p-0 overflow-hidden">
           <div>
-            {filteredComms.length === 0 ? (
+            {totalComms === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p className="font-medium">Nessuna comunicazione trovata</p>
@@ -1266,13 +1261,14 @@ export default function RegistroComunicazioni() {
         {totalPages > 1 && (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-sm text-muted-foreground">
-              Pagina <strong>{currentPage}</strong> di <strong>{totalPages}</strong> ({startIndex + 1}-{Math.min(endIndex, filteredComms.length)} di {filteredComms.length})
+              Pagina <strong>{currentPage}</strong> di <strong>{totalPages}</strong> ({totalComms > 0 ? startIndex + 1 : 0}-{endIndex} di {totalComms})
+              {commsFetching && <span className="ml-2 text-xs animate-pulse">Caricamento...</span>}
             </div>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onClick={prevPage}
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -1281,7 +1277,7 @@ export default function RegistroComunicazioni() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                onClick={nextPage}
                 disabled={currentPage === totalPages}
               >
                 <span className="hidden sm:inline">Successiva</span>

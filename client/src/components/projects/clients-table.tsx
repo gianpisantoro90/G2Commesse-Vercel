@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QK } from "@/lib/query-utils";
+import { usePaginatedQuery } from "@/lib/use-paginated-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -85,6 +86,7 @@ type EditClientForm = z.infer<typeof editClientSchema>;
 export default function ClientsTable() {
   const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [selectedClientProjects, setSelectedClientProjects] = useState<Project[] | null>(null);
   const [showProjectsModal, setShowProjectsModal] = useState(false);
@@ -92,16 +94,35 @@ export default function ClientsTable() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
-  
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: clients = [], isLoading } = useQuery<Client[]>({
-    queryKey: QK.clients,
+  // Debounce search term (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Server-side paginated clients
+  const {
+    data: paginatedClients,
+    total: totalClients,
+    page: currentPage,
+    pageSize: itemsPerPage,
+    totalPages,
+    setPage: setCurrentPage,
+    nextPage,
+    prevPage,
+    changePageSize,
+    resetPage,
+    isLoading,
+    isFetching,
+    refetch,
+  } = usePaginatedQuery<Client>({
+    basePath: '/api/clients',
+    defaultPageSize: 10,
+    search: debouncedSearch || undefined,
   });
 
   // Fetch projects for viewing client projects
@@ -270,17 +291,9 @@ export default function ClientsTable() {
     },
   });
 
-  const filteredClients = clients.filter(client =>
-    client.sigla.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (client.city && client.city.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
-
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
+  // Pagination display calculations
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedClients = filteredClients.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalClients);
 
   // Handle view client projects
   const handleViewProjects = (client: Client) => {
@@ -426,7 +439,7 @@ export default function ClientsTable() {
         </div>
       </div>
       
-      {filteredClients.length === 0 ? (
+      {totalClients === 0 && !isLoading ? (
         <div className="text-center py-12 text-muted-foreground">
           <div className="text-4xl mb-2">👥</div>
           <p className="font-medium">
@@ -577,12 +590,10 @@ export default function ClientsTable() {
           <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-sm">
             <div className="flex items-center gap-4">
               <span className="text-muted-foreground" data-testid="clients-count">
-                Mostrando <strong>{startIndex + 1}</strong>-<strong>{Math.min(endIndex, filteredClients.length)}</strong> di <strong>{filteredClients.length}</strong> clienti
-                {filteredClients.length !== clients.length && (
-                  <span className="text-muted-foreground ml-1">({clients.length} totali)</span>
-                )}
+                Mostrando <strong>{totalClients > 0 ? startIndex + 1 : 0}</strong>-<strong>{endIndex}</strong> di <strong>{totalClients}</strong> clienti
+                {isFetching && <span className="ml-2 text-xs animate-pulse">Caricamento...</span>}
               </span>
-              
+
               <div className="flex items-center gap-2">
                 <label htmlFor="clients-items-per-page" className="text-muted-foreground">
                   Elementi per pagina:
@@ -590,8 +601,7 @@ export default function ClientsTable() {
                 <Select
                   value={itemsPerPage.toString()}
                   onValueChange={(value) => {
-                    setItemsPerPage(parseInt(value) as 10 | 25 | 50);
-                    setCurrentPage(1);
+                    changePageSize(parseInt(value) as 10 | 25 | 50);
                   }}
                 >
                   <SelectTrigger id="clients-items-per-page" className="w-20" data-testid="clients-items-per-page-select">
@@ -605,7 +615,7 @@ export default function ClientsTable() {
                 </Select>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground text-sm">
                 Pagina <strong>{currentPage}</strong> di <strong>{totalPages || 1}</strong>
@@ -614,7 +624,7 @@ export default function ClientsTable() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  onClick={prevPage}
                   disabled={currentPage === 1}
                   data-testid="clients-prev-page"
                 >
@@ -624,7 +634,7 @@ export default function ClientsTable() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  onClick={nextPage}
                   disabled={currentPage === totalPages || totalPages === 0}
                   data-testid="clients-next-page"
                 >

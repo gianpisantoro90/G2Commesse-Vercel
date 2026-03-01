@@ -1,6 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import { storage, storagePromise } from "./storage";
+import { parsePaginationParams } from "@shared/pagination";
 import { insertProjectSchema, insertClientSchema, insertFileRoutingSchema, insertOneDriveMappingSchema, insertSystemConfigSchema, insertFilesIndexSchema, prestazioniSchema, insertUserSchema, createUserSchema, insertTaskSchema, aiConfigSchema, aiAutoApprovalSchema, insertProjectInvoiceSchema, insertProjectPrestazioneSchema, updatePrestazioneStatoSchema, PRESTAZIONE_TIPI, PRESTAZIONE_STATI } from "@shared/schema";
 import bcrypt from "bcryptjs";
 import serverOneDriveService, { ONEDRIVE_DEFAULT_FOLDERS } from "./lib/onedrive-service";
@@ -518,6 +519,18 @@ export async function registerRoutes(app: Express): Promise<void> {
     try {
       const { projectId, assignedTo, createdBy } = req.query;
 
+      const pagination = parsePaginationParams(req.query);
+      if (pagination) {
+        const result = await storage.getTasksPaginated({
+          ...pagination,
+          projectId: projectId as string | undefined,
+          assignedTo: assignedTo as string | undefined,
+          createdBy: createdBy as string | undefined,
+          status: req.query.status as string | undefined,
+        });
+        return res.json(result);
+      }
+
       let tasks;
       if (projectId) {
         tasks = await storage.getTasksByProject(projectId as string);
@@ -745,10 +758,22 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Projects
   app.get("/api/projects", async (req, res) => {
     try {
-      const projects = await storage.getAllProjects();
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+
+      const pagination = parsePaginationParams(req.query);
+      if (pagination) {
+        const result = await storage.getProjectsPaginated({
+          ...pagination,
+          status: req.query.status as string | undefined,
+          year: req.query.year as string | undefined,
+          creFilter: req.query.creFilter as string | undefined,
+        });
+        return res.json(result);
+      }
+
+      const projects = await storage.getAllProjects();
       res.json(projects);
     } catch (error) {
       res.status(500).json({ message: "Errore nel recupero delle commesse" });
@@ -982,6 +1007,18 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Communications
   app.get("/api/communications", async (req, res) => {
     try {
+      const pagination = parsePaginationParams(req.query);
+      if (pagination) {
+        const result = await storage.getCommunicationsPaginated({
+          ...pagination,
+          projectId: req.query.projectId as string | undefined,
+          type: req.query.type as string | undefined,
+          direction: req.query.direction as string | undefined,
+          importantOnly: req.query.importantOnly === 'true',
+        });
+        return res.json(result);
+      }
+
       const projectId = req.query.projectId as string | undefined;
       const communications = projectId
         ? await storage.getCommunicationsByProject(projectId)
@@ -1422,6 +1459,12 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Clients
   app.get("/api/clients", async (req, res) => {
     try {
+      const pagination = parsePaginationParams(req.query);
+      if (pagination) {
+        const result = await storage.getClientsPaginated(pagination);
+        return res.json(result);
+      }
+
       const clients = await storage.getAllClients();
       res.json(clients);
     } catch (error) {
@@ -3628,6 +3671,16 @@ export async function registerRoutes(app: Express): Promise<void> {
     try {
       const { stato, projectId } = req.query;
 
+      const pagination = parsePaginationParams(req.query);
+      if (pagination) {
+        const result = await storage.getPrestazioniPaginated({
+          ...pagination,
+          projectId: projectId as string | undefined,
+          stato: stato as string | undefined,
+        });
+        return res.json(result);
+      }
+
       let prestazioni;
       if (projectId && typeof projectId === 'string') {
         prestazioni = await storage.getPrestazioniByProject(projectId);
@@ -4084,8 +4137,21 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   // Get all invoices across all projects
   app.get("/api/invoices", async (req, res) => {
-    const invoices = await storage.getAllInvoices();
-    res.json(invoices);
+    try {
+      const pagination = parsePaginationParams(req.query);
+      if (pagination) {
+        const result = await storage.getInvoicesPaginated({
+          ...pagination,
+          projectId: req.query.projectId as string | undefined,
+        });
+        return res.json(result);
+      }
+
+      const invoices = await storage.getAllInvoices();
+      res.json(invoices);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero delle fatture" });
+    }
   });
 
   // ============================================
