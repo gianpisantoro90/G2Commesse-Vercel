@@ -102,35 +102,35 @@ export default function RecentProjectsTable() {
           {/* Desktop/Tablet: Table */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-muted">
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Codice</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Cliente</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Città</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Oggetto</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Status</th>
-                  <th className="text-center py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">☁️</th>
+              <thead>
+                <tr className="bg-muted border-b border-border">
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Codice</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Cliente</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Città</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Oggetto</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Status</th>
+                  <th className="text-center py-3 px-4 font-semibold text-foreground text-sm">☁️</th>
                 </tr>
               </thead>
               <tbody>
                 {recentProjects.map((project) => (
                   <tr key={project.id} className="border-b border-border hover:bg-muted transition-colors">
-                    <td className="py-3 px-2 sm:px-4 font-mono text-xs sm:text-sm font-semibold text-primary" data-testid={`project-code-${project.id}`}>
+                    <td className="py-3 px-4 font-mono text-sm font-semibold text-primary" data-testid={`project-code-${project.id}`}>
                       {project.code}
                     </td>
-                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-foreground" data-testid={`project-client-${project.id}`}>
+                    <td className="py-3 px-4 text-sm text-foreground" data-testid={`project-client-${project.id}`}>
                       <div className="truncate">{project.client}</div>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-muted-foreground" data-testid={`project-city-${project.id}`}>
+                    <td className="py-3 px-4 text-sm text-muted-foreground" data-testid={`project-city-${project.id}`}>
                       {project.city}
                     </td>
-                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-foreground" data-testid={`project-object-${project.id}`}>
+                    <td className="py-3 px-4 text-sm text-foreground" data-testid={`project-object-${project.id}`}>
                       <div className="truncate">{project.object}</div>
                     </td>
-                    <td className="py-3 px-2 sm:px-4" data-testid={`project-status-${project.id}`}>
+                    <td className="py-3 px-4" data-testid={`project-status-${project.id}`}>
                       <ProjectStatusBadge status={project.status as "in corso" | "conclusa" | "sospesa"} />
                     </td>
-                    <td className="py-3 px-2 sm:px-4 text-center" data-testid={`project-onedrive-${project.id}`}>
+                    <td className="py-3 px-4 text-center" data-testid={`project-onedrive-${project.id}`}>
                       {getOneDriveSyncIndicator(project)}
                     </td>
                   </tr>

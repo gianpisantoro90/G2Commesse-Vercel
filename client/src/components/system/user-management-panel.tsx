@@ -316,8 +316,8 @@ export default function UserManagementPanel() {
       <div className="bg-background rounded-lg border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted">
-              <tr>
+            <thead>
+              <tr className="bg-muted">
                 <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">
                   Utente
                 </th>
@@ -340,7 +340,7 @@ export default function UserManagementPanel() {
             </thead>
             <tbody className="bg-background divide-y divide-border">
               {users.map((user) => (
-                <tr key={user.id}>
+                <tr key={user.id} className="hover:bg-muted transition-colors">
                   <td className="py-3 px-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 bg-primary text-white rounded-full flex items-center justify-center font-semibold">

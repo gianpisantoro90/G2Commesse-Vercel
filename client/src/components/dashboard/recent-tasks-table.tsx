@@ -71,38 +71,38 @@ export default function RecentTasksTable() {
           {/* Desktop/Tablet: Table */}
           <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-muted">
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Titolo</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Commessa</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Assegnato</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Priorità</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Status</th>
-                  <th className="text-left py-3 px-2 sm:px-4 font-semibold text-foreground text-sm">Scadenza</th>
+              <thead>
+                <tr className="bg-muted border-b border-border">
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Titolo</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Commessa</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Assegnato</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Priorità</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Scadenza</th>
                 </tr>
               </thead>
               <tbody>
                 {recentTasks.map((task) => (
                   <tr key={task.id} className="border-b border-border hover:bg-muted transition-colors">
-                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm font-medium text-foreground" data-testid={`task-title-${task.id}`}>
+                    <td className="py-3 px-4 text-sm font-medium text-foreground" data-testid={`task-title-${task.id}`}>
                       <div className="max-w-xs truncate" title={task.title}>
                         {task.title}
                       </div>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-muted-foreground font-mono" data-testid={`task-project-${task.id}`}>
+                    <td className="py-3 px-4 text-sm text-muted-foreground font-mono" data-testid={`task-project-${task.id}`}>
                       {getProjectName(task.projectId)}
                     </td>
-                    <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm text-muted-foreground" data-testid={`task-assigned-${task.id}`}>
+                    <td className="py-3 px-4 text-sm text-muted-foreground" data-testid={`task-assigned-${task.id}`}>
                       <div className="truncate">{getUserName(task.assignedToId)}</div>
                     </td>
-                    <td className="py-3 px-2 sm:px-4" data-testid={`task-priority-${task.id}`}>
+                    <td className="py-3 px-4" data-testid={`task-priority-${task.id}`}>
                       <PriorityBadge priority={task.priority as "high" | "medium" | "low"} />
                     </td>
-                    <td className="py-3 px-2 sm:px-4" data-testid={`task-status-${task.id}`}>
+                    <td className="py-3 px-4" data-testid={`task-status-${task.id}`}>
                       <TaskStatusBadge status={task.status as "completed" | "in_progress" | "cancelled" | "pending"} />
                     </td>
                     <td className={cn(
-                      "py-3 px-2 sm:px-4 text-xs sm:text-sm",
+                      "py-3 px-4 text-sm",
                       isOverdue(task) ? "text-red-600 dark:text-red-400 font-medium" : "text-muted-foreground"
                     )} data-testid={`task-due-${task.id}`}>
                       <span className="flex items-center gap-1">

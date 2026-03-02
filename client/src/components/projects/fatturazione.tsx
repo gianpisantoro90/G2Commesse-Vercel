@@ -497,8 +497,8 @@ export default function Fatturazione() {
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-muted">
-                      <tr className="border-b dark:border-border">
+                    <thead>
+                      <tr className="bg-muted border-b dark:border-border">
                         <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">N. Fattura</th>
                         <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Commessa</th>
                         <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Data Emissione</th>
@@ -514,7 +514,7 @@ export default function Fatturazione() {
                         const statoConfig = STATI_FATTURA.find(s => s.value === invoice.stato);
 
                         return (
-                          <tr key={invoice.id} className="border-b dark:border-border hover:bg-muted">
+                          <tr key={invoice.id} className="border-b dark:border-border hover:bg-muted transition-colors">
                             <td className="py-3 px-4 font-medium text-foreground">{invoice.numeroFattura}</td>
                             <td className="py-3 px-4">
                               <div className="text-sm">

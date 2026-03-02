@@ -165,7 +165,7 @@ export function BillingConfig() {
                 />
                 <span className="text-sm text-muted-foreground">giorni</span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Alert se completata ma non fatturata dopo N giorni
               </p>
             </div>
@@ -186,7 +186,7 @@ export function BillingConfig() {
                 />
                 <span className="text-sm text-muted-foreground">giorni</span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Scadenza default fattura dopo emissione
               </p>
             </div>
@@ -207,7 +207,7 @@ export function BillingConfig() {
                 />
                 <span className="text-sm text-muted-foreground">giorni</span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 Alert se fattura emessa ma non pagata dopo N giorni
               </p>
             </div>

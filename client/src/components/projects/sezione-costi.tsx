@@ -826,8 +826,8 @@ export default function SezioneCosti() {
                         <h4 className="font-semibold mb-3">Risorse ({item.resources.length})</h4>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
-                            <thead className="bg-muted">
-                              <tr className="border-b">
+                            <thead>
+                              <tr className="bg-muted border-b">
                                 <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Risorsa</th>
                                 <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Ruolo</th>
                                 <th className="text-right py-3 px-4 font-semibold text-foreground text-sm">Ore</th>
@@ -841,16 +841,16 @@ export default function SezioneCosti() {
                                 const roleInfo = ROLES.find(r => r.value === resource.role);
                                 const costoTotale = (resource.oreLavorate || 0) * (resource.costoOrario || 0);
                                 return (
-                                  <tr key={resource.id} className="border-b">
-                                    <td className="py-2 px-3">
+                                  <tr key={resource.id} className="border-b hover:bg-muted transition-colors">
+                                    <td className="py-3 px-4 text-sm">
                                       <div className="font-medium">{resource.userName}</div>
                                       {resource.isResponsabile && <Badge variant="secondary" className="text-xs">Resp.</Badge>}
                                     </td>
-                                    <td className="py-2 px-3">{roleInfo?.icon} {roleInfo?.label}</td>
-                                    <td className="py-2 px-3 text-right">{resource.oreLavorate}/{resource.oreAssegnate}h</td>
-                                    <td className="py-2 px-3 text-right">€{((resource.costoOrario || 0) / 100).toFixed(2)}</td>
-                                    <td className="py-2 px-3 text-right font-medium">{formatCurrency(costoTotale)}</td>
-                                    <td className="py-2 px-3">
+                                    <td className="py-3 px-4 text-sm">{roleInfo?.icon} {roleInfo?.label}</td>
+                                    <td className="py-3 px-4 text-sm text-right">{resource.oreLavorate}/{resource.oreAssegnate}h</td>
+                                    <td className="py-3 px-4 text-sm text-right">€{((resource.costoOrario || 0) / 100).toFixed(2)}</td>
+                                    <td className="py-3 px-4 text-sm text-right font-medium">{formatCurrency(costoTotale)}</td>
+                                    <td className="py-3 px-4 text-sm">
                                       <div className="flex items-center justify-center gap-1">
                                         <Button variant="ghost" size="sm" onClick={() => openEditResource(resource)}><Edit className="w-3 h-3" /></Button>
                                         <Button variant="ghost" size="sm" onClick={() => { if (confirm("Eliminare?")) deleteResourceMutation.mutate(resource.id); }}><Trash2 className="w-3 h-3 text-red-500" /></Button>
@@ -871,8 +871,8 @@ export default function SezioneCosti() {
                         <h4 className="font-semibold mb-3">Altri Costi ({item.costs.length})</h4>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
-                            <thead className="bg-muted">
-                              <tr className="border-b">
+                            <thead>
+                              <tr className="bg-muted border-b">
                                 <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Tipo</th>
                                 <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Descrizione</th>
                                 <th className="text-left py-3 px-4 font-semibold text-foreground text-sm">Fornitore</th>
@@ -884,12 +884,12 @@ export default function SezioneCosti() {
                               {item.costs.map(cost => {
                                 const typeInfo = COST_TYPES.find(t => t.value === cost.tipo);
                                 return (
-                                  <tr key={cost.id} className="border-b">
-                                    <td className="py-2 px-3">{typeInfo?.icon} {typeInfo?.label}</td>
-                                    <td className="py-2 px-3">{cost.descrizione || '-'}</td>
-                                    <td className="py-2 px-3">{cost.fornitore || '-'}</td>
-                                    <td className="py-2 px-3 text-right font-medium">{formatCurrency(cost.importo || 0)}</td>
-                                    <td className="py-2 px-3">
+                                  <tr key={cost.id} className="border-b hover:bg-muted transition-colors">
+                                    <td className="py-3 px-4 text-sm">{typeInfo?.icon} {typeInfo?.label}</td>
+                                    <td className="py-3 px-4 text-sm">{cost.descrizione || '-'}</td>
+                                    <td className="py-3 px-4 text-sm">{cost.fornitore || '-'}</td>
+                                    <td className="py-3 px-4 text-sm text-right font-medium">{formatCurrency(cost.importo || 0)}</td>
+                                    <td className="py-3 px-4 text-sm">
                                       <div className="flex items-center justify-center gap-1">
                                         <Button variant="ghost" size="sm" onClick={() => openEditCost(cost)}><Edit className="w-3 h-3" /></Button>
                                         <Button variant="ghost" size="sm" onClick={() => { if (confirm("Eliminare?")) deleteCostMutation.mutate(cost.id); }}><Trash2 className="w-3 h-3 text-red-500" /></Button>

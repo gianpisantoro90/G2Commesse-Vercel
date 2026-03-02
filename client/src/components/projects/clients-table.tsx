@@ -33,7 +33,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { type Client, type Project } from "@shared/schema";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users } from "lucide-react";
 
 // Schema for add form - minimal required fields
 const addClientSchema = z.object({
@@ -440,8 +440,8 @@ export default function ClientsTable() {
       </div>
       
       {totalClients === 0 && !isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <div className="text-4xl mb-2">👥</div>
+        <div className="text-center py-8 text-muted-foreground">
+          <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
           <p className="font-medium">
             {searchTerm ? "Nessun cliente trovato" : "Nessun cliente presente"}
           </p>

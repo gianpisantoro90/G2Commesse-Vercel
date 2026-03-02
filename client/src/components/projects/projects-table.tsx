@@ -7,7 +7,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, FolderOpen } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -526,8 +526,8 @@ export default function ProjectsTable() {
       </div>
       
       {totalProjects === 0 && !isLoading ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <div className="text-4xl mb-2">📁</div>
+        <div className="text-center py-8 text-muted-foreground">
+          <FolderOpen className="h-12 w-12 mx-auto mb-3 opacity-50" />
           <p className="font-medium">
             {searchTerm ? "Nessuna commessa trovata" : "Nessuna commessa presente"}
           </p>

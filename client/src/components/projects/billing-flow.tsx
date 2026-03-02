@@ -1538,8 +1538,8 @@ export default function BillingFlow() {
       <div className="space-y-4">
         {filteredProjects.length === 0 ? (
           <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <CardContent className="py-8 text-center text-muted-foreground">
+              <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
               <p>Nessuna commessa con prestazioni o fatture</p>
             </CardContent>
           </Card>
@@ -2179,7 +2179,7 @@ function PrestazioneRow({
       {/* Fatture */}
       <div className="col-span-6">
         {prestazione.invoices.length === 0 ? (
-          <div className="text-sm text-muted-foreground italic">
+          <div className="text-sm text-muted-foreground">
             Nessuna fattura
           </div>
         ) : (

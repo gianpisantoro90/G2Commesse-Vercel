@@ -430,8 +430,8 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
               <Label className="text-xs text-muted-foreground">Cartella commessa mappata:</Label>
               <div className="p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600">📁</span>
-                  <span className="text-blue-800 font-medium">{selectedFolderPath}</span>
+                  <span className="text-blue-600 dark:text-blue-400">📁</span>
+                  <span className="text-blue-800 dark:text-blue-200 font-medium">{selectedFolderPath}</span>
                 </div>
               </div>
             </div>
@@ -535,10 +535,10 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                   </div>
 
                   {/* Current folder selection */}
-                  <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <div className="flex items-center gap-2">
-                      <Folder className="w-4 h-4 text-blue-600" />
-                      <span className="text-blue-800 font-medium">{browseCurrentPath}</span>
+                      <Folder className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-blue-800 dark:text-blue-200 font-medium">{browseCurrentPath}</span>
                     </div>
                     <Button
                       onClick={() => handleFolderSelect(browseCurrentPath)}
@@ -570,7 +570,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
             onClick={handleScanFolder}
             disabled={!selectedProject || !oneDriveConnected || isLoadingFiles || (!selectedFolderPath && !customFolderPath)}
             variant="outline"
-            className="w-full p-3 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full p-3 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="scan-folder-button"
           >
             {isLoadingFiles ? (

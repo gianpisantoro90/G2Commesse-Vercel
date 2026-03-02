@@ -99,9 +99,9 @@ export function AISuggestionsPanel({
   }
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.9) return "bg-green-100 text-green-800 border-green-300";
-    if (confidence >= 0.7) return "bg-yellow-100 text-yellow-800 border-yellow-300";
-    if (confidence >= 0.5) return "bg-orange-100 text-orange-800 border-orange-300";
+    if (confidence >= 0.9) return "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/30 dark:text-green-200 dark:border-green-700";
+    if (confidence >= 0.7) return "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-200 dark:border-yellow-700";
+    if (confidence >= 0.5) return "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-200 dark:border-orange-700";
     return "bg-muted text-foreground border-border";
   };
 
