@@ -105,13 +105,15 @@ export function NotificationCenter() {
                 const Icon = notificationIcons[notification.type] || Info;
 
                 return (
-                  <div
+                  <button
+                    type="button"
                     key={notification.id}
                     className={cn(
-                      "p-3 rounded-lg mb-2 cursor-pointer transition-colors hover:bg-accent",
+                      "w-full text-left p-3 rounded-lg mb-2 cursor-pointer transition-colors hover:bg-accent",
                       !notification.read && "bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800/50"
                     )}
                     onClick={() => handleNotificationClick(notification)}
+                    aria-label={`${notification.title}: ${notification.message}`}
                   >
                     <div className="flex gap-3">
                       <div className={cn(
@@ -146,7 +148,7 @@ export function NotificationCenter() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>

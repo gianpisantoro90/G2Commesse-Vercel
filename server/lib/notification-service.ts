@@ -171,12 +171,16 @@ class NotificationService {
   }
 
   /**
-   * Mark all notifications as read
+   * Mark all notifications as read for a specific user (or all if no userId)
    */
-  markAllAsRead() {
-    this.notifications.forEach(n => n.read = true);
+  markAllAsRead(userId?: string) {
+    const target = userId
+      ? this.notifications.filter(n => n.userId === userId)
+      : this.notifications;
+    target.forEach(n => n.read = true);
     this.broadcast({
-      type: 'all_notifications_read'
+      type: 'all_notifications_read',
+      userId
     });
   }
 

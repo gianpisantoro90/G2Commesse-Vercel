@@ -1,8 +1,10 @@
+import { lazy, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { QK } from "@/lib/query-utils";
 import { type Task, type ProjectDeadline } from "@shared/schema";
 import { CalendarClock, CheckSquare, AlertTriangle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import StatsCard from "@/components/dashboard/stats-card";
 import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
@@ -10,6 +12,8 @@ import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
 import AiInsightsCard from "@/components/dashboard/ai-insights-card";
 import CashFlowForecastCard from "@/components/dashboard/cashflow-forecast-card";
+
+const BillingAlerts = lazy(() => import("@/components/projects/billing-alerts"));
 
 function UserQuickStats() {
   const { user } = useAuth();
@@ -94,6 +98,11 @@ export default function Dashboard() {
       {isAdmin && <AiInsightsCard />}
       {isAdmin && <EconomicDashboardCard />}
       {isAdmin && <CashFlowForecastCard />}
+      {isAdmin && (
+        <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
+          <BillingAlerts maxAlerts={5} />
+        </Suspense>
+      )}
       {isAdmin && <StatsCard />}
       <RecentTasksTable />
       <RecentProjectsTable />

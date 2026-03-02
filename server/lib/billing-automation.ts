@@ -20,7 +20,8 @@ import type {
   BillingStatus,
   PrestazioneTipo,
   LivelloProgettazione,
-  ProjectMetadata
+  ProjectMetadata,
+  User
 } from '@shared/schema';
 
 // Labels per le prestazioni
@@ -72,6 +73,9 @@ interface BillingStorage {
 
   // Billing Config
   getBillingConfig(): Promise<Record<string, number>>;
+
+  // Users
+  getAllUsers(): Promise<User[]>;
 }
 
 class BillingAutomationService {
@@ -532,16 +536,26 @@ class BillingAutomationService {
       const alertCompletataGiorni = config['alert_completata_giorni'] || 15;
       const alertPagamentoGiorni = config['alert_pagamento_giorni'] || 60;
 
-      logger.info('[BillingAutomation] Running alert check', { alertCompletataGiorni, alertPagamentoGiorni });
+      // Fetch admin user IDs once for all alert notifications
+      const allUsers = await this.storage.getAllUsers();
+      const adminUserIds = allUsers
+        .filter(u => u.role === 'admin' && u.active !== false)
+        .map(u => u.id);
+
+      logger.info('[BillingAutomation] Running alert check', {
+        alertCompletataGiorni,
+        alertPagamentoGiorni,
+        adminCount: adminUserIds.length,
+      });
 
       // 1. Alert prestazioni completate non fatturate
-      await this.checkPrestazioniDaFatturare(alertCompletataGiorni);
+      await this.checkPrestazioniDaFatturare(alertCompletataGiorni, adminUserIds);
 
       // 2. Alert fatture scadute
-      await this.checkFattureScadute();
+      await this.checkFattureScadute(adminUserIds);
 
       // 3. Alert pagamenti in ritardo
-      await this.checkPagamentiInRitardo(alertPagamentoGiorni);
+      await this.checkPagamentiInRitardo(alertPagamentoGiorni, adminUserIds);
 
       logger.info('[BillingAutomation] Alert check completed');
     } catch (error) {
@@ -552,7 +566,7 @@ class BillingAutomationService {
   /**
    * Check: Prestazioni completate da troppo tempo senza fattura
    */
-  private async checkPrestazioniDaFatturare(giorniSoglia: number): Promise<void> {
+  private async checkPrestazioniDaFatturare(giorniSoglia: number, adminUserIds: string[]): Promise<void> {
     if (!this.storage) return;
 
     try {
@@ -595,15 +609,17 @@ class BillingAutomationService {
 
               alertsCreated++;
 
-              // Invia notifica
-              notificationService.sendNotification({
-                userId: 'admin', // TODO: determinare utente corretto
-                type: 'invoice',
-                title: `Prestazione da fatturare`,
-                message: `${project.code} - ${tipoLabel}${livelloLabel} completata da ${giorniPassati} giorni`,
-                priority: giorniPassati > 30 ? 'urgent' : 'high',
-                actionUrl: `/progetti/${project.id}?tab=fatturazione`,
-              });
+              // Invia notifica a tutti gli admin
+              for (const adminId of adminUserIds) {
+                notificationService.sendNotification({
+                  userId: adminId,
+                  type: 'invoice',
+                  title: `Prestazione da fatturare`,
+                  message: `${project.code} - ${tipoLabel}${livelloLabel} completata da ${giorniPassati} giorni`,
+                  priority: giorniPassati > 30 ? 'urgent' : 'high',
+                  actionUrl: `/progetti/${project.id}?tab=fatturazione`,
+                });
+              }
             } else {
               // Aggiorna giorni nell'alert esistente
               await this.storage.updateBillingAlert(existingAlert.id, {
@@ -626,7 +642,7 @@ class BillingAutomationService {
   /**
    * Check: Fatture scadute
    */
-  private async checkFattureScadute(): Promise<void> {
+  private async checkFattureScadute(adminUserIds: string[]): Promise<void> {
     if (!this.storage) return;
 
     try {
@@ -668,15 +684,17 @@ class BillingAutomationService {
 
             alertsCreated++;
 
-            // Invia notifica
-            notificationService.sendNotification({
-              userId: 'admin',
-              type: 'invoice',
-              title: `Fattura scaduta`,
-              message: `${project?.code || 'N/A'} - Fattura ${invoice.numeroFattura} scaduta da ${giorniScaduti} giorni`,
-              priority: 'urgent',
-              actionUrl: `/progetti/${invoice.projectId}?tab=fatturazione`,
-            });
+            // Invia notifica a tutti gli admin
+            for (const adminId of adminUserIds) {
+              notificationService.sendNotification({
+                userId: adminId,
+                type: 'invoice',
+                title: `Fattura scaduta`,
+                message: `${project?.code || 'N/A'} - Fattura ${invoice.numeroFattura} scaduta da ${giorniScaduti} giorni`,
+                priority: 'urgent',
+                actionUrl: `/progetti/${invoice.projectId}?tab=fatturazione`,
+              });
+            }
           } else {
             await this.storage.updateBillingAlert(existingAlert.id, { daysOverdue: giorniScaduti });
           }
@@ -694,7 +712,7 @@ class BillingAutomationService {
   /**
    * Check: Pagamenti in ritardo (fatture senza scadenza emesse da troppo tempo)
    */
-  private async checkPagamentiInRitardo(giorniSoglia: number): Promise<void> {
+  private async checkPagamentiInRitardo(giorniSoglia: number, adminUserIds: string[]): Promise<void> {
     if (!this.storage) return;
 
     try {
@@ -730,14 +748,17 @@ class BillingAutomationService {
 
             alertsCreated++;
 
-            notificationService.sendNotification({
-              userId: 'admin',
-              type: 'invoice',
-              title: `Pagamento in ritardo`,
-              message: `${project?.code || 'N/A'} - Fattura ${invoice.numeroFattura} emessa da ${giorniPassati} giorni`,
-              priority: 'high',
-              actionUrl: `/progetti/${invoice.projectId}?tab=fatturazione`,
-            });
+            // Invia notifica a tutti gli admin
+            for (const adminId of adminUserIds) {
+              notificationService.sendNotification({
+                userId: adminId,
+                type: 'invoice',
+                title: `Pagamento in ritardo`,
+                message: `${project?.code || 'N/A'} - Fattura ${invoice.numeroFattura} emessa da ${giorniPassati} giorni`,
+                priority: 'high',
+                actionUrl: `/progetti/${invoice.projectId}?tab=fatturazione`,
+              });
+            }
           } else {
             await this.storage.updateBillingAlert(existingAlert.id, { daysOverdue: giorniPassati });
           }

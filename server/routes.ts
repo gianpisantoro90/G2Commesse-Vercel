@@ -2976,16 +2976,24 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   app.post("/api/notifications/mark-all-read", async (req, res) => {
     try {
-      notificationService.markAllAsRead();
+      const userId = req.session.userId;
+      notificationService.markAllAsRead(userId);
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "Errore nell'aggiornamento delle notifiche" });
     }
   });
 
-  app.post("/api/notifications/send", async (req, res) => {
+  app.post("/api/notifications/send", requireAdmin, async (req, res) => {
     try {
-      const notification = notificationService.sendNotification(req.body);
+      const { userId, type, title, message, priority, projectId, actionUrl } = req.body;
+      if (!userId || !title || !message) {
+        return res.status(400).json({ message: "userId, title e message sono obbligatori" });
+      }
+      const notification = notificationService.sendNotification({
+        userId, type: type || 'info', title, message,
+        priority: priority || 'normal', projectId, actionUrl
+      });
       res.json(notification);
     } catch (error) {
       res.status(500).json({ message: "Errore nell'invio della notifica" });
@@ -3871,6 +3879,16 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Sync project dates and metadata (single source: billingAutomationService + storage)
       await billingAutomationService.updateProjectDatesFromPrestazioni(updated.projectId);
+
+      // Trigger billing automation when prestazione is completed
+      if (stato === 'completata') {
+        try {
+          await billingAutomationService.onPrestazioneCompletata(req.params.id);
+        } catch (billingError) {
+          // Non-blocking: log but don't fail the status update
+          console.error('Error in onPrestazioneCompletata:', billingError);
+        }
+      }
 
       res.json(updated);
     } catch (error) {
