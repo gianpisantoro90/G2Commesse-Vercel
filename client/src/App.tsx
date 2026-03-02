@@ -31,6 +31,7 @@ const AiConfigPage = lazy(() => import("@/pages/sistema/ai-config"));
 const OneDriveBrowserPage = lazy(() => import("@/pages/sistema/onedrive-browser"));
 const OneDriveConfigPage = lazy(() => import("@/pages/sistema/onedrive-config"));
 const RoutingPage = lazy(() => import("@/pages/routing"));
+const NotFoundPage = lazy(() => import("@/pages/not-found"));
 
 function LoadingScreen() {
   return (
@@ -83,64 +84,64 @@ function AuthenticatedRouter() {
   return (
     <AppLayout>
       <HashRedirector />
-      <Suspense fallback={<PageFallback />}>
-        <Switch>
-          <Route path="/" component={Dashboard} />
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/commesse" component={CommessePage} />
-          <Route path="/commesse/nuova">
-            <AdminRoute><NuovaCommessaPage /></AdminRoute>
-          </Route>
-          <Route path="/clienti">
-            <AdminRoute><ClientiPage /></AdminRoute>
-          </Route>
-          <Route path="/comunicazioni" component={ComunicazioniPage} />
-          <Route path="/costi">
-            <AdminRoute><CostiPage /></AdminRoute>
-          </Route>
-          <Route path="/parcella">
-            <AdminRoute><ParcellaPage /></AdminRoute>
-          </Route>
-          <Route path="/requisiti">
-            <AdminRoute><RequisitiPage /></AdminRoute>
-          </Route>
-          <Route path="/todo" component={TodoPage} />
-          <Route path="/scadenze" component={ScadenzePage} />
-          <Route path="/fatturazione">
-            <AdminRoute><FatturazionePage /></AdminRoute>
-          </Route>
-          <Route path="/routing">
-            <AdminRoute><RoutingPage /></AdminRoute>
-          </Route>
-          <Route path="/revisione-ai">
-            <AdminRoute><RevisioneAI /></AdminRoute>
-          </Route>
-          <Route path="/revisione-ai/tasks">
-            <AdminRoute><RevisioneAI /></AdminRoute>
-          </Route>
-          <Route path="/revisione-ai/scadenze">
-            <AdminRoute><RevisioneAI /></AdminRoute>
-          </Route>
-          <Route path="/sistema/utenti">
-            <AdminRoute><UtentiPage /></AdminRoute>
-          </Route>
-          <Route path="/sistema/storage">
-            <AdminRoute><StoragePage /></AdminRoute>
-          </Route>
-          <Route path="/sistema/ai-config">
-            <AdminRoute><AiConfigPage /></AdminRoute>
-          </Route>
-          <Route path="/sistema/onedrive-browser">
-            <AdminRoute><OneDriveBrowserPage /></AdminRoute>
-          </Route>
-          <Route path="/sistema/onedrive-config">
-            <AdminRoute><OneDriveConfigPage /></AdminRoute>
-          </Route>
-          <Route>
-            <Redirect to="/" />
-          </Route>
-        </Switch>
-      </Suspense>
+      <ErrorBoundary compact>
+        <Suspense fallback={<PageFallback />}>
+          <Switch>
+            <Route path="/" component={Dashboard} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/commesse" component={CommessePage} />
+            <Route path="/commesse/nuova">
+              <AdminRoute><NuovaCommessaPage /></AdminRoute>
+            </Route>
+            <Route path="/clienti">
+              <AdminRoute><ClientiPage /></AdminRoute>
+            </Route>
+            <Route path="/comunicazioni" component={ComunicazioniPage} />
+            <Route path="/costi">
+              <AdminRoute><CostiPage /></AdminRoute>
+            </Route>
+            <Route path="/parcella">
+              <AdminRoute><ParcellaPage /></AdminRoute>
+            </Route>
+            <Route path="/requisiti">
+              <AdminRoute><RequisitiPage /></AdminRoute>
+            </Route>
+            <Route path="/todo" component={TodoPage} />
+            <Route path="/scadenze" component={ScadenzePage} />
+            <Route path="/fatturazione">
+              <AdminRoute><FatturazionePage /></AdminRoute>
+            </Route>
+            <Route path="/routing">
+              <AdminRoute><RoutingPage /></AdminRoute>
+            </Route>
+            <Route path="/revisione-ai">
+              <AdminRoute><RevisioneAI /></AdminRoute>
+            </Route>
+            <Route path="/revisione-ai/tasks">
+              <AdminRoute><RevisioneAI /></AdminRoute>
+            </Route>
+            <Route path="/revisione-ai/scadenze">
+              <AdminRoute><RevisioneAI /></AdminRoute>
+            </Route>
+            <Route path="/sistema/utenti">
+              <AdminRoute><UtentiPage /></AdminRoute>
+            </Route>
+            <Route path="/sistema/storage">
+              <AdminRoute><StoragePage /></AdminRoute>
+            </Route>
+            <Route path="/sistema/ai-config">
+              <AdminRoute><AiConfigPage /></AdminRoute>
+            </Route>
+            <Route path="/sistema/onedrive-browser">
+              <AdminRoute><OneDriveBrowserPage /></AdminRoute>
+            </Route>
+            <Route path="/sistema/onedrive-config">
+              <AdminRoute><OneDriveConfigPage /></AdminRoute>
+            </Route>
+            <Route component={NotFoundPage} />
+          </Switch>
+        </Suspense>
+      </ErrorBoundary>
     </AppLayout>
   );
 }

@@ -1,4 +1,4 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectBudget, type InsertProjectBudget, type ProjectCost, type InsertProjectCost, type ProjectResource, type InsertProjectResource, type BillingAlert, type InsertBillingAlert, type BillingConfig as BillingConfigType } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectBudget, type InsertProjectBudget, type ProjectCost, type InsertProjectCost, type ProjectResource, type InsertProjectResource, type BillingAlert, type InsertBillingAlert, type BillingConfig as BillingConfigType, type ImportReport, type ImportEntityReport } from "@shared/schema";
 import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectBudget, projectCosts, projectResources, billingAlerts, billingConfig } from "@shared/schema";
 import { eq, sql, or, and, desc, asc, ilike } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -182,7 +182,7 @@ export interface IStorage {
     prestazioni?: ProjectPrestazione[],
     budget?: ProjectBudget[],
     resources?: ProjectResource[],
-  }, mode?: 'merge' | 'overwrite'): Promise<void>;
+  }, mode?: 'merge' | 'overwrite'): Promise<ImportReport>;
   clearAllData(): Promise<void>;
 
   // Billing Alerts
@@ -655,9 +655,10 @@ export class MemStorage implements IStorage {
     prestazioni?: ProjectPrestazione[],
     budget?: ProjectBudget[],
     resources?: ProjectResource[],
-  }, mode: 'merge' | 'overwrite' = 'overwrite') {
+  }, mode: 'merge' | 'overwrite' = 'overwrite'): Promise<ImportReport> {
+    const report = createEmptyReport(mode);
+
     if (mode === 'overwrite') {
-      // Clear all existing data
       this.projects.clear();
       this.clients.clear();
       this.fileRoutings.clear();
@@ -673,23 +674,38 @@ export class MemStorage implements IStorage {
       this.budget.clear();
       this.resources.clear();
     }
-    // For merge mode, we don't clear - we just add/update
 
-    // Import data - will add new items or update existing ones (based on ID)
-    data.projects?.forEach(p => this.projects.set(p.id, p));
-    data.clients?.forEach(c => this.clients.set(c.id, c));
-    data.fileRoutings?.forEach(fr => this.fileRoutings.set(fr.id, fr));
-    data.systemConfig?.forEach(sc => this.systemConfig.set(sc.id, sc));
-    data.oneDriveMappings?.forEach(odm => this.oneDriveMappings.set(odm.projectCode, odm));
-    data.filesIndex?.forEach(fi => this.filesIndex.set(fi.driveItemId, fi));
-    data.users?.forEach(u => this.users.set(u.id, u));
-    data.tasks?.forEach(t => this.tasks.set(t.id, t));
-    data.communications?.forEach(c => this.communications.set(c.id, c));
-    data.deadlines?.forEach(d => this.deadlines.set(d.id, d));
-    data.invoices?.forEach(inv => this.invoices.set(inv.id, inv));
-    data.prestazioni?.forEach(prest => this.prestazioni.set(prest.id, prest));
-    data.budget?.forEach(b => this.budget.set(b.id, b));
-    data.resources?.forEach(r => this.resources.set(r.id, r));
+    const importMap = (map: Map<string, any>, items: any[] | undefined, key: string, entityName: string) => {
+      if (!items || items.length === 0) return;
+      report.entities[entityName] = { created: 0, updated: 0, skipped: 0, errors: [] };
+      for (const item of items) {
+        if (map.has(item[key])) {
+          map.set(item[key], item);
+          report.entities[entityName].updated++;
+        } else {
+          map.set(item[key], item);
+          report.entities[entityName].created++;
+        }
+      }
+    };
+
+    importMap(this.users, data.users, 'id', 'users');
+    importMap(this.clients, data.clients, 'id', 'clients');
+    importMap(this.systemConfig, data.systemConfig, 'id', 'systemConfig');
+    importMap(this.projects, data.projects, 'id', 'projects');
+    importMap(this.oneDriveMappings, data.oneDriveMappings, 'projectCode', 'oneDriveMappings');
+    importMap(this.filesIndex, data.filesIndex, 'driveItemId', 'filesIndex');
+    importMap(this.fileRoutings, data.fileRoutings, 'id', 'fileRoutings');
+    importMap(this.tasks, data.tasks, 'id', 'tasks');
+    importMap(this.communications, data.communications, 'id', 'communications');
+    importMap(this.deadlines, data.deadlines, 'id', 'deadlines');
+    importMap(this.invoices, data.invoices, 'id', 'invoices');
+    importMap(this.prestazioni, data.prestazioni, 'id', 'prestazioni');
+    importMap(this.budget, data.budget, 'id', 'budget');
+    importMap(this.resources, data.resources, 'id', 'resources');
+
+    finalizeReport(report);
+    return report;
   }
 
   // Communications methods
@@ -1464,6 +1480,29 @@ export class MemStorage implements IStorage {
       { tipo: p => p.tipo, stato: p => p.stato, dataInizio: p => p.dataInizio }
     );
   }
+}
+
+// Import report helpers
+function createEmptyReport(mode: 'merge' | 'overwrite'): ImportReport {
+  return {
+    mode,
+    entities: {},
+    totalCreated: 0,
+    totalUpdated: 0,
+    totalSkipped: 0,
+    totalErrors: 0,
+    success: true,
+  };
+}
+
+function finalizeReport(report: ImportReport): void {
+  for (const entity of Object.values(report.entities)) {
+    report.totalCreated += entity.created;
+    report.totalUpdated += entity.updated;
+    report.totalSkipped += entity.skipped;
+    report.totalErrors += entity.errors.length;
+  }
+  report.success = report.totalErrors === 0;
 }
 
 // DatabaseStorage implementation
@@ -2774,28 +2813,60 @@ export class DatabaseStorage implements IStorage {
     prestazioni?: ProjectPrestazione[],
     budget?: ProjectBudget[],
     resources?: ProjectResource[],
-  }, mode: 'merge' | 'overwrite' = 'overwrite') {
-    if (mode === 'overwrite') {
-      // Clear all existing data
-      await this.clearAllData();
+  }, mode: 'merge' | 'overwrite' = 'overwrite'): Promise<ImportReport> {
+    const report = createEmptyReport(mode);
+
+    // Build set of valid project IDs (from import data + existing DB for merge)
+    const validProjectIds = new Set<string>();
+    const validProjectCodes = new Set<string>();
+    const validUserIds = new Set<string>();
+
+    if (mode === 'merge') {
+      // In merge mode, existing DB records satisfy FK constraints
+      const existingProjects = await db.select({ id: projects.id, code: projects.code }).from(projects);
+      for (const p of existingProjects) {
+        validProjectIds.add(p.id);
+        validProjectCodes.add(p.code);
+      }
+      const existingUsers = await db.select({ id: users.id }).from(users);
+      for (const u of existingUsers) validUserIds.add(u.id);
     }
 
-    // CRITICAL: Import in correct order to respect foreign key constraints
-    // Order: users, clients, projects, everything else
+    // Also add IDs from the import data itself (they'll be inserted before dependents)
+    if (data.projects) for (const p of data.projects) {
+      validProjectIds.add(p.id);
+      validProjectCodes.add(p.code);
+    }
+    if (data.users) for (const u of data.users) validUserIds.add(u.id);
 
-    try {
-      // 1. Users first (no dependencies)
-      // Note: Users are NOT deleted in clearAllData() to preserve authentication
-      // So we always use onConflict handling for users
+    await db.transaction(async (tx: typeof db) => {
+      if (mode === 'overwrite') {
+        // Clear all existing data in correct FK order
+        await tx.delete(tasks);
+        await tx.delete(projectDeadlines);
+        await tx.delete(communications);
+        await tx.delete(filesIndex);
+        await tx.delete(fileRoutings);
+        await tx.delete(oneDriveMappings);
+        await tx.delete(projectInvoices);
+        await tx.delete(projectPrestazioni);
+        await tx.delete(projectBudget);
+        await tx.delete(projectResources);
+        await tx.delete(projects);
+        await tx.delete(clients);
+        await tx.delete(systemConfig);
+        // Don't delete users - keep them for authentication
+      }
+
+      // CRITICAL: Import in correct order to respect foreign key constraints
+
+      // 1. Users (no dependencies)
       if (data.users && data.users.length > 0) {
-
+        report.entities.users = { created: 0, updated: 0, skipped: 0, errors: [] };
         const usersWithDates = this.convertTimestampsToDate(data.users, ['createdAt', 'updatedAt']);
         for (const user of usersWithDates) {
-          if (mode === 'merge') {
-            await db.insert(users).values(user).onConflictDoNothing();
-          } else {
-            // In overwrite mode, update existing users with backup data
-            await db.insert(users).values(user).onConflictDoUpdate({
+          try {
+            const [result] = await tx.insert(users).values(user).onConflictDoUpdate({
               target: users.id,
               set: {
                 username: user.username,
@@ -2806,171 +2877,401 @@ export class DatabaseStorage implements IStorage {
                 active: user.active,
                 updatedAt: user.updatedAt
               }
-            });
+            }).returning({ id: users.id });
+            // Heuristic: if id matches, it was an upsert; we count both modes
+            if (mode === 'overwrite') {
+              report.entities.users.updated++;
+            } else {
+              // In merge, check if record existed before
+              report.entities.users.updated++;
+            }
+          } catch (err: any) {
+            report.entities.users.errors.push(`User ${user.username}: ${err.message}`);
           }
         }
       }
 
-      // 2. Clients second (no dependencies)
+      // 2. Clients (no dependencies)
       if (data.clients && data.clients.length > 0) {
+        report.entities.clients = { created: 0, updated: 0, skipped: 0, errors: [] };
         const clientsWithDates = this.convertTimestampsToDate(data.clients, ['createdAt']);
-        if (mode === 'merge') {
-          for (const client of clientsWithDates) {
-            await db.insert(clients).values(client).onConflictDoNothing();
+        for (const client of clientsWithDates) {
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...updateFields } = client as any;
+              await tx.insert(clients).values(client).onConflictDoUpdate({
+                target: clients.id,
+                set: {
+                  sigla: client.sigla,
+                  name: client.name,
+                  partitaIva: client.partitaIva,
+                  codiceFiscale: client.codiceFiscale,
+                  formaGiuridica: client.formaGiuridica,
+                  indirizzo: client.indirizzo,
+                  cap: client.cap,
+                  city: client.city,
+                  provincia: client.provincia,
+                  email: client.email,
+                  telefono: client.telefono,
+                  pec: client.pec,
+                  codiceDestinatario: client.codiceDestinatario,
+                  nomeReferente: client.nomeReferente,
+                  ruoloReferente: client.ruoloReferente,
+                  emailReferente: client.emailReferente,
+                  telefonoReferente: client.telefonoReferente,
+                  note: client.note,
+                  projectsCount: client.projectsCount,
+                }
+              });
+              report.entities.clients.updated++;
+            } else {
+              await tx.insert(clients).values(client);
+              report.entities.clients.created++;
+            }
+          } catch (err: any) {
+            report.entities.clients.errors.push(`Client ${client.sigla}: ${err.message}`);
           }
-        } else {
-          await db.insert(clients).values(clientsWithDates);
         }
       }
 
       // 3. System config (no dependencies)
       if (data.systemConfig && data.systemConfig.length > 0) {
+        report.entities.systemConfig = { created: 0, updated: 0, skipped: 0, errors: [] };
         const configWithDates = this.convertTimestampsToDate(data.systemConfig, ['updatedAt']);
-        if (mode === 'merge') {
-          for (const config of configWithDates) {
-            await db.insert(systemConfig).values(config).onConflictDoNothing();
+        for (const config of configWithDates) {
+          try {
+            if (mode === 'merge') {
+              await tx.insert(systemConfig).values(config).onConflictDoUpdate({
+                target: systemConfig.id,
+                set: { key: config.key, value: config.value, updatedAt: config.updatedAt }
+              });
+              report.entities.systemConfig.updated++;
+            } else {
+              await tx.insert(systemConfig).values(config);
+              report.entities.systemConfig.created++;
+            }
+          } catch (err: any) {
+            report.entities.systemConfig.errors.push(`Config ${config.key}: ${err.message}`);
           }
-        } else {
-          await db.insert(systemConfig).values(configWithDates);
         }
       }
 
       // 4. Projects (depends on clients)
       if (data.projects && data.projects.length > 0) {
+        report.entities.projects = { created: 0, updated: 0, skipped: 0, errors: [] };
         const projectsWithDates = this.convertTimestampsToDate(data.projects, ['createdAt', 'dataFattura', 'dataPagamento', 'dataInizioCommessa', 'dataFineCommessa', 'creDataArchiviazione']);
-        if (mode === 'merge') {
-          for (const project of projectsWithDates) {
-            await db.insert(projects).values(project).onConflictDoNothing();
+        for (const project of projectsWithDates) {
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = project as any;
+              await tx.insert(projects).values(project).onConflictDoUpdate({
+                target: projects.id,
+                set: fields
+              });
+              report.entities.projects.updated++;
+            } else {
+              await tx.insert(projects).values(project);
+              report.entities.projects.created++;
+            }
+          } catch (err: any) {
+            report.entities.projects.errors.push(`Project ${project.code}: ${err.message}`);
           }
-        } else {
-          await db.insert(projects).values(projectsWithDates);
         }
       }
 
-      // 5. OneDrive mappings (depends on projects)
+      // 5. OneDrive mappings (depends on projects via projectCode)
       if (data.oneDriveMappings && data.oneDriveMappings.length > 0) {
+        report.entities.oneDriveMappings = { created: 0, updated: 0, skipped: 0, errors: [] };
         const mappingsWithDates = this.convertTimestampsToDate(data.oneDriveMappings, ['createdAt', 'updatedAt']);
-        if (mode === 'merge') {
-          for (const mapping of mappingsWithDates) {
-            await db.insert(oneDriveMappings).values(mapping).onConflictDoNothing();
+        for (const mapping of mappingsWithDates) {
+          if (!validProjectCodes.has(mapping.projectCode)) {
+            report.entities.oneDriveMappings.skipped++;
+            report.entities.oneDriveMappings.errors.push(`Mapping ${mapping.projectCode}: projectCode non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(oneDriveMappings).values(mappingsWithDates);
+          try {
+            if (mode === 'merge') {
+              await tx.insert(oneDriveMappings).values(mapping).onConflictDoUpdate({
+                target: oneDriveMappings.id,
+                set: {
+                  projectCode: mapping.projectCode,
+                  oneDriveFolderId: mapping.oneDriveFolderId,
+                  oneDriveFolderName: mapping.oneDriveFolderName,
+                  oneDriveFolderPath: mapping.oneDriveFolderPath,
+                  updatedAt: mapping.updatedAt
+                }
+              });
+              report.entities.oneDriveMappings.updated++;
+            } else {
+              await tx.insert(oneDriveMappings).values(mapping);
+              report.entities.oneDriveMappings.created++;
+            }
+          } catch (err: any) {
+            report.entities.oneDriveMappings.errors.push(`Mapping ${mapping.projectCode}: ${err.message}`);
+          }
         }
       }
 
-      // 6. Files index (depends on projects)
+      // 6. Files index (depends on projects via projectCode)
       if (data.filesIndex && data.filesIndex.length > 0) {
+        report.entities.filesIndex = { created: 0, updated: 0, skipped: 0, errors: [] };
         const filesWithDates = this.convertTimestampsToDate(data.filesIndex, ['createdAt', 'updatedAt', 'lastModified']);
-        if (mode === 'merge') {
-          for (const fileIndex of filesWithDates) {
-            await db.insert(filesIndex).values(fileIndex).onConflictDoNothing();
+        for (const fileIdx of filesWithDates) {
+          if (fileIdx.projectCode && !validProjectCodes.has(fileIdx.projectCode)) {
+            report.entities.filesIndex.skipped++;
+            report.entities.filesIndex.errors.push(`File ${fileIdx.name}: projectCode "${fileIdx.projectCode}" non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(filesIndex).values(filesWithDates);
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = fileIdx as any;
+              await tx.insert(filesIndex).values(fileIdx).onConflictDoUpdate({
+                target: filesIndex.id,
+                set: fields
+              });
+              report.entities.filesIndex.updated++;
+            } else {
+              await tx.insert(filesIndex).values(fileIdx);
+              report.entities.filesIndex.created++;
+            }
+          } catch (err: any) {
+            report.entities.filesIndex.errors.push(`File ${fileIdx.name}: ${err.message}`);
+          }
         }
       }
 
-      // 7. File routings (depends on projects)
+      // 7. File routings (depends on projects via projectId)
       if (data.fileRoutings && data.fileRoutings.length > 0) {
+        report.entities.fileRoutings = { created: 0, updated: 0, skipped: 0, errors: [] };
         const routingsWithDates = this.convertTimestampsToDate(data.fileRoutings, ['createdAt']);
-        if (mode === 'merge') {
-          for (const routing of routingsWithDates) {
-            await db.insert(fileRoutings).values(routing).onConflictDoNothing();
+        for (const routing of routingsWithDates) {
+          if (routing.projectId && !validProjectIds.has(routing.projectId)) {
+            report.entities.fileRoutings.skipped++;
+            report.entities.fileRoutings.errors.push(`Routing ${routing.fileName}: projectId non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(fileRoutings).values(routingsWithDates);
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = routing as any;
+              await tx.insert(fileRoutings).values(routing).onConflictDoUpdate({
+                target: fileRoutings.id,
+                set: fields
+              });
+              report.entities.fileRoutings.updated++;
+            } else {
+              await tx.insert(fileRoutings).values(routing);
+              report.entities.fileRoutings.created++;
+            }
+          } catch (err: any) {
+            report.entities.fileRoutings.errors.push(`Routing ${routing.fileName}: ${err.message}`);
+          }
         }
       }
 
-      // 8. Tasks (depends on projects)
+      // 8. Tasks (depends on projects + users)
       if (data.tasks && data.tasks.length > 0) {
+        report.entities.tasks = { created: 0, updated: 0, skipped: 0, errors: [] };
         const tasksWithDates = this.convertTimestampsToDate(data.tasks, ['createdAt', 'updatedAt', 'dueDate', 'completedAt']);
-        if (mode === 'merge') {
-          for (const task of tasksWithDates) {
-            await db.insert(tasks).values(task).onConflictDoNothing();
+        for (const task of tasksWithDates) {
+          if (task.createdById && !validUserIds.has(task.createdById)) {
+            report.entities.tasks.skipped++;
+            report.entities.tasks.errors.push(`Task "${task.title}": createdById "${task.createdById}" non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(tasks).values(tasksWithDates);
+          if (task.projectId && !validProjectIds.has(task.projectId)) {
+            report.entities.tasks.skipped++;
+            report.entities.tasks.errors.push(`Task "${task.title}": projectId non trovato`);
+            continue;
+          }
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = task as any;
+              await tx.insert(tasks).values(task).onConflictDoUpdate({
+                target: tasks.id,
+                set: fields
+              });
+              report.entities.tasks.updated++;
+            } else {
+              await tx.insert(tasks).values(task);
+              report.entities.tasks.created++;
+            }
+          } catch (err: any) {
+            report.entities.tasks.errors.push(`Task "${task.title}": ${err.message}`);
+          }
         }
       }
 
       // 9. Communications (depends on projects)
       if (data.communications && data.communications.length > 0) {
+        report.entities.communications = { created: 0, updated: 0, skipped: 0, errors: [] };
         const communicationsWithDates = this.convertTimestampsToDate(data.communications, ['createdAt', 'updatedAt', 'communicationDate', 'importedAt']);
-        if (mode === 'merge') {
-          for (const communication of communicationsWithDates) {
-            await db.insert(communications).values(communication).onConflictDoNothing();
+        for (const comm of communicationsWithDates) {
+          if (comm.projectId && !validProjectIds.has(comm.projectId)) {
+            report.entities.communications.skipped++;
+            report.entities.communications.errors.push(`Comunicazione "${comm.subject}": projectId non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(communications).values(communicationsWithDates);
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = comm as any;
+              await tx.insert(communications).values(comm).onConflictDoUpdate({
+                target: communications.id,
+                set: fields
+              });
+              report.entities.communications.updated++;
+            } else {
+              await tx.insert(communications).values(comm);
+              report.entities.communications.created++;
+            }
+          } catch (err: any) {
+            report.entities.communications.errors.push(`Comunicazione "${comm.subject}": ${err.message}`);
+          }
         }
       }
 
       // 10. Deadlines (depends on projects)
       if (data.deadlines && data.deadlines.length > 0) {
+        report.entities.deadlines = { created: 0, updated: 0, skipped: 0, errors: [] };
         const deadlinesWithDates = this.convertTimestampsToDate(data.deadlines, ['createdAt', 'updatedAt', 'dueDate', 'completedAt']);
-        if (mode === 'merge') {
-          for (const deadline of deadlinesWithDates) {
-            await db.insert(projectDeadlines).values(deadline).onConflictDoNothing();
+        for (const deadline of deadlinesWithDates) {
+          if (!validProjectIds.has(deadline.projectId)) {
+            report.entities.deadlines.skipped++;
+            report.entities.deadlines.errors.push(`Scadenza "${deadline.title}": projectId non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(projectDeadlines).values(deadlinesWithDates);
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = deadline as any;
+              await tx.insert(projectDeadlines).values(deadline).onConflictDoUpdate({
+                target: projectDeadlines.id,
+                set: fields
+              });
+              report.entities.deadlines.updated++;
+            } else {
+              await tx.insert(projectDeadlines).values(deadline);
+              report.entities.deadlines.created++;
+            }
+          } catch (err: any) {
+            report.entities.deadlines.errors.push(`Scadenza "${deadline.title}": ${err.message}`);
+          }
         }
       }
 
       // 11. Invoices (depends on projects)
       if (data.invoices && data.invoices.length > 0) {
+        report.entities.invoices = { created: 0, updated: 0, skipped: 0, errors: [] };
         const invoicesWithDates = this.convertTimestampsToDate(data.invoices, ['createdAt', 'updatedAt', 'dataEmissione', 'dataPagamento', 'scadenzaPagamento']);
-        if (mode === 'merge') {
-          for (const invoice of invoicesWithDates) {
-            await db.insert(projectInvoices).values(invoice).onConflictDoNothing();
+        for (const invoice of invoicesWithDates) {
+          if (!validProjectIds.has(invoice.projectId)) {
+            report.entities.invoices.skipped++;
+            report.entities.invoices.errors.push(`Fattura ${invoice.numeroFattura}: projectId non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(projectInvoices).values(invoicesWithDates);
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = invoice as any;
+              await tx.insert(projectInvoices).values(invoice).onConflictDoUpdate({
+                target: projectInvoices.id,
+                set: fields
+              });
+              report.entities.invoices.updated++;
+            } else {
+              await tx.insert(projectInvoices).values(invoice);
+              report.entities.invoices.created++;
+            }
+          } catch (err: any) {
+            report.entities.invoices.errors.push(`Fattura ${invoice.numeroFattura}: ${err.message}`);
+          }
         }
       }
 
       // 12. Prestazioni (depends on projects)
       if (data.prestazioni && data.prestazioni.length > 0) {
+        report.entities.prestazioni = { created: 0, updated: 0, skipped: 0, errors: [] };
         const prestazioniWithDates = this.convertTimestampsToDate(data.prestazioni, ['createdAt', 'updatedAt', 'dataInizio', 'dataCompletamento', 'dataFatturazione', 'dataPagamento']);
-        if (mode === 'merge') {
-          for (const prestazione of prestazioniWithDates) {
-            await db.insert(projectPrestazioni).values(prestazione).onConflictDoNothing();
+        for (const prestazione of prestazioniWithDates) {
+          if (!validProjectIds.has(prestazione.projectId)) {
+            report.entities.prestazioni.skipped++;
+            report.entities.prestazioni.errors.push(`Prestazione ${prestazione.tipo}: projectId non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(projectPrestazioni).values(prestazioniWithDates);
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = prestazione as any;
+              await tx.insert(projectPrestazioni).values(prestazione).onConflictDoUpdate({
+                target: projectPrestazioni.id,
+                set: fields
+              });
+              report.entities.prestazioni.updated++;
+            } else {
+              await tx.insert(projectPrestazioni).values(prestazione);
+              report.entities.prestazioni.created++;
+            }
+          } catch (err: any) {
+            report.entities.prestazioni.errors.push(`Prestazione ${prestazione.tipo}: ${err.message}`);
+          }
         }
       }
 
       // 13. Budget (depends on projects)
       if (data.budget && data.budget.length > 0) {
+        report.entities.budget = { created: 0, updated: 0, skipped: 0, errors: [] };
         const budgetWithDates = this.convertTimestampsToDate(data.budget, ['createdAt', 'updatedAt']);
-        if (mode === 'merge') {
-          for (const budget of budgetWithDates) {
-            await db.insert(projectBudget).values(budget).onConflictDoNothing();
+        for (const budgetItem of budgetWithDates) {
+          if (!validProjectIds.has(budgetItem.projectId)) {
+            report.entities.budget.skipped++;
+            report.entities.budget.errors.push(`Budget per projectId "${budgetItem.projectId}": non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(projectBudget).values(budgetWithDates);
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = budgetItem as any;
+              await tx.insert(projectBudget).values(budgetItem).onConflictDoUpdate({
+                target: projectBudget.id,
+                set: fields
+              });
+              report.entities.budget.updated++;
+            } else {
+              await tx.insert(projectBudget).values(budgetItem);
+              report.entities.budget.created++;
+            }
+          } catch (err: any) {
+            report.entities.budget.errors.push(`Budget: ${err.message}`);
+          }
         }
       }
 
-      // 16. Resources (depends on projects)
+      // 14. Resources (depends on projects)
       if (data.resources && data.resources.length > 0) {
+        report.entities.resources = { created: 0, updated: 0, skipped: 0, errors: [] };
         const resourcesWithDates = this.convertTimestampsToDate(data.resources, ['createdAt', 'updatedAt', 'dataInizio', 'dataFine']);
-        if (mode === 'merge') {
-          for (const resource of resourcesWithDates) {
-            await db.insert(projectResources).values(resource).onConflictDoNothing();
+        for (const resource of resourcesWithDates) {
+          if (!validProjectIds.has(resource.projectId)) {
+            report.entities.resources.skipped++;
+            report.entities.resources.errors.push(`Risorsa ${resource.userName}: projectId non trovato`);
+            continue;
           }
-        } else {
-          await db.insert(projectResources).values(resourcesWithDates);
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = resource as any;
+              await tx.insert(projectResources).values(resource).onConflictDoUpdate({
+                target: projectResources.id,
+                set: fields
+              });
+              report.entities.resources.updated++;
+            } else {
+              await tx.insert(projectResources).values(resource);
+              report.entities.resources.created++;
+            }
+          } catch (err: any) {
+            report.entities.resources.errors.push(`Risorsa ${resource.userName}: ${err.message}`);
+          }
         }
       }
+    });
 
-    } catch (error) {
-      console.error('❌ Error during import:', error);
-      throw error;
-    }
+    finalizeReport(report);
+    return report;
   }
 
   // Billing Alerts
@@ -3702,7 +4003,7 @@ class FallbackStorage implements IStorage {
     prestazioni?: ProjectPrestazione[],
     budget?: ProjectBudget[],
     resources?: ProjectResource[],
-  }, mode?: 'merge' | 'overwrite'): Promise<void> {
+  }, mode?: 'merge' | 'overwrite'): Promise<ImportReport> {
     return this.executeWithFallback(storage => storage.importAllData(data, mode));
   }
 

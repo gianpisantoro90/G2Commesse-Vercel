@@ -26,6 +26,7 @@ import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { type Project } from "@shared/schema";
 import { aiRouter, type RoutingResult } from "@/lib/ai-router";
 import oneDriveService, { type OneDriveFile } from "@/lib/onedrive-service";
+import { QK } from "@/lib/query-utils";
 
 interface ScannedFile extends OneDriveFile {
   mimeType?: string;
@@ -85,12 +86,12 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
 
   // Get projects for selection
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   // Get OneDrive mappings
   const { data: oneDriveMappings = [] } = useQuery({
-    queryKey: ["/api/onedrive/mappings"],
+    queryKey: QK.onedriveMappings,
     queryFn: async () => {
       const response = await fetch('/api/onedrive/mappings', { credentials: "include" });
       if (response.ok) {
@@ -498,7 +499,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         setSelectedFiles([]);
         setRoutingResults([]);
         setActiveTab("scan");
-        queryClient.invalidateQueries({ queryKey: ['onedrive-files'] });
+        queryClient.invalidateQueries({ queryKey: QK.onedriveFiles });
       }
     } finally {
       setIsMoving(false);
@@ -577,7 +578,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         setUploadedFiles([]);
         setRoutingResults([]);
         setActiveTab("scan");
-        queryClient.invalidateQueries({ queryKey: ['onedrive-files'] });
+        queryClient.invalidateQueries({ queryKey: QK.onedriveFiles });
       }
 
       if (errorCount > 0 && successCount === 0) {

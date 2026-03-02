@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { QK } from "@/lib/query-utils";
 import { usePaginatedQuery } from "@/lib/use-paginated-query";
 import DOMPurify from "dompurify";
 import { Button } from "@/components/ui/button";
@@ -307,7 +308,7 @@ function CommunicationForm({
             value={newTag}
             onChange={(e) => setNewTag(e.target.value)}
             placeholder="Aggiungi tag..."
-            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
           />
           <Button type="button" variant="outline" onClick={handleAddTag}>
             Aggiungi
@@ -574,7 +575,7 @@ function EmailSendDialog({
         description: "L'email è stata inviata con successo"
       });
 
-      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      queryClient.invalidateQueries({ queryKey: QK.communications });
       onOpenChange(false);
       setFormData({ to: '', subject: '', body: '' });
     } catch (error) {
@@ -673,7 +674,7 @@ export default function RegistroComunicazioni() {
   }, [searchTerm]);
 
   const { data: projects = [], isLoading: projectsLoading, error: projectsError } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   // Server-side paginated communications
@@ -722,7 +723,7 @@ export default function RegistroComunicazioni() {
       await apiRequest("POST", "/api/communications", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      queryClient.invalidateQueries({ queryKey: QK.communications });
       toast({
         title: "Comunicazione registrata",
         description: "La comunicazione è stata registrata con successo",
@@ -743,7 +744,7 @@ export default function RegistroComunicazioni() {
       await apiRequest("PATCH", `/api/communications/${id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      queryClient.invalidateQueries({ queryKey: QK.communications });
       toast({
         title: "Comunicazione aggiornata",
         description: "Le modifiche sono state salvate",
@@ -764,7 +765,7 @@ export default function RegistroComunicazioni() {
       await apiRequest("DELETE", `/api/communications/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      queryClient.invalidateQueries({ queryKey: QK.communications });
       toast({
         title: "Comunicazione eliminata",
         description: "La comunicazione è stata eliminata",
@@ -784,7 +785,7 @@ export default function RegistroComunicazioni() {
       await Promise.all(ids.map(id => apiRequest("DELETE", `/api/communications/${id}`)));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/communications"] });
+      queryClient.invalidateQueries({ queryKey: QK.communications });
       toast({
         title: "Comunicazioni eliminate",
         description: `${selectedIds.size} comunicazioni eliminate con successo`,

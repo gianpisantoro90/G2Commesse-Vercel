@@ -66,6 +66,8 @@ export const QK = {
   aiProjectHealth: ["/api/ai/project-health"] as const,
   aiProjectHealthDetail: (id: string) => [`/api/ai/project-health/${id}`] as const,
   aiInsights: ["/api/ai/insights"] as const,
+  aiFeatureConfigs: ["/api/ai/feature-configs"] as const,
+  aiAutoApproval: ["/api/ai/auto-approval"] as const,
   aiFeedbackStats: ["/api/ai/feedback-stats"] as const,
   aiCashFlowForecast: ["/api/ai/cashflow-forecast"] as const,
 

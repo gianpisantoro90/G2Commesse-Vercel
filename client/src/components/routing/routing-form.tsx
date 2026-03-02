@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { type Project } from "@shared/schema";
 import { aiRouter, type RoutingResult } from "@/lib/ai-router";
 import { useToast } from "@/hooks/use-toast";
+import { QK } from "@/lib/query-utils";
 import { CheckCircle, Loader2 } from "lucide-react";
 
 interface RoutingFormProps {
@@ -20,7 +21,7 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
   const { toast } = useToast();
 
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

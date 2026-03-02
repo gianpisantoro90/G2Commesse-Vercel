@@ -6,6 +6,7 @@ import { AlertCircle } from 'lucide-react';
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  compact?: boolean;
 }
 
 interface State {
@@ -62,7 +63,34 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      // Default error UI
+      // Compact section-level error UI (keeps layout intact)
+      if (this.props.compact) {
+        return (
+          <div className="flex items-center justify-center p-8">
+            <div className="max-w-md w-full">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Errore nel caricamento della sezione</AlertTitle>
+                <AlertDescription className="mt-2">
+                  <p className="mb-4 text-sm">
+                    Si è verificato un errore in questa sezione. Le altre sezioni dell'applicazione continuano a funzionare.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={this.handleReset} variant="outline">
+                      Riprova
+                    </Button>
+                    <Button size="sm" onClick={() => window.location.reload()}>
+                      Ricarica Pagina
+                    </Button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </div>
+          </div>
+        );
+      }
+
+      // Default full-page error UI
       return (
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="max-w-md w-full">

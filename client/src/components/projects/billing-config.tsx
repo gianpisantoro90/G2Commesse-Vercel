@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Settings, Save, RefreshCw, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { type BillingConfigData } from "@/lib/billing-calculations";
+import { QK } from "@/lib/query-utils";
 
 export function BillingConfig() {
   const { toast } = useToast();
@@ -18,7 +19,7 @@ export function BillingConfig() {
 
   // Fetch config
   const { data: config, isLoading } = useQuery<BillingConfigData>({
-    queryKey: ["/api/billing-config"],
+    queryKey: QK.billingConfig,
     queryFn: async () => {
       const res = await fetch('/api/billing-config', { credentials: 'include' });
       if (!res.ok) throw new Error('Errore nel caricamento configurazione');
@@ -42,7 +43,7 @@ export function BillingConfig() {
       await Promise.all(promises);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-config"] });
+      queryClient.invalidateQueries({ queryKey: QK.billingConfig });
       setHasChanges(false);
       toast({ title: "Configurazione salvata" });
     },
@@ -82,7 +83,7 @@ export function BillingConfig() {
       return res.json();
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
       toast({
         title: "Sincronizzazione completata",
         description: `Creati ${data.created} nuovi record in ${data.synced} progetti`,

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { type Project, type ProjectPrestazioni, type ProjectCost, type ProjectResource } from "@shared/schema";
+import { QK } from "@/lib/query-utils";
 
 // Tipologie di costo
 const COST_TYPES = [
@@ -90,19 +91,19 @@ export default function SezioneCosti() {
 
   // Fetch data
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"]
+    queryKey: QK.projects
   });
 
   const { data: resources = [] } = useQuery<ProjectResource[]>({
-    queryKey: ["/api/project-resources"]
+    queryKey: QK.projectResources
   });
 
   const { data: costs = [] } = useQuery<ProjectCost[]>({
-    queryKey: ["/api/project-costs"]
+    queryKey: QK.projectCosts
   });
 
   const { data: invoices = [] } = useQuery<any[]>({
-    queryKey: ["/api/invoices"]
+    queryKey: QK.invoices
   });
 
   // Mutations
@@ -123,7 +124,7 @@ export default function SezioneCosti() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/project-resources"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectResources });
       toast({ title: "Costo salvato", description: "Il costo risorsa è stato salvato con successo" });
       closeCostDialog();
     },
@@ -149,7 +150,7 @@ export default function SezioneCosti() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/project-costs"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectCosts });
       toast({ title: "Costo salvato", description: "Il costo è stato salvato con successo" });
       closeCostDialog();
     },
@@ -165,7 +166,7 @@ export default function SezioneCosti() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/project-resources"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectResources });
       toast({ title: "Eliminato", description: "Costo risorsa eliminato" });
     }
   });
@@ -177,7 +178,7 @@ export default function SezioneCosti() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/project-costs"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectCosts });
       toast({ title: "Eliminato", description: "Costo eliminato" });
     }
   });

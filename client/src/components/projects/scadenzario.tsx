@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { QK } from "@/lib/query-utils";
 import { type Project } from "@shared/schema";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
 import {
@@ -324,12 +325,12 @@ export default function Scadenzario() {
   const [itemsPerPage, setItemsPerPage] = useState<10 | 25 | 50>(10);
 
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   // Load deadlines from API
   const { data: deadlines = [] } = useQuery<Deadline[]>({
-    queryKey: ["/api/deadlines"],
+    queryKey: QK.deadlines,
   });
 
   const createMutation = useMutation({
@@ -337,7 +338,7 @@ export default function Scadenzario() {
       await apiRequest("POST", "/api/deadlines", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deadlines"] });
+      queryClient.invalidateQueries({ queryKey: QK.deadlines });
       toast({
         title: "Scadenza creata",
         description: "La scadenza è stata creata con successo",
@@ -358,7 +359,7 @@ export default function Scadenzario() {
       await apiRequest("PATCH", `/api/deadlines/${editingDeadline?.id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deadlines"] });
+      queryClient.invalidateQueries({ queryKey: QK.deadlines });
       toast({
         title: "Scadenza aggiornata",
         description: "Le modifiche sono state salvate",
@@ -382,7 +383,7 @@ export default function Scadenzario() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deadlines"] });
+      queryClient.invalidateQueries({ queryKey: QK.deadlines });
       toast({
         title: "Scadenza completata",
         description: "La scadenza è stata marcata come completata",
@@ -402,7 +403,7 @@ export default function Scadenzario() {
       await apiRequest("DELETE", `/api/deadlines/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/deadlines"] });
+      queryClient.invalidateQueries({ queryKey: QK.deadlines });
       toast({
         title: "Scadenza eliminata",
         description: "La scadenza è stata eliminata",

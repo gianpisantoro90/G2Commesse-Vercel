@@ -756,3 +756,24 @@ export interface AiChatMessage {
   timestamp: string;
 }
 
+// ============================================
+// IMPORT REPORT
+// ============================================
+
+export interface ImportEntityReport {
+  created: number;
+  updated: number;
+  skipped: number;
+  errors: string[];
+}
+
+export interface ImportReport {
+  mode: 'merge' | 'overwrite';
+  entities: Record<string, ImportEntityReport>;
+  totalCreated: number;
+  totalUpdated: number;
+  totalSkipped: number;
+  totalErrors: number;
+  success: boolean;
+}
+

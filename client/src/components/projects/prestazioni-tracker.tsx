@@ -23,6 +23,7 @@ import {
   Link as LinkIcon
 } from "lucide-react";
 import { type Project, type ProjectPrestazione, type ProjectInvoice, PRESTAZIONE_TIPI, PRESTAZIONE_STATI, LIVELLI_PROGETTAZIONE } from "@shared/schema";
+import { QK } from "@/lib/query-utils";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -76,12 +77,12 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
 
   // Fetch prestazioni del progetto
   const { data: prestazioni = [], isLoading } = useQuery<ProjectPrestazione[]>({
-    queryKey: [`/api/projects/${project.id}/prestazioni`],
+    queryKey: QK.projectPrestazioni(project.id),
   });
 
   // Fetch fatture del progetto (per collegamento)
   const { data: invoices = [] } = useQuery<ProjectInvoice[]>({
-    queryKey: [`/api/projects/${project.id}/invoices`],
+    queryKey: QK.projectInvoices(project.id),
   });
 
   // Create prestazione
@@ -97,8 +98,8 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${project.id}/prestazioni`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioniStats });
       toast({ title: "Prestazione aggiunta", description: "La prestazione è stata creata con successo" });
       resetForm();
     },
@@ -120,8 +121,8 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${project.id}/prestazioni`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioniStats });
       toast({ title: "Stato aggiornato", description: "Lo stato della prestazione è stato aggiornato" });
     },
     onError: () => {
@@ -144,8 +145,8 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/projects/${project.id}/prestazioni`] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni/stats"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioniStats });
       toast({ title: "Prestazione eliminata", description: "La prestazione è stata rimossa" });
     },
     onError: () => {

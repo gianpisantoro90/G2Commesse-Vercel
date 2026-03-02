@@ -147,6 +147,15 @@ export default function BillingFlow() {
   const [showStatusDetails, setShowStatusDetails] = useState<string | null>(null);
   const [showInvoiceManager, setShowInvoiceManager] = useState(false);
   const [invoiceFilter, setInvoiceFilter] = useState<string>("all");
+  const [isAddPrestazioneOpen, setIsAddPrestazioneOpen] = useState(false);
+  const [addPrestazioneProjectId, setAddPrestazioneProjectId] = useState<string | null>(null);
+  const [prestazioneForm, setPrestazioneForm] = useState({
+    tipo: "" as typeof PRESTAZIONE_TIPI[number] | "",
+    livelloProgettazione: "" as typeof LIVELLI_PROGETTAZIONE[number] | "",
+    descrizione: "",
+    importoPrevisto: 0,
+    note: "",
+  });
 
   // Invoice form
   const [invoiceForm, setInvoiceForm] = useState({
@@ -163,15 +172,15 @@ export default function BillingFlow() {
 
   // Fetch data
   const { data: projects = [], isLoading: loadingProjects } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   const { data: allPrestazioni = [], isLoading: loadingPrestazioni } = useQuery<ProjectPrestazione[]>({
-    queryKey: ["/api/prestazioni"],
+    queryKey: QK.prestazioni,
   });
 
   const { data: allInvoices = [], isLoading: loadingInvoices } = useQuery<ProjectInvoice[]>({
-    queryKey: ["/api/invoices"],
+    queryKey: QK.invoices,
   });
 
   // Fetch billing config thresholds
@@ -479,7 +488,7 @@ export default function BillingFlow() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
       toast({ title: "Stato aggiornato" });
     },
   });
@@ -496,8 +505,8 @@ export default function BillingFlow() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: QK.invoices });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
       toast({ title: "Fattura creata" });
       closeInvoiceDialog();
     },
@@ -515,8 +524,8 @@ export default function BillingFlow() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: QK.invoices });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
       toast({ title: "Fattura aggiornata" });
       closeInvoiceDialog();
     },
@@ -534,8 +543,8 @@ export default function BillingFlow() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: QK.invoices });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
       toast({ title: "Fattura incassata" });
     },
   });
@@ -550,8 +559,8 @@ export default function BillingFlow() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
+      queryClient.invalidateQueries({ queryKey: QK.invoices });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
       toast({ title: "Fattura eliminata" });
       closeInvoiceDialog();
     },
@@ -567,15 +576,83 @@ export default function BillingFlow() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/prestazioni"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
+      queryClient.invalidateQueries({ queryKey: QK.invoices });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
       toast({ title: "Prestazione eliminata" });
     },
     onError: () => {
       toast({ title: "Errore", description: "Impossibile eliminare la prestazione", variant: "destructive" });
     },
   });
+
+  // Create prestazione mutation
+  const createPrestazioneMutation = useMutation({
+    mutationFn: async ({ projectId, data }: { projectId: string; data: any }) => {
+      const res = await fetch(`/api/projects/${projectId}/prestazioni`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Errore nella creazione");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
+      toast({ title: "Prestazione creata", description: "La prestazione è stata aggiunta al progetto" });
+      closePrestazioneDialog();
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile creare la prestazione", variant: "destructive" });
+    },
+  });
+
+  // Sync all prestazioni from metadata
+  const syncAllPrestazioni = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/prestazioni/sync-all-from-metadata", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Errore sync");
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: QK.prestazioni });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
+      toast({ title: "Sync completato", description: data.message });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Errore nella sincronizzazione", variant: "destructive" });
+    },
+  });
+
+  const openPrestazioneDialog = (projectId: string) => {
+    setAddPrestazioneProjectId(projectId);
+    setPrestazioneForm({ tipo: "", livelloProgettazione: "", descrizione: "", importoPrevisto: 0, note: "" });
+    setIsAddPrestazioneOpen(true);
+  };
+
+  const closePrestazioneDialog = () => {
+    setIsAddPrestazioneOpen(false);
+    setAddPrestazioneProjectId(null);
+  };
+
+  const handleSavePrestazione = () => {
+    if (!addPrestazioneProjectId || !prestazioneForm.tipo) return;
+    createPrestazioneMutation.mutate({
+      projectId: addPrestazioneProjectId,
+      data: {
+        tipo: prestazioneForm.tipo,
+        livelloProgettazione: prestazioneForm.tipo === "progettazione" ? prestazioneForm.livelloProgettazione || null : null,
+        descrizione: prestazioneForm.descrizione || null,
+        importoPrevisto: Math.round(prestazioneForm.importoPrevisto * 100),
+        note: prestazioneForm.note || null,
+      },
+    });
+  };
 
   // Helpers
   const formatCurrency = (cents: number) => {
@@ -734,6 +811,20 @@ export default function BillingFlow() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => syncAllPrestazioni.mutate()}
+            disabled={syncAllPrestazioni.isPending}
+            title="Sincronizza prestazioni da metadata per tutte le commesse"
+          >
+            {syncAllPrestazioni.isPending ? (
+              <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-1" />
+            )}
+            Sync Prestazioni
+          </Button>
           <Button variant="outline" size="sm" onClick={() => setShowConfig(!showConfig)}>
             <Settings className="w-4 h-4 mr-1" />
             Config
@@ -1566,6 +1657,7 @@ export default function BillingFlow() {
               onDeletePrestazione={(prestazione) => {
                 deletePrestazioneMutation.mutate(prestazione.id);
               }}
+              onAddPrestazione={() => openPrestazioneDialog(project.id)}
               onCreateInvoice={(prestazione) => openInvoiceDialog(project, prestazione)}
               onEditInvoice={(invoice, prestazione) => openInvoiceDialog(project, prestazione, invoice)}
               onMarkAsPaid={(invoice) => markAsPaidMutation.mutate({ id: invoice.id, projectId: project.id })}
@@ -1875,6 +1967,105 @@ export default function BillingFlow() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* DIALOG AGGIUNGI PRESTAZIONE */}
+      <Dialog open={isAddPrestazioneOpen} onOpenChange={setIsAddPrestazioneOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Aggiungi Prestazione</DialogTitle>
+            <DialogDescription>
+              {addPrestazioneProjectId && (() => {
+                const p = projects.find(pr => pr.id === addPrestazioneProjectId);
+                return p ? `${p.code} - ${p.client}` : "";
+              })()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Tipo Prestazione *</Label>
+              <Select
+                value={prestazioneForm.tipo}
+                onValueChange={(v) => setPrestazioneForm({ ...prestazioneForm, tipo: v as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PRESTAZIONE_TIPI.map(tipo => (
+                    <SelectItem key={tipo} value={tipo}>
+                      {PRESTAZIONE_CONFIG[tipo]?.label || tipo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {prestazioneForm.tipo === "progettazione" && (
+              <div className="grid gap-2">
+                <Label>Livello Progettazione</Label>
+                <Select
+                  value={prestazioneForm.livelloProgettazione}
+                  onValueChange={(v) => setPrestazioneForm({ ...prestazioneForm, livelloProgettazione: v as any })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona livello" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {LIVELLI_PROGETTAZIONE.map(livello => (
+                      <SelectItem key={livello} value={livello}>
+                        {livello === "pfte" ? "PFTE" : livello === "definitivo" ? "Definitivo" : livello === "esecutivo" ? "Esecutivo" : "Variante"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="grid gap-2">
+              <Label>Importo Previsto (€)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={prestazioneForm.importoPrevisto}
+                onChange={(e) => setPrestazioneForm({ ...prestazioneForm, importoPrevisto: parseFloat(e.target.value) || 0 })}
+                placeholder="0.00"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Descrizione</Label>
+              <Input
+                value={prestazioneForm.descrizione}
+                onChange={(e) => setPrestazioneForm({ ...prestazioneForm, descrizione: e.target.value })}
+                placeholder="Descrizione opzionale"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Note</Label>
+              <Input
+                value={prestazioneForm.note}
+                onChange={(e) => setPrestazioneForm({ ...prestazioneForm, note: e.target.value })}
+                placeholder="Note opzionali"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closePrestazioneDialog}>Annulla</Button>
+            <Button
+              onClick={handleSavePrestazione}
+              disabled={!prestazioneForm.tipo || createPrestazioneMutation.isPending}
+            >
+              {createPrestazioneMutation.isPending ? (
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4 mr-1" />
+              )}
+              Aggiungi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1889,6 +2080,7 @@ interface ProjectBillingCardProps {
   onRegressStato: (prestazione: PrestazioneWithInvoices) => void;
   onChangeStato: (prestazione: PrestazioneWithInvoices, stato: string, data?: string) => void;
   onDeletePrestazione: (prestazione: PrestazioneWithInvoices) => void;
+  onAddPrestazione: () => void;
   onCreateInvoice: (prestazione?: PrestazioneWithInvoices) => void;
   onEditInvoice: (invoice: ProjectInvoice, prestazione?: PrestazioneWithInvoices) => void;
   onMarkAsPaid: (invoice: ProjectInvoice) => void;
@@ -1903,6 +2095,7 @@ function ProjectBillingCard({
   onRegressStato,
   onChangeStato,
   onDeletePrestazione,
+  onAddPrestazione,
   onCreateInvoice,
   onEditInvoice,
   onMarkAsPaid,
@@ -1954,6 +2147,10 @@ function ProjectBillingCard({
               style={{ width: `${project.totals.percentualeIncassato}%` }}
             />
           </div>
+          <Button size="sm" variant="outline" className="h-7 gap-1" onClick={onAddPrestazione}>
+            <Plus className="w-3 h-3" />
+            Prestazione
+          </Button>
         </div>
       </div>
       {project.object && (

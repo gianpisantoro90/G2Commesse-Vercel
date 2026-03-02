@@ -8,6 +8,7 @@ import { ChevronDown, ChevronRight, Filter, RotateCcw } from "lucide-react";
 import { ProjectStatusBadge } from "@/components/ui/status-badge";
 import { type Project, type ProjectPrestazioni } from "@shared/schema";
 import { getCategoriaById, type CategoriaOpera } from "@/lib/dm2016-tavole-ufficiali";
+import { QK } from "@/lib/query-utils";
 
 // Definizione macro-categorie
 const MACRO_CATEGORIE = [
@@ -74,7 +75,7 @@ export default function RequisitiTecnici() {
 
   // Fetch progetti
   const { data: projects = [], isLoading } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   // Estrai tutte le classificazioni con i dati della commessa

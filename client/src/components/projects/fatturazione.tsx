@@ -16,6 +16,7 @@ import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { ProjectCombobox } from "@/components/ui/project-combobox";
 import { calcInvoiceStats } from "@/lib/billing-calculations";
+import { QK } from "@/lib/query-utils";
 
 interface ProjectInvoice {
   id: string;
@@ -64,12 +65,12 @@ export default function Fatturazione() {
 
   // Fetch progetti
   const { data: projects } = useQuery<Project[]>({
-    queryKey: ["/api/projects"]
+    queryKey: QK.projects
   });
 
   // Fetch fatture
   const { data: invoices, isLoading } = useQuery<ProjectInvoice[]>({
-    queryKey: ["/api/project-invoices"]
+    queryKey: QK.projectInvoicesList
   });
 
   // Create/Update invoice mutation
@@ -91,7 +92,7 @@ export default function Fatturazione() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/project-invoices"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectInvoicesList });
       toast({
         title: editingInvoice ? "Fattura aggiornata" : "Fattura creata",
         description: "La fattura è stata salvata con successo"
@@ -118,7 +119,7 @@ export default function Fatturazione() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/project-invoices"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectInvoicesList });
       toast({
         title: "Fattura eliminata",
         description: "La fattura è stata rimossa con successo"
@@ -139,7 +140,7 @@ export default function Fatturazione() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/project-invoices"] });
+      queryClient.invalidateQueries({ queryKey: QK.projectInvoicesList });
       toast({
         title: "Stato aggiornato",
         description: "Lo stato della fattura è stato aggiornato"

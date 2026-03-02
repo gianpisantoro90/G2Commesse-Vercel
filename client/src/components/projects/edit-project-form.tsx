@@ -10,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { QK } from "@/lib/query-utils";
 import { insertProjectSchema, type Project, type InsertProject, type Client, type ProjectPrestazioni, type ProjectMetadata } from "@shared/schema";
 import {
   TIPO_RAPPORTO_CONFIG,
@@ -51,7 +52,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
 
   // Fetch existing clients
   const { data: clients = [] } = useQuery<Client[]>({
-    queryKey: ["/api/clients"],
+    queryKey: QK.clients,
   });
 
   const form = useForm<InsertProject>({
@@ -154,7 +155,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
         title: "Commessa aggiornata",
         description: "La commessa è stata aggiornata con successo",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
       setOpen(false);
     },
     onError: () => {

@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -652,6 +652,7 @@ export default function ClientsTable() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Aggiungi Nuovo Cliente</DialogTitle>
+            <DialogDescription>Inserisci i dati del nuovo cliente</DialogDescription>
           </DialogHeader>
 
           <Form {...addForm}>
@@ -786,6 +787,7 @@ export default function ClientsTable() {
             <DialogTitle>
               Commesse Cliente: {selectedClient?.name || 'Cliente'} ({selectedClient?.sigla})
             </DialogTitle>
+            <DialogDescription>Elenco delle commesse associate al cliente</DialogDescription>
           </DialogHeader>
           
           <div className="mt-4">
@@ -842,6 +844,7 @@ export default function ClientsTable() {
         <DialogContent className="w-full max-w-[95vw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Modifica Cliente</DialogTitle>
+            <DialogDescription>Modifica i dati del cliente</DialogDescription>
           </DialogHeader>
 
           <Form {...editForm}>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import oneDriveService from '@/lib/onedrive-service';
 import { useToast } from '@/hooks/use-toast';
+import { QK } from '@/lib/query-utils';
 import { type Project } from '@shared/schema';
 
 interface SyncStatus {
@@ -19,7 +20,7 @@ export function useOneDriveSync() {
 
   // Check OneDrive connection status (fixed state sync issue)
   const { data: connectionStatus, isSuccess } = useQuery({
-    queryKey: ['onedrive-connection'],
+    queryKey: QK.onedriveConnection,
     queryFn: async () => {
       const connected = await oneDriveService.testConnection();
       return connected;
@@ -34,13 +35,13 @@ export function useOneDriveSync() {
 
   // Get all projects for syncing (always enabled)
   const { data: projects, isLoading: projectsLoading } = useQuery({
-    queryKey: ['/api/projects']
+    queryKey: QK.projects
     // Remove enabled condition - we need projects for sync stats calculation
   }) as { data: Project[] | undefined, isLoading: boolean };
 
   // Get OneDrive mappings to include in sync stats
   const { data: oneDriveMappings, isLoading: mappingsLoading } = useQuery({
-    queryKey: ['/api/onedrive/mappings'],
+    queryKey: QK.onedriveMappings,
     enabled: isConnected
   }) as { data: any[] | undefined, isLoading: boolean };
 
@@ -100,7 +101,7 @@ export function useOneDriveSync() {
         description: `Il progetto ${project?.code} è stato sincronizzato con OneDrive`,
       });
       // Invalidate OneDrive mappings to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
+      queryClient.invalidateQueries({ queryKey: QK.onedriveMappings });
     },
     onError: (error, projectId) => {
       setSyncStatuses(prev => ({
@@ -191,7 +192,7 @@ export function useOneDriveSync() {
         description: message,
       });
       // Invalidate OneDrive mappings to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
+      queryClient.invalidateQueries({ queryKey: QK.onedriveMappings });
     },
     onError: (error) => {
       toast({
@@ -223,7 +224,7 @@ export function useOneDriveSync() {
         description: `File ${result.name} caricato con successo in OneDrive`,
       });
       // Invalidate OneDrive files query
-      queryClient.invalidateQueries({ queryKey: ['onedrive-files'] });
+      queryClient.invalidateQueries({ queryKey: QK.onedriveFiles });
     },
     onError: (error) => {
       toast({

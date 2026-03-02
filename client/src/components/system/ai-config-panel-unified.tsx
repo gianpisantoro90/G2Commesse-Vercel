@@ -15,6 +15,7 @@ import { testClaudeConnection } from "@/lib/ai-router";
 import { apiRequest } from "@/lib/queryClient";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
+import { QK } from "@/lib/query-utils";
 import {
   Eye, EyeOff, Check, AlertTriangle, Zap, Brain, Settings,
   Mail, MessageSquare, Activity, Bell, TrendingUp, FileText,
@@ -143,17 +144,17 @@ export default function AiConfigPanelUnified() {
 
   // ── Queries for feature config / auto-approval / feedback stats ──
   const { data: savedFeatureConfigs } = useQuery<FeatureConfig[]>({
-    queryKey: ["/api/ai/feature-configs"],
+    queryKey: QK.aiFeatureConfigs,
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
   const { data: savedAutoApproval } = useQuery<AutoApprovalConfig>({
-    queryKey: ["/api/ai/auto-approval"],
+    queryKey: QK.aiAutoApproval,
     queryFn: getQueryFn({ on401: "throw" }),
   });
 
   const { data: feedbackStats } = useQuery<FeedbackStats>({
-    queryKey: ["/api/ai/feedback-stats"],
+    queryKey: QK.aiFeedbackStats,
     queryFn: getQueryFn({ on401: "throw" }),
   });
 

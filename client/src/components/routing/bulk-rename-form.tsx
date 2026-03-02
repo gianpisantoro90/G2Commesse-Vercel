@@ -11,6 +11,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { Folder, FolderOpen, ChevronRight, ChevronDown, RefreshCw, Loader2 } from "lucide-react";
 import { type Project } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { QK } from "@/lib/query-utils";
 import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { oneDriveService, type OneDriveFile } from "@/lib/onedrive-service";
 
@@ -37,7 +38,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
   const { rootConfig } = useOneDriveRootConfig();
 
   const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects"],
+    queryKey: QK.projects,
   });
 
   // Check OneDrive connection and auto-load root folder on component mount

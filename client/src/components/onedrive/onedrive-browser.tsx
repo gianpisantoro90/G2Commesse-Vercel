@@ -29,6 +29,7 @@ import {
   FolderOpen
 } from "lucide-react";
 import oneDriveService, { OneDriveFile } from "@/lib/onedrive-service";
+import { QK } from "@/lib/query-utils";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { type Project } from '@shared/schema';
 
@@ -55,12 +56,12 @@ export default function OneDriveBrowser() {
 
   // Get projects for linking
   const { data: projects } = useQuery({
-    queryKey: ["/api/projects"]
+    queryKey: QK.projects
   }) as { data: Project[] | undefined };
 
   // Get current folder files
   const { data: currentFiles, isLoading: isLoadingFiles, refetch: refetchFiles, error: browseError } = useQuery({
-    queryKey: ['onedrive-browse', currentPath],
+    queryKey: QK.onedriveBrowse(currentPath),
     queryFn: async () => {
       const response = await fetch(`/api/onedrive/browse?path=${encodeURIComponent(currentPath)}`, { credentials: "include" });
       if (!response.ok) {
@@ -80,7 +81,7 @@ export default function OneDriveBrowser() {
 
   // Search files
   const { data: searchResults, isLoading: isSearching, error: searchError } = useQuery({
-    queryKey: ['onedrive-search', searchQuery],
+    queryKey: QK.onedriveSearch(searchQuery),
     queryFn: async () => {
       if (!searchQuery.trim()) return [];
       const response = await fetch(`/api/onedrive/search?q=${encodeURIComponent(searchQuery)}`, { credentials: "include" });
@@ -96,7 +97,7 @@ export default function OneDriveBrowser() {
 
   // Get folder hierarchy for tree view
   const { data: folderHierarchy, error: hierarchyError } = useQuery({
-    queryKey: ['onedrive-hierarchy'],
+    queryKey: QK.onedriveHierarchy,
     queryFn: async () => {
       const response = await fetch('/api/onedrive/hierarchy', { credentials: "include" });
       if (!response.ok) {
@@ -201,8 +202,8 @@ export default function OneDriveBrowser() {
       setLinkingFile(null);
       setSelectedProject("");
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ["/api/onedrive/mappings"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
+      queryClient.invalidateQueries({ queryKey: QK.onedriveMappings });
+      queryClient.invalidateQueries({ queryKey: QK.projects });
     },
     onError: (error: any) => {
       console.error('Project linking error:', error);
@@ -449,7 +450,7 @@ export default function OneDriveBrowser() {
             size="sm" 
             onClick={() => {
               refetchFiles();
-              queryClient.invalidateQueries({ queryKey: ['onedrive-hierarchy'] });
+              queryClient.invalidateQueries({ queryKey: QK.onedriveHierarchy });
             }}
             data-testid="button-refresh"
           >

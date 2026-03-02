@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Link } from "wouter";
+import { QK } from "@/lib/query-utils";
 
 interface BillingAlert {
   id: string;
@@ -129,7 +130,7 @@ export function BillingAlerts({
 
   // Fetch alerts
   const { data: alerts = [], isLoading: alertsLoading } = useQuery<BillingAlert[]>({
-    queryKey: ["/api/billing-alerts", { projectId, active: true }],
+    queryKey: [...QK.billingAlerts, { projectId, active: true }],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (projectId) params.append('projectId', projectId);
@@ -142,7 +143,7 @@ export function BillingAlerts({
 
   // Fetch stats
   const { data: stats } = useQuery<AlertStats>({
-    queryKey: ["/api/billing-alerts/stats"],
+    queryKey: QK.billingAlertsStats,
     queryFn: async () => {
       const res = await fetch('/api/billing-alerts/stats', { credentials: 'include' });
       if (!res.ok) throw new Error('Errore nel caricamento delle statistiche');
@@ -164,7 +165,7 @@ export function BillingAlerts({
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-alerts"] });
+      queryClient.invalidateQueries({ queryKey: QK.billingAlerts });
       toast({ title: "Alert ignorato" });
     },
   });
@@ -180,7 +181,7 @@ export function BillingAlerts({
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/billing-alerts"] });
+      queryClient.invalidateQueries({ queryKey: QK.billingAlerts });
       toast({ title: "Alert aggiornati" });
     },
   });
@@ -401,7 +402,7 @@ export function BillingAlerts({
 // Compact version for sidebar/header
 export function BillingAlertsBadge() {
   const { data: stats } = useQuery<AlertStats>({
-    queryKey: ["/api/billing-alerts/stats"],
+    queryKey: QK.billingAlertsStats,
     queryFn: async () => {
       const res = await fetch('/api/billing-alerts/stats', { credentials: 'include' });
       if (!res.ok) throw new Error('Errore');
