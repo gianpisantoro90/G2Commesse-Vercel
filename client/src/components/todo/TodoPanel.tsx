@@ -210,7 +210,7 @@ export default function TodoPanel() {
   };
 
   return (
-    <div className="animate-fade-in" data-testid="todo-panel">
+    <div data-testid="todo-panel">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
