@@ -39,7 +39,7 @@ export interface InvoiceStats {
  * Calculate aggregate invoice statistics from a list of invoices.
  * All amounts are in centesimi.
  */
-export function calcInvoiceStats(invoices: ProjectInvoice[]): InvoiceStats {
+export function calcInvoiceStats(invoices: Pick<ProjectInvoice, 'importoTotale' | 'stato'>[]): InvoiceStats {
   let importoTotale = 0;
   let importoPagato = 0;
   let emesse = 0;

@@ -3243,9 +3243,9 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
 
       // Batch-load related entities to avoid N+1 queries
-      const projectIds = [...new Set(alerts.map(a => a.projectId))];
-      const prestazioneIds = [...new Set(alerts.filter(a => a.prestazioneId).map(a => a.prestazioneId!))];
-      const invoiceIds = [...new Set(alerts.filter(a => a.invoiceId).map(a => a.invoiceId!))];
+      const projectIds = Array.from(new Set(alerts.map(a => a.projectId)));
+      const prestazioneIds = Array.from(new Set(alerts.filter(a => a.prestazioneId).map(a => a.prestazioneId!)));
+      const invoiceIds = Array.from(new Set(alerts.filter(a => a.invoiceId).map(a => a.invoiceId!)));
 
       const [allProjects, allPrestazioni, allInvoices] = await Promise.all([
         Promise.all(projectIds.map(id => storage.getProject(id))),
@@ -3887,9 +3887,8 @@ export async function registerRoutes(app: Express): Promise<void> {
         return res.status(404).json({ message: "Prestazione non trovata" });
       }
 
-      // Update project dates and metadata automatically
-      await updateProjectDatesFromPrestazioni(projectId);
-      await syncProjectMetadataPrestazioni(projectId);
+      // Update project dates automatically (metadata already synced by storage.deletePrestazione)
+      await billingAutomationService.updateProjectDatesFromPrestazioni(projectId);
 
       res.json({ message: "Prestazione eliminata con successo" });
     } catch (error) {
