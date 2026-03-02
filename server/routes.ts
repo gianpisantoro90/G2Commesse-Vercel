@@ -2310,16 +2310,22 @@ export async function registerRoutes(app: Express): Promise<void> {
           configured: true
         });
       } else {
-        // Salva automaticamente la configurazione di default nel database
-        // Questo garantisce che LAVORO_CORRENTE sia sempre la cartella di default
+        // Auto-save default config with real folderId from OneDrive
+        const folderPath = ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER;
+        let folderId = '';
+        try {
+          const items = await serverOneDriveService.listFiles('/');
+          const match = items.find((f: any) => f.name === folderPath.replace('/', ''));
+          if (match) folderId = match.id;
+        } catch { /* OneDrive not connected yet, save without ID */ }
+
         const defaultConfig = {
-          folderPath: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER,
-          folderId: '',
-          folderName: ONEDRIVE_DEFAULT_FOLDERS.ROOT_FOLDER.split('/').pop() || 'LAVORO_CORRENTE',
+          folderPath,
+          folderId,
+          folderName: folderPath.split('/').pop() || 'LAVORO_CORRENTE',
           lastUpdated: new Date().toISOString()
         };
 
-        // Salva il default nel database
         await storage.setSystemConfig('onedrive_root_folder', defaultConfig);
 
         res.json({
@@ -2330,6 +2336,17 @@ export async function registerRoutes(app: Express): Promise<void> {
     } catch (error) {
       console.error('Get root folder failed:', error);
       res.status(500).json({ error: 'Failed to get root folder configuration' });
+    }
+  });
+
+  // Reset root folder configuration
+  app.delete("/api/onedrive/root-folder", async (req, res) => {
+    try {
+      await storage.setSystemConfig('onedrive_root_folder', null);
+      res.json({ message: "Configurazione cartella radice rimossa" });
+    } catch (error) {
+      console.error('Error deleting root folder config:', error);
+      res.status(500).json({ message: "Errore nella rimozione della configurazione" });
     }
   });
 
@@ -3074,16 +3091,30 @@ export async function registerRoutes(app: Express): Promise<void> {
     try {
       const config = await storage.getSystemConfig('onedrive_archive_folder');
       if (!config || !config.value) {
-        // Restituisce il valore di default invece di 404
+        // Auto-save default config with real folderId from OneDrive
+        const folderPath = ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER;
+        let folderId = '';
+        try {
+          const items = await serverOneDriveService.listFiles('/');
+          const match = items.find((f: any) => f.name === folderPath.replace('/', ''));
+          if (match) folderId = match.id;
+        } catch { /* OneDrive not connected yet, save without ID */ }
+
+        const defaultConfig = {
+          folderPath,
+          folderId,
+          folderName: folderPath.split('/').pop() || 'LAVORI_CONCLUSI',
+          lastUpdated: new Date().toISOString()
+        };
+
+        await storage.setSystemConfig('onedrive_archive_folder', defaultConfig);
+
         return res.json({
-          config: {
-            folderPath: ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER,
-            folderName: ONEDRIVE_DEFAULT_FOLDERS.ARCHIVE_FOLDER.split('/').pop(),
-            isDefault: true
-          }
+          config: defaultConfig,
+          configured: true
         });
       }
-      res.json({ config: config.value });
+      res.json({ config: config.value, configured: true });
     } catch (error) {
       console.error('Error fetching archive folder config:', error);
       res.status(500).json({ message: "Errore nel recupero della configurazione archivio" });
