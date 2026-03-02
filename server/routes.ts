@@ -1586,10 +1586,11 @@ export async function registerRoutes(app: Express): Promise<void> {
           
           const validatedConfig = aiConfigSchema.parse(configToValidate);
           const modelToProvider: Record<string, 'anthropic' | 'deepseek'> = {
+            'claude-opus-4-6': 'anthropic',
+            'claude-sonnet-4-6': 'anthropic',
+            'claude-haiku-4-5-20251001': 'anthropic',
             'claude-sonnet-4-20250514': 'anthropic',
-            'claude-3-5-sonnet-20241022': 'anthropic',
-            'claude-3-haiku-20240307': 'anthropic',
-            'deepseek-r1': 'deepseek',
+            'deepseek-reasoner': 'deepseek',
             'deepseek-chat': 'deepseek',
           };
           
@@ -1711,14 +1712,14 @@ export async function registerRoutes(app: Express): Promise<void> {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: model || 'deepseek-r1',
+            model: model || 'deepseek-reasoner',
             messages: [{ role: 'user', content: 'test' }],
             max_tokens: 10,
           }),
         });
       } else {
         // Claude API (default)
-        const claudeModel = model?.startsWith('claude-') ? model : 'claude-sonnet-4-20250514';
+        const claudeModel = model?.startsWith('claude-') ? model : 'claude-sonnet-4-6';
         response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -1787,14 +1788,14 @@ export async function registerRoutes(app: Express): Promise<void> {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: model || 'deepseek-r1',
+            model: model || 'deepseek-reasoner',
             messages: [{ role: 'user', content: prompt }],
             max_tokens: 800,
           }),
         });
       } else {
         // Claude API (default)
-        const claudeModel = model?.startsWith('claude-') ? model : 'claude-sonnet-4-20250514';
+        const claudeModel = model?.startsWith('claude-') ? model : 'claude-sonnet-4-6';
         response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {

@@ -27,7 +27,7 @@ export interface LearnedPattern {
 }
 
 class AIFileRouter {
-  private currentModel: string = 'claude-sonnet-4-20250514';
+  private currentModel: string = 'claude-sonnet-4-6';
   private learnedPatterns: Record<string, string> = {};
   private isInitialized = false;
   private serverKeyAvailable = false;
@@ -53,7 +53,7 @@ class AIFileRouter {
       if (response.ok) {
         const { value } = await response.json();
         if (value) {
-          this.currentModel = value.model || 'claude-sonnet-4-20250514';
+          this.currentModel = value.model || 'claude-sonnet-4-6';
           this.serverKeyAvailable = true;
           return;
         }
@@ -61,7 +61,7 @@ class AIFileRouter {
     } catch {
       // Could not load server config
     }
-    this.currentModel = 'claude-sonnet-4-20250514';
+    this.currentModel = 'claude-sonnet-4-6';
     this.serverKeyAvailable = false;
   }
 

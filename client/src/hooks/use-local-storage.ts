@@ -105,7 +105,7 @@ export function useEncryptedLocalStorage<T>(
 export function useAIConfig() {
   return useEncryptedLocalStorage('ai_config', {
     apiKey: '',
-    model: 'claude-3-5-sonnet-latest',
+    model: 'claude-sonnet-4-6',
     autoRouting: true,
     contentAnalysis: true,
     learningMode: true,

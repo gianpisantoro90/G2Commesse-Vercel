@@ -175,7 +175,7 @@ class EmailService {
           if (typeof aiConfig === 'string') {
             config = {
               provider: 'anthropic',
-              model: 'claude-sonnet-4-20250514',
+              model: 'claude-sonnet-4-6',
               apiKey: aiConfig,
               autoRouting: true,
               contentAnalysis: true,
@@ -419,7 +419,7 @@ RISPOSTA IN JSON (esempio):
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-sonnet-4-6',
           max_tokens: 2000,
           messages: [
             {

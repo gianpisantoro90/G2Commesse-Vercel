@@ -35,10 +35,10 @@ const AI_PROVIDERS = {
   anthropic: {
     name: "Anthropic Claude",
     models: [
-      { id: 'claude-4-20250514', name: 'Claude 4.5 (Latest)', tokens: 800 },
-      { id: 'claude-sonnet-4-20250514', name: 'Claude 4 Sonnet', tokens: 800 },
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', tokens: 800 },
-      { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku (Fast)', tokens: 400 },
+      { id: 'claude-opus-4-6', name: 'Claude Opus 4.6 (Top)', tokens: 200 },
+      { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', tokens: 200 },
+      { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5 (Fast)', tokens: 200 },
+      { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4 (Legacy)', tokens: 200 },
     ],
     features: ['Routing intelligente', 'Analisi documenti', 'Pattern matching'],
     color: 'bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800'
@@ -46,8 +46,8 @@ const AI_PROVIDERS = {
   deepseek: {
     name: "DeepSeek",
     models: [
-      { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner (Ragionamento)', tokens: 800 },
-      { id: 'deepseek-chat', name: 'DeepSeek Chat', tokens: 400 },
+      { id: 'deepseek-reasoner', name: 'DeepSeek V3.2 Reasoner (Ragionamento)', tokens: 128 },
+      { id: 'deepseek-chat', name: 'DeepSeek V3.2 Chat', tokens: 128 },
     ],
     features: ['Chain-of-thought', 'Analisi profonda', 'Ragionamento esteso'],
     color: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
@@ -91,20 +91,21 @@ const FEATURES = [
 
 const PROVIDER_MODELS = {
   anthropic: [
-    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4' },
-    { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet' },
-    { id: 'claude-3-haiku-20240307', name: 'Claude 3 Haiku (Veloce)' },
+    { id: 'claude-opus-4-6', name: 'Claude Opus 4.6' },
+    { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
+    { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5 (Veloce)' },
+    { id: 'claude-sonnet-4-20250514', name: 'Claude Sonnet 4 (Legacy)' },
   ],
   deepseek: [
-    { id: 'deepseek-reasoner', name: 'DeepSeek Reasoner' },
-    { id: 'deepseek-chat', name: 'DeepSeek Chat' },
+    { id: 'deepseek-reasoner', name: 'DeepSeek V3.2 Reasoner' },
+    { id: 'deepseek-chat', name: 'DeepSeek V3.2 Chat' },
   ],
 };
 
 const DEFAULT_FEATURE_CONFIG: FeatureConfig = {
   feature: '',
   provider: 'anthropic',
-  model: 'claude-sonnet-4-20250514',
+  model: 'claude-sonnet-4-6',
   enabled: true,
 };
 
@@ -119,7 +120,7 @@ export default function AiConfigPanelUnified() {
   const [lastSync, setLastSync] = useState<string>("");
   const [isTesting, setIsTesting] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<'anthropic' | 'deepseek'>('anthropic');
-  const [savedModel, setSavedModel] = useState("claude-sonnet-4-20250514");
+  const [savedModel, setSavedModel] = useState("claude-sonnet-4-6");
   const [hasServerKey, setHasServerKey] = useState(false);
 
   const form = useForm<AiConfigForm>({
@@ -235,10 +236,10 @@ export default function AiConfigPanelUnified() {
       setSavedModel(data.model);
 
       const modelToProvider: Record<string, 'anthropic' | 'deepseek'> = {
-        'claude-4-20250514': 'anthropic',
+        'claude-opus-4-6': 'anthropic',
+        'claude-sonnet-4-6': 'anthropic',
+        'claude-haiku-4-5-20251001': 'anthropic',
         'claude-sonnet-4-20250514': 'anthropic',
-        'claude-3-5-sonnet-20241022': 'anthropic',
-        'claude-3-haiku-20240307': 'anthropic',
         'deepseek-reasoner': 'deepseek',
         'deepseek-chat': 'deepseek',
       };
