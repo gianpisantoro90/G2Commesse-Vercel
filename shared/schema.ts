@@ -388,24 +388,6 @@ export const projectDeadlines = pgTable("project_deadlines", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Gestione SAL (Stati Avanzamento Lavori)
-export const projectSAL = pgTable("project_sal", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  numero: integer("numero").notNull(), // Numero progressivo SAL
-  descrizione: text("descrizione"),
-  percentualeAvanzamento: integer("percentuale_avanzamento").notNull(), // 0-100
-  importoLavori: integer("importo_lavori").default(0), // In centesimi di euro
-  importoContabilizzato: integer("importo_contabilizzato").default(0),
-  dataEmissione: timestamp("data_emissione").notNull(),
-  dataApprovazione: timestamp("data_approvazione"),
-  stato: text("stato").notNull().default("bozza"), // 'bozza', 'emesso', 'approvato', 'fatturato'
-  note: text("note"),
-  attachments: jsonb("attachments").default([]),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
 // Tipi di fattura per prestazione
 export const TIPO_FATTURA = ['acconto', 'sal', 'saldo', 'unica'] as const;
 export type TipoFattura = typeof TIPO_FATTURA[number];
@@ -414,7 +396,7 @@ export type TipoFattura = typeof TIPO_FATTURA[number];
 export const projectInvoices = pgTable("project_invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  salId: text("sal_id").references(() => projectSAL.id), // Opzionale: collegamento a SAL
+  salId: text("sal_id"), // Opzionale: collegamento a SAL (FK reference removed - table dropped from schema)
   prestazioneId: text("prestazione_id").references(() => projectPrestazioni.id, { onDelete: "cascade" }), // Collegamento a prestazione - cascade delete
   tipoFattura: text("tipo_fattura").default("unica"), // 'acconto', 'sal', 'saldo', 'unica'
   numeroFattura: text("numero_fattura").notNull(),
@@ -481,20 +463,6 @@ export const projectPrestazioni = pgTable("project_prestazioni", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Changelog - Storico modifiche progetti
-export const projectChangelog = pgTable("project_changelog", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  action: text("action").notNull(), // 'created', 'updated', 'deleted', 'status_changed'
-  field: text("field"), // Campo modificato (es: 'status', 'client', 'metadata.prestazioni')
-  oldValue: text("old_value"), // Valore precedente (JSON stringificato se complesso)
-  newValue: text("new_value"), // Nuovo valore
-  description: text("description"), // Descrizione human-readable della modifica
-  userId: text("user_id"), // ID utente che ha fatto la modifica
-  userName: text("user_name"), // Nome utente
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Budget e costi per commessa
 export const projectBudget = pgTable("project_budget", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -542,18 +510,6 @@ export const projectResources = pgTable("project_resources", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Filtri salvati per ricerca
-export const savedFilters = pgTable("saved_filters", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  description: text("description"),
-  filterConfig: jsonb("filter_config").notNull(), // Configurazione filtri salvata
-  isDefault: boolean("is_default").default(false),
-  userId: text("user_id"), // Per supporto multi-utente futuro
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
 // Tasks - Sistema gestione To Do
 export const tasks = pgTable("tasks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -576,12 +532,6 @@ export const tasks = pgTable("tasks", {
 // ============================================
 
 export const insertProjectDeadlineSchema = createInsertSchema(projectDeadlines).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertProjectSALSchema = createInsertSchema(projectSAL).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -625,11 +575,6 @@ export const updatePrestazioneStatoSchema = z.object({
   note: z.string().optional(),
 });
 
-export const insertProjectChangelogSchema = createInsertSchema(projectChangelog).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertProjectBudgetSchema = createInsertSchema(projectBudget).omit({
   id: true,
   createdAt: true,
@@ -643,12 +588,6 @@ export const insertProjectCostSchema = createInsertSchema(projectCosts).omit({
 });
 
 export const insertProjectResourceSchema = createInsertSchema(projectResources).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertSavedFilterSchema = createInsertSchema(savedFilters).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -671,14 +610,8 @@ export type InsertProjectDeadline = z.infer<typeof insertProjectDeadlineSchema>;
 export type ProjectDeadline = typeof projectDeadlines.$inferSelect;
 export type Deadline = ProjectDeadline; // Alias for convenience
 
-export type InsertProjectSAL = z.infer<typeof insertProjectSALSchema>;
-export type ProjectSAL = typeof projectSAL.$inferSelect;
-
 export type InsertProjectInvoice = z.infer<typeof insertProjectInvoiceSchema>;
 export type ProjectInvoice = typeof projectInvoices.$inferSelect;
-
-export type InsertProjectChangelog = z.infer<typeof insertProjectChangelogSchema>;
-export type ProjectChangelog = typeof projectChangelog.$inferSelect;
 
 export type InsertProjectBudget = z.infer<typeof insertProjectBudgetSchema>;
 export type ProjectBudget = typeof projectBudget.$inferSelect;
@@ -688,9 +621,6 @@ export type ProjectCost = typeof projectCosts.$inferSelect;
 
 export type InsertProjectResource = z.infer<typeof insertProjectResourceSchema>;
 export type ProjectResource = typeof projectResources.$inferSelect;
-
-export type InsertSavedFilter = z.infer<typeof insertSavedFilterSchema>;
-export type SavedFilter = typeof savedFilters.$inferSelect;
 
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type Task = typeof tasks.$inferSelect;
@@ -816,78 +746,13 @@ export interface PrestazioniStats {
 }
 
 // ============================================
-// AI CONVERSATIONS & FEEDBACK
+// AI CHAT MESSAGE STRUCTURE
 // ============================================
 
-// AI Chat conversations
-export const aiConversations = pgTable("ai_conversations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  title: text("title"), // Auto-generated from first message
-  messages: jsonb("messages").default([]), // Array of {role, content, timestamp}
-  context: jsonb("context"), // Snapshot of system context used
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertAiConversationSchema = createInsertSchema(aiConversations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertAiConversation = z.infer<typeof insertAiConversationSchema>;
-export type AiConversation = typeof aiConversations.$inferSelect;
-
-// AI Chat message structure
+// AI Chat message structure (used by ai-assistant.ts)
 export interface AiChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
 }
 
-// AI Feedback for learning mode
-export const aiFeedback = pgTable("ai_feedback", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  communicationId: text("communication_id").references(() => communications.id, { onDelete: "cascade" }),
-  feedbackType: text("feedback_type").notNull(), // 'project_match', 'task_suggestion', 'deadline_suggestion', 'spam_detection'
-  action: text("action").notNull(), // 'approved', 'dismissed', 'corrected'
-  aiSuggestion: jsonb("ai_suggestion"), // What AI suggested
-  userCorrection: jsonb("user_correction"), // What user chose instead (if corrected)
-  aiConfidence: integer("ai_confidence"), // Original AI confidence (0-100)
-  userId: text("user_id").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const insertAiFeedbackSchema = createInsertSchema(aiFeedback).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type InsertAiFeedback = z.infer<typeof insertAiFeedbackSchema>;
-export type AiFeedback = typeof aiFeedback.$inferSelect;
-
-// AI Insights (proactive suggestions)
-export const aiInsights = pgTable("ai_insights", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  type: text("type").notNull(), // 'billing', 'deadline', 'communication', 'project_health', 'financial'
-  priority: text("priority").notNull().default("medium"), // 'low', 'medium', 'high', 'urgent'
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  projectId: text("project_id").references(() => projects.id, { onDelete: "cascade" }),
-  actionSuggestion: text("action_suggestion"), // Suggested action to resolve
-  data: jsonb("data"), // Additional data (amounts, dates, etc.)
-  status: text("status").notNull().default("active"), // 'active', 'dismissed', 'resolved'
-  dismissedBy: text("dismissed_by").references(() => users.id),
-  dismissedAt: timestamp("dismissed_at"),
-  resolvedAt: timestamp("resolved_at"),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
-export const insertAiInsightSchema = createInsertSchema(aiInsights).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type InsertAiInsight = z.infer<typeof insertAiInsightSchema>;
-export type AiInsight = typeof aiInsights.$inferSelect;

@@ -2,7 +2,6 @@ import { lazy, Suspense } from "react";
 import { PageFallback } from "@/components/layout/page-fallback";
 
 const AiConfigPanelUnified = lazy(() => import("@/components/system/ai-config-panel-unified"));
-const AiFeatureConfigPanel = lazy(() => import("@/components/ai-assistant/ai-feature-config-panel"));
 
 export default function AiConfigPage() {
   return (
@@ -12,12 +11,7 @@ export default function AiConfigPage() {
         <p className="text-sm text-muted-foreground">Modello AI, provider e funzionalita</p>
       </div>
       <Suspense fallback={<PageFallback />}>
-        <div className="space-y-8">
-          <AiConfigPanelUnified />
-          <div className="border-t border-border pt-8">
-            <AiFeatureConfigPanel />
-          </div>
-        </div>
+        <AiConfigPanelUnified />
       </Suspense>
     </div>
   );

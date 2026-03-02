@@ -116,7 +116,6 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       setBrowseFiles(files);
       setBrowseCurrentPath(path);
     } catch (error) {
-      console.error('Error loading OneDrive folder:', error);
       toast({
         title: "Errore",
         description: "Impossibile caricare la cartella OneDrive",
@@ -216,7 +215,6 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       });
       
     } catch (error: any) {
-      console.error('Error scanning OneDrive folder:', error);
       toast({
         title: "Errore nella scansione",
         description: "Impossibile accedere alla cartella OneDrive selezionata",
@@ -274,7 +272,6 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       });
       
     } catch (error: any) {
-      console.error('Error refreshing file scan:', error);
       toast({
         title: "Errore aggiornamento",
         description: "Impossibile aggiornare la lista dei file - controlla la connessione OneDrive",
@@ -365,7 +362,6 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
       }
 
     } catch (error) {
-      console.error('Bulk rename error:', error);
       toast({
         title: "Errore nella rinominazione",
         description: "Si è verificato un errore durante il processo di rinominazione",

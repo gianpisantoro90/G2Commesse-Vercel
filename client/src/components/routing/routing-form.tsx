@@ -74,7 +74,6 @@ export default function RoutingForm({ onAnalysisComplete }: RoutingFormProps) {
       });
       
     } catch (error) {
-      console.error('Routing analysis failed:', error);
       toast({
         title: "Errore analisi AI",
         description: error instanceof Error ? error.message : "Errore durante l'analisi AI dei file",

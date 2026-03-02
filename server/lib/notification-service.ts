@@ -251,6 +251,12 @@ class NotificationService {
       const deadlines = await storage.getAllDeadlines();
       const now = new Date();
 
+      // Pre-fetch all projects and users once to avoid N+1 queries
+      const allProjects = await storage.getAllProjects();
+      const projectMap = new Map<number, any>(allProjects.map((p: any) => [p.id, p]));
+      const allUsers = await storage.getAllUsers();
+      const admins = allUsers.filter((u: any) => u.role === 'admin');
+
       for (const deadline of deadlines) {
         // Skip completed deadlines or those without notification settings
         if (deadline.status === 'completed' || !deadline.notifyDaysBefore) continue;
@@ -260,9 +266,7 @@ class NotificationService {
 
         // Notify admins when deadline is approaching within notifyDaysBefore range
         if (daysUntil > 0 && daysUntil <= deadline.notifyDaysBefore) {
-          const project = await storage.getProject(deadline.projectId);
-          const users = await storage.getAllUsers();
-          const admins = users.filter((u: any) => u.role === 'admin');
+          const project = projectMap.get(deadline.projectId);
 
           for (const admin of admins) {
             this.sendNotification({
@@ -277,9 +281,7 @@ class NotificationService {
 
         // Urgent notification for overdue deadlines
         if (daysUntil < 0 && deadline.status === 'pending') {
-          const project = await storage.getProject(deadline.projectId);
-          const users = await storage.getAllUsers();
-          const admins = users.filter((u: any) => u.role === 'admin');
+          const project = projectMap.get(deadline.projectId);
 
           for (const admin of admins) {
             this.sendNotification({

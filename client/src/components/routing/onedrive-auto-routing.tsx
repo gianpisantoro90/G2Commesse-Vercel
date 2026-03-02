@@ -373,7 +373,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           });
 
         } catch (error) {
-          console.error(`❌ Failed to analyze ${selectedFile.name}:`, error);
           results.push({
             file: selectedFile,
             suggestedPath: 'MATERIALE_RICEVUTO/',
@@ -392,7 +391,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
         description: `${results.length} file analizzati con AI`,
       });
     } catch (error) {
-      console.error('Analysis failed:', error);
       toast({
         title: "Errore analisi",
         description: "Impossibile completare l'analisi AI",
@@ -476,7 +474,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           successCount++;
         } catch (error) {
           errorCount++;
-          console.error(`❌ Failed to move ${result.file.name}:`, error);
         }
       }
 
@@ -564,7 +561,6 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
           
         } catch (error) {
           errorCount++;
-          console.error(`❌ Failed to upload ${result.file.name}:`, error);
         }
       }
 

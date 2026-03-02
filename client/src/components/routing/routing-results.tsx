@@ -104,7 +104,6 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
       });
       
     } catch (error) {
-      console.error('Errore nel spostamento file:', error);
       toast({
         title: "Errore nello spostamento",
         description: "Impossibile spostare il file. Verifica i permessi.",
@@ -156,7 +155,6 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
         description: `Sposta manualmente "${finalFileName}" in: ${targetPath}`,
       });
     } catch (error) {
-      console.error('Download fallback error:', error);
       throw error;
     }
   };
@@ -176,7 +174,6 @@ export default function RoutingResults({ results, project, onClear }: RoutingRes
       
       await apiRequest('POST', '/api/file-routings', requestData);
     } catch (error) {
-      console.error('Error saving file routing record:', error);
       // Don't throw - this is not critical for the user experience
     }
   };
