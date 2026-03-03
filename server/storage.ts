@@ -1804,14 +1804,24 @@ export class DatabaseStorage implements IStorage {
     const allClients = await this.getAllClients();
 
     // Build lookup maps for clients
-    const validClientIds = new Set<string>();
+    const clientById = new Map<string, Client>();
     const clientByName = new Map<string, Client>();
     const clientBySigla = new Map<string, Client>();
     for (const client of allClients) {
-      validClientIds.add(client.id);
+      clientById.set(client.id, client);
       clientByName.set(client.name.trim().toLowerCase(), client);
       clientBySigla.set(client.sigla.trim().toLowerCase(), client);
     }
+
+    // Helper: find the correct client for a project based on project.client (name)
+    const findClientByProjectName = (projectClientName: string): Client | undefined => {
+      const nameKey = projectClientName.trim().toLowerCase();
+      const byName = clientByName.get(nameKey);
+      if (byName) return byName;
+      // Fallback: try matching by generated sigla
+      const sigla = this.generateSafeAcronym(projectClientName).toLowerCase();
+      return clientBySigla.get(sigla);
+    };
 
     // Resolve clientId for every project and count
     const projectCounts = new Map<string, number>();
@@ -1820,22 +1830,28 @@ export class DatabaseStorage implements IStorage {
       let resolvedClientId = project.clientId;
       let needsUpdate = false;
 
-      // If clientId is missing OR points to a non-existent client, resolve from name
-      if (!resolvedClientId || !validClientIds.has(resolvedClientId)) {
+      if (resolvedClientId && clientById.has(resolvedClientId)) {
+        // clientId exists and points to a valid client — verify name matches
+        const linkedClient = clientById.get(resolvedClientId)!;
+        const projectName = project.client?.trim().toLowerCase();
+        const clientName = linkedClient.name.trim().toLowerCase();
+
+        if (projectName && projectName !== clientName) {
+          // Name mismatch! project.client says one name, clientId points to another.
+          // Trust the project.client name and reassign to the correct client.
+          const correctClient = findClientByProjectName(project.client);
+          if (correctClient && correctClient.id !== resolvedClientId) {
+            resolvedClientId = correctClient.id;
+            needsUpdate = true;
+          }
+        }
+      } else {
+        // clientId missing or points to non-existent client — resolve from name
         resolvedClientId = null;
         if (project.client) {
-          // Try exact name match (case-insensitive)
-          const nameKey = project.client.trim().toLowerCase();
-          const matchedClient = clientByName.get(nameKey);
-          if (matchedClient) {
-            resolvedClientId = matchedClient.id;
-          } else {
-            // Fallback: try matching by generated sigla
-            const sigla = this.generateSafeAcronym(project.client).toLowerCase();
-            const matchedBySigla = clientBySigla.get(sigla);
-            if (matchedBySigla) {
-              resolvedClientId = matchedBySigla.id;
-            }
+          const correctClient = findClientByProjectName(project.client);
+          if (correctClient) {
+            resolvedClientId = correctClient.id;
           }
         }
         needsUpdate = true;
