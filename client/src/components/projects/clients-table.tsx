@@ -352,13 +352,10 @@ export default function ClientsTable() {
 
   // Handle delete client
   const handleDeleteClient = async (client: Client) => {
-    // Filtro robusto: confronta case-insensitive e trimmed, gestisce null/undefined
-    // IMPORTANTE: project.client contiene il NOME completo, non la sigla!
-    const clientName = client.name?.trim().toLowerCase();
-    const clientProjectsCount = allProjects.filter(project => {
-      const projectClient = project.client?.trim().toLowerCase();
-      return projectClient && clientName && projectClient === clientName;
-    }).length;
+    // Usa la FK clientId per contare le commesse associate (coerente con il vincolo DB)
+    const clientProjectsCount = allProjects.filter(project =>
+      project.clientId === client.id
+    ).length;
 
     if (clientProjectsCount > 0) {
       toast({

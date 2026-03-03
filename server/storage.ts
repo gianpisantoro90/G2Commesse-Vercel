@@ -324,7 +324,6 @@ export class MemStorage implements IStorage {
       tipoRapporto: insertProject.tipoRapporto || "diretto",
       committenteFinale: insertProject.committenteFinale || null,
       createdAt: new Date(),
-      fsRoot: insertProject.fsRoot || null,
       metadata: insertProject.metadata || {},
       fatturato: insertProject.fatturato || null,
       numeroFattura: insertProject.numeroFattura || null,
@@ -981,7 +980,6 @@ export class MemStorage implements IStorage {
     const invoice: ProjectInvoice = {
       ...insertInvoice,
       id,
-      salId: insertInvoice.salId || null,
       importoParcella: insertInvoice.importoParcella || 0,
       ritenuta: insertInvoice.ritenuta || 0,
       scadenzaPagamento: insertInvoice.scadenzaPagamento || null,
@@ -1715,7 +1713,6 @@ export class DatabaseStorage implements IStorage {
       .values({
         ...insertProject,
         clientId: clientId,
-        fsRoot: insertProject.fsRoot || null,
         metadata: insertProject.metadata || {},
       })
       .returning();
@@ -1737,15 +1734,16 @@ export class DatabaseStorage implements IStorage {
     if (!project) return false;
     
     await db.delete(projects).where(eq(projects.id, id));
-    
-    // Update client projects count
-    const clientSigla = this.generateSafeAcronym(project.client);
-    const client = await this.getClientBySigla(clientSigla);
-    if (client && (client.projectsCount || 0) > 0) {
-      await db
-        .update(clients)
-        .set({ projectsCount: (client.projectsCount || 0) - 1 })
-        .where(eq(clients.id, client.id));
+
+    // Update client projects count using FK relationship
+    if (project.clientId) {
+      const client = await this.getClient(project.clientId);
+      if (client && (client.projectsCount || 0) > 0) {
+        await db
+          .update(clients)
+          .set({ projectsCount: (client.projectsCount || 0) - 1 })
+          .where(eq(clients.id, client.id));
+      }
     }
     
     return true;
@@ -1805,17 +1803,19 @@ export class DatabaseStorage implements IStorage {
     const allProjects = await this.getAllProjects();
     const allClients = await this.getAllClients();
 
-    // Count projects for each client by matching client name
+    // Count projects by clientId (FK relationship) — reliable, not name-based
     const projectCounts = new Map<string, number>();
 
     for (const project of allProjects) {
-      const count = projectCounts.get(project.client) || 0;
-      projectCounts.set(project.client, count + 1);
+      if (project.clientId) {
+        const count = projectCounts.get(project.clientId) || 0;
+        projectCounts.set(project.clientId, count + 1);
+      }
     }
 
     // Update each client's projectsCount in database
     for (const client of allClients) {
-      const count = projectCounts.get(client.name) || 0;
+      const count = projectCounts.get(client.id) || 0;
       if (client.projectsCount !== count) {
         await db
           .update(clients)
