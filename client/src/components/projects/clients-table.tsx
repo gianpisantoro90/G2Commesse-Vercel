@@ -352,9 +352,11 @@ export default function ClientsTable() {
 
   // Handle delete client
   const handleDeleteClient = async (client: Client) => {
-    // Usa la FK clientId per contare le commesse associate (coerente con il vincolo DB)
+    // Conta commesse associate: per FK (clientId) o per nome (fallback per progetti senza FK)
+    const clientName = client.name?.trim().toLowerCase();
     const clientProjectsCount = allProjects.filter(project =>
-      project.clientId === client.id
+      project.clientId === client.id ||
+      (!project.clientId && project.client?.trim().toLowerCase() === clientName)
     ).length;
 
     if (clientProjectsCount > 0) {
