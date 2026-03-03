@@ -69,6 +69,50 @@ export function registerClientRoutes(app: Express): void {
     }
   });
 
+  // Diagnostic: check actual project linkage for a specific client
+  app.get("/api/clients/:id/diagnostic", async (req, res) => {
+    try {
+      const client = await storage.getClient(req.params.id);
+      if (!client) {
+        return res.status(404).json({ message: "Cliente non trovato" });
+      }
+
+      const allProjects = await storage.getAllProjects();
+
+      // Projects linked by FK (clientId)
+      const byFK = allProjects.filter(p => p.clientId === client.id);
+
+      // Projects matched by name (case-insensitive)
+      const clientNameLower = client.name.trim().toLowerCase();
+      const byName = allProjects.filter(p =>
+        p.client?.trim().toLowerCase() === clientNameLower
+      );
+
+      // Projects matched by sigla
+      const clientSiglaLower = client.sigla.trim().toLowerCase();
+      const bySigla = allProjects.filter(p => {
+        const generated = (p.client || '').toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 3).padEnd(3, 'X');
+        return generated.toLowerCase() === clientSiglaLower;
+      });
+
+      res.json({
+        client: { id: client.id, sigla: client.sigla, name: client.name, projectsCount: client.projectsCount },
+        projectsByFK: byFK.map(p => ({ id: p.id, code: p.code, client: p.client, clientId: p.clientId, status: p.status })),
+        projectsByName: byName.map(p => ({ id: p.id, code: p.code, client: p.client, clientId: p.clientId, status: p.status })),
+        projectsBySigla: bySigla.map(p => ({ id: p.id, code: p.code, client: p.client, clientId: p.clientId, status: p.status })),
+        counts: {
+          storedCount: client.projectsCount || 0,
+          byFK: byFK.length,
+          byName: byName.length,
+          bySigla: bySigla.length,
+        }
+      });
+    } catch (error) {
+      console.error("Error in client diagnostic:", error);
+      res.status(500).json({ message: "Errore nella diagnostica" });
+    }
+  });
+
   // Recalculate clients projects count
   app.post("/api/clients/sync-counts", async (req, res) => {
     try {
