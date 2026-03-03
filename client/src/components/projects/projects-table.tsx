@@ -60,8 +60,8 @@ export default function ProjectsTable() {
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
 
   // Sorting state
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
+  const [sortField, setSortField] = useState<SortField | null>("code");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
   // Debounce search term for server-side queries (300ms)
   useEffect(() => {
