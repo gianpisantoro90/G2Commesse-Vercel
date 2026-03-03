@@ -1803,42 +1803,50 @@ export class DatabaseStorage implements IStorage {
     const allProjects = await this.getAllProjects();
     const allClients = await this.getAllClients();
 
-    // Build lookup maps for clients (by name and by sigla) to fix missing clientId
+    // Build lookup maps for clients
+    const validClientIds = new Set<string>();
     const clientByName = new Map<string, Client>();
     const clientBySigla = new Map<string, Client>();
     for (const client of allClients) {
+      validClientIds.add(client.id);
       clientByName.set(client.name.trim().toLowerCase(), client);
       clientBySigla.set(client.sigla.trim().toLowerCase(), client);
     }
 
-    // Fix missing clientId on projects and count
+    // Resolve clientId for every project and count
     const projectCounts = new Map<string, number>();
 
     for (const project of allProjects) {
       let resolvedClientId = project.clientId;
+      let needsUpdate = false;
 
-      // If clientId is missing, try to resolve it from project.client (name)
-      if (!resolvedClientId && project.client) {
-        const nameKey = project.client.trim().toLowerCase();
-        const matchedClient = clientByName.get(nameKey);
-        if (matchedClient) {
-          resolvedClientId = matchedClient.id;
-        } else {
-          // Fallback: try matching by generated sigla
-          const sigla = this.generateSafeAcronym(project.client).toLowerCase();
-          const matchedBySigla = clientBySigla.get(sigla);
-          if (matchedBySigla) {
-            resolvedClientId = matchedBySigla.id;
+      // If clientId is missing OR points to a non-existent client, resolve from name
+      if (!resolvedClientId || !validClientIds.has(resolvedClientId)) {
+        resolvedClientId = null;
+        if (project.client) {
+          // Try exact name match (case-insensitive)
+          const nameKey = project.client.trim().toLowerCase();
+          const matchedClient = clientByName.get(nameKey);
+          if (matchedClient) {
+            resolvedClientId = matchedClient.id;
+          } else {
+            // Fallback: try matching by generated sigla
+            const sigla = this.generateSafeAcronym(project.client).toLowerCase();
+            const matchedBySigla = clientBySigla.get(sigla);
+            if (matchedBySigla) {
+              resolvedClientId = matchedBySigla.id;
+            }
           }
         }
+        needsUpdate = true;
+      }
 
-        // Persist the fixed clientId in the database
-        if (resolvedClientId) {
-          await db
-            .update(projects)
-            .set({ clientId: resolvedClientId })
-            .where(eq(projects.id, project.id));
-        }
+      // Persist the fixed clientId in the database
+      if (needsUpdate && resolvedClientId) {
+        await db
+          .update(projects)
+          .set({ clientId: resolvedClientId })
+          .where(eq(projects.id, project.id));
       }
 
       if (resolvedClientId) {
