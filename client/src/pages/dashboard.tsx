@@ -2,10 +2,12 @@ import { lazy, Suspense } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { QK } from "@/lib/query-utils";
-import { type Task, type ProjectDeadline } from "@shared/schema";
-import { CalendarClock, CheckSquare, AlertTriangle } from "lucide-react";
+import { type Task, type ProjectDeadline, type Project, type Client } from "@shared/schema";
+import {
+  CalendarClock, CheckSquare, AlertTriangle, Briefcase,
+  Users, FolderCheck, Pause, LayoutDashboard
+} from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import StatsCard from "@/components/dashboard/stats-card";
 import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
@@ -81,32 +83,113 @@ function UserQuickStats() {
   );
 }
 
+function AdminQuickStats() {
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
+    queryKey: QK.projects,
+  });
+  const { data: clients = [], isLoading: isLoadingClients } = useQuery<Client[]>({
+    queryKey: QK.clients,
+  });
+
+  const projectsInCorso = projects.filter(p => p.status === "in corso").length;
+  const projectsSospese = projects.filter(p => p.status === "sospesa").length;
+  const projectsConcluse = projects.filter(p => p.status === "conclusa").length;
+  const isLoading = isLoadingProjects || isLoadingClients;
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-20 rounded-lg" />)}
+      </div>
+    );
+  }
+
+  const stats = [
+    { label: "In Corso", value: projectsInCorso, icon: Briefcase, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+    { label: "Sospese", value: projectsSospese, icon: Pause, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
+    { label: "Concluse", value: projectsConcluse, icon: FolderCheck, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-950/30" },
+    { label: "Clienti", value: clients.length, icon: Users, color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-950/30" },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {stats.map(s => (
+        <div key={s.label} className={`flex items-center gap-3 p-3 rounded-lg border border-border ${s.bg}`}>
+          <s.icon className={`h-5 w-5 shrink-0 ${s.color}`} />
+          <div className="min-w-0">
+            <p className="text-2xl font-bold text-foreground leading-none">{s.value}</p>
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{s.label}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">Dashboard</h2>
-        <p className="text-sm text-muted-foreground">
-          {isAdmin ? "Panoramica generale del sistema" : `Benvenuto, ${user?.fullName || "utente"}`}
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <LayoutDashboard className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold text-foreground">
+            {isAdmin ? "Dashboard" : `Ciao, ${user?.fullName || "utente"}`}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {isAdmin ? "Panoramica generale del sistema" : "Ecco il riepilogo delle tue attività"}
+          </p>
+        </div>
       </div>
 
-      {!isAdmin && <UserQuickStats />}
-      {isAdmin && <AiInsightsCard />}
-      {isAdmin && <EconomicDashboardCard />}
-      {isAdmin && <CashFlowForecastCard />}
-      {isAdmin && (
-        <Suspense fallback={<Skeleton className="h-48 w-full rounded-lg" />}>
-          <BillingAlerts maxAlerts={5} />
-        </Suspense>
+      {/* User Dashboard - simple layout */}
+      {!isAdmin && (
+        <>
+          <UserQuickStats />
+          <RecentTasksTable />
+          <RecentProjectsTable />
+        </>
       )}
-      {isAdmin && <StatsCard />}
-      <RecentTasksTable />
-      <RecentProjectsTable />
-      {isAdmin && <OneDriveStatusCard />}
+
+      {/* Admin Dashboard - structured grid layout */}
+      {isAdmin && (
+        <>
+          {/* Row 1: Quick stats bar */}
+          <AdminQuickStats />
+
+          {/* Row 2: AI Insights + CashFlow side by side */}
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+            <div className="xl:col-span-3">
+              <AiInsightsCard />
+            </div>
+            <div className="xl:col-span-2">
+              <CashFlowForecastCard />
+            </div>
+          </div>
+
+          {/* Row 3: Economic Dashboard full width */}
+          <EconomicDashboardCard />
+
+          {/* Row 4: Billing Alerts */}
+          <Suspense fallback={<Skeleton className="h-32 w-full rounded-lg" />}>
+            <BillingAlerts maxAlerts={5} />
+          </Suspense>
+
+          {/* Row 5: Tasks + Projects side by side */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            <RecentTasksTable />
+            <RecentProjectsTable />
+          </div>
+
+          {/* Row 6: OneDrive compact */}
+          <OneDriveStatusCard />
+        </>
+      )}
     </div>
   );
 }

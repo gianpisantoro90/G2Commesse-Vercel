@@ -4,35 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { useOneDriveSync } from "@/hooks/use-onedrive-sync";
 import { useOneDriveRootConfig } from "@/hooks/use-onedrive-root-config";
 import { useToast } from "@/hooks/use-toast";
-import oneDriveService from "@/lib/onedrive-service";
 import { useState } from "react";
-import { Cloud, CloudOff, RefreshCw, Settings, User, AlertTriangle, CheckCircle, Clock, FolderOpen } from "lucide-react";
+import { Cloud, CloudOff, RefreshCw, Settings, AlertTriangle, CheckCircle } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function OneDriveStatusCard() {
   const [isSyncingManually, setIsSyncingManually] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { 
-    isConnected, 
-    syncAllProjects, 
-    isSyncingAll, 
-    autoSyncEnabled, 
-    getOverallSyncStats 
+  const {
+    isConnected,
+    syncAllProjects,
+    isSyncingAll,
+    autoSyncEnabled,
+    getOverallSyncStats
   } = useOneDriveSync();
 
-  // Get user info when connected
-  const { data: userInfo } = useQuery({
-    queryKey: ['onedrive-user'],
-    queryFn: () => oneDriveService.getUserInfo(),
-    enabled: isConnected,
-    refetchInterval: false // No polling - minimize compute units
-  });
-
-  // Get root folder configuration using the dedicated hook
   const { rootConfig } = useOneDriveRootConfig();
-
-  // Get sync statistics
   const syncStats = getOverallSyncStats();
 
   const handleManualSync = async () => {
@@ -54,221 +42,101 @@ export default function OneDriveStatusCard() {
     }
   };
 
-  const getConnectionStatusIcon = () => {
-    if (isSyncingAll || isSyncingManually) {
-      return <RefreshCw className="h-5 w-5 animate-spin text-teal-600" />;
-    }
-    if (isConnected) {
-      return <Cloud className="h-5 w-5 text-green-600" />;
-    }
-    return <CloudOff className="h-5 w-5 text-red-600" />;
-  };
-
-  const getConnectionStatusBadge = () => {
-    if (isSyncingAll || isSyncingManually) {
-      return (
-        <Badge variant="secondary" className="bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-200">
-          <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-          Sincronizzazione
-        </Badge>
-      );
-    }
-    if (isConnected) {
-      return (
-        <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
-          <CheckCircle className="h-3 w-3 mr-1" />
-          Connesso
-        </Badge>
-      );
-    }
-    return (
-      <Badge variant="destructive" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">
-        <AlertTriangle className="h-3 w-3 mr-1" />
-        Disconnesso
-      </Badge>
-    );
-  };
-
-  const getHealthIndicator = () => {
-    if (!isConnected) return "Disconnesso";
-    if (syncStats.errors > 0) return "Attenzione richiesta";
-    if (syncStats.pending > 0) return "Sincronizzazione in corso";
-    if (syncStats.synced === syncStats.total) return "Tutto sincronizzato";
-    return "Configurazione incompleta";
-  };
-
-  const getHealthColor = () => {
-    if (!isConnected) return "text-red-600";
-    if (syncStats.errors > 0) return "text-yellow-600";
-    if (syncStats.pending > 0) return "text-teal-600";
-    if (syncStats.synced === syncStats.total && syncStats.total > 0) return "text-green-600";
-    return "text-muted-foreground";
-  };
+  const isSyncing = isSyncingAll || isSyncingManually;
 
   return (
     <div className="card-g2" data-testid="onedrive-status-card">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          {getConnectionStatusIcon()}
-          <h3 className="text-lg font-semibold text-foreground">OneDrive Status</h3>
-        </div>
-        {getConnectionStatusBadge()}
-      </div>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        {/* Left: status info */}
+        <div className="flex items-center gap-3 min-w-0">
+          {isSyncing ? (
+            <RefreshCw className="h-5 w-5 animate-spin text-teal-600 shrink-0" />
+          ) : isConnected ? (
+            <Cloud className="h-5 w-5 text-green-600 shrink-0" />
+          ) : (
+            <CloudOff className="h-5 w-5 text-red-600 shrink-0" />
+          )}
 
-      {/* Connection Status and User Info */}
-      <div className="space-y-4">
-        {isConnected && userInfo ? (
-          <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-            <User className="h-5 w-5 text-green-600 dark:text-green-400" />
-            <div>
-              <div className="font-medium text-green-900 dark:text-green-100">{userInfo.name}</div>
-              <div className="text-sm text-green-700 dark:text-green-300">{userInfo.email}</div>
-            </div>
-          </div>
-        ) : !isConnected ? (
-          <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
-            <div className="flex items-center space-x-2 text-red-800 dark:text-red-300">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="font-medium">OneDrive non connesso</span>
-            </div>
-            <p className="text-sm text-red-700 dark:text-red-400 mt-1">
-              Configura la connessione OneDrive nelle impostazioni sistema
-            </p>
-          </div>
-        ) : (
-          <div className="p-3 bg-muted rounded-lg">
-            <div className="flex items-center space-x-2 text-foreground">
-              <Clock className="h-4 w-4" />
-              <span>Caricamento informazioni utente...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Root Folder Configuration */}
-        {isConnected && (
-          <div className={`flex items-center justify-between p-3 rounded-lg ${
-            rootConfig?.folderPath 
-              ? 'bg-teal-50 dark:bg-teal-950/30' 
-              : 'bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400 dark:border-amber-600'
-          }`}>
-            <div className="flex items-center space-x-3">
-              <FolderOpen className={`h-5 w-5 ${
-                rootConfig?.folderPath ? 'text-teal-600 dark:text-teal-400' : 'text-amber-600 dark:text-amber-400'
-              }`} />
-              <div className="flex-1">
-                <div className={`font-medium ${
-                  rootConfig?.folderPath ? 'text-teal-900 dark:text-teal-100' : 'text-amber-900 dark:text-amber-100'
-                }`}>
-                  Cartella Progetti
-                </div>
-                <div className={`text-sm font-mono ${
-                  rootConfig?.folderPath ? 'text-teal-700 dark:text-teal-300' : 'text-amber-700 dark:text-amber-300'
-                }`}>
-                  {rootConfig?.folderPath || 'Non configurata'}
-                </div>
-              </div>
-              {!rootConfig?.folderPath && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-amber-700 border-amber-300 hover:bg-amber-100"
-                  onClick={() => navigate("/sistema/onedrive-config")}
-                  data-testid="button-configure-root"
-                >
-                  Configura
-                </Button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-semibold text-foreground">OneDrive</h3>
+              {isSyncing ? (
+                <Badge variant="secondary" className="bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-200 text-[10px] px-1.5 py-0">
+                  Sincronizzazione...
+                </Badge>
+              ) : isConnected ? (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200 text-[10px] px-1.5 py-0">
+                  <CheckCircle className="h-2.5 w-2.5 mr-1" />
+                  Connesso
+                </Badge>
+              ) : (
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                  <AlertTriangle className="h-2.5 w-2.5 mr-1" />
+                  Disconnesso
+                </Badge>
               )}
             </div>
-          </div>
-        )}
 
-        {/* Sync Statistics */}
-        {isConnected && (
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <div className="text-2xl font-bold text-primary" data-testid="sync-stats-total">
-                {syncStats.total}
+            {isConnected && (
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                <span>{syncStats.synced}/{syncStats.total} sincronizzati</span>
+                {syncStats.errors > 0 && (
+                  <span className="text-red-600">{syncStats.errors} errori</span>
+                )}
+                {rootConfig?.folderPath && (
+                  <span className="font-mono truncate max-w-[200px]">{rootConfig.folderPath}</span>
+                )}
+                {autoSyncEnabled && <span className="text-green-600">Auto-sync attivo</span>}
               </div>
-              <div className="text-sm text-muted-foreground">Progetti Totali</div>
-            </div>
-            <div className="text-center p-3 bg-muted rounded-lg">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400" data-testid="sync-stats-synced">
-                {syncStats.synced}
-              </div>
-              <div className="text-sm text-muted-foreground">Sincronizzati</div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* Health Indicator */}
-        <div className="p-3 border-l-4 border-border bg-muted">
-          <div className={`font-medium ${getHealthColor()}`}>
-            {getHealthIndicator()}
+            {!isConnected && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Configura la connessione per sincronizzare i progetti
+              </p>
+            )}
           </div>
-          {syncStats.errors > 0 && (
-            <div className="text-sm text-red-600 mt-1">
-              {syncStats.errors} progett{syncStats.errors === 1 ? 'o' : 'i'} con errori
-            </div>
-          )}
-          {syncStats.pending > 0 && (
-            <div className="text-sm text-teal-600 mt-1">
-              {syncStats.pending} progett{syncStats.pending === 1 ? 'o' : 'i'} in sincronizzazione
-            </div>
-          )}
         </div>
 
-        {/* Quick Actions */}
-        <div className="space-y-2">
+        {/* Right: actions */}
+        <div className="flex items-center gap-2 shrink-0">
           {isConnected ? (
             <>
               <Button
                 variant="outline"
-                className="w-full"
+                size="sm"
                 onClick={handleManualSync}
-                disabled={isSyncingAll || isSyncingManually}
+                disabled={isSyncing}
                 data-testid="button-sync-now"
+                className="h-8 text-xs"
               >
-                {(isSyncingAll || isSyncingManually) ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Sincronizzazione in corso...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Sincronizza Ora
-                  </>
-                )}
+                <RefreshCw className={`h-3 w-3 mr-1.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                Sincronizza
               </Button>
               <Button
                 variant="ghost"
-                className="w-full text-sm"
+                size="sm"
                 onClick={() => navigate("/sistema/onedrive-config")}
                 data-testid="button-onedrive-settings"
+                className="h-8 text-xs"
               >
-                <Settings className="h-4 w-4 mr-2" />
-                Impostazioni OneDrive
+                <Settings className="h-3 w-3 mr-1.5" />
+                Impostazioni
               </Button>
             </>
           ) : (
             <Button
               variant="outline"
-              className="w-full"
+              size="sm"
               onClick={() => navigate("/sistema/onedrive-config")}
               data-testid="button-setup-onedrive"
+              className="h-8 text-xs"
             >
-              <Cloud className="h-4 w-4 mr-2" />
-              Configura OneDrive
+              <Cloud className="h-3 w-3 mr-1.5" />
+              Configura
             </Button>
           )}
         </div>
-
-        {/* Auto-sync status */}
-        {isConnected && (
-          <div className="text-xs text-muted-foreground text-center">
-            Auto-sync: {autoSyncEnabled ? '✅ Attivo' : '❌ Disattivo'}
-          </div>
-        )}
       </div>
     </div>
   );
