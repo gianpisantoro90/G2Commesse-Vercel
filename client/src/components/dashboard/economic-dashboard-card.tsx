@@ -116,7 +116,7 @@ export default function EconomicDashboardCard() {
     .sort((a, b) => {
       const metadataA = a.metadata as ProjectMetadata;
       const metadataB = b.metadata as ProjectMetadata;
-      return (metadataB?.importoOpere || 0) - (metadataA?.importoOpere || 0);
+      return getImportoOpere(metadataB) - getImportoOpere(metadataA);
     })
     .slice(0, 5);
 

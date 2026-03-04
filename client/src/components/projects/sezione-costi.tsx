@@ -266,9 +266,9 @@ export default function SezioneCosti() {
       const projectCosts = costs.filter(c => c.projectId === project.id);
       const projectInvoices = invoices.filter(i => i.projectId === project.id);
 
-      // Ricavi (importoServizio è in EURO, convertiamo in centesimi)
+      // Ricavi (importoServizio nel metadata è già in centesimi)
       const metadata = project.metadata as ProjectPrestazioni;
-      const ricaviPrevisti = (metadata?.importoServizio || 0) * 100;
+      const ricaviPrevisti = metadata?.importoServizio || 0;
       const ricaviFatturati = projectInvoices.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
       const ricaviIncassati = projectInvoices
         .filter(inv => inv.stato === 'pagata')
