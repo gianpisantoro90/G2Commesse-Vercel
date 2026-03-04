@@ -47,7 +47,6 @@ const transformInvoiceData = (data: any) => {
     aliquotaIVA: data.aliquotaIVA || 22,
     dataPagamento: dataPagamento || null,
     note: data.note || null,
-    salId: data.salId || null,
     prestazioneId: data.prestazioneId || null, // Collegamento a prestazione (1:N)
     tipoFattura: data.tipoFattura || 'unica', // Tipo fattura (acconto, sal, saldo, unica)
     ritenuta: data.ritenuta !== undefined ? Math.round(data.ritenuta * 100) : 0,
@@ -70,7 +69,6 @@ const invoiceInputSchemaBase = z.object({
   aliquotaIVA: z.number().optional(),
   dataPagamento: z.any().optional().nullable(),
   note: z.any().optional().nullable(),
-  salId: z.string().optional().nullable(),
   prestazioneId: z.string().optional().nullable(), // Collegamento a prestazione (1:N)
   tipoFattura: z.enum(['acconto', 'sal', 'saldo', 'unica']).optional().default('unica'),
   ritenuta: z.number().optional(),

@@ -215,7 +215,6 @@ export class FileStorage implements IStorage {
       tipoRapporto: insertProject.tipoRapporto || "diretto",
       committenteFinale: insertProject.committenteFinale || null,
       createdAt: new Date(),
-      fsRoot: insertProject.fsRoot || null,
       metadata: insertProject.metadata || {},
       fatturato: insertProject.fatturato || null,
       numeroFattura: insertProject.numeroFattura || null,

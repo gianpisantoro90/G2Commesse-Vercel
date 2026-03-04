@@ -235,7 +235,6 @@ export const projectSAL = sqliteTable("project_sal", {
 export const projectInvoices = sqliteTable("project_invoices", {
   id: text("id").primaryKey().$defaultFn(() => generateId()),
   projectId: text("project_id").notNull().references(() => projects.id),
-  salId: text("sal_id").references(() => projectSAL.id),
   numeroFattura: text("numero_fattura").notNull(),
   dataEmissione: integer("data_emissione", { mode: "timestamp" }).notNull(),
   importoNetto: integer("importo_netto").notNull(),

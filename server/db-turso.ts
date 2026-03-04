@@ -261,7 +261,6 @@ export async function initializeDatabase() {
     `CREATE TABLE IF NOT EXISTS project_invoices (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL REFERENCES projects(id),
-      sal_id TEXT REFERENCES project_sal(id),
       numero_fattura TEXT NOT NULL,
       data_emissione INTEGER NOT NULL,
       importo_netto INTEGER NOT NULL,
