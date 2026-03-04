@@ -208,14 +208,13 @@ export function calcolaImportoTotale(importoOpere?: number, importoServizio?: nu
 export function getImportoOpere(metadata?: ProjectPrestazioni | null): number {
   if (!metadata) return 0;
 
-  // Preferisci la nuova struttura classificazioniDM2016
-  // I valori nel metadata JSON sono in centesimi (copiati dalla tabella DB), quindi dividiamo per 100
+  // I valori nel metadata JSON sono in euro (convertiti dal server durante il sync)
   if (metadata.classificazioniDM2016 && metadata.classificazioniDM2016.length > 0) {
-    return metadata.classificazioniDM2016.reduce((sum, c) => sum + (c.importo || 0), 0) / 100;
+    return metadata.classificazioniDM2016.reduce((sum, c) => sum + (c.importo || 0), 0);
   }
 
-  // Fallback al campo deprecato per retrocompatibilità (anch'esso in centesimi)
-  return (metadata.importoOpere || 0) / 100;
+  // Fallback al campo deprecato per retrocompatibilità (anch'esso in euro nel metadata)
+  return metadata.importoOpere || 0;
 }
 
 // Funzione per validare i dati prestazioni

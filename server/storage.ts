@@ -1227,11 +1227,12 @@ export class MemStorage implements IStorage {
       }
     }
 
+    // Converti da centesimi (DB) a euro per il metadata JSON
     const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
       codice,
-      importo: v.importo,
-      importoOpere: v.importoOpere,
-      importoServizio: v.importoServizio,
+      importo: v.importo / 100,
+      importoOpere: v.importoOpere / 100,
+      importoServizio: v.importoServizio / 100,
     }));
 
     const metadata = (project.metadata as any) || {};
@@ -2908,9 +2909,9 @@ export class DatabaseStorage implements IStorage {
 
     const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
       codice,
-      importo: v.importo,
-      importoOpere: v.importoOpere,
-      importoServizio: v.importoServizio,
+      importo: v.importo / 100,
+      importoOpere: v.importoOpere / 100,
+      importoServizio: v.importoServizio / 100,
     }));
 
     const metadata = (project.metadata as any) || {};
