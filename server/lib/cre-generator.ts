@@ -134,8 +134,8 @@ function getGradoComplessita(codice: string): string {
  */
 function calcolaTotaleOpere(classificazioni: ClassificazioneDM2016[] | undefined): number {
   if (!classificazioni || classificazioni.length === 0) return 0;
-  // I valori nel metadata JSON sono in centesimi, convertiamo in euro
-  return classificazioni.reduce((sum, c) => sum + (c.importoOpere || c.importo || 0), 0) / 100;
+  // I valori nel metadata JSON sono già in euro (convertiti dal server durante il sync)
+  return classificazioni.reduce((sum, c) => sum + (c.importoOpere || c.importo || 0), 0);
 }
 
 /**
@@ -143,8 +143,8 @@ function calcolaTotaleOpere(classificazioni: ClassificazioneDM2016[] | undefined
  */
 function calcolaTotaleServizio(classificazioni: ClassificazioneDM2016[] | undefined): number {
   if (!classificazioni || classificazioni.length === 0) return 0;
-  // I valori nel metadata JSON sono in centesimi, convertiamo in euro
-  return classificazioni.reduce((sum, c) => sum + (c.importoServizio || 0), 0) / 100;
+  // I valori nel metadata JSON sono già in euro
+  return classificazioni.reduce((sum, c) => sum + (c.importoServizio || 0), 0);
 }
 
 /**
@@ -211,7 +211,7 @@ export async function generateCREDocument(data: CREData): Promise<Buffer> {
   const { project, client, metadata } = data;
 
   const totaleOpere = calcolaTotaleOpere(metadata.classificazioniDM2016);
-  const totaleServizio = metadata.importoServizio ? metadata.importoServizio / 100 : calcolaTotaleServizio(metadata.classificazioniDM2016);
+  const totaleServizio = metadata.importoServizio || calcolaTotaleServizio(metadata.classificazioniDM2016);
   const importoCSE = getImportoCSE(metadata.classificazioniDM2016, metadata);
   const tipologiaServizio = getTipologiaServizio(metadata);
 
@@ -711,10 +711,10 @@ function createClassificazioniTable(classificazioni: ClassificazioneDM2016[]): T
           children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: getGradoComplessita(c.codice), size: 20 })] })],
         }),
         new TableCell({
-          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: formatCurrency((c.importoOpere || c.importo || 0) / 100), size: 20 })] })],
+          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: formatCurrency(c.importoOpere || c.importo || 0), size: 20 })] })],
         }),
         new TableCell({
-          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: formatCurrency((c.importoServizio || 0) / 100), size: 20 })] })],
+          children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: formatCurrency(c.importoServizio || 0), size: 20 })] })],
         }),
       ],
     });
@@ -779,12 +779,9 @@ function createDichiarazioni(project: Project, client: Client): Paragraph[] {
 export function generateCREPreview(data: CREData): object {
   const { project, client, metadata } = data;
 
-  // Converti i valori da centesimi a euro per la preview
+  // I valori nel metadata sono già in euro (convertiti dal server durante il sync)
   const classificazioniWithG = (metadata.classificazioniDM2016 || []).map(c => ({
     ...c,
-    importo: (c.importo || 0) / 100,
-    importoOpere: c.importoOpere ? c.importoOpere / 100 : undefined,
-    importoServizio: c.importoServizio ? c.importoServizio / 100 : undefined,
     gradoComplessita: getGradoComplessita(c.codice),
   }));
 
@@ -807,7 +804,7 @@ export function generateCREPreview(data: CREData): object {
     servizio: {
       tipologie: getTipologiaServizio(metadata),
       importoTotaleOpere: calcolaTotaleOpere(metadata.classificazioniDM2016),
-      importoTotaleServizio: metadata.importoServizio ? metadata.importoServizio / 100 : calcolaTotaleServizio(metadata.classificazioniDM2016),
+      importoTotaleServizio: metadata.importoServizio || calcolaTotaleServizio(metadata.classificazioniDM2016),
     },
     classificazioni: classificazioniWithG,
     isComplete: checkCRECompleteness(data),

@@ -88,8 +88,8 @@ export default function RequisitiTecnici() {
         metadata.classificazioniDM2016.forEach((classif) => {
           classificazioni.push({
             codice: classif.codice,
-            importo: (classif.importo || 0) / 100,
-            importoServizio: (classif.importoServizio || 0) / 100,
+            importo: classif.importo || 0,
+            importoServizio: classif.importoServizio || 0,
             projectId: project.id,
             projectCode: project.code,
             projectClient: project.client,
