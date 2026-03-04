@@ -152,15 +152,16 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: Partial<InsertProject>) => {
+      // classificazioniDM2016 is managed by syncProjectMetadataFromClassificazioni on the backend
+      // Do NOT include it here — it would overwrite with stale data from the form's initial load
+      const existingMetadata = typeof data.metadata === 'object' && data.metadata !== null ? data.metadata as Record<string, unknown> : {};
+      const { classificazioniDM2016: _ignored, ...restMetadata } = existingMetadata as any;
       const projectData = {
         ...data,
         metadata: {
-          ...(typeof data.metadata === 'object' && data.metadata !== null ? data.metadata as Record<string, unknown> : {}),
+          ...restMetadata,
           prestazioni: prestazioniData.prestazioni,
           livelloProgettazione: prestazioniData.livelloProgettazione,
-          // classificazioniDM2016 is now managed via the prestazione_classificazioni table
-          // Keep backward compat by preserving what's already there
-          classificazioniDM2016: (project.metadata as any)?.classificazioniDM2016 || [],
         }
       };
 

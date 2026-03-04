@@ -186,6 +186,14 @@ export function registerProjectRoutes(app: Express): void {
 
       const validatedData = insertProjectSchema.partial().parse(bodyWithDates);
 
+      // Merge incoming metadata with existing to preserve backend-managed fields
+      // (e.g. classificazioniDM2016 managed by syncProjectMetadataFromClassificazioni)
+      if (validatedData.metadata && originalProject.metadata) {
+        const existingMeta = originalProject.metadata as Record<string, unknown>;
+        const incomingMeta = validatedData.metadata as Record<string, unknown>;
+        validatedData.metadata = { ...existingMeta, ...incomingMeta };
+      }
+
       const project = await storage.updateProject(req.params.id, validatedData);
 
       if (!project) {
