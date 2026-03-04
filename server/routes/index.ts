@@ -17,6 +17,7 @@ import { registerSystemRoutes } from "./system";
 import { registerOneDriveRoutes } from "./onedrive";
 import { registerBillingRoutes } from "./billing";
 import { registerPrestazioniRoutes } from "./prestazioni";
+import { registerClassificazioniRoutes } from "./classificazioni";
 import { registerCRERoutes } from "./cre";
 import { registerProjectFinancialRoutes } from "./project-financials";
 import { registerAIRoutes } from "./ai";
@@ -59,6 +60,7 @@ export async function registerRoutes(app: Express): Promise<void> {
   registerOneDriveRoutes(app);
   registerBillingRoutes(app);
   registerPrestazioniRoutes(app);
+  registerClassificazioniRoutes(app);
   registerCRERoutes(app);
   registerProjectFinancialRoutes(app);
   registerAIRoutes(app);
