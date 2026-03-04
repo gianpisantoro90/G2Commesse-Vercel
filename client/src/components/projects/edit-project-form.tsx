@@ -17,7 +17,6 @@ import {
   type TipoRapportoType,
   getAllPrestazioni,
   getAllLivelliProgettazione,
-  hasProgettazione,
   formatImporto
 } from "@/lib/prestazioni-utils";
 import { CATEGORIE_DM2016 } from "@/lib/parcella-calculator";
@@ -37,17 +36,30 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
     base: true,
     contratto: false,
     prestazioni: false,
-    classificazioni: false,
     health: false,
   });
+  const [expandedPrestazioni, setExpandedPrestazioni] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // State per prestazioni e classificazioni
+  // State per prestazioni (classificazioni are now managed via API)
   const [prestazioniData, setPrestazioniData] = useState<ProjectPrestazioni>({
     prestazioni: [],
     livelloProgettazione: [],
-    classificazioniDM2016: [],
+  });
+
+  // Fetch existing prestazioni from DB for this project
+  const { data: dbPrestazioni = [] } = useQuery({
+    queryKey: QK.projectPrestazioni(project.id),
+    queryFn: () => apiRequest("GET", `/api/projects/${project.id}/prestazioni`).then(r => r.json()),
+    enabled: open,
+  });
+
+  // Fetch existing classificazioni from DB for this project
+  const { data: dbClassificazioni = [], refetch: refetchClassificazioni } = useQuery({
+    queryKey: QK.projectClassificazioni(project.id),
+    queryFn: () => apiRequest("GET", `/api/projects/${project.id}/classificazioni`).then(r => r.json()),
+    enabled: open,
   });
 
   // Fetch existing clients
@@ -70,7 +82,6 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       committenteFinale: project.committenteFinale || undefined,
       cig: (project as any).cig || undefined,
       numeroContratto: (project as any).numeroContratto || undefined,
-      fsRoot: project.fsRoot || undefined,
       metadata: project.metadata || {},
     },
   });
@@ -99,51 +110,60 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
     }));
   };
 
-  // Handlers per classificazioni DM 17/06/2016
-  const handleAddClassificazione = () => {
-    setPrestazioniData(prev => ({
-      ...prev,
-      classificazioniDM2016: [
-        ...(prev.classificazioniDM2016 || []),
-        { codice: '', importo: 0 }
-      ]
-    }));
+  // Mutations for classificazioni CRUD (real-time, not on form save)
+  const createClassificazioneMutation = useMutation({
+    mutationFn: async ({ prestazioneId, data }: { prestazioneId: string; data: any }) => {
+      const response = await apiRequest("POST", `/api/prestazioni/${prestazioneId}/classificazioni`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchClassificazioni();
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+    },
+  });
+
+  const updateClassificazioneMutation = useMutation({
+    mutationFn: async ({ prestazioneId, classId, data }: { prestazioneId: string; classId: string; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchClassificazioni();
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+    },
+  });
+
+  const deleteClassificazioneMutation = useMutation({
+    mutationFn: async ({ prestazioneId, classId }: { prestazioneId: string; classId: string }) => {
+      await apiRequest("DELETE", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`);
+    },
+    onSuccess: () => {
+      refetchClassificazioni();
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+    },
+  });
+
+  // Helper: find the DB prestazione record for a given tipo
+  const getDbPrestazioneByTipo = (tipo: string) => {
+    return dbPrestazioni.find((p: any) => p.tipo === tipo);
   };
 
-  const handleRemoveClassificazione = (index: number) => {
-    setPrestazioniData(prev => ({
-      ...prev,
-      classificazioniDM2016: (prev.classificazioniDM2016 || []).filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleClassificazioneChange = (index: number, field: 'codice' | 'importo' | 'importoServizio', value: string | number) => {
-    setPrestazioniData(prev => {
-      const newClassificazioni = [...(prev.classificazioniDM2016 || [])];
-      if (field === 'codice') {
-        newClassificazioni[index] = { ...newClassificazioni[index], codice: value as string };
-      } else if (field === 'importo') {
-        newClassificazioni[index] = { ...newClassificazioni[index], importo: value as number };
-      } else if (field === 'importoServizio') {
-        newClassificazioni[index] = { ...newClassificazioni[index], importoServizio: value as number };
-      }
-      return {
-        ...prev,
-        classificazioniDM2016: newClassificazioni
-      };
-    });
+  // Helper: get classificazioni for a specific prestazione
+  const getClassificazioniForPrestazione = (prestazioneId: string) => {
+    return dbClassificazioni.filter((c: any) => c.prestazioneId === prestazioneId);
   };
 
   const updateProjectMutation = useMutation({
     mutationFn: async (data: Partial<InsertProject>) => {
-      // Include prestazioni data in metadata
       const projectData = {
         ...data,
         metadata: {
           ...(typeof data.metadata === 'object' && data.metadata !== null ? data.metadata as Record<string, unknown> : {}),
           prestazioni: prestazioniData.prestazioni,
           livelloProgettazione: prestazioniData.livelloProgettazione,
-          classificazioniDM2016: prestazioniData.classificazioniDM2016,
+          // classificazioniDM2016 is now managed via the prestazione_classificazioni table
+          // Keep backward compat by preserving what's already there
+          classificazioniDM2016: (project.metadata as any)?.classificazioniDM2016 || [],
         }
       };
 
@@ -176,19 +196,9 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
     if (open) {
       const metadata = project.metadata as ProjectMetadata;
 
-      // Migra vecchi dati al nuovo formato se necessario
-      let classificazioni = metadata?.classificazioniDM2016 || [];
-      if (!classificazioni.length && metadata?.classeDM2016) {
-        classificazioni = [{
-          codice: metadata.classeDM2016,
-          importo: metadata.importoOpere || 0
-        }];
-      }
-
       setPrestazioniData({
         prestazioni: metadata?.prestazioni || [],
         livelloProgettazione: metadata?.livelloProgettazione || [],
-        classificazioniDM2016: classificazioni,
       });
 
       form.reset({
@@ -204,7 +214,6 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
         committenteFinale: project.committenteFinale || undefined,
         cig: (project as any).cig || undefined,
         numeroContratto: (project as any).numeroContratto || undefined,
-        fsRoot: project.fsRoot || undefined,
         metadata: project.metadata || {},
       });
     }
@@ -212,11 +221,10 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
 
   const prestazioniList = getAllPrestazioni();
   const livelliProgettazioneList = getAllLivelliProgettazione();
-  const showLivelloProgettazione = hasProgettazione(prestazioniData.prestazioni);
 
-  // Calcola importo totale opere dalla somma delle classificazioni
-  const importoTotaleOpere = (prestazioniData.classificazioniDM2016 || []).reduce((sum, c) => sum + (c.importo || 0), 0);
-  const importoTotaleServizio = (prestazioniData.classificazioniDM2016 || []).reduce((sum, c) => sum + (c.importoServizio || 0), 0);
+  // Compute totals from DB classificazioni (amounts in centesimi)
+  const importoTotaleOpere = dbClassificazioni.reduce((sum: number, c: any) => sum + (c.importoOpere || 0), 0);
+  const importoTotaleServizio = dbClassificazioni.reduce((sum: number, c: any) => sum + (c.importoServizio || 0), 0);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -491,209 +499,246 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
               )}
             </div>
 
-            {/* SEZIONE 3: Prestazioni Professionali */}
+            {/* SEZIONE 3: Prestazioni e Classificazioni */}
             <div className="border border-border rounded-lg overflow-hidden">
               <button
                 type="button"
                 onClick={() => toggleSection('prestazioni')}
                 className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted transition-colors"
               >
-                <span className="font-semibold text-foreground text-sm">Prestazioni Professionali</span>
+                <span className="font-semibold text-foreground text-sm">Prestazioni e Classificazioni DM</span>
                 {expandedSections.prestazioni ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
 
               {expandedSections.prestazioni && (
-                <div className="p-4 space-y-4">
-                  {/* Tipologia Prestazioni */}
-                  <div>
-                    <Label className="text-sm font-medium text-foreground mb-3 block">
-                      Tipologia Prestazioni
-                    </Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                      {prestazioniList.map(({ id, config }) => (
-                        <div key={id} className="flex items-center space-x-2 p-2 border border-border rounded-lg hover:bg-muted">
-                          <Checkbox
-                            id={`edit-prestazione-${id}`}
-                            checked={prestazioniData.prestazioni?.includes(id) || false}
-                            onCheckedChange={(checked) => handlePrestazioneChange(id, checked as boolean)}
-                          />
-                          <Label htmlFor={`edit-prestazione-${id}`} className="flex items-center gap-1 cursor-pointer text-xs">
-                            <span>{config.icon}</span>
-                            <span>{config.shortLabel}</span>
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Livello Progettazione - condizionale */}
-                  {showLivelloProgettazione && (
-                    <div className="bg-teal-50 dark:bg-teal-950/50 p-3 rounded-lg border border-teal-200 dark:border-teal-800">
-                      <Label className="text-sm font-medium text-foreground mb-2 block">
-                        Livello Progettazione
-                      </Label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                        {livelliProgettazioneList.map(({ id, config }) => (
-                          <div key={id} className="flex items-center space-x-2 p-2 bg-card border border-teal-200 dark:border-teal-700 rounded-lg">
-                            <Checkbox
-                              id={`edit-livello-${id}`}
-                              checked={prestazioniData.livelloProgettazione?.includes(id) || false}
-                              onCheckedChange={(checked) => handleLivelloProgettazioneChange(id, checked as boolean)}
-                            />
-                            <Label htmlFor={`edit-livello-${id}`} className="cursor-pointer text-xs">
-                              {config.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* SEZIONE 4: Classificazioni DM 17/06/2016 */}
-            <div className="border border-border rounded-lg overflow-hidden">
-              <button
-                type="button"
-                onClick={() => toggleSection('classificazioni')}
-                className="w-full flex items-center justify-between p-3 bg-muted hover:bg-muted transition-colors"
-              >
-                <span className="font-semibold text-foreground text-sm">Classificazioni DM 17/06/2016</span>
-                {expandedSections.classificazioni ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-
-              {expandedSections.classificazioni && (
                 <div className="p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <p className="text-xs text-muted-foreground">
-                      Categorie con importi
-                    </p>
-                    <Button
-                      type="button"
-                      onClick={handleAddClassificazione}
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1 text-xs"
-                    >
-                      <Plus className="w-3 h-3" /> Aggiungi
-                    </Button>
-                  </div>
+                  {/* Checkbox grid for prestazione types */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    {prestazioniList.map(({ id, config }) => {
+                      const isChecked = prestazioniData.prestazioni?.includes(id) || false;
+                      const dbPrestazione = getDbPrestazioneByTipo(id);
+                      const isExpanded = expandedPrestazioni.has(id);
+                      const classificazioni = dbPrestazione ? getClassificazioniForPrestazione(dbPrestazione.id) : [];
 
-                  {/* Lista classificazioni */}
-                  <div className="space-y-2">
-                    {prestazioniData.classificazioniDM2016 && prestazioniData.classificazioniDM2016.length > 0 ? (
-                      prestazioniData.classificazioniDM2016.map((classificazione, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-2 p-2 bg-muted rounded-lg border border-border">
-                          {/* Dropdown Categoria */}
-                          <div>
-                            <Select
-                              value={classificazione.codice || ''}
-                              onValueChange={(value) => handleClassificazioneChange(index, 'codice', value)}
-                            >
-                              <SelectTrigger className="font-mono text-xs h-9">
-                                <SelectValue placeholder="Categoria..." />
-                              </SelectTrigger>
-                              <SelectContent className="max-h-[300px]">
-                                <SelectGroup>
-                                  <SelectLabel>Edilizia</SelectLabel>
-                                  {Object.entries(CATEGORIE_DM2016)
-                                    .filter(([_, data]) => data.categoria === 'Edilizia')
-                                    .map(([codice, data]) => (
-                                      <SelectItem key={codice} value={codice} className="text-xs">
-                                        <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 40)}...
-                                      </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                                <SelectGroup>
-                                  <SelectLabel>Strutture</SelectLabel>
-                                  {Object.entries(CATEGORIE_DM2016)
-                                    .filter(([_, data]) => data.categoria === 'Strutture')
-                                    .map(([codice, data]) => (
-                                      <SelectItem key={codice} value={codice} className="text-xs">
-                                        <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 40)}...
-                                      </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                                <SelectGroup>
-                                  <SelectLabel>Impianti</SelectLabel>
-                                  {Object.entries(CATEGORIE_DM2016)
-                                    .filter(([_, data]) => data.categoria === 'Impianti')
-                                    .map(([codice, data]) => (
-                                      <SelectItem key={codice} value={codice} className="text-xs">
-                                        <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 40)}...
-                                      </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                                <SelectGroup>
-                                  <SelectLabel>Altro</SelectLabel>
-                                  {Object.entries(CATEGORIE_DM2016)
-                                    .filter(([_, data]) => !['Edilizia', 'Strutture', 'Impianti'].includes(data.categoria))
-                                    .map(([codice, data]) => (
-                                      <SelectItem key={codice} value={codice} className="text-xs">
-                                        <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 40)}...
-                                      </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          {/* Input Importo Opere */}
-                          <div>
-                            <Input
-                              type="number"
-                              placeholder="Importo Opere"
-                              min="0"
-                              step="0.01"
-                              value={classificazione.importo || ''}
-                              onChange={(e) => handleClassificazioneChange(index, 'importo', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
-                              className="text-xs h-9"
+                      return (
+                        <div key={id} className="col-span-full">
+                          <div className="flex items-center gap-2 p-2 border border-border rounded-lg hover:bg-muted">
+                            <Checkbox
+                              id={`edit-prestazione-${id}`}
+                              checked={isChecked}
+                              onCheckedChange={(checked) => handlePrestazioneChange(id, checked as boolean)}
                             />
+                            <Label htmlFor={`edit-prestazione-${id}`} className="flex items-center gap-1 cursor-pointer text-xs flex-1">
+                              <span>{config.icon}</span>
+                              <span>{config.shortLabel}</span>
+                              {classificazioni.length > 0 && (
+                                <span className="ml-auto text-xs text-muted-foreground">
+                                  {classificazioni.length} class. | Serv: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoServizio || 0), 0) / 100)}
+                                </span>
+                              )}
+                            </Label>
+                            {isChecked && dbPrestazione && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={() => {
+                                  setExpandedPrestazioni(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(id)) next.delete(id);
+                                    else next.add(id);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              </Button>
+                            )}
                           </div>
 
-                          {/* Input Importo Servizio */}
-                          <div>
-                            <Input
-                              type="number"
-                              placeholder="Importo Servizio"
-                              min="0"
-                              step="0.01"
-                              value={classificazione.importoServizio || ''}
-                              onChange={(e) => handleClassificazioneChange(index, 'importoServizio', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
-                              className="text-xs h-9"
-                            />
-                          </div>
+                          {/* Livello Progettazione (for progettazione only) */}
+                          {isChecked && id === 'progettazione' && (
+                            <div className="ml-6 mt-2 bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <Label className="text-xs font-medium text-foreground mb-2 block">Livello Progettazione</Label>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                {livelliProgettazioneList.map(({ id: livId, config: livConfig }) => (
+                                  <div key={livId} className="flex items-center space-x-2 p-1.5 bg-card border border-blue-200 dark:border-blue-700 rounded-lg">
+                                    <Checkbox
+                                      id={`edit-livello-${livId}`}
+                                      checked={prestazioniData.livelloProgettazione?.includes(livId) || false}
+                                      onCheckedChange={(checked) => handleLivelloProgettazioneChange(livId, checked as boolean)}
+                                    />
+                                    <Label htmlFor={`edit-livello-${livId}`} className="cursor-pointer text-xs">{livConfig.label}</Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
-                          {/* Bottone Rimuovi */}
-                          <Button
-                            type="button"
-                            onClick={() => handleRemoveClassificazione(index)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 h-9 w-9 p-0"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {/* Expanded classificazioni area */}
+                          {isChecked && isExpanded && dbPrestazione && (
+                            <div className="ml-6 mt-2 p-3 border border-dashed border-border rounded-lg bg-muted/30 space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-medium text-muted-foreground">Classificazioni DM 17/06/2016</span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-6 text-xs px-2"
+                                  onClick={() => {
+                                    createClassificazioneMutation.mutate({
+                                      prestazioneId: dbPrestazione.id,
+                                      data: { codiceDM: 'E.01', importoOpere: 0, importoServizio: 0 },
+                                    });
+                                  }}
+                                >
+                                  <Plus className="w-3 h-3 mr-1" /> Aggiungi
+                                </Button>
+                              </div>
+
+                              {classificazioni.length > 0 ? (
+                                <div className="space-y-2">
+                                  {classificazioni.map((c: any) => (
+                                    <div key={c.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 items-center">
+                                      <Select
+                                        value={c.codiceDM}
+                                        onValueChange={(value) => {
+                                          updateClassificazioneMutation.mutate({
+                                            prestazioneId: dbPrestazione.id,
+                                            classId: c.id,
+                                            data: { codiceDM: value },
+                                          });
+                                        }}
+                                      >
+                                        <SelectTrigger className="font-mono text-xs h-8">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="max-h-[300px]">
+                                          <SelectGroup>
+                                            <SelectLabel>Edilizia</SelectLabel>
+                                            {Object.entries(CATEGORIE_DM2016)
+                                              .filter(([_, data]) => data.categoria === 'Edilizia')
+                                              .map(([codice, data]) => (
+                                                <SelectItem key={codice} value={codice} className="text-xs">
+                                                  <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
+                                                </SelectItem>
+                                              ))}
+                                          </SelectGroup>
+                                          <SelectGroup>
+                                            <SelectLabel>Strutture</SelectLabel>
+                                            {Object.entries(CATEGORIE_DM2016)
+                                              .filter(([_, data]) => data.categoria === 'Strutture')
+                                              .map(([codice, data]) => (
+                                                <SelectItem key={codice} value={codice} className="text-xs">
+                                                  <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
+                                                </SelectItem>
+                                              ))}
+                                          </SelectGroup>
+                                          <SelectGroup>
+                                            <SelectLabel>Impianti</SelectLabel>
+                                            {Object.entries(CATEGORIE_DM2016)
+                                              .filter(([_, data]) => data.categoria === 'Impianti')
+                                              .map(([codice, data]) => (
+                                                <SelectItem key={codice} value={codice} className="text-xs">
+                                                  <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
+                                                </SelectItem>
+                                              ))}
+                                          </SelectGroup>
+                                          <SelectGroup>
+                                            <SelectLabel>Altro</SelectLabel>
+                                            {Object.entries(CATEGORIE_DM2016)
+                                              .filter(([_, data]) => !['Edilizia', 'Strutture', 'Impianti'].includes(data.categoria))
+                                              .map(([codice, data]) => (
+                                                <SelectItem key={codice} value={codice} className="text-xs">
+                                                  <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
+                                                </SelectItem>
+                                              ))}
+                                          </SelectGroup>
+                                        </SelectContent>
+                                      </Select>
+                                      <Input
+                                        type="number"
+                                        placeholder="Opere"
+                                        min="0"
+                                        step="100"
+                                        defaultValue={c.importoOpere ? c.importoOpere / 100 : ''}
+                                        onBlur={(e) => {
+                                          const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
+                                          if (val !== c.importoOpere) {
+                                            updateClassificazioneMutation.mutate({
+                                              prestazioneId: dbPrestazione.id,
+                                              classId: c.id,
+                                              data: { importoOpere: val },
+                                            });
+                                          }
+                                        }}
+                                        className="text-xs h-8"
+                                      />
+                                      <Input
+                                        type="number"
+                                        placeholder="Servizio"
+                                        min="0"
+                                        step="100"
+                                        defaultValue={c.importoServizio ? c.importoServizio / 100 : ''}
+                                        onBlur={(e) => {
+                                          const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
+                                          if (val !== c.importoServizio) {
+                                            updateClassificazioneMutation.mutate({
+                                              prestazioneId: dbPrestazione.id,
+                                              classId: c.id,
+                                              data: { importoServizio: val },
+                                            });
+                                          }
+                                        }}
+                                        className="text-xs h-8"
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                        onClick={() => {
+                                          deleteClassificazioneMutation.mutate({
+                                            prestazioneId: dbPrestazione.id,
+                                            classId: c.id,
+                                          });
+                                        }}
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                  <div className="flex justify-end gap-4 text-xs text-muted-foreground pt-1 border-t">
+                                    <span>Opere: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoOpere || 0), 0) / 100)}</span>
+                                    <span className="font-medium text-primary">Servizio: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoServizio || 0), 0) / 100)}</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-xs text-muted-foreground text-center py-2">Nessuna classificazione</p>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Message for newly checked prestazione not yet in DB */}
+                          {isChecked && !dbPrestazione && (
+                            <p className="ml-6 mt-1 text-xs text-amber-600">Salva la commessa per aggiungere classificazioni a questa prestazione</p>
+                          )}
                         </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-4 text-muted-foreground border border-dashed border-border rounded-lg">
-                        <p className="text-xs">Nessuna classificazione</p>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
 
-                  {/* Totale Importi */}
-                  {prestazioniData.classificazioniDM2016 && prestazioniData.classificazioniDM2016.length > 0 && (
-                    <div className="pt-2 border-t border-border space-y-1">
+                  {/* Grand Total */}
+                  {dbClassificazioni.length > 0 && (
+                    <div className="pt-3 border-t border-border">
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Totale Opere:</span>
-                        <span className="font-semibold">{formatImporto(importoTotaleOpere)}</span>
+                        <span className="text-muted-foreground">Totale Commessa Opere:</span>
+                        <span className="font-semibold">{formatImporto(importoTotaleOpere / 100)}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-muted-foreground">Totale Servizio:</span>
-                        <span className="font-semibold text-primary">{formatImporto(importoTotaleServizio)}</span>
+                        <span className="text-muted-foreground">Totale Commessa Servizio:</span>
+                        <span className="font-semibold text-primary">{formatImporto(importoTotaleServizio / 100)}</span>
                       </div>
                     </div>
                   )}
