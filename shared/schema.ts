@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -84,7 +84,6 @@ export const projects = pgTable("projects", {
   billingStatus: text("billing_status").default("da_fatturare"), // 'da_fatturare', 'parzialmente_fatturato', 'fatturato', 'parzialmente_pagato', 'pagato'
 
   createdAt: timestamp("created_at").defaultNow(),
-  fsRoot: text("fs_root"),
   metadata: jsonb("metadata").default({}),
 });
 
@@ -396,7 +395,6 @@ export type TipoFattura = typeof TIPO_FATTURA[number];
 export const projectInvoices = pgTable("project_invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
-  salId: text("sal_id"), // Opzionale: collegamento a SAL (FK reference removed - table dropped from schema)
   prestazioneId: text("prestazione_id").references(() => projectPrestazioni.id, { onDelete: "cascade" }), // Collegamento a prestazione - cascade delete
   tipoFattura: text("tipo_fattura").default("unica"), // 'acconto', 'sal', 'saldo', 'unica'
   numeroFattura: text("numero_fattura").notNull(),
@@ -462,6 +460,21 @@ export const projectPrestazioni = pgTable("project_prestazioni", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Classificazioni DM 17/06/2016 per singola prestazione
+export const prestazioneClassificazioni = pgTable("prestazione_classificazioni", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  prestazioneId: text("prestazione_id").notNull().references(() => projectPrestazioni.id, { onDelete: "cascade" }),
+  projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  codiceDM: text("codice_dm").notNull(), // Es. "E.22", "S.05", "IA.03"
+  importoOpere: integer("importo_opere").notNull().default(0), // Centesimi di euro
+  importoServizio: integer("importo_servizio").notNull().default(0), // Centesimi di euro
+  note: text("note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  unique("uq_prestazione_codice").on(table.prestazioneId, table.codiceDM),
+]);
 
 // Budget e costi per commessa
 export const projectBudget = pgTable("project_budget", {
@@ -564,6 +577,17 @@ export const insertProjectPrestazioneSchema = createInsertSchema(projectPrestazi
   return true;
 });
 
+// Schema inserimento classificazione DM per prestazione
+export const insertPrestazioneClassificazioneSchema = createInsertSchema(prestazioneClassificazioni).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  codiceDM: z.string().regex(/^[A-Z]{1,2}\.?[0-9]{1,2}$/, 'Formato codice DM non valido (es: E.22, IA.03)'),
+  importoOpere: z.number().int().min(0).default(0),
+  importoServizio: z.number().int().min(0).default(0),
+});
+
 // Schema per aggiornamento stato prestazione
 export const updatePrestazioneStatoSchema = z.object({
   stato: z.enum(PRESTAZIONE_STATI),
@@ -630,6 +654,10 @@ export type InsertProjectPrestazione = z.infer<typeof insertProjectPrestazioneSc
 export type ProjectPrestazione = typeof projectPrestazioni.$inferSelect;
 export type UpdatePrestazioneStato = z.infer<typeof updatePrestazioneStatoSchema>;
 
+// Classificazioni DM per prestazione types
+export type InsertPrestazioneClassificazione = z.infer<typeof insertPrestazioneClassificazioneSchema>;
+export type PrestazioneClassificazione = typeof prestazioneClassificazioni.$inferSelect;
+
 // ============================================
 // BILLING AUTOMATION - ALERT E CONFIGURAZIONE
 // ============================================
@@ -664,7 +692,6 @@ export const billingConfig = pgTable("billing_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   settingKey: text("setting_key").notNull().unique(),
   settingValue: integer("setting_value").notNull(),
-  description: text("description"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
