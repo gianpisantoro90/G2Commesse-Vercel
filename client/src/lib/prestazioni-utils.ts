@@ -209,12 +209,13 @@ export function getImportoOpere(metadata?: ProjectPrestazioni | null): number {
   if (!metadata) return 0;
 
   // Preferisci la nuova struttura classificazioniDM2016
+  // I valori nel metadata JSON sono in centesimi (copiati dalla tabella DB), quindi dividiamo per 100
   if (metadata.classificazioniDM2016 && metadata.classificazioniDM2016.length > 0) {
-    return metadata.classificazioniDM2016.reduce((sum, c) => sum + (c.importo || 0), 0);
+    return metadata.classificazioniDM2016.reduce((sum, c) => sum + (c.importo || 0), 0) / 100;
   }
 
-  // Fallback al campo deprecato per retrocompatibilità
-  return metadata.importoOpere || 0;
+  // Fallback al campo deprecato per retrocompatibilità (anch'esso in centesimi)
+  return (metadata.importoOpere || 0) / 100;
 }
 
 // Funzione per validare i dati prestazioni
