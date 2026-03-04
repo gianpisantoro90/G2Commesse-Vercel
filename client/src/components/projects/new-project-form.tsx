@@ -18,7 +18,6 @@ import {
   type TipoRapportoType,
   getAllPrestazioni,
   getAllLivelliProgettazione,
-  hasProgettazione,
   formatImporto
 } from "@/lib/prestazioni-utils";
 import { CATEGORIE_DM2016 } from "@/lib/parcella-calculator";
@@ -44,7 +43,6 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
     base: true,
     contratto: false,
     prestazioni: false,
-    classificazioni: false,
   });
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,8 +52,13 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
   const [prestazioniData, setPrestazioniData] = useState<ProjectPrestazioni>({
     prestazioni: [],
     livelloProgettazione: [],
-    classificazioniDM2016: [],
   });
+
+  const [expandedPrestazioni, setExpandedPrestazioni] = useState<Set<string>>(new Set());
+  // Classificazioni per tipo di prestazione (local state, saved after project creation)
+  const [classificazioniPerTipo, setClassificazioniPerTipo] = useState<
+    Record<string, Array<{ codice: string; importoOpere: number; importoServizio: number }>>
+  >({});
 
   // Fetch existing clients
   const { data: clients = [] } = useQuery<Client[]>({
@@ -77,7 +80,6 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
       cig: "",
       numeroContratto: "",
       code: "",
-      fsRoot: null,
       metadata: {},
     },
   });
@@ -126,38 +128,26 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
     }));
   };
 
-  // Handlers per classificazioni DM 17/06/2016
-  const handleAddClassificazione = () => {
-    setPrestazioniData(prev => ({
+  // Handlers per classificazioni DM 17/06/2016 (local state, per tipo di prestazione)
+  const handleAddClassificazioneForTipo = (tipo: string) => {
+    setClassificazioniPerTipo(prev => ({
       ...prev,
-      classificazioniDM2016: [
-        ...(prev.classificazioniDM2016 || []),
-        { codice: '', importo: 0 }
-      ]
+      [tipo]: [...(prev[tipo] || []), { codice: 'E.01', importoOpere: 0, importoServizio: 0 }],
     }));
   };
 
-  const handleRemoveClassificazione = (index: number) => {
-    setPrestazioniData(prev => ({
+  const handleRemoveClassificazioneForTipo = (tipo: string, index: number) => {
+    setClassificazioniPerTipo(prev => ({
       ...prev,
-      classificazioniDM2016: (prev.classificazioniDM2016 || []).filter((_, i) => i !== index)
+      [tipo]: (prev[tipo] || []).filter((_, i) => i !== index),
     }));
   };
 
-  const handleClassificazioneChange = (index: number, field: 'codice' | 'importo' | 'importoServizio', value: string | number) => {
-    setPrestazioniData(prev => {
-      const newClassificazioni = [...(prev.classificazioniDM2016 || [])];
-      if (field === 'codice') {
-        newClassificazioni[index] = { ...newClassificazioni[index], codice: value as string };
-      } else if (field === 'importo') {
-        newClassificazioni[index] = { ...newClassificazioni[index], importo: value as number };
-      } else if (field === 'importoServizio') {
-        newClassificazioni[index] = { ...newClassificazioni[index], importoServizio: value as number };
-      }
-      return {
-        ...prev,
-        classificazioniDM2016: newClassificazioni
-      };
+  const handleClassificazioneChangeForTipo = (tipo: string, index: number, field: string, value: string | number) => {
+    setClassificazioniPerTipo(prev => {
+      const arr = [...(prev[tipo] || [])];
+      arr[index] = { ...arr[index], [field]: value };
+      return { ...prev, [tipo]: arr };
     });
   };
 
@@ -172,19 +162,45 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
       // Step 1: Create project in database
       setCreationStep("Creando commessa nel database...");
 
-      // Include prestazioni data in metadata
+      // Include prestazioni data in metadata (classificazioni saved separately after creation)
       const projectData = {
         ...data,
         metadata: {
           ...(typeof data.metadata === 'object' && data.metadata !== null ? data.metadata as Record<string, unknown> : {}),
           prestazioni: prestazioniData.prestazioni,
           livelloProgettazione: prestazioniData.livelloProgettazione,
-          classificazioniDM2016: prestazioniData.classificazioniDM2016,
         }
       };
 
       const projectResponse = await apiRequest("POST", "/api/projects", projectData);
       const project = await projectResponse.json();
+
+      // Step 1b: Save classificazioni for each prestazione
+      const hasClassificazioni = Object.values(classificazioniPerTipo).some(arr => arr.length > 0);
+      if (hasClassificazioni) {
+        setCreationStep("Salvando classificazioni DM...");
+        const prestazioniResponse = await apiRequest("GET", `/api/projects/${project.id}/prestazioni`);
+        const prestazioni = await prestazioniResponse.json();
+
+        for (const [tipo, classificazioni] of Object.entries(classificazioniPerTipo)) {
+          if (!classificazioni || classificazioni.length === 0) continue;
+          const prestazione = prestazioni.find((p: any) => p.tipo === tipo);
+          if (!prestazione) continue;
+
+          for (const c of classificazioni) {
+            if (!c.codice) continue;
+            try {
+              await apiRequest("POST", `/api/prestazioni/${prestazione.id}/classificazioni`, {
+                codiceDM: c.codice,
+                importoOpere: Math.round(c.importoOpere * 100),
+                importoServizio: Math.round(c.importoServizio * 100),
+              });
+            } catch (err) {
+              console.error(`Error saving classificazione for ${tipo}:`, err);
+            }
+          }
+        }
+      }
 
       // Step 2: Create OneDrive folder with template
       setCreationStep("Creando cartella OneDrive...");
@@ -240,19 +256,46 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
     mutationFn: async (data: InsertProject) => {
       setCreationStep("Creando commessa nel database...");
 
-      // Include prestazioni data in metadata
+      // Include prestazioni data in metadata (classificazioni saved separately after creation)
       const projectData = {
         ...data,
         metadata: {
           ...(typeof data.metadata === 'object' && data.metadata !== null ? data.metadata as Record<string, unknown> : {}),
           prestazioni: prestazioniData.prestazioni,
           livelloProgettazione: prestazioniData.livelloProgettazione,
-          classificazioniDM2016: prestazioniData.classificazioniDM2016,
         }
       };
 
       const projectResponse = await apiRequest("POST", "/api/projects", projectData);
       const project = await projectResponse.json();
+
+      // Save classificazioni for each prestazione
+      const hasClassificazioni = Object.values(classificazioniPerTipo).some(arr => arr.length > 0);
+      if (hasClassificazioni) {
+        setCreationStep("Salvando classificazioni DM...");
+        const prestazioniResponse = await apiRequest("GET", `/api/projects/${project.id}/prestazioni`);
+        const prestazioni = await prestazioniResponse.json();
+
+        for (const [tipo, classificazioni] of Object.entries(classificazioniPerTipo)) {
+          if (!classificazioni || classificazioni.length === 0) continue;
+          const prestazione = prestazioni.find((p: any) => p.tipo === tipo);
+          if (!prestazione) continue;
+
+          for (const c of classificazioni) {
+            if (!c.codice) continue;
+            try {
+              await apiRequest("POST", `/api/prestazioni/${prestazione.id}/classificazioni`, {
+                codiceDM: c.codice,
+                importoOpere: Math.round(c.importoOpere * 100),
+                importoServizio: Math.round(c.importoServizio * 100),
+              });
+            } catch (err) {
+              console.error(`Error saving classificazione for ${tipo}:`, err);
+            }
+          }
+        }
+      }
+
       return { project };
     },
     onSuccess: ({ project }) => {
@@ -349,11 +392,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
   const prestazioniList = getAllPrestazioni();
   const livelliProgettazioneList = getAllLivelliProgettazione();
-  const showLivelloProgettazione = hasProgettazione(prestazioniData.prestazioni);
-
-  // Calcola importo totale opere dalla somma delle classificazioni
-  const importoTotaleOpere = (prestazioniData.classificazioniDM2016 || []).reduce((sum, c) => sum + (c.importo || 0), 0);
-  const importoTotaleServizio = (prestazioniData.classificazioniDM2016 || []).reduce((sum, c) => sum + (c.importoServizio || 0), 0);
+  // Calcola importo totale opere dalla somma delle classificazioni (tutte le prestazioni)
+  const importoTotaleOpere = Object.values(classificazioniPerTipo).flat().reduce((sum, c) => sum + (c.importoOpere || 0), 0);
+  const importoTotaleServizio = Object.values(classificazioniPerTipo).flat().reduce((sum, c) => sum + (c.importoServizio || 0), 0);
 
   return (
     <div className="card-g2" data-testid="new-project-form">
@@ -602,264 +643,208 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
           )}
         </div>
 
-        {/* SEZIONE 3: Prestazioni Professionali */}
+        {/* SEZIONE 3: Prestazioni e Classificazioni */}
         <div className="border border-border rounded-lg overflow-hidden">
           <button
             type="button"
             onClick={() => toggleSection('prestazioni')}
             className="w-full flex items-center justify-between p-4 bg-muted hover:bg-muted transition-colors"
           >
-            <span className="font-semibold text-foreground">Prestazioni Professionali</span>
+            <span className="font-semibold text-foreground">Prestazioni e Classificazioni DM</span>
             {expandedSections.prestazioni ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
           </button>
 
           {expandedSections.prestazioni && (
-            <div className="p-4 space-y-4">
-              {/* Tipologia Prestazioni */}
-              <div>
-                <Label className="text-sm font-medium text-foreground mb-3 block">
-                  Tipologia Prestazioni
-                </Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {prestazioniList.map(({ id, config }) => (
-                    <div key={id} className="flex items-center space-x-2 p-2 border border-border rounded-lg hover:bg-muted">
-                      <Checkbox
-                        id={`prestazione-${id}`}
-                        checked={prestazioniData.prestazioni?.includes(id) || false}
-                        onCheckedChange={(checked) => handlePrestazioneChange(id, checked as boolean)}
-                      />
-                      <Label htmlFor={`prestazione-${id}`} className="flex items-center gap-1 cursor-pointer text-sm">
-                        <span>{config.icon}</span>
-                        <span>{config.shortLabel}</span>
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            <div className="p-4 space-y-3">
+              <div className="space-y-2">
+                {prestazioniList.map(({ id, config }) => {
+                  const isChecked = prestazioniData.prestazioni?.includes(id) || false;
+                  const isExpanded = expandedPrestazioni.has(id);
+                  const classificazioni = classificazioniPerTipo[id] || [];
 
-              {/* Livello Progettazione - condizionale */}
-              {showLivelloProgettazione && (
-                <div className="bg-teal-50 dark:bg-teal-950/50 p-4 rounded-lg border border-teal-200 dark:border-teal-800">
-                  <Label className="text-sm font-medium text-foreground mb-3 block">
-                    Livello Progettazione
-                  </Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {livelliProgettazioneList.map(({ id, config }) => (
-                      <div key={id} className="flex items-center space-x-2 p-2 bg-card border border-teal-200 dark:border-teal-700 rounded-lg">
+                  return (
+                    <div key={id}>
+                      <div className="flex items-center gap-2 p-2 border border-border rounded-lg hover:bg-muted">
                         <Checkbox
-                          id={`livello-${id}`}
-                          checked={prestazioniData.livelloProgettazione?.includes(id) || false}
-                          onCheckedChange={(checked) => handleLivelloProgettazioneChange(id, checked as boolean)}
+                          id={`prestazione-${id}`}
+                          checked={isChecked}
+                          onCheckedChange={(checked) => handlePrestazioneChange(id, checked as boolean)}
                         />
-                        <Label htmlFor={`livello-${id}`} className="cursor-pointer text-sm">
-                          {config.label}
+                        <Label htmlFor={`prestazione-${id}`} className="flex items-center gap-1 cursor-pointer text-sm flex-1">
+                          <span>{config.icon}</span>
+                          <span>{config.shortLabel}</span>
+                          {classificazioni.length > 0 && (
+                            <span className="ml-auto text-xs text-muted-foreground">
+                              {classificazioni.length} class. | Serv: {formatImporto(classificazioni.reduce((s, c) => s + (c.importoServizio || 0), 0))}
+                            </span>
+                          )}
                         </Label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* SEZIONE 4: Classificazioni DM 17/06/2016 */}
-        <div className="border border-border rounded-lg overflow-hidden">
-          <button
-            type="button"
-            onClick={() => toggleSection('classificazioni')}
-            className="w-full flex items-center justify-between p-4 bg-muted hover:bg-muted transition-colors"
-          >
-            <span className="font-semibold text-foreground">Classificazioni DM 17/06/2016</span>
-            {expandedSections.classificazioni ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </button>
-
-          {expandedSections.classificazioni && (
-            <div className="p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">
-                  Aggiungi una o più categorie con i rispettivi importi
-                </p>
-                <Button
-                  type="button"
-                  onClick={handleAddClassificazione}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" /> Aggiungi
-                </Button>
-              </div>
-
-              {/* Lista classificazioni */}
-              <div className="space-y-3">
-                {prestazioniData.classificazioniDM2016 && prestazioniData.classificazioniDM2016.length > 0 ? (
-                  prestazioniData.classificazioniDM2016.map((classificazione, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] gap-3 p-3 bg-muted rounded-lg border border-border">
-                      {/* Dropdown Categoria */}
-                      <div className="space-y-1">
-                        <Label className="text-xs font-medium">Classe e Categoria</Label>
-                        <Select
-                          value={classificazione.codice || ''}
-                          onValueChange={(value) => handleClassificazioneChange(index, 'codice', value)}
-                        >
-                          <SelectTrigger className="font-mono text-sm">
-                            <SelectValue placeholder="Seleziona categoria..." />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-[400px]">
-                            <SelectGroup>
-                              <SelectLabel>Edilizia</SelectLabel>
-                              {Object.entries(CATEGORIE_DM2016)
-                                .filter(([_, data]) => data.categoria === 'Edilizia')
-                                .map(([codice, data]) => (
-                                  <SelectItem key={codice} value={codice}>
-                                    <span className="font-mono font-semibold">{codice}</span> - {data.descrizione.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                            <SelectGroup>
-                              <SelectLabel>Strutture</SelectLabel>
-                              {Object.entries(CATEGORIE_DM2016)
-                                .filter(([_, data]) => data.categoria === 'Strutture')
-                                .map(([codice, data]) => (
-                                  <SelectItem key={codice} value={codice}>
-                                    <span className="font-mono font-semibold">{codice}</span> - {data.descrizione.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                            <SelectGroup>
-                              <SelectLabel>Impianti</SelectLabel>
-                              {Object.entries(CATEGORIE_DM2016)
-                                .filter(([_, data]) => data.categoria === 'Impianti')
-                                .map(([codice, data]) => (
-                                  <SelectItem key={codice} value={codice}>
-                                    <span className="font-mono font-semibold">{codice}</span> - {data.descrizione.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                            <SelectGroup>
-                              <SelectLabel>Infrastrutture Mobilità</SelectLabel>
-                              {Object.entries(CATEGORIE_DM2016)
-                                .filter(([_, data]) => data.categoria === 'Infrastrutture Mobilità')
-                                .map(([codice, data]) => (
-                                  <SelectItem key={codice} value={codice}>
-                                    <span className="font-mono font-semibold">{codice}</span> - {data.descrizione.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                            <SelectGroup>
-                              <SelectLabel>Idraulica</SelectLabel>
-                              {Object.entries(CATEGORIE_DM2016)
-                                .filter(([_, data]) => data.categoria === 'Idraulica')
-                                .map(([codice, data]) => (
-                                  <SelectItem key={codice} value={codice}>
-                                    <span className="font-mono font-semibold">{codice}</span> - {data.descrizione.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                            <SelectGroup>
-                              <SelectLabel>Tecnologie ICT</SelectLabel>
-                              {Object.entries(CATEGORIE_DM2016)
-                                .filter(([_, data]) => data.categoria === 'Tecnologie ICT')
-                                .map(([codice, data]) => (
-                                  <SelectItem key={codice} value={codice}>
-                                    <span className="font-mono font-semibold">{codice}</span> - {data.descrizione.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                            <SelectGroup>
-                              <SelectLabel>Paesaggio e Ambiente</SelectLabel>
-                              {Object.entries(CATEGORIE_DM2016)
-                                .filter(([_, data]) => data.categoria === 'Paesaggio e Ambiente')
-                                .map(([codice, data]) => (
-                                  <SelectItem key={codice} value={codice}>
-                                    <span className="font-mono font-semibold">{codice}</span> - {data.descrizione.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                            <SelectGroup>
-                              <SelectLabel>Territorio e Urbanistica</SelectLabel>
-                              {Object.entries(CATEGORIE_DM2016)
-                                .filter(([_, data]) => data.categoria === 'Territorio e Urbanistica')
-                                .map(([codice, data]) => (
-                                  <SelectItem key={codice} value={codice}>
-                                    <span className="font-mono font-semibold">{codice}</span> - {data.descrizione.substring(0, 50)}...
-                                  </SelectItem>
-                                ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
+                        {isChecked && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => {
+                              setExpandedPrestazioni(prev => {
+                                const next = new Set(prev);
+                                if (next.has(id)) next.delete(id);
+                                else next.add(id);
+                                return next;
+                              });
+                            }}
+                          >
+                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                          </Button>
+                        )}
                       </div>
 
-                      {/* Input Importo Opere */}
-                      <div className="space-y-1">
-                        <Label className="text-xs font-medium">Importo Opere</Label>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          min="0"
-                          step="0.01"
-                          value={classificazione.importo || ''}
-                          onChange={(e) => handleClassificazioneChange(index, 'importo', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
-                          className="text-sm"
-                        />
-                      </div>
+                      {/* Livello Progettazione for progettazione */}
+                      {isChecked && id === 'progettazione' && (
+                        <div className="ml-6 mt-2 bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <Label className="text-xs font-medium text-foreground mb-2 block">Livello Progettazione</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            {livelliProgettazioneList.map(({ id: livId, config: livConfig }) => (
+                              <div key={livId} className="flex items-center space-x-2 p-1.5 bg-card border border-blue-200 dark:border-blue-700 rounded-lg">
+                                <Checkbox
+                                  id={`livello-${livId}`}
+                                  checked={prestazioniData.livelloProgettazione?.includes(livId) || false}
+                                  onCheckedChange={(checked) => handleLivelloProgettazioneChange(livId, checked as boolean)}
+                                />
+                                <Label htmlFor={`livello-${livId}`} className="cursor-pointer text-xs">{livConfig.label}</Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
-                      {/* Input Importo Servizio */}
-                      <div className="space-y-1">
-                        <Label className="text-xs font-medium">
-                          Importo Servizio
-                          <span className="ml-1 text-gray-400 text-[10px]">per CRE</span>
-                        </Label>
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          min="0"
-                          step="0.01"
-                          value={classificazione.importoServizio || ''}
-                          onChange={(e) => handleClassificazioneChange(index, 'importoServizio', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
-                          className="text-sm"
-                        />
-                      </div>
+                      {/* Expanded classificazioni area (local state) */}
+                      {isChecked && isExpanded && (
+                        <div className="ml-6 mt-2 p-3 border border-dashed border-border rounded-lg bg-muted/30 space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs font-medium text-muted-foreground">Classificazioni DM 17/06/2016</span>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-xs px-2"
+                              onClick={() => handleAddClassificazioneForTipo(id)}
+                            >
+                              <Plus className="w-3 h-3 mr-1" /> Aggiungi
+                            </Button>
+                          </div>
 
-                      {/* Bottone Rimuovi */}
-                      <div className="flex items-end">
-                        <Button
-                          type="button"
-                          onClick={() => handleRemoveClassificazione(index)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                          {classificazioni.length > 0 ? (
+                            <div className="space-y-2">
+                              {classificazioni.map((c, index) => (
+                                <div key={index} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 items-center">
+                                  <Select
+                                    value={c.codice}
+                                    onValueChange={(value) => handleClassificazioneChangeForTipo(id, index, 'codice', value)}
+                                  >
+                                    <SelectTrigger className="font-mono text-xs h-8">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[300px]">
+                                      <SelectGroup>
+                                        <SelectLabel>Edilizia</SelectLabel>
+                                        {Object.entries(CATEGORIE_DM2016)
+                                          .filter(([_, data]) => data.categoria === 'Edilizia')
+                                          .map(([codice, data]) => (
+                                            <SelectItem key={codice} value={codice} className="text-xs">
+                                              <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                      <SelectGroup>
+                                        <SelectLabel>Strutture</SelectLabel>
+                                        {Object.entries(CATEGORIE_DM2016)
+                                          .filter(([_, data]) => data.categoria === 'Strutture')
+                                          .map(([codice, data]) => (
+                                            <SelectItem key={codice} value={codice} className="text-xs">
+                                              <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                      <SelectGroup>
+                                        <SelectLabel>Impianti</SelectLabel>
+                                        {Object.entries(CATEGORIE_DM2016)
+                                          .filter(([_, data]) => data.categoria === 'Impianti')
+                                          .map(([codice, data]) => (
+                                            <SelectItem key={codice} value={codice} className="text-xs">
+                                              <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                      <SelectGroup>
+                                        <SelectLabel>Altro</SelectLabel>
+                                        {Object.entries(CATEGORIE_DM2016)
+                                          .filter(([_, data]) => !['Edilizia', 'Strutture', 'Impianti'].includes(data.categoria))
+                                          .map(([codice, data]) => (
+                                            <SelectItem key={codice} value={codice} className="text-xs">
+                                              <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    type="number"
+                                    placeholder="Opere"
+                                    min="0"
+                                    step="0.01"
+                                    value={c.importoOpere || ''}
+                                    onChange={(e) => handleClassificazioneChangeForTipo(id, index, 'importoOpere', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                                    className="text-xs h-8"
+                                  />
+                                  <Input
+                                    type="number"
+                                    placeholder="Servizio"
+                                    min="0"
+                                    step="0.01"
+                                    value={c.importoServizio || ''}
+                                    onChange={(e) => handleClassificazioneChangeForTipo(id, index, 'importoServizio', e.target.value === '' ? 0 : parseFloat(e.target.value) || 0)}
+                                    className="text-xs h-8"
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                    onClick={() => handleRemoveClassificazioneForTipo(id, index)}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <div className="flex justify-end gap-4 text-xs text-muted-foreground pt-1 border-t">
+                                <span>Opere: {formatImporto(classificazioni.reduce((s, c) => s + (c.importoOpere || 0), 0))}</span>
+                                <span className="font-medium text-primary">Servizio: {formatImporto(classificazioni.reduce((s, c) => s + (c.importoServizio || 0), 0))}</span>
+                              </div>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground text-center py-2">Nessuna classificazione</p>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 text-muted-foreground border border-dashed border-border rounded-lg">
-                    <p className="text-sm">Nessuna classificazione aggiunta</p>
-                    <p className="text-xs mt-1">Clicca "Aggiungi" per inserire una categoria</p>
-                  </div>
-                )}
+                  );
+                })}
               </div>
 
-              {/* Totale Importi */}
-              {prestazioniData.classificazioniDM2016 && prestazioniData.classificazioniDM2016.length > 0 && (
-                <div className="pt-3 border-t border-border space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-foreground">Importo Totale Opere:</span>
-                    <span className="text-lg font-bold text-foreground">{formatImporto(importoTotaleOpere)}</span>
+              {/* Grand Total */}
+              {importoTotaleOpere > 0 || importoTotaleServizio > 0 ? (
+                <div className="pt-3 border-t border-border">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Totale Commessa Opere:</span>
+                    <span className="font-semibold">{formatImporto(importoTotaleOpere)}</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-foreground">
-                      Importo Totale Servizio:
-                      <span className="ml-1 text-gray-400 text-[10px]">per CRE</span>
-                    </span>
-                    <span className="text-lg font-bold text-primary">{formatImporto(importoTotaleServizio)}</span>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Totale Commessa Servizio:</span>
+                    <span className="font-semibold text-primary">{formatImporto(importoTotaleServizio)}</span>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
           )}
         </div>
@@ -1015,8 +1000,9 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
                 setPrestazioniData({
                   prestazioni: [],
                   livelloProgettazione: [],
-                  classificazioniDM2016: [],
                 });
+                setExpandedPrestazioni(new Set());
+                setClassificazioniPerTipo({});
               }}
               className="px-8 py-3 border-2 border-border text-foreground rounded-md font-semibold hover:bg-muted transition-colors disabled:opacity-50"
             >
