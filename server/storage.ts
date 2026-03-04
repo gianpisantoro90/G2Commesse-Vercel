@@ -1,5 +1,5 @@
-import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectBudget, type InsertProjectBudget, type ProjectCost, type InsertProjectCost, type ProjectResource, type InsertProjectResource, type BillingAlert, type InsertBillingAlert, type BillingConfig as BillingConfigType, type ImportReport, type ImportEntityReport } from "@shared/schema";
-import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectBudget, projectCosts, projectResources, billingAlerts, billingConfig } from "@shared/schema";
+import { type Project, type InsertProject, type Client, type InsertClient, type FileRouting, type InsertFileRouting, type SystemConfig, type InsertSystemConfig, type OneDriveMapping, type InsertOneDriveMapping, type FilesIndex, type InsertFilesIndex, type Communication, type InsertCommunication, type Deadline, type InsertProjectDeadline, type User, type InsertUser, type Task, type InsertTask, type ProjectInvoice, type InsertProjectInvoice, type ProjectPrestazione, type InsertProjectPrestazione, type PrestazioniStats, type ProjectBudget, type InsertProjectBudget, type ProjectCost, type InsertProjectCost, type ProjectResource, type InsertProjectResource, type BillingAlert, type InsertBillingAlert, type BillingConfig as BillingConfigType, type ImportReport, type ImportEntityReport, type PrestazioneClassificazione, type InsertPrestazioneClassificazione } from "@shared/schema";
+import { projects, clients, fileRoutings, systemConfig, oneDriveMappings, filesIndex, communications, projectDeadlines, users, tasks, projectInvoices, projectPrestazioni, projectBudget, projectCosts, projectResources, billingAlerts, billingConfig, prestazioneClassificazioni } from "@shared/schema";
 import { eq, sql, or, and, desc, asc, ilike } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { type PaginationParams, type PaginatedResponse, buildPaginatedResponse } from "@shared/pagination";
@@ -132,6 +132,15 @@ export interface IStorage {
   getInvoicesByPrestazione(prestazioneId: string): Promise<ProjectInvoice[]>;
   recalculatePrestazioneImporti(prestazioneId: string): Promise<ProjectPrestazione | undefined>;
   fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }>;
+
+  // Classificazioni DM per prestazione
+  getClassificazioniByPrestazione(prestazioneId: string): Promise<PrestazioneClassificazione[]>;
+  getClassificazioniByProject(projectId: string): Promise<PrestazioneClassificazione[]>;
+  createClassificazione(data: InsertPrestazioneClassificazione): Promise<PrestazioneClassificazione>;
+  updateClassificazione(id: string, updates: Partial<InsertPrestazioneClassificazione>): Promise<PrestazioneClassificazione | undefined>;
+  deleteClassificazione(id: string): Promise<boolean>;
+  recalculatePrestazioneFromClassificazioni(prestazioneId: string): Promise<void>;
+  syncProjectMetadataFromClassificazioni(projectId: string): Promise<void>;
 
   // Project Resources
   getAllProjectResources(): Promise<ProjectResource[]>;
@@ -1127,6 +1136,113 @@ export class MemStorage implements IStorage {
     }
 
     return deleted;
+  }
+
+  // ============================================
+  // CLASSIFICAZIONI DM PER PRESTAZIONE
+  // ============================================
+
+  private classificazioni: Map<string, PrestazioneClassificazione> = new Map();
+
+  async getClassificazioniByPrestazione(prestazioneId: string): Promise<PrestazioneClassificazione[]> {
+    return Array.from(this.classificazioni.values())
+      .filter(c => c.prestazioneId === prestazioneId)
+      .sort((a, b) => (a.codiceDM || '').localeCompare(b.codiceDM || ''));
+  }
+
+  async getClassificazioniByProject(projectId: string): Promise<PrestazioneClassificazione[]> {
+    return Array.from(this.classificazioni.values())
+      .filter(c => c.projectId === projectId)
+      .sort((a, b) => (a.codiceDM || '').localeCompare(b.codiceDM || ''));
+  }
+
+  async createClassificazione(data: InsertPrestazioneClassificazione): Promise<PrestazioneClassificazione> {
+    const id = randomUUID();
+    const now = new Date();
+    const record: PrestazioneClassificazione = {
+      id,
+      prestazioneId: data.prestazioneId,
+      projectId: data.projectId,
+      codiceDM: data.codiceDM,
+      importoOpere: data.importoOpere ?? 0,
+      importoServizio: data.importoServizio ?? 0,
+      note: data.note ?? null,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.classificazioni.set(id, record);
+    await this.recalculatePrestazioneFromClassificazioni(data.prestazioneId);
+    await this.syncProjectMetadataFromClassificazioni(data.projectId);
+    return record;
+  }
+
+  async updateClassificazione(id: string, updates: Partial<InsertPrestazioneClassificazione>): Promise<PrestazioneClassificazione | undefined> {
+    const existing = this.classificazioni.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.classificazioni.set(id, updated);
+    await this.recalculatePrestazioneFromClassificazioni(existing.prestazioneId);
+    await this.syncProjectMetadataFromClassificazioni(existing.projectId);
+    return updated;
+  }
+
+  async deleteClassificazione(id: string): Promise<boolean> {
+    const existing = this.classificazioni.get(id);
+    if (!existing) return false;
+    this.classificazioni.delete(id);
+    await this.recalculatePrestazioneFromClassificazioni(existing.prestazioneId);
+    await this.syncProjectMetadataFromClassificazioni(existing.projectId);
+    return true;
+  }
+
+  async recalculatePrestazioneFromClassificazioni(prestazioneId: string): Promise<void> {
+    const classificazioni = await this.getClassificazioniByPrestazione(prestazioneId);
+    const importoPrevisto = classificazioni.reduce((sum, c) => sum + (c.importoServizio ?? 0), 0);
+    const prestazione = this.prestazioni.get(prestazioneId);
+    if (prestazione) {
+      prestazione.importoPrevisto = importoPrevisto;
+      prestazione.updatedAt = new Date();
+    }
+  }
+
+  async syncProjectMetadataFromClassificazioni(projectId: string): Promise<void> {
+    const allClassificazioni = await this.getClassificazioniByProject(projectId);
+    const project = await this.getProject(projectId);
+    if (!project) return;
+
+    // Aggregate by codiceDM across all prestazioni
+    const byCode = new Map<string, { importo: number; importoOpere: number; importoServizio: number }>();
+    for (const c of allClassificazioni) {
+      const existing = byCode.get(c.codiceDM);
+      if (existing) {
+        existing.importo += c.importoOpere ?? 0;
+        existing.importoOpere += c.importoOpere ?? 0;
+        existing.importoServizio += c.importoServizio ?? 0;
+      } else {
+        byCode.set(c.codiceDM, {
+          importo: c.importoOpere ?? 0,
+          importoOpere: c.importoOpere ?? 0,
+          importoServizio: c.importoServizio ?? 0,
+        });
+      }
+    }
+
+    const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
+      codice,
+      importo: v.importo,
+      importoOpere: v.importoOpere,
+      importoServizio: v.importoServizio,
+    }));
+
+    const metadata = (project.metadata as any) || {};
+    metadata.classificazioniDM2016 = classificazioniDM2016;
+    metadata.importoServizio = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importoServizio || 0), 0);
+    if (classificazioniDM2016.length > 0) {
+      metadata.classeDM2016 = classificazioniDM2016[0].codice;
+      metadata.importoOpere = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importo || 0), 0);
+    }
+
+    await this.updateProject(projectId, { metadata });
   }
 
   async getPrestazioniStats(): Promise<PrestazioniStats> {
@@ -2706,6 +2822,108 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // ============================================
+  // CLASSIFICAZIONI DM PER PRESTAZIONE (DatabaseStorage)
+  // ============================================
+
+  async getClassificazioniByPrestazione(prestazioneId: string): Promise<PrestazioneClassificazione[]> {
+    return db.select().from(prestazioneClassificazioni)
+      .where(eq(prestazioneClassificazioni.prestazioneId, prestazioneId))
+      .orderBy(prestazioneClassificazioni.codiceDM);
+  }
+
+  async getClassificazioniByProject(projectId: string): Promise<PrestazioneClassificazione[]> {
+    return db.select().from(prestazioneClassificazioni)
+      .where(eq(prestazioneClassificazioni.projectId, projectId))
+      .orderBy(prestazioneClassificazioni.codiceDM);
+  }
+
+  async createClassificazione(data: InsertPrestazioneClassificazione): Promise<PrestazioneClassificazione> {
+    const [record] = await db.insert(prestazioneClassificazioni).values({
+      ...data,
+      importoOpere: data.importoOpere ?? 0,
+      importoServizio: data.importoServizio ?? 0,
+    }).returning();
+    await this.recalculatePrestazioneFromClassificazioni(data.prestazioneId);
+    await this.syncProjectMetadataFromClassificazioni(data.projectId);
+    return record;
+  }
+
+  async updateClassificazione(id: string, updates: Partial<InsertPrestazioneClassificazione>): Promise<PrestazioneClassificazione | undefined> {
+    const existing = await db.select().from(prestazioneClassificazioni)
+      .where(eq(prestazioneClassificazioni.id, id)).limit(1);
+    if (existing.length === 0) return undefined;
+
+    const [updated] = await db.update(prestazioneClassificazioni)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(prestazioneClassificazioni.id, id))
+      .returning();
+
+    await this.recalculatePrestazioneFromClassificazioni(existing[0].prestazioneId);
+    await this.syncProjectMetadataFromClassificazioni(existing[0].projectId);
+    return updated;
+  }
+
+  async deleteClassificazione(id: string): Promise<boolean> {
+    const existing = await db.select().from(prestazioneClassificazioni)
+      .where(eq(prestazioneClassificazioni.id, id)).limit(1);
+    if (existing.length === 0) return false;
+
+    await db.delete(prestazioneClassificazioni)
+      .where(eq(prestazioneClassificazioni.id, id));
+
+    await this.recalculatePrestazioneFromClassificazioni(existing[0].prestazioneId);
+    await this.syncProjectMetadataFromClassificazioni(existing[0].projectId);
+    return true;
+  }
+
+  async recalculatePrestazioneFromClassificazioni(prestazioneId: string): Promise<void> {
+    const classificazioni = await this.getClassificazioniByPrestazione(prestazioneId);
+    const importoPrevisto = classificazioni.reduce((sum, c) => sum + (c.importoServizio ?? 0), 0);
+    await db.update(projectPrestazioni)
+      .set({ importoPrevisto, updatedAt: new Date() })
+      .where(eq(projectPrestazioni.id, prestazioneId));
+  }
+
+  async syncProjectMetadataFromClassificazioni(projectId: string): Promise<void> {
+    const allClassificazioni = await this.getClassificazioniByProject(projectId);
+    const project = await this.getProject(projectId);
+    if (!project) return;
+
+    const byCode = new Map<string, { importo: number; importoOpere: number; importoServizio: number }>();
+    for (const c of allClassificazioni) {
+      const existing = byCode.get(c.codiceDM);
+      if (existing) {
+        existing.importo += c.importoOpere ?? 0;
+        existing.importoOpere += c.importoOpere ?? 0;
+        existing.importoServizio += c.importoServizio ?? 0;
+      } else {
+        byCode.set(c.codiceDM, {
+          importo: c.importoOpere ?? 0,
+          importoOpere: c.importoOpere ?? 0,
+          importoServizio: c.importoServizio ?? 0,
+        });
+      }
+    }
+
+    const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
+      codice,
+      importo: v.importo,
+      importoOpere: v.importoOpere,
+      importoServizio: v.importoServizio,
+    }));
+
+    const metadata = (project.metadata as any) || {};
+    metadata.classificazioniDM2016 = classificazioniDM2016;
+    metadata.importoServizio = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importoServizio || 0), 0);
+    if (classificazioniDM2016.length > 0) {
+      metadata.classeDM2016 = classificazioniDM2016[0].codice;
+      metadata.importoOpere = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importo || 0), 0);
+    }
+
+    await this.updateProject(projectId, { metadata });
+  }
+
   async getPrestazioniStats(): Promise<PrestazioniStats> {
     try {
       const all = await this.getAllPrestazioni();
@@ -3978,6 +4196,35 @@ class FallbackStorage implements IStorage {
 
   async fixPrestazioniAmounts(): Promise<{ fixed: number; errors: number }> {
     return this.executeWithFallback(storage => storage.fixPrestazioniAmounts());
+  }
+
+  // Classificazioni DM per prestazione
+  async getClassificazioniByPrestazione(prestazioneId: string): Promise<PrestazioneClassificazione[]> {
+    return this.executeWithFallback(storage => storage.getClassificazioniByPrestazione(prestazioneId));
+  }
+
+  async getClassificazioniByProject(projectId: string): Promise<PrestazioneClassificazione[]> {
+    return this.executeWithFallback(storage => storage.getClassificazioniByProject(projectId));
+  }
+
+  async createClassificazione(data: InsertPrestazioneClassificazione): Promise<PrestazioneClassificazione> {
+    return this.executeWithFallback(storage => storage.createClassificazione(data));
+  }
+
+  async updateClassificazione(id: string, updates: Partial<InsertPrestazioneClassificazione>): Promise<PrestazioneClassificazione | undefined> {
+    return this.executeWithFallback(storage => storage.updateClassificazione(id, updates));
+  }
+
+  async deleteClassificazione(id: string): Promise<boolean> {
+    return this.executeWithFallback(storage => storage.deleteClassificazione(id));
+  }
+
+  async recalculatePrestazioneFromClassificazioni(prestazioneId: string): Promise<void> {
+    return this.executeWithFallback(storage => storage.recalculatePrestazioneFromClassificazioni(prestazioneId));
+  }
+
+  async syncProjectMetadataFromClassificazioni(projectId: string): Promise<void> {
+    return this.executeWithFallback(storage => storage.syncProjectMetadataFromClassificazioni(projectId));
   }
 
   // Project Resources
