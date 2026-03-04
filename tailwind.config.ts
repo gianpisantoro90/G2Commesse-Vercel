@@ -61,6 +61,20 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+        // Override Tailwind teal to match G2 logo (#004455)
+        teal: {
+          50: '#e6f2f5',
+          100: '#cce5eb',
+          200: '#99ccd7',
+          300: '#66b2c3',
+          400: '#3399af',
+          500: '#007f9b',
+          600: '#00667c',
+          700: '#004d5d',
+          800: '#004455',
+          900: '#00333f',
+          950: '#001a20',
+        },
         // G2 Brand Colors
         g2: {
           primary: "var(--g2-primary)",
