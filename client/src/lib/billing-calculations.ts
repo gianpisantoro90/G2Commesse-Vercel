@@ -15,10 +15,7 @@ import { type ProjectInvoice, type ProjectPrestazione } from "@shared/schema";
 
 export interface BillingConfigData {
   alert_completata_giorni: number;
-  alert_scadenza_fattura_giorni: number;
   alert_pagamento_giorni: number;
-  auto_sync_prestazioni: number;
-  auto_data_inizio: number;
 }
 
 // ============================================

@@ -277,10 +277,7 @@ export class MemStorage implements IStorage {
   private billingAlertsMap: Map<string, BillingAlert> = new Map();
   private billingConfigMap: Map<string, number> = new Map([
     ['alert_completata_giorni', 15],
-    ['alert_scadenza_fattura_giorni', 30],
     ['alert_pagamento_giorni', 60],
-    ['auto_sync_prestazioni', 1],
-    ['auto_data_inizio', 1],
   ]);
 
   // Projects
@@ -3603,10 +3600,7 @@ export class DatabaseStorage implements IStorage {
     }
     // Default values if not in DB
     if (!result['alert_completata_giorni']) result['alert_completata_giorni'] = 15;
-    if (!result['alert_scadenza_fattura_giorni']) result['alert_scadenza_fattura_giorni'] = 30;
     if (!result['alert_pagamento_giorni']) result['alert_pagamento_giorni'] = 60;
-    if (!result['auto_sync_prestazioni']) result['auto_sync_prestazioni'] = 1;
-    if (!result['auto_data_inizio']) result['auto_data_inizio'] = 1;
     return result;
   }
 

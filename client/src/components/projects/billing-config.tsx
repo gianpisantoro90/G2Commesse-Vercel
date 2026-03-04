@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Settings, Save, RefreshCw, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -149,7 +148,7 @@ export function BillingConfig() {
         <div className="space-y-4">
           <h4 className="font-medium text-sm text-foreground">Soglie Alert (giorni)</h4>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="alert_completata">
                 Prestazione completata
@@ -168,27 +167,6 @@ export function BillingConfig() {
               </div>
               <p className="text-sm text-muted-foreground">
                 Alert se completata ma non fatturata dopo N giorni
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="alert_scadenza">
-                Scadenza fattura
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="alert_scadenza"
-                  type="number"
-                  min="1"
-                  max="365"
-                  value={localConfig.alert_scadenza_fattura_giorni}
-                  onChange={(e) => handleChange('alert_scadenza_fattura_giorni', parseInt(e.target.value) || 30)}
-                  className="w-24"
-                />
-                <span className="text-sm text-muted-foreground">giorni</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Scadenza default fattura dopo emissione
               </p>
             </div>
 
@@ -215,57 +193,24 @@ export function BillingConfig() {
           </div>
         </div>
 
-        {/* Automazioni */}
-        <div className="space-y-4 pt-4 border-t">
-          <h4 className="font-medium text-sm text-foreground">Automazioni</h4>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="auto_sync">Sincronizzazione prestazioni</Label>
-                <p className="text-sm text-muted-foreground">
-                  Sincronizza automaticamente le prestazioni da metadata a tabella
-                </p>
-              </div>
-              <Switch
-                id="auto_sync"
-                checked={localConfig.auto_sync_prestazioni === 1}
-                onCheckedChange={(checked) => handleChange('auto_sync_prestazioni', checked ? 1 : 0)}
-              />
+        {/* Sync manuale */}
+        <div className="pt-4 border-t">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label>Sincronizza prestazioni</Label>
+              <p className="text-sm text-muted-foreground">
+                Forza la sincronizzazione delle prestazioni da metadata per tutti i progetti
+              </p>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="auto_data">Data inizio automatica</Label>
-                <p className="text-sm text-muted-foreground">
-                  Imposta automaticamente la data inizio commessa alla creazione
-                </p>
-              </div>
-              <Switch
-                id="auto_data"
-                checked={localConfig.auto_data_inizio === 1}
-                onCheckedChange={(checked) => handleChange('auto_data_inizio', checked ? 1 : 0)}
-              />
-            </div>
-
-            {/* Sync manuale */}
-            <div className="flex items-center justify-between pt-2 border-t">
-              <div className="space-y-0.5">
-                <Label>Sincronizza prestazioni</Label>
-                <p className="text-sm text-muted-foreground">
-                  Forza la sincronizzazione delle prestazioni da metadata per tutti i progetti
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => syncMutation.mutate()}
-                disabled={syncMutation.isPending}
-              >
-                <Database className="h-4 w-4 mr-1" />
-                {syncMutation.isPending ? "Sincronizzando..." : "Sincronizza ora"}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending}
+            >
+              <Database className="h-4 w-4 mr-1" />
+              {syncMutation.isPending ? "Sincronizzando..." : "Sincronizza ora"}
+            </Button>
           </div>
         </div>
 
