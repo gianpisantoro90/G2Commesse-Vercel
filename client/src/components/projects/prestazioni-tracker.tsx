@@ -166,25 +166,25 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
   });
 
   // Classificazioni mutations
+  const invalidateAfterClassificazione = () => {
+    refetchClassificazioni();
+    queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+    queryClient.invalidateQueries({ queryKey: QK.projects });
+  };
+
   const createClassMutation = useMutation({
     mutationFn: async ({ prestazioneId, data }: { prestazioneId: string; data: any }) => {
       const response = await apiRequest("POST", `/api/prestazioni/${prestazioneId}/classificazioni`, data);
       return response.json();
     },
-    onSuccess: () => {
-      refetchClassificazioni();
-      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
-    },
+    onSuccess: invalidateAfterClassificazione,
   });
 
   const deleteClassMutation = useMutation({
     mutationFn: async ({ prestazioneId, classId }: { prestazioneId: string; classId: string }) => {
       await apiRequest("DELETE", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`);
     },
-    onSuccess: () => {
-      refetchClassificazioni();
-      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
-    },
+    onSuccess: invalidateAfterClassificazione,
   });
 
   const updateClassMutation = useMutation({
@@ -192,10 +192,7 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
       const response = await apiRequest("PATCH", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`, data);
       return response.json();
     },
-    onSuccess: () => {
-      refetchClassificazioni();
-      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
-    },
+    onSuccess: invalidateAfterClassificazione,
   });
 
   const getClassificazioniForPrestazione = (prestazioneId: string) => {
