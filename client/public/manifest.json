@@ -7,7 +7,7 @@
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#F9FAFB",
-  "theme_color": "#1B5B5A",
+  "theme_color": "#004455",
   "orientation": "any",
   "icons": [
     {
