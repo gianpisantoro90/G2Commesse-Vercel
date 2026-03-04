@@ -661,7 +661,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                         type="number"
                                         placeholder="Opere"
                                         min="0"
-                                        step="100"
+                                        step="0.01"
                                         defaultValue={c.importoOpere ? c.importoOpere / 100 : ''}
                                         onBlur={(e) => {
                                           const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
@@ -679,7 +679,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                         type="number"
                                         placeholder="Servizio"
                                         min="0"
-                                        step="100"
+                                        step="0.01"
                                         defaultValue={c.importoServizio ? c.importoServizio / 100 : ''}
                                         onBlur={(e) => {
                                           const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
