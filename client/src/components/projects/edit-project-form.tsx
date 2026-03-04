@@ -111,15 +111,18 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
   };
 
   // Mutations for classificazioni CRUD (real-time, not on form save)
+  const invalidateAfterClassificazione = () => {
+    refetchClassificazioni();
+    queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+    queryClient.invalidateQueries({ queryKey: QK.projects });
+  };
+
   const createClassificazioneMutation = useMutation({
     mutationFn: async ({ prestazioneId, data }: { prestazioneId: string; data: any }) => {
       const response = await apiRequest("POST", `/api/prestazioni/${prestazioneId}/classificazioni`, data);
       return response.json();
     },
-    onSuccess: () => {
-      refetchClassificazioni();
-      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
-    },
+    onSuccess: invalidateAfterClassificazione,
   });
 
   const updateClassificazioneMutation = useMutation({
@@ -127,20 +130,14 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       const response = await apiRequest("PATCH", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`, data);
       return response.json();
     },
-    onSuccess: () => {
-      refetchClassificazioni();
-      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
-    },
+    onSuccess: invalidateAfterClassificazione,
   });
 
   const deleteClassificazioneMutation = useMutation({
     mutationFn: async ({ prestazioneId, classId }: { prestazioneId: string; classId: string }) => {
       await apiRequest("DELETE", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`);
     },
-    onSuccess: () => {
-      refetchClassificazioni();
-      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
-    },
+    onSuccess: invalidateAfterClassificazione,
   });
 
   // Helper: find the DB prestazione record for a given tipo
