@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,10 +20,14 @@ import {
   Clock,
   AlertCircle,
   ArrowRight,
-  Link as LinkIcon
+  Link as LinkIcon,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { type Project, type ProjectPrestazione, type ProjectInvoice, PRESTAZIONE_TIPI, PRESTAZIONE_STATI, LIVELLI_PROGETTAZIONE } from "@shared/schema";
 import { QK } from "@/lib/query-utils";
+import { apiRequest } from "@/lib/queryClient";
+import { CATEGORIE_DM2016 } from "@/lib/parcella-calculator";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -63,6 +67,7 @@ interface PrestazioniTrackerProps {
 export default function PrestazioniTracker({ project }: PrestazioniTrackerProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingPrestazione, setEditingPrestazione] = useState<ProjectPrestazione | null>(null);
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   // Note: Link invoice dialog removed - invoices are now created with prestazioneId directly
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -83,6 +88,12 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
   // Fetch fatture del progetto (per collegamento)
   const { data: invoices = [] } = useQuery<ProjectInvoice[]>({
     queryKey: QK.projectInvoices(project.id),
+  });
+
+  // Fetch classificazioni for all project prestazioni
+  const { data: allClassificazioni = [], refetch: refetchClassificazioni } = useQuery<any[]>({
+    queryKey: QK.projectClassificazioni(project.id),
+    queryFn: () => apiRequest("GET", `/api/projects/${project.id}/classificazioni`).then(r => r.json()),
   });
 
   // Create prestazione
@@ -153,6 +164,43 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
       toast({ title: "Errore", description: "Impossibile eliminare la prestazione", variant: "destructive" });
     }
   });
+
+  // Classificazioni mutations
+  const createClassMutation = useMutation({
+    mutationFn: async ({ prestazioneId, data }: { prestazioneId: string; data: any }) => {
+      const response = await apiRequest("POST", `/api/prestazioni/${prestazioneId}/classificazioni`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchClassificazioni();
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+    },
+  });
+
+  const deleteClassMutation = useMutation({
+    mutationFn: async ({ prestazioneId, classId }: { prestazioneId: string; classId: string }) => {
+      await apiRequest("DELETE", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`);
+    },
+    onSuccess: () => {
+      refetchClassificazioni();
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+    },
+  });
+
+  const updateClassMutation = useMutation({
+    mutationFn: async ({ prestazioneId, classId, data }: { prestazioneId: string; classId: string; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      refetchClassificazioni();
+      queryClient.invalidateQueries({ queryKey: QK.projectPrestazioni(project.id) });
+    },
+  });
+
+  const getClassificazioniForPrestazione = (prestazioneId: string) => {
+    return allClassificazioni.filter((c: any) => c.prestazioneId === prestazioneId);
+  };
 
   const resetForm = () => {
     setFormData({
@@ -315,80 +363,249 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
               const nextStato = getNextStato(prestazione.stato);
               // Find invoices linked to this prestazione (new 1:N relationship)
               const linkedInvoices = invoices.filter(i => i.prestazioneId === prestazione.id);
+              const classificazioni = getClassificazioniForPrestazione(prestazione.id);
+              const isExpanded = expandedCards.has(prestazione.id);
 
               return (
-                <div
-                  key={prestazione.id}
-                  className="flex items-center justify-between p-3 rounded-lg border dark:border-border bg-card hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    {/* Tipo Badge */}
-                    <Badge variant="outline" className={config.color}>
-                      <span className="mr-1">{config.icon}</span>
-                      {config.label}
-                      {prestazione.livelloProgettazione && (
-                        <span className="ml-1 text-xs opacity-70">
-                          ({LIVELLO_CONFIG[prestazione.livelloProgettazione]})
+                <div key={prestazione.id} className="rounded-lg border dark:border-border bg-card">
+                  {/* Existing row */}
+                  <div className="flex items-center justify-between p-3 hover:bg-muted transition-colors">
+                    <div className="flex items-center gap-3">
+                      {/* Tipo Badge */}
+                      <Badge variant="outline" className={config.color}>
+                        <span className="mr-1">{config.icon}</span>
+                        {config.label}
+                        {prestazione.livelloProgettazione && (
+                          <span className="ml-1 text-xs opacity-70">
+                            ({LIVELLO_CONFIG[prestazione.livelloProgettazione]})
+                          </span>
+                        )}
+                      </Badge>
+
+                      {/* Stato Badge */}
+                      <Badge variant="secondary" className={`${statoConfig.color} flex items-center gap-1`}>
+                        {statoConfig.icon}
+                        {statoConfig.label}
+                      </Badge>
+
+                      {/* Importo */}
+                      {prestazione.importoPrevisto && prestazione.importoPrevisto > 0 && (
+                        <span className="text-sm text-muted-foreground">
+                          {formatCurrency(prestazione.importoPrevisto)}
                         </span>
                       )}
-                    </Badge>
 
-                    {/* Stato Badge */}
-                    <Badge variant="secondary" className={`${statoConfig.color} flex items-center gap-1`}>
-                      {statoConfig.icon}
-                      {statoConfig.label}
-                    </Badge>
+                      {/* Linked Invoices (multiple invoices per prestazione) */}
+                      {linkedInvoices.length > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          <LinkIcon className="w-3 h-3 mr-1" />
+                          {linkedInvoices.length === 1
+                            ? linkedInvoices[0].numeroFattura
+                            : `${linkedInvoices.length} fatture`}
+                        </Badge>
+                      )}
 
-                    {/* Importo */}
-                    {prestazione.importoPrevisto && prestazione.importoPrevisto > 0 && (
-                      <span className="text-sm text-muted-foreground">
-                        {formatCurrency(prestazione.importoPrevisto)}
-                      </span>
-                    )}
+                      {/* Classificazioni count badge */}
+                      {classificazioni.length > 0 && (
+                        <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                          {classificazioni.length} DM
+                        </Badge>
+                      )}
+                    </div>
 
-                    {/* Linked Invoices (multiple invoices per prestazione) */}
-                    {linkedInvoices.length > 0 && (
-                      <Badge variant="outline" className="text-xs">
-                        <LinkIcon className="w-3 h-3 mr-1" />
-                        {linkedInvoices.length === 1
-                          ? linkedInvoices[0].numeroFattura
-                          : `${linkedInvoices.length} fatture`}
-                      </Badge>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {/* Advance Status Button */}
-                    {nextStato && (
+                    <div className="flex items-center gap-2">
+                      {/* Expand button for classificazioni */}
                       <Button
                         size="sm"
-                        variant="outline"
-                        onClick={() => updateStatoMutation.mutate({ id: prestazione.id, stato: nextStato })}
-                        disabled={updateStatoMutation.isPending}
-                        title={`Passa a: ${STATO_CONFIG[nextStato]?.label}`}
+                        variant="ghost"
+                        onClick={() => {
+                          setExpandedCards(prev => {
+                            const next = new Set(prev);
+                            if (next.has(prestazione.id)) next.delete(prestazione.id);
+                            else next.add(prestazione.id);
+                            return next;
+                          });
+                        }}
+                        title="Classificazioni DM"
+                        className="h-8 w-8 p-0"
                       >
-                        <ArrowRight className="w-4 h-4 mr-1" />
-                        {STATO_CONFIG[nextStato]?.label}
+                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                       </Button>
-                    )}
 
-                    {/* Note: Link to Invoice button removed - invoices are now created with prestazioneId directly */}
+                      {/* Advance Status Button */}
+                      {nextStato && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateStatoMutation.mutate({ id: prestazione.id, stato: nextStato })}
+                          disabled={updateStatoMutation.isPending}
+                          title={`Passa a: ${STATO_CONFIG[nextStato]?.label}`}
+                        >
+                          <ArrowRight className="w-4 h-4 mr-1" />
+                          {STATO_CONFIG[nextStato]?.label}
+                        </Button>
+                      )}
 
-                    {/* Delete Button */}
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        if (confirm("Sei sicuro di voler eliminare questa prestazione?")) {
-                          deleteMutation.mutate(prestazione.id);
-                        }
-                      }}
-                      disabled={deleteMutation.isPending}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      {/* Delete Button */}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          if (confirm("Sei sicuro di voler eliminare questa prestazione?")) {
+                            deleteMutation.mutate(prestazione.id);
+                          }
+                        }}
+                        disabled={deleteMutation.isPending}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
+
+                  {/* Expanded classificazioni section */}
+                  {isExpanded && (
+                    <div className="px-3 pb-3 border-t border-border">
+                      <div className="mt-2 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs font-medium text-muted-foreground">Classificazioni DM 17/06/2016</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-6 text-xs px-2"
+                            onClick={() => {
+                              createClassMutation.mutate({
+                                prestazioneId: prestazione.id,
+                                data: { codiceDM: 'E.01', importoOpere: 0, importoServizio: 0 },
+                              });
+                            }}
+                          >
+                            <Plus className="w-3 h-3 mr-1" /> Aggiungi
+                          </Button>
+                        </div>
+
+                        {classificazioni.length > 0 ? (
+                          <div className="space-y-1">
+                            {classificazioni.map((c: any) => {
+                              return (
+                                <div key={c.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 items-center text-xs">
+                                  <Select
+                                    value={c.codiceDM}
+                                    onValueChange={(value) => {
+                                      updateClassMutation.mutate({
+                                        prestazioneId: prestazione.id,
+                                        classId: c.id,
+                                        data: { codiceDM: value },
+                                      });
+                                    }}
+                                  >
+                                    <SelectTrigger className="font-mono text-xs h-7">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="max-h-[300px]">
+                                      <SelectGroup>
+                                        <SelectLabel>Edilizia</SelectLabel>
+                                        {Object.entries(CATEGORIE_DM2016)
+                                          .filter(([_, data]) => data.categoria === 'Edilizia')
+                                          .map(([codice, data]) => (
+                                            <SelectItem key={codice} value={codice} className="text-xs">
+                                              <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 30)}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                      <SelectGroup>
+                                        <SelectLabel>Strutture</SelectLabel>
+                                        {Object.entries(CATEGORIE_DM2016)
+                                          .filter(([_, data]) => data.categoria === 'Strutture')
+                                          .map(([codice, data]) => (
+                                            <SelectItem key={codice} value={codice} className="text-xs">
+                                              <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 30)}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                      <SelectGroup>
+                                        <SelectLabel>Impianti</SelectLabel>
+                                        {Object.entries(CATEGORIE_DM2016)
+                                          .filter(([_, data]) => data.categoria === 'Impianti')
+                                          .map(([codice, data]) => (
+                                            <SelectItem key={codice} value={codice} className="text-xs">
+                                              <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 30)}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                      <SelectGroup>
+                                        <SelectLabel>Altro</SelectLabel>
+                                        {Object.entries(CATEGORIE_DM2016)
+                                          .filter(([_, data]) => !['Edilizia', 'Strutture', 'Impianti'].includes(data.categoria))
+                                          .map(([codice, data]) => (
+                                            <SelectItem key={codice} value={codice} className="text-xs">
+                                              <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 30)}
+                                            </SelectItem>
+                                          ))}
+                                      </SelectGroup>
+                                    </SelectContent>
+                                  </Select>
+                                  <Input
+                                    type="number"
+                                    placeholder="Opere"
+                                    className="h-7 text-xs"
+                                    defaultValue={c.importoOpere / 100 || ''}
+                                    onBlur={(e) => {
+                                      const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
+                                      if (val !== c.importoOpere) {
+                                        updateClassMutation.mutate({
+                                          prestazioneId: prestazione.id,
+                                          classId: c.id,
+                                          data: { importoOpere: val },
+                                        });
+                                      }
+                                    }}
+                                  />
+                                  <Input
+                                    type="number"
+                                    placeholder="Servizio"
+                                    className="h-7 text-xs"
+                                    defaultValue={c.importoServizio / 100 || ''}
+                                    onBlur={(e) => {
+                                      const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
+                                      if (val !== c.importoServizio) {
+                                        updateClassMutation.mutate({
+                                          prestazioneId: prestazione.id,
+                                          classId: c.id,
+                                          data: { importoServizio: val },
+                                        });
+                                      }
+                                    }}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 text-red-600 hover:text-red-700"
+                                    onClick={() => {
+                                      deleteClassMutation.mutate({
+                                        prestazioneId: prestazione.id,
+                                        classId: c.id,
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              );
+                            })}
+                            <div className="flex justify-end gap-4 text-xs text-muted-foreground pt-1 border-t">
+                              <span>Opere: {formatCurrency(classificazioni.reduce((s: number, c: any) => s + (c.importoOpere || 0), 0))}</span>
+                              <span className="font-medium text-primary">Servizio: {formatCurrency(classificazioni.reduce((s: number, c: any) => s + (c.importoServizio || 0), 0))}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground text-center py-2">Nessuna classificazione DM</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
