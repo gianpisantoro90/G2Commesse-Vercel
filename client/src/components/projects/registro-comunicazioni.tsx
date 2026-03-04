@@ -126,7 +126,7 @@ interface Communication {
 }
 
 const TYPE_CONFIG = {
-  email: { label: 'Email', icon: <Mail className="h-4 w-4" />, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300' },
+  email: { label: 'Email', icon: <Mail className="h-4 w-4" />, color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300' },
   pec: { label: 'PEC', icon: <Mail className="h-4 w-4" />, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300' },
   raccomandata: { label: 'Raccomandata', icon: <FileText className="h-4 w-4" />, color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' },
   telefono: { label: 'Telefonata', icon: <Phone className="h-4 w-4" />, color: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300' },
@@ -135,7 +135,7 @@ const TYPE_CONFIG = {
 };
 
 const DIRECTION_CONFIG = {
-  outgoing: { label: 'Inviato', icon: <Send className="h-3 w-3" />, color: 'text-blue-600' },
+  outgoing: { label: 'Inviato', icon: <Send className="h-3 w-3" />, color: 'text-teal-600' },
   incoming: { label: 'Ricevuto', icon: <Download className="h-3 w-3" />, color: 'text-green-600' },
   internal: { label: 'Interno', icon: <MessageSquare className="h-3 w-3" />, color: 'text-muted-foreground' }
 };
@@ -879,7 +879,7 @@ export default function RegistroComunicazioni() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-blue-600" />
+            <MessageSquare className="h-5 w-5 text-teal-600" />
             Registro Comunicazioni
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -914,7 +914,7 @@ export default function RegistroComunicazioni() {
               <p className="text-sm text-muted-foreground">Totali</p>
               <p className="text-2xl font-bold text-foreground">{totalComms}</p>
             </div>
-            <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            <MessageSquare className="h-8 w-8 text-teal-600 dark:text-teal-400" />
           </div>
         </div>
 
@@ -932,9 +932,9 @@ export default function RegistroComunicazioni() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Inviate</p>
-              <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{outgoingComms}</p>
+              <p className="text-2xl font-bold text-teal-600 dark:text-teal-400">{outgoingComms}</p>
             </div>
-            <ArrowUp className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            <ArrowUp className="h-8 w-8 text-teal-600 dark:text-teal-400" />
           </div>
         </div>
 
@@ -1122,7 +1122,7 @@ export default function RegistroComunicazioni() {
                         key={comm.id}
                         className={`cursor-pointer hover:bg-muted/50 ${
                           comm.isImportant ? 'bg-yellow-50 dark:bg-yellow-950/20' : ''
-                        } ${selectedIds.has(comm.id) ? 'bg-blue-50 dark:bg-blue-950/20' : ''}`}
+                        } ${selectedIds.has(comm.id) ? 'bg-teal-50 dark:bg-teal-950/20' : ''}`}
                         onClick={() => setSelectedComm(comm)}
                       >
                         <TableCell onClick={(e) => e.stopPropagation()}>

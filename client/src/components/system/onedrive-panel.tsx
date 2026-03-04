@@ -169,11 +169,11 @@ export default function OneDrivePanel() {
         </div>
 
         {userInfo && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
+          <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-4">
+            <div className="flex items-center gap-2 text-teal-800 dark:text-teal-300">
               <Users className="w-4 h-4" />
               <span className="font-medium">{userInfo.name}</span>
-              <span className="text-blue-600 dark:text-blue-400">• {userInfo.email}</span>
+              <span className="text-teal-600 dark:text-teal-400">• {userInfo.email}</span>
             </div>
           </div>
         )}
@@ -184,8 +184,8 @@ export default function OneDrivePanel() {
         <h4 className="text-lg font-semibold text-foreground mb-4">⚙️ Mappatura Cartelle OneDrive</h4>
 
         <div className="space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-4">
-            <p className="text-sm text-blue-800 dark:text-blue-300">
+          <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-4 mb-4">
+            <p className="text-sm text-teal-800 dark:text-teal-300">
               💡 La funzione "Mappa Tutti i Progetti" cerca cartelle OneDrive esistenti che corrispondono ai codici progetto
               {isConfigured && rootConfig && (
                 <> nella cartella radice <strong>{rootConfig.folderPath}</strong></>
@@ -238,12 +238,12 @@ export default function OneDrivePanel() {
 
         {/* Sync Statistics */}
         {isConnected && (
-          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-            <div className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">📊 Stato Mappatura</div>
+          <div className="mt-4 p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
+            <div className="text-sm font-medium text-teal-900 dark:text-teal-300 mb-2">📊 Stato Mappatura</div>
             {(() => {
               const stats = getOverallSyncStats();
               return (
-                <div className="text-xs text-blue-700 dark:text-blue-400 space-y-1">
+                <div className="text-xs text-teal-700 dark:text-teal-400 space-y-1">
                   <div>✅ Mappati: {stats.synced}/{stats.total}</div>
                   {stats.pending > 0 && <div>🔄 In corso: {stats.pending}</div>}
                   {stats.errors > 0 && <div>❌ Errori: {stats.errors}</div>}
@@ -257,23 +257,23 @@ export default function OneDrivePanel() {
 
 
       {!isConnected && (
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-6">
+        <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-700 rounded-md p-6">
           <div className="flex items-start gap-3">
-            <Cloud className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+            <Cloud className="w-5 h-5 text-teal-600 dark:text-teal-400 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Configura Accesso OneDrive</h4>
-              <p className="text-sm text-blue-700 dark:text-blue-400 mb-4">
+              <h4 className="font-medium text-teal-800 dark:text-teal-300 mb-2">Configura Accesso OneDrive</h4>
+              <p className="text-sm text-teal-700 dark:text-teal-400 mb-4">
                 Per utilizzare l'integrazione OneDrive per gestire i tuoi progetti, devi prima configurare l'accesso al tuo account Microsoft.
               </p>
               <div className="space-y-3">
                 <Button 
                   onClick={handleSetupOneDrive}
-                  className="bg-blue-600 hover:bg-blue-700 text-white dark:bg-blue-500 dark:hover:bg-blue-600"
+                  className="bg-teal-600 hover:bg-teal-700 text-white dark:bg-teal-500 dark:hover:bg-teal-600"
                   data-testid="button-setup-onedrive"
                 >
                   🔑 Configura OneDrive
                 </Button>
-                <div className="text-xs text-blue-600 dark:text-blue-400">
+                <div className="text-xs text-teal-600 dark:text-teal-400">
                   ✨ La configurazione è semplice e sicura: ti verrà richiesto di autorizzare l'accesso al tuo account Microsoft OneDrive.
                 </div>
               </div>

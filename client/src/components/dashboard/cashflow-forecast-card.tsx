@@ -155,12 +155,12 @@ export default function CashFlowForecastCard() {
           </p>
           <p className="text-[10px] text-red-600">Uscite previste</p>
         </div>
-        <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg text-center">
-          <Clock className="w-4 h-4 text-blue-600 mx-auto mb-1" />
-          <p className="text-lg font-bold text-blue-700 dark:text-blue-400">
+        <div className="p-3 bg-teal-50 dark:bg-teal-950/20 rounded-lg text-center">
+          <Clock className="w-4 h-4 text-teal-600 mx-auto mb-1" />
+          <p className="text-lg font-bold text-teal-700 dark:text-teal-400">
             {summary.collectionDelayDays}gg
           </p>
-          <p className="text-[10px] text-blue-600">Ritardo medio incasso</p>
+          <p className="text-[10px] text-teal-600">Ritardo medio incasso</p>
         </div>
         <div className="p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg text-center">
           <Target className="w-4 h-4 text-purple-600 mx-auto mb-1" />
@@ -233,7 +233,7 @@ export default function CashFlowForecastCard() {
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-green-600">+{formatEuro(month.entriPrevisti)}</span>
                     <span className="text-red-600">-{formatEuro(month.uscitePreviste)}</span>
-                    <span className={month.saldoPrevisto >= 0 ? 'text-blue-600 font-medium' : 'text-red-600 font-medium'}>
+                    <span className={month.saldoPrevisto >= 0 ? 'text-teal-600 font-medium' : 'text-red-600 font-medium'}>
                       = {month.saldoPrevisto >= 0 ? '+' : ''}{formatEuro(month.saldoPrevisto)}
                     </span>
                   </div>

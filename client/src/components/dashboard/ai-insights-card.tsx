@@ -47,7 +47,7 @@ const priorityConfig: Record<string, { color: string; bg: string; label: string 
   urgent: { color: 'text-red-700 dark:text-red-400', bg: 'bg-red-100 dark:bg-red-950/30', label: 'Urgente' },
   high: { color: 'text-orange-700 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-950/30', label: 'Alta' },
   medium: { color: 'text-yellow-700 dark:text-yellow-400', bg: 'bg-yellow-100 dark:bg-yellow-950/30', label: 'Media' },
-  low: { color: 'text-blue-700 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-950/30', label: 'Bassa' },
+  low: { color: 'text-teal-700 dark:text-teal-400', bg: 'bg-teal-100 dark:bg-teal-950/30', label: 'Bassa' },
 };
 
 const typeIcons: Record<string, typeof AlertTriangle> = {

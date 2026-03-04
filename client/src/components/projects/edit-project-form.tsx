@@ -528,13 +528,13 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
 
                   {/* Livello Progettazione - condizionale */}
                   {showLivelloProgettazione && (
-                    <div className="bg-blue-50 dark:bg-blue-950/50 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="bg-teal-50 dark:bg-teal-950/50 p-3 rounded-lg border border-teal-200 dark:border-teal-800">
                       <Label className="text-sm font-medium text-foreground mb-2 block">
                         Livello Progettazione
                       </Label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                         {livelliProgettazioneList.map(({ id, config }) => (
-                          <div key={id} className="flex items-center space-x-2 p-2 bg-card border border-blue-200 dark:border-blue-700 rounded-lg">
+                          <div key={id} className="flex items-center space-x-2 p-2 bg-card border border-teal-200 dark:border-teal-700 rounded-lg">
                             <Checkbox
                               id={`edit-livello-${id}`}
                               checked={prestazioniData.livelloProgettazione?.includes(id) || false}

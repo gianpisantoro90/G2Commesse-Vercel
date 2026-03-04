@@ -639,13 +639,13 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
               {/* Livello Progettazione - condizionale */}
               {showLivelloProgettazione && (
-                <div className="bg-blue-50 dark:bg-blue-950/50 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="bg-teal-50 dark:bg-teal-950/50 p-4 rounded-lg border border-teal-200 dark:border-teal-800">
                   <Label className="text-sm font-medium text-foreground mb-3 block">
                     Livello Progettazione
                   </Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {livelliProgettazioneList.map(({ id, config }) => (
-                      <div key={id} className="flex items-center space-x-2 p-2 bg-card border border-blue-200 dark:border-blue-700 rounded-lg">
+                      <div key={id} className="flex items-center space-x-2 p-2 bg-card border border-teal-200 dark:border-teal-700 rounded-lg">
                         <Checkbox
                           id={`livello-${id}`}
                           checked={prestazioniData.livelloProgettazione?.includes(id) || false}
@@ -865,17 +865,17 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
         </div>
 
         {/* OneDrive Configuration Status */}
-        <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+        <div className="bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
+          <h4 className="font-semibold text-teal-900 dark:text-teal-100 mb-3 flex items-center gap-2">
             <Cloud className="w-5 h-5" />
             Stato OneDrive
           </h4>
           <div className="space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-blue-700 dark:text-blue-300">Connessione OneDrive:</span>
+              <span className="text-teal-700 dark:text-teal-300">Connessione OneDrive:</span>
               <div className="flex items-center gap-2">
                 {isLoadingConfig ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-teal-500" />
                 ) : isConnected ? (
                   <>
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -890,10 +890,10 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-blue-700 dark:text-blue-300">Cartella radice configurata:</span>
+              <span className="text-teal-700 dark:text-teal-300">Cartella radice configurata:</span>
               <div className="flex items-center gap-2">
                 {isLoadingConfig ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                  <Loader2 className="w-4 h-4 animate-spin text-teal-500" />
                 ) : isRootConfigured ? (
                   <>
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -935,10 +935,10 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
 
         {/* Creation Progress */}
         {creationStep && (
-          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-              <span className="font-medium text-blue-900 dark:text-blue-100">{creationStep}</span>
+              <Loader2 className="w-5 h-5 animate-spin text-teal-500" />
+              <span className="font-medium text-teal-900 dark:text-teal-100">{creationStep}</span>
             </div>
           </div>
         )}
@@ -988,7 +988,7 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
               type="button"
               onClick={handleCreateWithoutOneDrive}
               disabled={createProjectMutation.isPending || createProjectOnlyMutation.isPending || !generatedCode}
-              className="px-8 py-3 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="px-8 py-3 bg-teal-600 text-white rounded-md font-semibold hover:bg-teal-700 transition-colors disabled:opacity-50"
             >
               {createProjectOnlyMutation.isPending ? (
                 <>

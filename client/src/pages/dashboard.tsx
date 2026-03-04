@@ -45,8 +45,8 @@ function UserQuickStats() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <div className="card-g2 flex items-center gap-3">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-          <CheckSquare className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+        <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+          <CheckSquare className="h-5 w-5 text-teal-600 dark:text-teal-400" />
         </div>
         <div>
           <p className="text-2xl font-bold text-foreground">{myPending.length}</p>

@@ -167,14 +167,14 @@ export default function EconomicDashboardCard() {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* KPI 1: Importo Totale Opere */}
-              <div className="p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 border border-blue-200 dark:border-blue-800">
-                <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-1">
+              <div className="p-4 rounded-lg bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-950/50 dark:to-teal-900/50 border border-teal-200 dark:border-teal-800">
+                <p className="text-sm font-medium text-teal-700 dark:text-teal-300 mb-1">
                   Importo Totale Opere
                 </p>
-                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
                   {formatImporto(totalImportoOpere)}
                 </p>
-                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                <p className="text-xs text-teal-600 dark:text-teal-400 mt-2">
                   Base di calcolo compensi professionali
                 </p>
               </div>
@@ -273,7 +273,7 @@ export default function EconomicDashboardCard() {
               <div className="p-4 rounded-lg bg-muted border border-border">
                 <div className="mb-4">
                   <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <BarChart3 className="h-5 w-5 text-teal-600 dark:text-teal-400" />
                     Distribuzione Annuale Compensi
                   </h4>
                   <p className="text-sm text-muted-foreground mt-1">
@@ -300,7 +300,7 @@ export default function EconomicDashboardCard() {
                       />
                       <Bar
                         dataKey="importo"
-                        fill="#3B82F6"
+                        fill="#0d9488"
                         radius={[8, 8, 0, 0]}
                         name="Compensi"
                       />
@@ -394,7 +394,7 @@ export default function EconomicDashboardCard() {
                                 index === 0 ? 'bg-yellow-500' :
                                 index === 1 ? 'bg-gray-400' :
                                 index === 2 ? 'bg-orange-600' :
-                                'bg-blue-500'
+                                'bg-teal-500'
                               }`}>
                                 {index + 1}
                               </div>
@@ -493,8 +493,8 @@ export default function EconomicDashboardCard() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                    <div className="p-1.5 rounded-md bg-blue-100 dark:bg-blue-900">
-                      <Play className="h-3.5 w-3.5 text-blue-600" />
+                    <div className="p-1.5 rounded-md bg-teal-100 dark:bg-teal-900">
+                      <Play className="h-3.5 w-3.5 text-teal-600" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">In corso</p>

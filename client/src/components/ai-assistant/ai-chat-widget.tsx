@@ -117,15 +117,15 @@ export default function AiChatWidget() {
         className="w-full sm:w-[440px] p-0 flex flex-col"
       >
         {/* Header */}
-        <SheetHeader className="px-4 py-3 border-b bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30">
+        <SheetHeader className="px-4 py-3 border-b bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-950/30 dark:to-teal-900/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5 text-blue-800 dark:text-blue-400" />
+              <Bot className="h-5 w-5 text-teal-800 dark:text-teal-400" />
               <div>
-                <SheetTitle className="text-sm font-semibold text-blue-900 dark:text-blue-200">
+                <SheetTitle className="text-sm font-semibold text-teal-900 dark:text-teal-200">
                   Assistente AI G2
                 </SheetTitle>
-                <p className="text-xs text-blue-700 dark:text-blue-400">{conversationTitle}</p>
+                <p className="text-xs text-teal-700 dark:text-teal-400">{conversationTitle}</p>
               </div>
             </div>
             <div className="flex items-center gap-1">
@@ -143,7 +143,7 @@ export default function AiChatWidget() {
           {messages.length === 0 ? (
             <div className="space-y-4 py-8">
               <div className="text-center space-y-2">
-                <Bot className="h-12 w-12 mx-auto text-blue-300 dark:text-blue-800" />
+                <Bot className="h-12 w-12 mx-auto text-teal-300 dark:text-teal-800" />
                 <h3 className="font-semibold text-foreground">Ciao! Sono l'assistente AI di G2</h3>
                 <p className="text-sm text-muted-foreground">
                   Posso aiutarti con informazioni su progetti, fatturazione, scadenze e comunicazioni.
@@ -160,7 +160,7 @@ export default function AiChatWidget() {
                       inputRef.current?.focus();
                     }}
                   >
-                    <MessageSquare className="h-3 w-3 inline mr-2 text-blue-500" />
+                    <MessageSquare className="h-3 w-3 inline mr-2 text-teal-500" />
                     {prompt}
                   </button>
                 ))}
@@ -172,7 +172,7 @@ export default function AiChatWidget() {
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
                     msg.role === 'user'
-                      ? 'bg-blue-700 text-white'
+                      ? 'bg-teal-700 text-white'
                       : 'bg-muted text-foreground'
                   }`}>
                     {msg.role === 'assistant' ? (
@@ -182,7 +182,7 @@ export default function AiChatWidget() {
                     ) : (
                       <p className="whitespace-pre-wrap">{msg.content}</p>
                     )}
-                    <p className={`text-[10px] mt-1 ${msg.role === 'user' ? 'text-blue-200' : 'text-muted-foreground'}`}>
+                    <p className={`text-[10px] mt-1 ${msg.role === 'user' ? 'text-teal-200' : 'text-muted-foreground'}`}>
                       {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
@@ -191,7 +191,7 @@ export default function AiChatWidget() {
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="bg-muted rounded-lg px-4 py-3">
-                    <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                    <Loader2 className="h-4 w-4 animate-spin text-teal-500" />
                   </div>
                 </div>
               )}
@@ -209,7 +209,7 @@ export default function AiChatWidget() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Scrivi un messaggio..."
-              className="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-lg border border-border bg-muted px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-foreground"
+              className="flex-1 min-h-[40px] max-h-[120px] resize-none rounded-lg border border-border bg-muted px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-foreground"
               rows={1}
               disabled={isLoading}
             />

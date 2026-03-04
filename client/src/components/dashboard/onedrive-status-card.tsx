@@ -56,7 +56,7 @@ export default function OneDriveStatusCard() {
 
   const getConnectionStatusIcon = () => {
     if (isSyncingAll || isSyncingManually) {
-      return <RefreshCw className="h-5 w-5 animate-spin text-blue-600" />;
+      return <RefreshCw className="h-5 w-5 animate-spin text-teal-600" />;
     }
     if (isConnected) {
       return <Cloud className="h-5 w-5 text-green-600" />;
@@ -67,7 +67,7 @@ export default function OneDriveStatusCard() {
   const getConnectionStatusBadge = () => {
     if (isSyncingAll || isSyncingManually) {
       return (
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
+        <Badge variant="secondary" className="bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-200">
           <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
           Sincronizzazione
         </Badge>
@@ -100,7 +100,7 @@ export default function OneDriveStatusCard() {
   const getHealthColor = () => {
     if (!isConnected) return "text-red-600";
     if (syncStats.errors > 0) return "text-yellow-600";
-    if (syncStats.pending > 0) return "text-blue-600";
+    if (syncStats.pending > 0) return "text-teal-600";
     if (syncStats.synced === syncStats.total && syncStats.total > 0) return "text-green-600";
     return "text-muted-foreground";
   };
@@ -148,21 +148,21 @@ export default function OneDriveStatusCard() {
         {isConnected && (
           <div className={`flex items-center justify-between p-3 rounded-lg ${
             rootConfig?.folderPath 
-              ? 'bg-blue-50 dark:bg-blue-950/30' 
+              ? 'bg-teal-50 dark:bg-teal-950/30' 
               : 'bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400 dark:border-amber-600'
           }`}>
             <div className="flex items-center space-x-3">
               <FolderOpen className={`h-5 w-5 ${
-                rootConfig?.folderPath ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400'
+                rootConfig?.folderPath ? 'text-teal-600 dark:text-teal-400' : 'text-amber-600 dark:text-amber-400'
               }`} />
               <div className="flex-1">
                 <div className={`font-medium ${
-                  rootConfig?.folderPath ? 'text-blue-900 dark:text-blue-100' : 'text-amber-900 dark:text-amber-100'
+                  rootConfig?.folderPath ? 'text-teal-900 dark:text-teal-100' : 'text-amber-900 dark:text-amber-100'
                 }`}>
                   Cartella Progetti
                 </div>
                 <div className={`text-sm font-mono ${
-                  rootConfig?.folderPath ? 'text-blue-700 dark:text-blue-300' : 'text-amber-700 dark:text-amber-300'
+                  rootConfig?.folderPath ? 'text-teal-700 dark:text-teal-300' : 'text-amber-700 dark:text-amber-300'
                 }`}>
                   {rootConfig?.folderPath || 'Non configurata'}
                 </div>
@@ -211,7 +211,7 @@ export default function OneDriveStatusCard() {
             </div>
           )}
           {syncStats.pending > 0 && (
-            <div className="text-sm text-blue-600 mt-1">
+            <div className="text-sm text-teal-600 mt-1">
               {syncStats.pending} progett{syncStats.pending === 1 ? 'o' : 'i'} in sincronizzazione
             </div>
           )}

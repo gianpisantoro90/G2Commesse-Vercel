@@ -363,7 +363,7 @@ export default function UserManagementPanel() {
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       user.role === 'admin'
                         ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                        : 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200'
                     }`}>
                       {user.role === 'admin' ? 'Amministratore' : 'Utilizzatore'}
                     </span>
@@ -391,7 +391,7 @@ export default function UserManagementPanel() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleOpenEditDialog(user)}
-                          className="text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900"
+                          className="text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900"
                         >
                           ✏️ Modifica
                         </Button>
@@ -408,7 +408,7 @@ export default function UserManagementPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenEditDialog(user)}
-                        className="text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900"
+                        className="text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900"
                       >
                         ✏️ Modifica Profilo
                       </Button>

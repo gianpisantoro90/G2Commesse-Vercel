@@ -51,7 +51,7 @@ const AI_PROVIDERS = {
       { id: 'deepseek-chat', name: 'DeepSeek V3.2 Chat', tokens: 128 },
     ],
     features: ['Chain-of-thought', 'Analisi profonda', 'Ragionamento esteso'],
-    color: 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
+    color: 'bg-teal-50 dark:bg-teal-950/20 border-teal-200 dark:border-teal-800'
   }
 };
 
@@ -463,8 +463,8 @@ export default function AiConfigPanelUnified() {
 
                   {/* Features Info */}
                   {providerInfo && (
-                    <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-                      <AlertDescription className="text-sm text-blue-900 dark:text-blue-100">
+                    <Alert className="bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800">
+                      <AlertDescription className="text-sm text-teal-900 dark:text-teal-100">
                         <strong>Funzionalita:</strong> {providerInfo.features.join(" - ")}
                       </AlertDescription>
                     </Alert>
@@ -481,8 +481,8 @@ export default function AiConfigPanelUnified() {
 
         {/* ─── Tab 2: Per-Feature Routing ─── */}
         <TabsContent value="features" className="space-y-4">
-          <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-            <AlertDescription className="text-blue-900 dark:text-blue-100 text-sm">
+          <Alert className="bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800">
+            <AlertDescription className="text-teal-900 dark:text-teal-100 text-sm">
               Scegli quale provider e modello AI usare per ogni funzionalita. DeepSeek e piu economico per task ad alto volume, Claude offre migliore qualita per analisi complesse e scrittura.
             </AlertDescription>
           </Alert>
@@ -623,7 +623,7 @@ export default function AiConfigPanelUnified() {
                 <StatCard label="Feedback totali" value={feedbackStats.totalFeedback} />
                 <StatCard label="Approvati" value={feedbackStats.approved} color="text-green-600" />
                 <StatCard label="Rifiutati" value={feedbackStats.dismissed} color="text-red-500" />
-                <StatCard label="Tasso approvazione" value={`${feedbackStats.approvalRate}%`} color="text-blue-600" />
+                <StatCard label="Tasso approvazione" value={`${feedbackStats.approvalRate}%`} color="text-teal-600" />
               </div>
 
               {/* Per-type breakdown */}

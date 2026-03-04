@@ -246,7 +246,7 @@ export function TasksReview() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4 text-blue-600" />
+                            <CheckSquare className="h-4 w-4 text-teal-600" />
                             <h4 className="font-semibold">{task.title}</h4>
                             <Badge variant={getPriorityColor(task.priority)}>
                               {getPriorityLabel(task.priority)}
@@ -266,9 +266,9 @@ export function TasksReview() {
                             </div>
                           )}
 
-                          <Alert className="bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
-                            <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                            <AlertDescription className="text-sm text-blue-900 dark:text-blue-100">
+                          <Alert className="bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800">
+                            <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                            <AlertDescription className="text-sm text-teal-900 dark:text-teal-100">
                               <strong>Perché l'AI suggerisce questo task:</strong><br />
                               {task.reasoning}
                             </AlertDescription>

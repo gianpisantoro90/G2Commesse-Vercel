@@ -622,7 +622,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             onClick={() => handleModeChange("onedrive")}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               mode === "onedrive"
-                ? "bg-card text-blue-600 dark:text-blue-400"
+                ? "bg-card text-teal-600 dark:text-teal-400"
                 : "text-muted-foreground hover:text-foreground"
             }`}
             data-testid="mode-toggle-onedrive"
@@ -743,12 +743,12 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                       Cartella OneDrive del Progetto
                     </Label>
                     {selectedProject ? (
-                      <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="p-3 bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <FolderOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                          <span className="font-mono text-sm text-blue-800 dark:text-blue-300" data-testid="text-scan-path">{scanPath}</span>
+                          <FolderOpen className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                          <span className="font-mono text-sm text-teal-800 dark:text-teal-300" data-testid="text-scan-path">{scanPath}</span>
                         </div>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                        <p className="text-xs text-teal-600 dark:text-teal-400 mt-1">
                           📂 Cartella automaticamente selezionata dal mapping OneDrive
                         </p>
                       </div>
@@ -782,9 +782,9 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
               )}
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">ℹ️ Come Funziona</h4>
-              <div className="space-y-2 text-sm text-blue-800 dark:text-blue-300">
+            <div className="bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
+              <h4 className="font-semibold text-teal-900 dark:text-teal-300 mb-2">ℹ️ Come Funziona</h4>
+              <div className="space-y-2 text-sm text-teal-800 dark:text-teal-300">
                 <p>1. <strong>Seleziona un progetto</strong> per contestualizzare l'analisi AI</p>
                 {mode === "onedrive" ? (
                   <>
@@ -871,7 +871,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                   key={file.id}
                   className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                     selectedFiles.some(f => f.id === file.id)
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                      ? 'border-teal-500 bg-teal-50 dark:bg-teal-950/30'
                       : 'border-border hover:bg-muted'
                   }`}
                   onClick={() => handleFileSelect(file, !selectedFiles.some(f => f.id === file.id))}
@@ -887,7 +887,7 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
                     </div>
                   </div>
                   {selectedFiles.some(f => f.id === file.id) && (
-                    <CheckCircle className="w-5 h-5 text-blue-500" />
+                    <CheckCircle className="w-5 h-5 text-teal-500" />
                   )}
                 </div>
               ))}
@@ -951,10 +951,10 @@ export default function OneDriveAutoRouting({ onRoutingComplete }: OneDriveAutoR
             )}
             {routingResults.length > 0 && mode === "upload" && (
               <div className="flex items-center gap-4">
-                <div className="flex-1 text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex-1 text-sm text-muted-foreground bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-lg p-3">
                   <div className="flex items-center gap-2">
-                    <Cloud className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <span className="font-medium text-blue-800 dark:text-blue-300">Carica su OneDrive:</span>
+                    <Cloud className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    <span className="font-medium text-teal-800 dark:text-teal-300">Carica su OneDrive:</span>
                     <span>I file verranno caricati direttamente nei percorsi suggeriti con codice progetto</span>
                   </div>
                 </div>

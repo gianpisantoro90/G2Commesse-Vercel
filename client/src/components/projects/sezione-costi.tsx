@@ -45,7 +45,7 @@ const ROLES = [
   { value: "altro", label: "Altro", icon: "👤" }
 ];
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6'];
+const COLORS = ['#0d9488', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6'];
 
 export default function SezioneCosti() {
   const [activeTab, setActiveTab] = useState("panoramica");
@@ -610,7 +610,7 @@ export default function SezioneCosti() {
           <p className="text-sm text-muted-foreground mb-1">Ricavi Totali</p>
           <p className="text-3xl font-bold text-foreground mb-3">{formatCurrency(globalStats.ricaviPrevisti)}</p>
           <div className="text-xs text-muted-foreground space-y-1">
-            <div className="flex justify-between"><span>Fatturato:</span><span className="font-medium text-blue-600 dark:text-blue-400">{formatCurrency(globalStats.ricaviFatturati)}</span></div>
+            <div className="flex justify-between"><span>Fatturato:</span><span className="font-medium text-teal-600 dark:text-teal-400">{formatCurrency(globalStats.ricaviFatturati)}</span></div>
             <div className="flex justify-between"><span>Incassato:</span><span className="font-medium text-green-600 dark:text-green-400">{formatCurrency(globalStats.ricaviIncassati)}</span></div>
           </div>
         </div>
