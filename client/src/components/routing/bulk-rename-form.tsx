@@ -376,13 +376,13 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
   const selectedProjectData = projects.find(p => p.id === selectedProject);
 
   return (
-    <div className="card-g2 border-2 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20" data-testid="bulk-rename-form">
+    <div className="card-g2 border-2 border-teal-200 dark:border-teal-800 bg-teal-50/50 dark:bg-teal-950/20" data-testid="bulk-rename-form">
       <div className="pb-4">
-        <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-teal-900 dark:text-teal-200 flex items-center gap-2">
           <span className="text-xl">📁</span>
           Rinomina File Esistenti
         </h3>
-        <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
+        <p className="text-sm text-teal-700 dark:text-teal-300 mt-2">
           Seleziona una cartella OneDrive per rinominare automaticamente tutti i file contenuti aggiungendo il prefisso della commessa
         </p>
       </div>
@@ -402,8 +402,8 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
         </div>
 
         {selectedProjectData && (
-          <Alert className="border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30">
-            <AlertDescription className="text-blue-800 dark:text-blue-200">
+          <Alert className="border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-950/30">
+            <AlertDescription className="text-teal-800 dark:text-teal-200">
               <strong>Codice commessa:</strong> {selectedProjectData.code}<br/>
               <strong>Prefisso file:</strong> {selectedProjectData.code}_
             </AlertDescription>
@@ -429,10 +429,10 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           {selectedFolderPath && (
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Cartella commessa mappata:</Label>
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <div className="p-3 bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <span className="text-blue-600 dark:text-blue-400">📁</span>
-                  <span className="text-blue-800 dark:text-blue-200 font-medium">{selectedFolderPath}</span>
+                  <span className="text-teal-600 dark:text-teal-400">📁</span>
+                  <span className="text-teal-800 dark:text-teal-200 font-medium">{selectedFolderPath}</span>
                 </div>
               </div>
             </div>
@@ -507,7 +507,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                                   className="flex items-center gap-3 min-w-0 flex-1"
                                   onClick={() => loadBrowseFolder(folderPath)}
                                 >
-                                  <FolderOpen className="w-5 h-5 text-blue-500" />
+                                  <FolderOpen className="w-5 h-5 text-teal-500" />
                                   <div className="min-w-0 flex-1">
                                     <div className="font-medium text-sm truncate text-foreground">{folder.name}</div>
                                     <div className="text-xs text-muted-foreground">
@@ -536,10 +536,10 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                   </div>
 
                   {/* Current folder selection */}
-                  <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-teal-50 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-800 rounded-lg">
                     <div className="flex items-center gap-2">
-                      <Folder className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                      <span className="text-blue-800 dark:text-blue-200 font-medium">{browseCurrentPath}</span>
+                      <Folder className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                      <span className="text-teal-800 dark:text-teal-200 font-medium">{browseCurrentPath}</span>
                     </div>
                     <Button
                       onClick={() => handleFolderSelect(browseCurrentPath)}
@@ -571,7 +571,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
             onClick={handleScanFolder}
             disabled={!selectedProject || !oneDriveConnected || isLoadingFiles || (!selectedFolderPath && !customFolderPath)}
             variant="outline"
-            className="w-full p-3 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full p-3 border-2 border-dashed border-teal-300 dark:border-teal-700 rounded-lg bg-teal-50 dark:bg-teal-950/30 hover:bg-teal-100 dark:hover:bg-teal-900/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="scan-folder-button"
           >
             {isLoadingFiles ? (
@@ -597,7 +597,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
             <h4 className="font-medium text-foreground">Anteprima rinominazione:</h4>
             <div className="grid grid-cols-3 gap-2 text-xs font-semibold mb-2">
               <div className="text-green-600 dark:text-green-400">✓ Già corretti: {renamePreview.filter(r => r.original === r.renamed).length}</div>
-              <div className="text-blue-600 dark:text-blue-400">🔄 Da rinominare: {renamePreview.filter(r => r.original !== r.renamed).length}</div>
+              <div className="text-teal-600 dark:text-teal-400">🔄 Da rinominare: {renamePreview.filter(r => r.original !== r.renamed).length}</div>
               <div className="text-muted-foreground">📁 Totale: {renamePreview.length}</div>
             </div>
             <div className="max-h-64 overflow-y-auto bg-card border border-border rounded-lg p-3">
@@ -619,7 +619,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
                         ✓ Già corretto
                       </span>
                     ) : (
-                      <span className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 px-2 py-1 rounded">
+                      <span className="text-xs bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-200 px-2 py-1 rounded">
                         🔄 Da rinominare
                       </span>
                     )}
@@ -635,7 +635,7 @@ export default function BulkRenameForm({ onRenameComplete }: BulkRenameFormProps
           <Button
             onClick={handleBulkRename}
             disabled={!selectedProject || folderFiles.length === 0 || isProcessing}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-teal-600 text-white rounded-lg font-semibold hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed"
             data-testid="bulk-rename-button"
           >
             {isProcessing ? (

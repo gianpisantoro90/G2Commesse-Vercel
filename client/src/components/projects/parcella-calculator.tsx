@@ -207,7 +207,7 @@ PROSPETTO FATTURA:
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Calculator className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <Calculator className="h-6 w-6 text-teal-600 dark:text-teal-400" />
             Calcolatore Parcella DM 17/06/2016
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -224,9 +224,9 @@ PROSPETTO FATTURA:
 
       {/* Step Indicator */}
       <div className="flex items-center gap-4">
-        <div className={`flex items-center gap-2 ${currentStep === 'input' ? 'text-blue-600 dark:text-blue-400' : 'text-green-600 dark:text-green-400'}`}>
+        <div className={`flex items-center gap-2 ${currentStep === 'input' ? 'text-teal-600 dark:text-teal-400' : 'text-green-600 dark:text-green-400'}`}>
           {currentStep === 'input' ? (
-            <div className="w-8 h-8 rounded-full bg-blue-600 dark:bg-blue-500 text-white flex items-center justify-center font-bold">
+            <div className="w-8 h-8 rounded-full bg-teal-600 dark:bg-teal-500 text-white flex items-center justify-center font-bold">
               1
             </div>
           ) : (
@@ -235,8 +235,8 @@ PROSPETTO FATTURA:
           <span className="font-semibold">Dati Input</span>
         </div>
         <ChevronRight className="text-muted-foreground" />
-        <div className={`flex items-center gap-2 ${currentStep === 'result' ? 'text-blue-600 dark:text-blue-400' : 'text-muted-foreground'}`}>
-          <div className={`w-8 h-8 rounded-full ${currentStep === 'result' ? 'bg-blue-600 dark:bg-blue-500 text-white' : 'bg-muted text-muted-foreground'} flex items-center justify-center font-bold`}>
+        <div className={`flex items-center gap-2 ${currentStep === 'result' ? 'text-teal-600 dark:text-teal-400' : 'text-muted-foreground'}`}>
+          <div className={`w-8 h-8 rounded-full ${currentStep === 'result' ? 'bg-teal-600 dark:bg-teal-500 text-white' : 'bg-muted text-muted-foreground'} flex items-center justify-center font-bold`}>
             2
           </div>
           <span className="font-semibold">Risultato</span>
@@ -339,7 +339,7 @@ PROSPETTO FATTURA:
 
                     {/* Livelli Progettazione (solo se progettazione selezionata) */}
                     {id === 'progettazione' && prestazioni.includes('progettazione') && (
-                      <div className="ml-6 pl-4 border-l-2 border-blue-200 dark:border-blue-800 space-y-2">
+                      <div className="ml-6 pl-4 border-l-2 border-teal-200 dark:border-teal-800 space-y-2">
                         <p className="text-xs text-muted-foreground font-medium">Livelli di Progettazione:</p>
                         {Object.entries(LIVELLO_PROGETTAZIONE_CONFIG).map(([livelloId, livelloConfig]) => (
                           <div key={livelloId} className="flex items-center space-x-2">
@@ -382,23 +382,23 @@ PROSPETTO FATTURA:
       {currentStep === 'result' && calculationResult && fatturaResult && (
         <div className="space-y-6">
           {/* Summary Card */}
-          <div className="card-g2 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 border-blue-200 dark:border-blue-800">
+          <div className="card-g2 bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-950/30 dark:to-teal-900/30 border-teal-200 dark:border-teal-800">
             <div className="grid gap-6 md:grid-cols-3">
               <div>
-                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">Importo Opere</p>
-                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                <p className="text-sm text-teal-700 dark:text-teal-300 font-medium mb-1">Importo Opere</p>
+                <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
                   {formatEuro(calculationResult.importoBase)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">Percentuale Applicata</p>
-                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+                <p className="text-sm text-teal-700 dark:text-teal-300 font-medium mb-1">Percentuale Applicata</p>
+                <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
                   {calculationResult.percentualeApplicata.toFixed(2)}%
                 </p>
               </div>
               <div>
-                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-1">Compenso Totale</p>
-                <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+                <p className="text-sm text-teal-700 dark:text-teal-300 font-medium mb-1">Compenso Totale</p>
+                <p className="text-3xl font-bold text-teal-900 dark:text-teal-100">
                   {formatEuro(calculationResult.compensoTotale)}
                 </p>
               </div>
@@ -409,7 +409,7 @@ PROSPETTO FATTURA:
           <div className="card-g2">
             <div className="flex items-center justify-between mb-4">
               <h3 className="flex items-center gap-2 text-lg font-semibold text-foreground">
-                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <FileText className="h-5 w-5 text-teal-600 dark:text-teal-400" />
                 Dettaglio Compensi per Prestazione
               </h3>
               <div className="flex gap-2">
@@ -522,7 +522,7 @@ PROSPETTO FATTURA:
                 <Separator className="dark:bg-border" />
                 <div className="flex justify-between items-center font-semibold text-lg">
                   <span className="text-foreground">Totale con IVA</span>
-                  <span className="text-blue-700 dark:text-blue-400">{formatEuro(fatturaResult.totaleConIVA)}</span>
+                  <span className="text-teal-700 dark:text-teal-400">{formatEuro(fatturaResult.totaleConIVA)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-muted-foreground">- Ritenuta d'acconto {aliquotaRitenuta}%</span>

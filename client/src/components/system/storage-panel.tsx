@@ -165,7 +165,7 @@ export default function StoragePanel() {
             <div className="text-sm text-muted-foreground mb-3">
               Importa dati da file JSON
               <br />
-              <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">Opzioni: Unisci o Sovrascrivi</span>
+              <span className="text-xs text-teal-600 dark:text-teal-400 font-medium">Opzioni: Unisci o Sovrascrivi</span>
             </div>
             <Button
               onClick={handleImportClick}
@@ -264,8 +264,8 @@ export default function StoragePanel() {
                   <div className="text-lg font-bold text-green-700 dark:text-green-400">{importReport.totalCreated}</div>
                   <div className="text-xs text-muted-foreground">Creati</div>
                 </div>
-                <div className="p-2 rounded bg-blue-50 dark:bg-blue-950/30">
-                  <div className="text-lg font-bold text-blue-700 dark:text-blue-400">{importReport.totalUpdated}</div>
+                <div className="p-2 rounded bg-teal-50 dark:bg-teal-950/30">
+                  <div className="text-lg font-bold text-teal-700 dark:text-teal-400">{importReport.totalUpdated}</div>
                   <div className="text-xs text-muted-foreground">Aggiornati</div>
                 </div>
                 <div className="p-2 rounded bg-yellow-50 dark:bg-yellow-950/30">

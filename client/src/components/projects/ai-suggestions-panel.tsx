@@ -201,7 +201,7 @@ export function AISuggestionsPanel({
                         <Badge
                           key={field}
                           variant="secondary"
-                          className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
+                          className="text-xs bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-200"
                         >
                           {field}
                         </Badge>

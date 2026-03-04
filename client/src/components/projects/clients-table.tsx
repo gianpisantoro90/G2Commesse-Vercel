@@ -420,7 +420,7 @@ export default function ClientsTable() {
               variant="outline"
               onClick={() => syncCountsMutation.mutate()}
               disabled={syncCountsMutation.isPending}
-              className="flex-1 sm:flex-none border-2 border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900 text-xs sm:text-sm"
+              className="flex-1 sm:flex-none border-2 border-teal-300 text-teal-700 hover:bg-teal-50 dark:border-teal-600 dark:text-teal-400 dark:hover:bg-teal-900 text-xs sm:text-sm"
               data-testid="sync-counts"
               title="Sincronizza i conteggi delle commesse per tutti i clienti"
             >
@@ -465,7 +465,7 @@ export default function ClientsTable() {
                       <span className="font-mono text-sm font-bold text-primary">{client.sigla}</span>
                       <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
                         (client.projectsCount || 0) > 5
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          ? 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200'
                           : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                       }`}>
                         {client.projectsCount || 0} commesse
@@ -536,7 +536,7 @@ export default function ClientsTable() {
                     <td className="py-4 px-4" data-testid={`client-projects-count-${client.id}`}>
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                         (client.projectsCount || 0) > 5
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          ? 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200'
                           : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                       }`}>
                         {client.projectsCount || 0}
@@ -547,7 +547,7 @@ export default function ClientsTable() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900 rounded-lg transition-colors"
+                          className="p-2 text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900 rounded-lg transition-colors"
                           title="Modifica"
                           onClick={() => handleEditClient(client)}
                           disabled={updateClientMutation.isPending}

@@ -1,41 +1,46 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Background -->
-  <rect width="512" height="512" rx="64" fill="#1B5B5A"/>
+  <rect width="512" height="512" fill="#004455"/>
 
-  <!-- G2 Text -->
-  <g transform="translate(256, 256)">
-    <!-- G -->
-    <text
-      x="-80"
-      y="40"
-      font-family="Arial, sans-serif"
-      font-size="180"
-      font-weight="bold"
-      fill="#FFFFFF"
-      text-anchor="middle"
-    >G</text>
+  <!-- Top line -->
+  <rect x="80" y="60" width="352" height="12" fill="#FFFFFF"/>
 
-    <!-- 2 -->
-    <text
-      x="40"
-      y="40"
-      font-family="Arial, sans-serif"
-      font-size="180"
-      font-weight="bold"
-      fill="#C62828"
-      text-anchor="middle"
-    >2</text>
-  </g>
+  <!-- Bottom line -->
+  <rect x="80" y="440" width="352" height="12" fill="#FFFFFF"/>
 
-  <!-- Small text -->
+  <!-- G letter - white arc -->
+  <path d="M 220 150
+    A 110 110 0 1 0 220 310
+    L 220 280
+    A 80 80 0 1 1 220 180
+    Z" fill="#FFFFFF"/>
+
+  <!-- G horizontal bar -->
+  <rect x="140" y="218" width="90" height="30" fill="#FFFFFF"/>
+
+  <!-- Red circle inside G -->
+  <circle cx="178" cy="248" r="68" fill="#D40000"/>
+
+  <!-- 2 -->
+  <text
+    x="350"
+    y="330"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="240"
+    font-weight="300"
+    fill="#FFFFFF"
+    text-anchor="middle"
+  >2</text>
+
+  <!-- ingegneria text -->
   <text
     x="256"
     y="420"
-    font-family="Arial, sans-serif"
-    font-size="32"
-    font-weight="normal"
+    font-family="Arial, Helvetica, sans-serif"
+    font-size="48"
+    font-weight="300"
+    letter-spacing="4"
     fill="#FFFFFF"
     text-anchor="middle"
-    opacity="0.9"
-  >Ingegneria</text>
+  >ingegneria</text>
 </svg>

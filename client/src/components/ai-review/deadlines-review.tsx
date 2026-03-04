@@ -277,7 +277,7 @@ export function DeadlinesReview() {
                   <div className="space-y-3">
                     {/* Title */}
                     <div className="flex items-start gap-2">
-                      <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                      <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-teal-600 dark:text-teal-400" />
                       <span className="font-medium line-clamp-2">{deadline.title}</span>
                     </div>
 
@@ -348,7 +348,7 @@ export function DeadlinesReview() {
                     >
                       <TableCell className="font-medium">
                         <div className="flex items-start gap-2">
-                          <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                          <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-teal-600 dark:text-teal-400" />
                           <span className="line-clamp-2">{deadline.title}</span>
                         </div>
                       </TableCell>
@@ -435,7 +435,7 @@ export function DeadlinesReview() {
         <DialogContent className="w-full max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <CalendarClock className="h-5 w-5 text-teal-600 dark:text-teal-400" />
               {selectedComm && selectedComm.comm.aiSuggestions.suggestedDeadlines?.[selectedComm.deadlineIndex]?.title}
             </DialogTitle>
             <DialogDescription>
@@ -496,8 +496,8 @@ export function DeadlinesReview() {
                 </div>
 
                 {/* AI Reasoning */}
-                <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                  <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <Alert className="bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800">
+                  <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                   <AlertDescription className="text-sm">
                     <strong>Perché l'AI suggerisce questa scadenza:</strong><br />
                     {deadline.reasoning}

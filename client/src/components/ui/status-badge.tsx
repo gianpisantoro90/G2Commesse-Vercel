@@ -74,7 +74,7 @@ export const TaskStatusBadge = memo(function TaskStatusBadge({ status, className
     pending: {
       icon: "📋",
       label: "Da Fare",
-      classes: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border-blue-200 dark:border-blue-800"
+      classes: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-200 border-teal-200 dark:border-teal-800"
     }
   };
 
@@ -118,7 +118,7 @@ export const PriorityBadge = memo(function PriorityBadge({ priority, className, 
     low: {
       icon: "🔵",
       label: "Bassa",
-      classes: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border-blue-200 dark:border-blue-800"
+      classes: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-200 border-teal-200 dark:border-teal-800"
     }
   };
 

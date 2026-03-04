@@ -31,7 +31,7 @@ const statusIcons = {
 
 const statusIconColors = {
   pending: "text-muted-foreground",
-  in_progress: "text-blue-600 dark:text-blue-400",
+  in_progress: "text-teal-600 dark:text-teal-400",
   completed: "text-green-600 dark:text-green-400",
   cancelled: "text-red-600 dark:text-red-400",
 };
@@ -394,7 +394,7 @@ export default function TodoPanel() {
                                 <h4 className="font-semibold text-foreground truncate max-w-md">{task.title}</h4>
                                 <PriorityBadge priority={task.priority as "high" | "medium" | "low"} />
                                 {task.notes && task.notes.trim() !== '' && (
-                                  <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800">
+                                  <Badge variant="outline" className="bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-800">
                                     <StickyNote className="w-3 h-3 mr-1" />
                                     Note
                                   </Badge>

@@ -241,7 +241,7 @@ export default function FolderConfigPanel() {
   // File icon helper
   const getFileIcon = (file: OneDriveFile) => {
     return file.folder ? 
-      <Folder className="w-4 h-4 text-blue-500" /> : 
+      <Folder className="w-4 h-4 text-teal-500" /> : 
       <FolderOpen className="w-4 h-4 text-muted-foreground" />;
   };
 
@@ -413,7 +413,7 @@ export default function FolderConfigPanel() {
 
         {/* Information Panel */}
         <div className="space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-md p-6">
+          <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-700 rounded-md p-6">
             <h4 className="text-lg font-semibold text-foreground mb-4">ℹ️ Come Funziona</h4>
             <div className="space-y-3 text-sm text-foreground">
               <p>
@@ -512,7 +512,7 @@ export default function FolderConfigPanel() {
                     key={folder.id}
                     className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                       selectedFolder?.id === folder.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                        ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30'
                         : 'border-border hover:bg-muted'
                     }`}
                     onClick={() => handleFolderSelect(folder)}
@@ -530,7 +530,7 @@ export default function FolderConfigPanel() {
                     </div>
                     <div className="flex items-center gap-2">
                       {selectedFolder?.id === folder.id && (
-                        <Check className="w-4 h-4 text-blue-500" />
+                        <Check className="w-4 h-4 text-teal-500" />
                       )}
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     </div>
@@ -636,7 +636,7 @@ export default function FolderConfigPanel() {
                     key={folder.id}
                     className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
                       selectedArchiveFolder?.id === folder.id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30'
+                        ? 'border-teal-500 bg-teal-50 dark:bg-teal-900/30'
                         : 'border-border hover:bg-muted'
                     }`}
                     onClick={() => setSelectedArchiveFolder(folder)}
@@ -659,7 +659,7 @@ export default function FolderConfigPanel() {
                     </div>
                     <div className="flex items-center gap-2">
                       {selectedArchiveFolder?.id === folder.id && (
-                        <Check className="w-4 h-4 text-blue-500" />
+                        <Check className="w-4 h-4 text-teal-500" />
                       )}
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     </div>

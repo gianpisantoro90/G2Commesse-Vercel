@@ -71,7 +71,7 @@ interface Deadline {
 
 const PRIORITY_CONFIG = {
   low: { label: 'Bassa', color: 'bg-muted text-foreground dark:bg-background dark:text-foreground', icon: '🟢' },
-  medium: { label: 'Media', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300', icon: '🟡' },
+  medium: { label: 'Media', color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300', icon: '🟡' },
   high: { label: 'Alta', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300', icon: '🟠' },
   urgent: { label: 'Urgente', color: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300', icon: '🔴' }
 };
@@ -476,7 +476,7 @@ export default function Scadenzario() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <CalendarClock className="h-5 w-5 text-blue-600" />
+            <CalendarClock className="h-5 w-5 text-teal-600" />
             Scadenzario Commesse
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
@@ -525,15 +525,15 @@ export default function Scadenzario() {
           </div>
         </div>
 
-        <div className="card-g2 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+        <div className="card-g2 bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-800">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">In Programma</p>
-              <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+              <p className="text-sm text-teal-700 dark:text-teal-300 font-medium">In Programma</p>
+              <p className="text-3xl font-bold text-teal-900 dark:text-teal-100">
                 {enrichedDeadlines.filter(d => d.status === 'pending').length - overdueCount - upcomingCount}
               </p>
             </div>
-            <CalendarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            <CalendarIcon className="h-8 w-8 text-teal-600 dark:text-teal-400" />
           </div>
         </div>
 

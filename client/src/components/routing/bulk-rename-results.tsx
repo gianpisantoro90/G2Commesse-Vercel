@@ -35,7 +35,7 @@ export default function BulkRenameResults({ results, onClear }: BulkRenameResult
             <div className="text-sm text-muted-foreground">File rinominati</div>
           </div>
           <div className="bg-card p-4 rounded-lg border border-border">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{alreadyCorrectCount}</div>
+            <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">{alreadyCorrectCount}</div>
             <div className="text-sm text-muted-foreground">Già corretti</div>
           </div>
         </div>
@@ -62,7 +62,7 @@ export default function BulkRenameResults({ results, onClear }: BulkRenameResult
                 </div>
                 <div className="flex gap-2">
                   {item.original === item.renamed ? (
-                    <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+                    <span className="text-xs bg-teal-100 dark:bg-teal-900 text-teal-800 dark:text-teal-200 px-2 py-1 rounded">
                       Già corretto
                     </span>
                   ) : (

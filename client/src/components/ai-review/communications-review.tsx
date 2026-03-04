@@ -627,7 +627,7 @@ export function CommunicationsReview() {
                 {/* Manual project selection */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <FolderOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <FolderOpen className="h-5 w-5 text-teal-600 dark:text-teal-400" />
                     <h4 className="font-semibold text-foreground">Assegna a Commessa</h4>
                   </div>
 
@@ -655,7 +655,7 @@ export function CommunicationsReview() {
                             onClick={() => setSelectedProjectId(project.id.toString())}
                             className={`p-3 rounded-lg cursor-pointer transition-all ${
                               selectedProjectId === project.id.toString()
-                                ? "bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-500"
+                                ? "bg-teal-100 dark:bg-teal-900/30 border-2 border-teal-500"
                                 : "hover:bg-muted border border-transparent"
                             }`}
                             data-testid={`project-option-${project.id}`}
@@ -667,7 +667,7 @@ export function CommunicationsReview() {
                                     {project.code}
                                   </Badge>
                                   {selectedProjectId === project.id.toString() && (
-                                    <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
+                                    <CheckCircle2 className="h-4 w-4 text-teal-600 shrink-0" />
                                   )}
                                 </div>
                                 <p className="text-sm font-medium text-foreground mt-1 truncate">

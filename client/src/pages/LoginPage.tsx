@@ -56,12 +56,12 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-teal-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-blue-100 dark:bg-blue-900 p-3">
-              <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+            <div className="rounded-full bg-teal-100 dark:bg-teal-900 p-3">
+              <Shield className="h-8 w-8 text-teal-600 dark:text-teal-400" />
             </div>
           </div>
           <CardTitle className="text-2xl font-bold">G2 Ingegneria</CardTitle>

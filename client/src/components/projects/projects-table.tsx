@@ -310,7 +310,7 @@ export default function ProjectsTable() {
     }
     
     if (syncStatus.status === 'pending') {
-      return { status: 'syncing', label: 'In sincronizzazione...', icon: '🔄', color: 'text-blue-600' };
+      return { status: 'syncing', label: 'In sincronizzazione...', icon: '🔄', color: 'text-teal-600' };
     }
     
     if (syncStatus.status === 'error') {
@@ -643,7 +643,7 @@ export default function ProjectsTable() {
                     {/* Fatturazione for Admin */}
                     {isAdmin && project.fatturato && (
                       <div className="mt-2 pt-2 border-t border-border">
-                        <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
+                        <span className="text-xs px-2 py-0.5 bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-200 rounded">
                           ✓ Fatturato
                         </span>
                         {project.pagato && (
@@ -902,7 +902,7 @@ export default function ProjectsTable() {
                         <td className="py-4 px-4" data-testid={`project-template-${project.id}`}>
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             project.template === 'LUNGO'
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300'
+                              ? 'bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300'
                               : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300'
                           }`}>
                             {project.template}
@@ -1030,7 +1030,7 @@ export default function ProjectsTable() {
 
                           const priorityConfig: Record<string, { color: string; icon: string }> = {
                             low: { color: 'bg-muted text-foreground dark:bg-muted dark:text-foreground', icon: '🟢' },
-                            medium: { color: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200', icon: '🟡' },
+                            medium: { color: 'bg-teal-100 text-teal-700 dark:bg-teal-900 dark:text-teal-200', icon: '🟡' },
                             high: { color: 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200', icon: '🟠' },
                             urgent: { color: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200', icon: '🔴' }
                           };
@@ -1083,7 +1083,7 @@ export default function ProjectsTable() {
                                 <div className="flex flex-col gap-1 min-w-0">
                                   <button
                                     onClick={() => handleOpenOneDriveFolder(mapping)}
-                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-xs underline text-left truncate"
+                                    className="text-teal-600 hover:text-teal-800 dark:text-teal-400 dark:hover:text-teal-300 text-xs underline text-left truncate"
                                     title={`Apri cartella: ${mapping.oneDriveFolderPath}`}
                                     data-testid={`onedrive-link-${project.id}`}
                                   >
@@ -1140,7 +1140,7 @@ export default function ProjectsTable() {
                           <Button
                             size="default"
                             variant="ghost"
-                            className="min-w-[44px] min-h-[44px] p-3 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900 rounded-lg transition-colors"
+                            className="min-w-[44px] min-h-[44px] p-3 text-teal-600 hover:bg-teal-50 dark:text-teal-400 dark:hover:bg-teal-900 rounded-lg transition-colors"
                             title="Modifica"
                             aria-label="Modifica commessa"
                             data-testid={`edit-project-${project.id}`}

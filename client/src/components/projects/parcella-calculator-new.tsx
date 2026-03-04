@@ -206,17 +206,17 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                       </SelectContent>
                     </Select>
                     {categoriaSelezionata && (
-                      <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-md">
-                        <p className="text-xs text-blue-900 dark:text-blue-100 font-medium mb-1">
+                      <div className="mt-2 p-3 bg-teal-50 dark:bg-teal-950 border border-teal-200 dark:border-teal-800 rounded-md">
+                        <p className="text-xs text-teal-900 dark:text-teal-100 font-medium mb-1">
                           <Info className="w-3 h-3 inline mr-1" />
                           Destinazione funzionale:
                         </p>
-                        <p className="text-xs text-blue-800 dark:text-blue-200">{categoriaSelezionata.destinazioneFunzionale}</p>
-                        <div className="mt-2 pt-2 border-t border-blue-200 dark:border-blue-800">
+                        <p className="text-xs text-teal-800 dark:text-teal-200">{categoriaSelezionata.destinazioneFunzionale}</p>
+                        <div className="mt-2 pt-2 border-t border-teal-200 dark:border-teal-800">
                           <Badge variant="outline" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 border-green-300 dark:border-green-700">
                             Parametro G (complessità): {categoriaSelezionata.G.toFixed(2)}
                           </Badge>
-                          <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                          <p className="text-xs text-teal-600 dark:text-teal-300 mt-1">
                             ✓ Il parametro G è assegnato automaticamente dalla normativa
                           </p>
                         </div>
@@ -335,7 +335,7 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
               </div>
 
               {/* Opzioni Calcolo */}
-              <div className="space-y-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/30 dark:border-blue-800">
+              <div className="space-y-4 p-4 border rounded-lg bg-teal-50 dark:bg-teal-950/30 dark:border-teal-800">
                 <h4 className="font-semibold text-sm">Opzioni Calcolo Compenso</h4>
 
                 <div className="flex items-center justify-between">
@@ -467,31 +467,31 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
               </div>
 
               {/* Formula e Parametri */}
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <Card className="bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm font-medium text-blue-700 mb-2">Formula Parametrica</p>
-                      <p className="text-2xl font-bold font-mono text-blue-900">
+                      <p className="text-sm font-medium text-teal-700 mb-2">Formula Parametrica</p>
+                      <p className="text-2xl font-bold font-mono text-teal-900">
                         CP = ∑(V × G × Q × P)
                       </p>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                       <div>
-                        <p className="text-xs text-blue-700">V - Importo Opere</p>
-                        <p className="font-bold text-blue-900">{formatEuro(risultatoParcella.importoBase)}</p>
+                        <p className="text-xs text-teal-700">V - Importo Opere</p>
+                        <p className="font-bold text-teal-900">{formatEuro(risultatoParcella.importoBase)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-blue-700">G - Complessità</p>
-                        <p className="font-bold text-blue-900">{risultatoParcella.parametroG.toFixed(2)}</p>
+                        <p className="text-xs text-teal-700">G - Complessità</p>
+                        <p className="font-bold text-teal-900">{risultatoParcella.parametroG.toFixed(2)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-blue-700">P - Parametro Base</p>
-                        <p className="font-bold text-blue-900">{risultatoParcella.parametroP.toFixed(6)}</p>
+                        <p className="text-xs text-teal-700">P - Parametro Base</p>
+                        <p className="font-bold text-teal-900">{risultatoParcella.parametroP.toFixed(6)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-blue-700">Prestazioni</p>
-                        <p className="font-bold text-blue-900">{risultatoParcella.prestazioni.length}</p>
+                        <p className="text-xs text-teal-700">Prestazioni</p>
+                        <p className="font-bold text-teal-900">{risultatoParcella.prestazioni.length}</p>
                       </div>
                     </div>
                   </div>
@@ -553,14 +553,14 @@ NETTO A PAGARE: ${formatEuro(risultatoFattura.nettoAPagare)}
                   </div>
 
                   {risultatoParcella.incrementoBIM && (
-                    <div className="flex justify-between items-center text-blue-700">
+                    <div className="flex justify-between items-center text-teal-700">
                       <span className="text-sm">+ Incremento BIM ({incrementoBIM}%)</span>
                       <span className="font-semibold">{formatEuro(risultatoParcella.incrementoBIM)}</span>
                     </div>
                   )}
 
                   {risultatoParcella.speseAccessorie && (
-                    <div className="flex justify-between items-center text-blue-700">
+                    <div className="flex justify-between items-center text-teal-700">
                       <span className="text-sm">
                         + Spese Accessorie ({((risultatoParcella.speseAccessorie / risultatoParcella.compensoBase) * 100).toFixed(1)}%)
                       </span>

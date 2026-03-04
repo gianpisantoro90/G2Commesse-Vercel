@@ -7,7 +7,7 @@ export const PRESTAZIONI_CONFIG = {
     icon: '📐',
     label: 'Progettazione',
     shortLabel: 'Prog.',
-    className: 'bg-blue-100 text-blue-800 border-blue-200',
+    className: 'bg-teal-100 text-teal-800 border-teal-200',
     description: 'Progettazione architettonica e/o strutturale'
   },
   dl: {
@@ -75,7 +75,7 @@ export const LIVELLO_PROGETTAZIONE_CONFIG = {
     label: 'PFTE',
     fullLabel: 'Progetto di Fattibilità Tecnico-Economica',
     description: 'Progetto di Fattibilità Tecnico-Economica',
-    className: 'bg-blue-50 text-blue-700 border-blue-200',
+    className: 'bg-teal-50 text-teal-700 border-teal-200',
     icon: '📋'
   },
   definitivo: {
@@ -358,7 +358,7 @@ export const TIPO_RAPPORTO_CONFIG = {
     id: 'diretto',
     label: 'Diretto',
     description: 'Incarico diretto con il committente',
-    className: 'bg-blue-50 text-blue-700 border-blue-200',
+    className: 'bg-teal-50 text-teal-700 border-teal-200',
     icon: '🤝'
   },
   consulenza: {

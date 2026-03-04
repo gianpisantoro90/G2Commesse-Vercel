@@ -51,7 +51,7 @@ export default function RecentProjectsTable() {
         );
       case 'pending':
         return (
-          <div className="flex items-center space-x-1 text-blue-600" title="Sincronizzazione in corso">
+          <div className="flex items-center space-x-1 text-teal-600" title="Sincronizzazione in corso">
             <Cloud className="h-3 w-3" />
             <RefreshCw className="h-3 w-3 animate-spin" />
           </div>

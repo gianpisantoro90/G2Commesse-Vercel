@@ -270,9 +270,9 @@ export function BillingConfig() {
         </div>
 
         {/* Info box */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-sm">
-          <p className="font-medium text-blue-800 dark:text-blue-200">Come funziona</p>
-          <ul className="mt-2 space-y-1 text-blue-700 dark:text-blue-300 list-disc list-inside">
+        <div className="bg-teal-50 dark:bg-teal-900/20 p-4 rounded-lg text-sm">
+          <p className="font-medium text-teal-800 dark:text-teal-200">Come funziona</p>
+          <ul className="mt-2 space-y-1 text-teal-700 dark:text-teal-300 list-disc list-inside">
             <li>Il sistema controlla automaticamente ogni ora</li>
             <li>Genera alert quando le soglie vengono superate</li>
             <li>Gli alert vengono risolti automaticamente quando l'azione viene completata</li>

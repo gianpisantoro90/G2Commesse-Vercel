@@ -28,7 +28,7 @@ const notificationIcons = {
 };
 
 const priorityColors = {
-  low: 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+  low: 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800',
   normal: 'bg-muted text-foreground border-border',
   medium: 'bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
   high: 'bg-orange-100 dark:bg-orange-950 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800',
@@ -110,7 +110,7 @@ export function NotificationCenter() {
                     key={notification.id}
                     className={cn(
                       "w-full text-left p-3 rounded-lg mb-2 cursor-pointer transition-colors hover:bg-accent",
-                      !notification.read && "bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-800/50"
+                      !notification.read && "bg-teal-50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-800/50"
                     )}
                     onClick={() => handleNotificationClick(notification)}
                     aria-label={`${notification.title}: ${notification.message}`}
@@ -129,7 +129,7 @@ export function NotificationCenter() {
                             {notification.title}
                           </p>
                           {!notification.read && (
-                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-1" />
+                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-teal-500 mt-1" />
                           )}
                         </div>
 

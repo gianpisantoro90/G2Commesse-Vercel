@@ -73,7 +73,7 @@ import {
 // ============================================
 
 const PRESTAZIONE_CONFIG: Record<string, { label: string; color: string }> = {
-  progettazione: { label: "Progettazione", color: "bg-blue-500" },
+  progettazione: { label: "Progettazione", color: "bg-teal-500" },
   dl: { label: "Dir. Lavori", color: "bg-purple-500" },
   csp: { label: "CSP", color: "bg-orange-500" },
   cse: { label: "CSE", color: "bg-red-500" },
@@ -85,7 +85,7 @@ const PRESTAZIONE_CONFIG: Record<string, { label: string; color: string }> = {
 
 const STATO_CONFIG: Record<string, { label: string; color: string; bgColor: string; position: number }> = {
   da_iniziare: { label: "Da iniziare", color: "text-muted-foreground", bgColor: "bg-muted", position: 0 },
-  in_corso: { label: "In corso", color: "text-blue-600", bgColor: "bg-blue-500", position: 1 },
+  in_corso: { label: "In corso", color: "text-teal-600", bgColor: "bg-teal-500", position: 1 },
   completata: { label: "Completata", color: "text-amber-600", bgColor: "bg-amber-500", position: 2 },
   fatturata: { label: "Fatturata", color: "text-purple-600", bgColor: "bg-purple-500", position: 3 },
   pagata: { label: "Pagata", color: "text-green-600", bgColor: "bg-green-500", position: 4 },
@@ -842,7 +842,7 @@ export default function BillingFlow() {
       )}
 
       {/* RIEPILOGO GLOBALE */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border-0">
+      <Card className="bg-gradient-to-r from-teal-50 to-purple-50 dark:from-teal-950/30 dark:to-purple-950/30 border-0">
         <CardContent className="pt-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap gap-6">
@@ -1073,7 +1073,7 @@ export default function BillingFlow() {
             )}
             {prestazioniByStatus.in_corso.count > 0 && (
               <div
-                className="bg-blue-500 transition-all"
+                className="bg-teal-500 transition-all"
                 style={{ width: `${(prestazioniByStatus.in_corso.count / allPrestazioni.length) * 100}%` }}
                 title={`In corso: ${prestazioniByStatus.in_corso.count}`}
               />
@@ -1130,19 +1130,19 @@ export default function BillingFlow() {
               className={cn(
                 "p-3 rounded-lg border cursor-pointer transition-all",
                 showStatusDetails === 'in_corso'
-                  ? "bg-blue-100 dark:bg-blue-900/30 border-blue-400 ring-2 ring-blue-400"
-                  : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 hover:border-blue-400"
+                  ? "bg-teal-100 dark:bg-teal-900/30 border-teal-400 ring-2 ring-teal-400"
+                  : "bg-teal-50 dark:bg-teal-900/20 border-teal-200 dark:border-teal-800 hover:border-teal-400"
               )}
               onClick={() => setShowStatusDetails(showStatusDetails === 'in_corso' ? null : 'in_corso')}
             >
               <div className="flex items-center gap-2 mb-1">
-                <Loader2 className="w-4 h-4 text-blue-500" />
-                <span className="text-xs font-medium text-blue-600 dark:text-blue-400">In corso</span>
+                <Loader2 className="w-4 h-4 text-teal-500" />
+                <span className="text-xs font-medium text-teal-600 dark:text-teal-400">In corso</span>
               </div>
-              <div className="text-xl font-bold text-blue-700 dark:text-blue-300">
+              <div className="text-xl font-bold text-teal-700 dark:text-teal-300">
                 {prestazioniByStatus.in_corso.count}
               </div>
-              <div className="text-xs text-blue-600 dark:text-blue-400">
+              <div className="text-xs text-teal-600 dark:text-teal-400">
                 {formatCurrency(prestazioniByStatus.in_corso.importo)}
               </div>
             </div>
@@ -2488,7 +2488,7 @@ function WorkflowTimeline({ stato }: { stato: string }) {
                 isCompleted
                   ? cn(config.bgColor, "border-transparent")
                   : "bg-muted border-border",
-                isCurrent && "ring-2 ring-offset-1 ring-blue-400"
+                isCurrent && "ring-2 ring-offset-1 ring-teal-400"
               )}
             />
             {/* Connector */}

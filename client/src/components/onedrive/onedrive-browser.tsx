@@ -228,7 +228,7 @@ export default function OneDriveBrowser() {
 
   // File icon helper
   const getFileIcon = (file: OneDriveFile) => {
-    if (file.folder) return <Folder className="w-4 h-4 text-blue-500" />;
+    if (file.folder) return <Folder className="w-4 h-4 text-teal-500" />;
     
     const extension = file.name.split('.').pop()?.toLowerCase();
     switch (extension) {
@@ -236,7 +236,7 @@ export default function OneDriveBrowser() {
       case 'md':
       case 'doc':
       case 'docx':
-        return <FileText className="w-4 h-4 text-blue-600" />;
+        return <FileText className="w-4 h-4 text-teal-600" />;
       case 'jpg':
       case 'jpeg':
       case 'png':
@@ -411,7 +411,7 @@ export default function OneDriveBrowser() {
               <div className="w-3 h-3" />
             )}
           </button>
-          <Folder className="w-4 h-4 text-blue-500" />
+          <Folder className="w-4 h-4 text-teal-500" />
           <span className="text-sm truncate" data-testid={`text-tree-folder-${node.file.id}`}>
             {node.file.name}
           </span>
@@ -564,7 +564,7 @@ export default function OneDriveBrowser() {
                               {formatDate(file.lastModified)}
                             </span>
                             {searchQuery && file.parentPath && (
-                              <span className="text-blue-500">
+                              <span className="text-teal-500">
                                 📁 {file.parentPath}
                               </span>
                             )}
@@ -634,7 +634,7 @@ export default function OneDriveBrowser() {
                                 <div>
                                   <label className="text-sm font-medium text-foreground">Cartella OneDrive:</label>
                                   <div className="mt-1 p-2 bg-muted rounded flex items-center gap-2" data-testid={`text-selected-folder-${linkingFile?.id}`}>
-                                    <Folder className="w-4 h-4 text-blue-500" />
+                                    <Folder className="w-4 h-4 text-teal-500" />
                                     {linkingFile?.name}
                                   </div>
                                 </div>

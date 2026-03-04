@@ -375,7 +375,7 @@ export default function RequisitiTecnici() {
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-blue-600">
+            <div className="text-2xl font-bold text-teal-600">
               {formatCurrency(totaliGlobali.totaleImportoServizi)}
             </div>
             <p className="text-sm text-muted-foreground">Importo Servizi</p>
@@ -427,7 +427,7 @@ export default function RequisitiTecnici() {
                     <div className="font-bold text-green-600">
                       {formatCurrency(macro.totaleImportoOpere)}
                     </div>
-                    <div className="text-sm text-blue-600">
+                    <div className="text-sm text-teal-600">
                       Servizi: {formatCurrency(macro.totaleImportoServizi)}
                     </div>
                   </div>
@@ -473,7 +473,7 @@ export default function RequisitiTecnici() {
                               <div className="font-semibold text-green-600 text-sm">
                                 {formatCurrency(cat.totaleImportoOpere)}
                               </div>
-                              <div className="text-xs text-blue-600">
+                              <div className="text-xs text-teal-600">
                                 {formatCurrency(cat.totaleImportoServizi)}
                               </div>
                             </div>
@@ -526,7 +526,7 @@ export default function RequisitiTecnici() {
                                       <td className="p-2 text-right font-medium text-green-600">
                                         {formatCurrency(c.importo)}
                                       </td>
-                                      <td className="p-2 pr-4 text-right text-blue-600">
+                                      <td className="p-2 pr-4 text-right text-teal-600">
                                         {formatCurrency(c.importoServizio || 0)}
                                       </td>
                                     </tr>

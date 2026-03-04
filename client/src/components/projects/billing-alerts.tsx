@@ -93,7 +93,7 @@ const ALERT_TYPE_CONFIG = {
 
 const PRIORITY_CONFIG = {
   low: { label: 'Bassa', color: 'bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground' },
-  medium: { label: 'Media', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400' },
+  medium: { label: 'Media', color: 'bg-teal-100 text-teal-600 dark:bg-teal-900 dark:text-teal-400' },
   high: { label: 'Alta', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900 dark:text-orange-400' },
   urgent: { label: 'Urgente', color: 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400' },
 };
