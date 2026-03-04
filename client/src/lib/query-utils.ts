@@ -42,6 +42,8 @@ export const QK = {
   // Prestazioni
   prestazioni: ["/api/prestazioni"] as const,
   prestazioniStats: ["/api/prestazioni/stats"] as const,
+  prestazioneClassificazioni: (prestazioneId: string) => [`/api/prestazioni/${prestazioneId}/classificazioni`] as const,
+  projectClassificazioni: (projectId: string | number) => [`/api/projects/${projectId}/classificazioni`] as const,
 
   // Invoices
   invoices: ["/api/invoices"] as const,
