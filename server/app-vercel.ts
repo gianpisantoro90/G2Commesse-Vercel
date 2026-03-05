@@ -173,8 +173,9 @@ export async function createApp() {
   const sensitiveEndpoints = [
     '/api/auth/login',
     '/api/auth/logout',
-    '/api/get-env-api-key',
-    '/api/test-claude'
+    '/api/ai/key-status',
+    '/api/ai/test-connection',
+    '/api/ai/config'
   ];
 
   app.use((req, res, next) => {

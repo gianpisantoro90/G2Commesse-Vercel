@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { z } from "zod";
 import { storage } from "../storage";
-import { insertFileRoutingSchema, insertSystemConfigSchema, aiConfigSchema } from "@shared/schema";
+import { insertFileRoutingSchema, aiConfigSchema } from "@shared/schema";
 import { requireAdmin } from "./middleware";
 
 export function registerSystemRoutes(app: Express): void {
@@ -140,184 +140,18 @@ export function registerSystemRoutes(app: Express): void {
     }
   });
 
-  // API key availability check (does NOT expose the key itself)
-  app.get("/api/get-env-api-key", async (req, res) => {
-    try {
-      const apiKey = process.env.ANTHROPIC_API_KEY ||
-                    process.env.CLAUDE_API_KEY ||
-                    process.env.AI_API_KEY;
+  // ── Legacy AI endpoint redirects (consolidated to /api/ai/*) ──
 
-      if (apiKey) {
-        res.json({ available: true, message: "API Key configurata lato server" });
-      } else {
-        res.status(404).json({
-          available: false,
-          message: "API Key non trovata nelle variabili d'ambiente",
-          suggestion: "Configura manualmente l'API Key nelle impostazioni AI"
-        });
-      }
-    } catch (error) {
-      res.status(500).json({ message: "Errore nel controllo API key" });
-    }
+  app.get("/api/get-env-api-key", (req, res) => {
+    res.redirect(307, '/api/ai/key-status');
   });
 
-  // AI test endpoint (supports multiple providers)
-  app.post("/api/test-claude", async (req, res) => {
-    try {
-      let { apiKey, model } = req.body;
-
-      // Use server-side API key when client signals 'server-managed' or sends no key
-      if (!apiKey || apiKey === 'server-managed') {
-        // Check user-saved config in system_config table first, then env vars
-        const aiConfig = await storage.getSystemConfig('ai_config');
-        const savedKey = (aiConfig?.value as any)?.apiKey;
-        apiKey = savedKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
-        if (!apiKey) {
-          return res.status(400).json({ message: "API Key non configurata sul server" });
-        }
-      }
-
-      // Determine provider based on model or API key format
-      const isDeepSeek = model?.includes('deepseek') || (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-ant-'));
-
-      let response;
-      if (isDeepSeek && !apiKey.startsWith('sk-ant-')) {
-        // DeepSeek API
-        response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: model || 'deepseek-reasoner',
-            messages: [{ role: 'user', content: 'test' }],
-            max_tokens: 10,
-          }),
-        });
-      } else {
-        // Claude API (default)
-        const claudeModel = model?.startsWith('claude-') ? model : 'claude-sonnet-4-6';
-        response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: claudeModel,
-            max_tokens: 10,
-            messages: [{ role: 'user', content: 'test' }],
-          }),
-        });
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        return res.status(400).json({
-          message: "API Key non valida o servizio non disponibile",
-          details: {
-            status: response.status,
-            error: errorText
-          }
-        });
-      }
-
-      const provider = isDeepSeek && !apiKey.startsWith('sk-ant-') ? 'DeepSeek' : 'Claude';
-      res.json({ success: true, message: `Connessione ${provider} API riuscita` });
-    } catch (error) {
-      console.error('AI API test error:', error);
-      res.status(500).json({
-        message: "Errore nel test della connessione",
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
+  app.post("/api/test-claude", (req, res) => {
+    res.redirect(307, '/api/ai/test-connection');
   });
 
-  // AI routing endpoint (supports multiple providers)
-  app.post("/api/ai-routing", async (req, res) => {
-    try {
-      let { apiKey, prompt, model } = req.body;
-      if (!prompt) {
-        return res.status(400).json({ message: "Prompt mancante" });
-      }
-
-      // Use server-side API key when client signals 'server-managed' or sends no key
-      if (!apiKey || apiKey === 'server-managed') {
-        const aiConfig = await storage.getSystemConfig('ai_config');
-        const savedKey = (aiConfig?.value as any)?.apiKey;
-        apiKey = savedKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
-        if (!apiKey) {
-          return res.status(400).json({ message: "API Key non configurata sul server" });
-        }
-      }
-
-      // Determine provider based on model or API key format
-      const isDeepSeek = model?.includes('deepseek') || (apiKey.startsWith('sk-') && !apiKey.startsWith('sk-ant-'));
-
-      let response;
-      if (isDeepSeek) {
-        // DeepSeek API
-        response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: model || 'deepseek-reasoner',
-            messages: [{ role: 'user', content: prompt }],
-            max_tokens: 800,
-          }),
-        });
-      } else {
-        // Claude API (default)
-        const claudeModel = model?.startsWith('claude-') ? model : 'claude-sonnet-4-6';
-        response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: claudeModel,
-            max_tokens: 800,
-            messages: [{ role: 'user', content: prompt }],
-          }),
-        });
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        return res.status(400).json({
-          message: "Errore nell'analisi AI del file",
-          details: {
-            status: response.status,
-            error: errorText
-          }
-        });
-      }
-
-      const data = await response.json();
-
-      // Handle different response formats
-      let content;
-      if (isDeepSeek) {
-        content = data.choices?.[0]?.message?.content || '';
-      } else {
-        content = data.content?.[0]?.text || '';
-      }
-
-      res.json({ content });
-    } catch (error) {
-      console.error('AI routing error:', error);
-      res.status(500).json({
-        message: "Errore nell'analisi AI",
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
+  app.post("/api/ai-routing", (req, res) => {
+    res.redirect(307, '/api/ai/file-routing');
   });
 
 }

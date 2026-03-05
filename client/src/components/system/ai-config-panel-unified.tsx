@@ -18,7 +18,7 @@ import { getQueryFn } from "@/lib/queryClient";
 import { QK } from "@/lib/query-utils";
 import {
   Eye, EyeOff, Check, AlertTriangle, Zap, Brain, Settings,
-  Mail, MessageSquare, Activity, Bell, TrendingUp, FileText,
+  Mail, MessageSquare, Activity, Bell, TrendingUp,
   Shield, Save, BarChart3
 } from "lucide-react";
 import { z } from "zod";
@@ -87,7 +87,6 @@ const FEATURES = [
   { id: 'project_health', name: 'Salute Progetto', desc: 'Analisi rischio e stato progetti', icon: Activity },
   { id: 'proactive_alerts', name: 'Alert Proattivi', desc: 'Suggerimenti e notifiche intelligenti', icon: Bell },
   { id: 'financial_forecast', name: 'Previsioni Finanziarie', desc: 'Cash flow e previsioni fatturazione', icon: TrendingUp },
-  { id: 'report_generation', name: 'Generazione Report', desc: 'Report automatici periodici', icon: FileText },
 ];
 
 const PROVIDER_MODELS = {
@@ -163,7 +162,7 @@ export default function AiConfigPanelUnified() {
   useEffect(() => {
     const loadServerConfig = async () => {
       try {
-        const response = await fetch('/api/system-config/ai_config', { credentials: "include" });
+        const response = await fetch('/api/ai/config', { credentials: "include" });
         if (response.ok) {
           const { value } = await response.json();
           if (value) {
@@ -249,11 +248,11 @@ export default function AiConfigPanelUnified() {
         ...data,
         provider: modelToProvider[data.model] || 'anthropic',
       };
-      const response = await fetch('/api/system-config', {
+      const response = await fetch('/api/ai/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: "include",
-        body: JSON.stringify({ key: 'ai_config', value: configToSave }),
+        body: JSON.stringify({ value: configToSave }),
       });
       if (!response.ok) throw new Error('Errore nel salvataggio');
 
