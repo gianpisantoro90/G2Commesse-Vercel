@@ -325,47 +325,31 @@ class EmailPoller {
   }
 
   /**
-   * Decide if email should be auto-imported based on AI analysis
-   *
-   * Rules:
-   * - Single match with confidence > 0.9 → Auto-import
-   * - Multiple matches: auto-import only if best match > 0.9 AND gap to 2nd > 0.2
-   * - Otherwise → Manual review required
+   * Decide if email should be auto-assigned based on AI analysis and auto-approval config.
    */
-  private shouldAutoImportEmail(analysis: any): boolean {
+  private shouldAutoAssignEmail(analysis: any, threshold: number): boolean {
     const matches = analysis.projectMatches || [];
 
-    // No matches at all
-    if (matches.length === 0) {
-      return false;
-    }
+    if (matches.length === 0) return false;
 
-    // Single match
+    // Single match: check against threshold
     if (matches.length === 1) {
-      return matches[0].confidence > 0.9;
+      return matches[0].confidence >= threshold;
     }
 
-    // Multiple matches: require very high confidence AND clear winner
-    const bestMatch = matches[0]; // Already sorted by confidence
+    // Multiple matches: require confidence above threshold AND clear gap to 2nd
+    const bestMatch = matches[0];
     const secondBest = matches[1];
-
-    const isHighConfidence = bestMatch.confidence > 0.9;
     const hasClearGap = (bestMatch.confidence - secondBest.confidence) > 0.2;
 
-    if (isHighConfidence && hasClearGap) {
-      logger.info('Auto-import decision: Clear winner among multiple matches', {
+    if (bestMatch.confidence >= threshold && hasClearGap) {
+      logger.info('Auto-assign: Clear winner among multiple matches', {
         bestConfidence: bestMatch.confidence,
         secondConfidence: secondBest.confidence,
         gap: (bestMatch.confidence - secondBest.confidence).toFixed(2),
       });
       return true;
     }
-
-    logger.info('Manual review required: Multiple plausible matches', {
-      matchesCount: matches.length,
-      bestConfidence: bestMatch.confidence,
-      secondConfidence: secondBest.confidence,
-    });
 
     return false;
   }
@@ -558,23 +542,34 @@ class EmailPoller {
         return;
       }
 
-      // ALL emails go to manual review - no auto-import
-      // AI suggestions are stored in aiSuggestions for user to review
-      const matchesInfo = analysis.projectMatches?.map(m => ({
-        code: m.projectCode,
-        confidence: m.confidence,
-        reasoning: m.reasoning.substring(0, 100),
-      })) || [];
+      // Check auto-approval configuration
+      const autoApprovalConfig = await this.storage.getSystemConfig('ai_auto_approval');
+      const autoApproval = autoApprovalConfig?.value as any || { enabled: false };
 
-      logger.info('Email saved for manual review', {
-        confidence: analysis.confidence,
-        matchesCount: analysis.projectMatches?.length || 0,
-        matches: matchesInfo,
-      });
+      // Determine if email should be auto-assigned to a project
+      let assignedProjectId: string | null = null;
+      let autoImported = false;
 
-      // Store email for manual review (no projectId assigned yet)
+      if (autoApproval.enabled) {
+        const threshold = autoApproval.emailAssignmentThreshold || 0.95;
+        if (this.shouldAutoAssignEmail(analysis, threshold)) {
+          const bestMatch = analysis.projectMatches[0];
+          const matchedProject = projects.find(p => p.id === bestMatch.projectId);
+          if (matchedProject) {
+            assignedProjectId = matchedProject.id;
+            autoImported = true;
+            logger.info('Auto-approved: Email assigned to project', {
+              projectCode: matchedProject.code,
+              confidence: bestMatch.confidence,
+              threshold,
+            });
+          }
+        }
+      }
+
+      // Store email (auto-assigned or for manual review)
       const communication = await this.storage.createCommunication({
-        projectId: null, // Will be assigned when user selects from suggestions
+        projectId: assignedProjectId,
         type: parsedEmail.from.email.includes('@pec.') ? 'pec' : 'email',
         direction: 'incoming',
         subject: parsedEmail.subject,
@@ -592,17 +587,103 @@ class EmailPoller {
         emailHeaders: parsedEmail.headers,
         emailHtml: parsedEmail.bodyHtml,
         emailText: parsedEmail.bodyText,
-        autoImported: false, // Requires manual review
-        aiSuggestions: analysis, // Contains all projectMatches for UI
+        autoImported,
+        aiSuggestions: analysis,
         importedAt: new Date(),
       });
 
-      logger.info('Communication saved for manual review', {
+      logger.info(autoImported ? 'Communication auto-assigned to project' : 'Communication saved for manual review', {
         communicationId: communication.id,
+        autoImported,
         matchesCount: analysis.projectMatches?.length || 0,
         bestMatch: analysis.projectMatches?.[0]?.projectCode,
         bestConfidence: analysis.projectMatches?.[0]?.confidence,
       });
+
+      // Auto-create tasks if enabled and project is assigned
+      if (autoApproval.enabled && assignedProjectId && analysis.suggestedTasks?.length > 0) {
+        const taskThreshold = autoApproval.taskCreationThreshold || 0.90;
+        if (analysis.confidence >= taskThreshold) {
+          const aiTasksStatus: Record<string, any> = {};
+
+          for (let i = 0; i < analysis.suggestedTasks.length; i++) {
+            const suggestedTask = analysis.suggestedTasks[i];
+            try {
+              const newTask = await this.storage.createTask({
+                title: suggestedTask.title,
+                description: suggestedTask.description || null,
+                projectId: assignedProjectId,
+                assignedToId: null,
+                createdById: null,
+                priority: suggestedTask.priority,
+                status: 'pending',
+                dueDate: suggestedTask.dueDate ? new Date(suggestedTask.dueDate) : null,
+                notes: `Task auto-creato dall'AI dalla comunicazione: ${parsedEmail.subject}\n\nRagionamento: ${suggestedTask.reasoning}`,
+              });
+
+              aiTasksStatus[i] = {
+                action: 'approved',
+                taskId: newTask.id,
+                approvedAt: new Date().toISOString(),
+                approvedBy: 'auto-approval',
+              };
+
+              logger.info('Auto-approved: Task created', {
+                taskTitle: suggestedTask.title,
+                confidence: analysis.confidence,
+              });
+            } catch (error) {
+              logger.error('Failed to auto-create task', { error, taskTitle: suggestedTask.title });
+            }
+          }
+
+          if (Object.keys(aiTasksStatus).length > 0) {
+            await this.storage.updateCommunication(communication.id, { aiTasksStatus });
+          }
+        }
+      }
+
+      // Auto-create deadlines if enabled and project is assigned
+      if (autoApproval.enabled && assignedProjectId && analysis.suggestedDeadlines?.length > 0) {
+        const deadlineThreshold = autoApproval.deadlineCreationThreshold || 0.90;
+        if (analysis.confidence >= deadlineThreshold) {
+          const aiDeadlinesStatus: Record<string, any> = {};
+
+          for (let i = 0; i < analysis.suggestedDeadlines.length; i++) {
+            const suggestedDeadline = analysis.suggestedDeadlines[i];
+            try {
+              const newDeadline = await this.storage.createDeadline({
+                projectId: assignedProjectId,
+                title: suggestedDeadline.title,
+                description: suggestedDeadline.description || null,
+                dueDate: new Date(suggestedDeadline.dueDate),
+                priority: suggestedDeadline.priority,
+                type: suggestedDeadline.type,
+                status: 'pending',
+                notifyDaysBefore: suggestedDeadline.notifyDaysBefore || 7,
+              });
+
+              aiDeadlinesStatus[i] = {
+                action: 'approved',
+                deadlineId: newDeadline.id,
+                approvedAt: new Date().toISOString(),
+                approvedBy: 'auto-approval',
+              };
+
+              logger.info('Auto-approved: Deadline created', {
+                deadlineTitle: suggestedDeadline.title,
+                confidence: analysis.confidence,
+              });
+            } catch (error) {
+              logger.error('Failed to auto-create deadline', { error, deadlineTitle: suggestedDeadline.title });
+            }
+          }
+
+          if (Object.keys(aiDeadlinesStatus).length > 0) {
+            await this.storage.updateCommunication(communication.id, { aiDeadlinesStatus });
+          }
+        }
+      }
 
       // Mark email as read to avoid reprocessing
       await this.markAsRead(emailData.uid);

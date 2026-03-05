@@ -1,10 +1,180 @@
 import type { Express } from "express";
 import { storage } from "../storage";
-import { aiAutoApprovalSchema } from "@shared/schema";
+import { aiAutoApprovalSchema, aiConfigSchema } from "@shared/schema";
 import { logger } from "../lib/logger";
 import { requireAdmin } from "./middleware";
+import { aiComplete } from "../lib/ai-provider";
 
 export function registerAIRoutes(app: Express): void {
+
+  // ============================================
+  // AI CONFIG (consolidated from system.ts)
+  // ============================================
+
+  // Get global AI config (without API key)
+  app.get("/api/ai/config", async (req, res) => {
+    try {
+      const config = await storage.getSystemConfig('ai_config');
+      if (!config) {
+        return res.status(404).json({ message: "Configurazione non trovata" });
+      }
+      if (config.value && typeof config.value === 'object' && 'apiKey' in config.value) {
+        const { apiKey, ...safeConfig } = config.value as any;
+        return res.json({ ...config, value: safeConfig });
+      }
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero della configurazione AI" });
+    }
+  });
+
+  // Save global AI config
+  app.post("/api/ai/config", requireAdmin, async (req, res) => {
+    try {
+      const { value } = req.body;
+      if (!value) {
+        return res.status(400).json({ message: "Configurazione mancante" });
+      }
+
+      const existingConfig = await storage.getSystemConfig('ai_config');
+      const existingApiKey = (existingConfig?.value as any)?.apiKey;
+
+      const configToValidate = {
+        ...value,
+        apiKey: value.apiKey || existingApiKey || '',
+      };
+
+      const validatedConfig = aiConfigSchema.parse(configToValidate);
+      const modelToProvider: Record<string, 'anthropic' | 'deepseek'> = {
+        'claude-opus-4-6': 'anthropic',
+        'claude-sonnet-4-6': 'anthropic',
+        'claude-haiku-4-5-20251001': 'anthropic',
+        'claude-sonnet-4-20250514': 'anthropic',
+        'deepseek-reasoner': 'deepseek',
+        'deepseek-chat': 'deepseek',
+      };
+
+      const configWithProvider = {
+        ...validatedConfig,
+        provider: modelToProvider[validatedConfig.model] || 'anthropic',
+      };
+
+      const config = await storage.setSystemConfig('ai_config', configWithProvider);
+      const { apiKey, ...safeValue } = configWithProvider;
+      res.json({ ...config, value: safeValue });
+    } catch (validationError) {
+      res.status(400).json({
+        message: "Configurazione AI non valida",
+        error: validationError instanceof Error ? validationError.message : 'Invalid config',
+      });
+    }
+  });
+
+  // Check API key availability (does NOT expose the key itself)
+  app.get("/api/ai/key-status", async (req, res) => {
+    try {
+      const anthropicKey = process.env.ANTHROPIC_API_KEY ||
+                          process.env.CLAUDE_API_KEY ||
+                          process.env.AI_API_KEY;
+      const deepseekKey = process.env.DEEPSEEK_API_KEY;
+
+      // Also check stored config
+      const aiConfig = await storage.getSystemConfig('ai_config');
+      const storedKey = (aiConfig?.value as any)?.apiKey;
+
+      const available = !!(anthropicKey || deepseekKey || storedKey);
+
+      if (available) {
+        res.json({
+          available: true,
+          message: "API Key configurata",
+          providers: {
+            anthropic: !!(anthropicKey || storedKey),
+            deepseek: !!deepseekKey,
+          },
+        });
+      } else {
+        res.status(404).json({
+          available: false,
+          message: "Nessuna API Key configurata",
+          suggestion: "Configura l'API Key nelle impostazioni AI",
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel controllo API key" });
+    }
+  });
+
+  // Test AI connection (uses unified ai-provider)
+  app.post("/api/ai/test-connection", async (req, res) => {
+    try {
+      let { apiKey, model } = req.body;
+
+      // Resolve API key: use provided key, or fall back to stored/env
+      if (!apiKey || apiKey === 'server-managed') {
+        const aiConfig = await storage.getSystemConfig('ai_config');
+        const savedKey = (aiConfig?.value as any)?.apiKey;
+        apiKey = savedKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
+        if (!apiKey) {
+          return res.status(400).json({ message: "API Key non configurata sul server" });
+        }
+      }
+
+      // Determine provider from model
+      const isDeepSeek = model?.includes('deepseek');
+      const provider = isDeepSeek ? 'DeepSeek' : 'Claude';
+
+      // Use the unified ai-provider for the test call
+      const globalConfig = { apiKey, model: model || 'claude-sonnet-4-6', provider: isDeepSeek ? 'deepseek' as const : 'anthropic' as const };
+      await aiComplete('chat_assistant', {
+        messages: [{ role: 'user', content: 'test' }],
+        maxTokens: 10,
+      }, globalConfig);
+
+      res.json({ success: true, message: `Connessione ${provider} API riuscita` });
+    } catch (error) {
+      logger.error('AI API test error', { error: error instanceof Error ? error.message : 'Unknown' });
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      if (msg.includes('API error')) {
+        return res.status(400).json({ message: "API Key non valida o servizio non disponibile" });
+      }
+      res.status(500).json({ message: "Errore nel test della connessione" });
+    }
+  });
+
+  // AI file routing for OneDrive uploads (uses unified ai-provider)
+  app.post("/api/ai/file-routing", async (req, res) => {
+    try {
+      const { prompt, model } = req.body;
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt mancante" });
+      }
+
+      // Load AI config
+      const aiConfigData = await storage.getSystemConfig('ai_config');
+      const globalConfig = aiConfigData?.value as any;
+      const featureConfigsData = await storage.getSystemConfig('ai_feature_configs');
+      const featureConfigs = (featureConfigsData?.value || []) as any[];
+
+      // Override model if specified in request
+      const effectiveConfig = model ? { ...globalConfig, model } : globalConfig;
+
+      const result = await aiComplete('email_analysis', {
+        messages: [{ role: 'user', content: prompt }],
+        maxTokens: 800,
+      }, effectiveConfig, featureConfigs);
+
+      res.json({ content: result.content });
+    } catch (error) {
+      logger.error('AI file routing error', { error: error instanceof Error ? error.message : 'Unknown' });
+      res.status(500).json({ message: "Errore nell'analisi AI del file" });
+    }
+  });
+
+  // ============================================
+  // FEATURE CONFIGS & AUTO-APPROVAL
+  // ============================================
+
   // Get per-feature AI configuration
   app.get("/api/ai/feature-configs", async (req, res) => {
     try {
@@ -106,18 +276,33 @@ export function registerAIRoutes(app: Express): void {
         title = await generateConversationTitle(message, globalConfig, featureConfigs);
       }
 
+      const finalTitle = title || 'Nuova conversazione';
       await storage.setSystemConfig(`ai_conversation_${convId}`, {
         id: convId,
-        title: title || 'Nuova conversazione',
+        title: finalTitle,
         messages: newMessages,
         userId: (req.session as any).userId,
         updatedAt: now,
       });
 
+      // Update conversations index
+      const indexData = await storage.getSystemConfig('ai_conversations_index');
+      const index: any[] = Array.isArray(indexData?.value) ? indexData.value : [];
+      const existingIdx = index.findIndex((c: any) => c.id === convId);
+      const entry = { id: convId, title: finalTitle, updatedAt: now, userId: (req.session as any).userId };
+      if (existingIdx >= 0) {
+        index[existingIdx] = entry;
+      } else {
+        index.unshift(entry);
+      }
+      // Keep max 50 conversations in the index
+      const trimmedIndex = index.slice(0, 50);
+      await storage.setSystemConfig('ai_conversations_index', trimmedIndex);
+
       res.json({
         response,
         conversationId: convId,
-        title,
+        title: finalTitle,
       });
     } catch (error) {
       const msg = error instanceof Error ? error.message : 'Errore sconosciuto';
@@ -157,6 +342,15 @@ export function registerAIRoutes(app: Express): void {
     try {
       const { id } = req.params;
       await storage.setSystemConfig(`ai_conversation_${id}`, null);
+
+      // Remove from conversations index
+      const indexData = await storage.getSystemConfig('ai_conversations_index');
+      const index: any[] = Array.isArray(indexData?.value) ? indexData.value : [];
+      const filtered = index.filter((c: any) => c.id !== id);
+      if (filtered.length !== index.length) {
+        await storage.setSystemConfig('ai_conversations_index', filtered);
+      }
+
       res.json({ message: "Conversazione eliminata" });
     } catch (error) {
       res.status(500).json({ message: "Errore nell'eliminazione conversazione" });

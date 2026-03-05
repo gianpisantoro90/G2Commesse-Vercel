@@ -140,10 +140,9 @@ async function callDeepSeek(apiKey: string, model: string, options: AICompletion
   const message = data.choices[0].message || {};
   let content = message.content || message.reasoning_content || '';
 
-  // For reasoner models, combine reasoning + final content
-  if (isThinkingModel && message.reasoning_content) {
-    const finalContent = message.content || '';
-    content = message.reasoning_content + (finalContent ? '\n' + finalContent : '');
+  // For reasoner models, use only the final content (discard internal reasoning)
+  if (isThinkingModel && message.content) {
+    content = message.content;
   }
 
   return {
