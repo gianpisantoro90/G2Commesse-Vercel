@@ -60,6 +60,8 @@ export default function Fatturazione() {
     aliquotaIVA: 22,
     ritenuta: 0,
     scadenzaPagamento: "",
+    stato: "emessa" as "emessa" | "pagata" | "scaduta" | "parzialmente_pagata",
+    dataPagamento: "",
     note: ""
   });
 
@@ -156,6 +158,8 @@ export default function Fatturazione() {
       aliquotaIVA: 22,
       ritenuta: 0,
       scadenzaPagamento: "",
+      stato: "emessa",
+      dataPagamento: "",
       note: ""
     });
     setSelectedProject("");
@@ -200,7 +204,12 @@ export default function Fatturazione() {
       aliquotaIVA: formData.aliquotaIVA,
       note: formData.note,
       ...calculated,
-      stato: 'emessa'
+      stato: formData.stato,
+      dataPagamento: formData.stato === "pagata" && formData.dataPagamento
+        ? formData.dataPagamento
+        : formData.stato === "pagata"
+          ? formData.dataEmissione
+          : null,
     });
   };
 
@@ -214,6 +223,8 @@ export default function Fatturazione() {
       aliquotaIVA: invoice.aliquotaIVA,
       ritenuta: invoice.ritenuta / 100,
       scadenzaPagamento: invoice.scadenzaPagamento?.split('T')[0] || "",
+      stato: (invoice.stato as any) || "emessa",
+      dataPagamento: invoice.dataPagamento ? new Date(invoice.dataPagamento).toISOString().split('T')[0] : "",
       note: invoice.note || ""
     });
     setIsDialogOpen(true);
@@ -351,6 +362,43 @@ export default function Fatturazione() {
                   value={formData.scadenzaPagamento}
                   onChange={(e) => setFormData({ ...formData, scadenzaPagamento: e.target.value })}
                 />
+              </div>
+
+              <div className={`grid gap-4 ${formData.stato === "pagata" ? "grid-cols-2" : "grid-cols-1"}`}>
+                <div>
+                  <Label>Stato</Label>
+                  <Select
+                    value={formData.stato}
+                    onValueChange={(v) => {
+                      const newStato = v as typeof formData.stato;
+                      setFormData({
+                        ...formData,
+                        stato: newStato,
+                        dataPagamento: newStato !== "pagata" ? "" : formData.dataPagamento,
+                      });
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="emessa">Emessa</SelectItem>
+                      <SelectItem value="pagata">Pagata</SelectItem>
+                      <SelectItem value="parzialmente_pagata">Parzialmente pagata</SelectItem>
+                      <SelectItem value="scaduta">Scaduta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {formData.stato === "pagata" && (
+                  <div>
+                    <Label>Data Pagamento</Label>
+                    <Input
+                      type="date"
+                      value={formData.dataPagamento}
+                      onChange={(e) => setFormData({ ...formData, dataPagamento: e.target.value })}
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

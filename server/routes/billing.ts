@@ -38,6 +38,14 @@ const transformInvoiceData = (data: any) => {
     importoTotale = nettoInCentesimi + cassaPrevidenziale + importoIVA;
   }
 
+  // Calcola scadenzaPagamento automatica: +30 giorni da emissione se non fornita
+  let finalScadenza = scadenzaPagamento || null;
+  if (!finalScadenza && dataEmissione) {
+    const autoScadenza = new Date(dataEmissione);
+    autoScadenza.setDate(autoScadenza.getDate() + 30);
+    finalScadenza = autoScadenza;
+  }
+
   return {
     numeroFattura: data.numeroFattura || undefined,
     dataEmissione: dataEmissione || undefined,
@@ -50,7 +58,7 @@ const transformInvoiceData = (data: any) => {
     prestazioneId: data.prestazioneId || null, // Collegamento a prestazione (1:N)
     tipoFattura: data.tipoFattura || 'unica', // Tipo fattura (acconto, sal, saldo, unica)
     ritenuta: data.ritenuta !== undefined ? Math.round(data.ritenuta * 100) : 0,
-    scadenzaPagamento: scadenzaPagamento || null,
+    scadenzaPagamento: finalScadenza,
     attachmentPath: data.attachmentPath || null,
     cassaPrevidenziale: cassaPrevidenziale,
     importoIVA: importoIVA,

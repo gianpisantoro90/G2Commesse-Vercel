@@ -167,6 +167,8 @@ export default function BillingFlow() {
     ritenuta: 0,
     scadenzaPagamento: "",
     tipoFattura: "unica" as "acconto" | "sal" | "saldo" | "unica",
+    stato: "emessa" as "emessa" | "pagata" | "scaduta" | "parzialmente_pagata",
+    dataPagamento: "",
     note: "",
   });
 
@@ -696,6 +698,8 @@ export default function BillingFlow() {
         ritenuta: (invoice.ritenuta || 0) / 100,
         scadenzaPagamento: invoice.scadenzaPagamento ? new Date(invoice.scadenzaPagamento).toISOString().split("T")[0] : "",
         tipoFattura: (invoice.tipoFattura as any) || "unica",
+        stato: (invoice.stato as any) || "emessa",
+        dataPagamento: invoice.dataPagamento ? new Date(invoice.dataPagamento).toISOString().split("T")[0] : "",
         note: invoice.note || "",
       });
     } else {
@@ -708,6 +712,8 @@ export default function BillingFlow() {
         ritenuta: 0,
         scadenzaPagamento: "",
         tipoFattura: "unica",
+        stato: "emessa",
+        dataPagamento: "",
         note: "",
       });
     }
@@ -728,6 +734,8 @@ export default function BillingFlow() {
       ritenuta: 0,
       scadenzaPagamento: "",
       tipoFattura: "unica",
+      stato: "emessa",
+      dataPagamento: "",
       note: "",
     });
     setIsInvoiceDialogOpen(true);
@@ -758,7 +766,12 @@ export default function BillingFlow() {
       ritenuta: invoiceForm.ritenuta, // Euro, non centesimi
       tipoFattura: invoiceForm.tipoFattura,
       note: invoiceForm.note,
-      stato: editingInvoice?.stato || "emessa",
+      stato: invoiceForm.stato,
+      dataPagamento: invoiceForm.stato === "pagata" && invoiceForm.dataPagamento
+        ? invoiceForm.dataPagamento
+        : invoiceForm.stato === "pagata"
+          ? invoiceForm.dataEmissione  // Default: data emissione se pagata senza data specifica
+          : null,
     };
 
     if (editingInvoice) {
@@ -1862,6 +1875,51 @@ export default function BillingFlow() {
               </div>
             </div>
 
+            <div className={`grid gap-4 ${invoiceForm.stato === "pagata" ? "grid-cols-3" : "grid-cols-2"}`}>
+              <div>
+                <Label>Stato</Label>
+                <Select
+                  value={invoiceForm.stato}
+                  onValueChange={(v) => {
+                    const newStato = v as typeof invoiceForm.stato;
+                    setInvoiceForm({
+                      ...invoiceForm,
+                      stato: newStato,
+                      dataPagamento: newStato !== "pagata" ? "" : invoiceForm.dataPagamento,
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="emessa">Emessa</SelectItem>
+                    <SelectItem value="pagata">Pagata</SelectItem>
+                    <SelectItem value="parzialmente_pagata">Parzialmente pagata</SelectItem>
+                    <SelectItem value="scaduta">Scaduta</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {invoiceForm.stato === "pagata" && (
+                <div>
+                  <Label>Data Pagamento</Label>
+                  <Input
+                    type="date"
+                    value={invoiceForm.dataPagamento}
+                    onChange={(e) => setInvoiceForm({ ...invoiceForm, dataPagamento: e.target.value })}
+                  />
+                </div>
+              )}
+              <div>
+                <Label>Note</Label>
+                <Input
+                  value={invoiceForm.note}
+                  onChange={(e) => setInvoiceForm({ ...invoiceForm, note: e.target.value })}
+                  placeholder="Note fattura..."
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-4 gap-4">
               <div>
                 <Label>Imponibile (€) *</Label>
@@ -1923,14 +1981,6 @@ export default function BillingFlow() {
               </div>
             </div>
 
-            <div>
-              <Label>Note</Label>
-              <Input
-                value={invoiceForm.note}
-                onChange={(e) => setInvoiceForm({ ...invoiceForm, note: e.target.value })}
-                placeholder="Note aggiuntive..."
-              />
-            </div>
           </div>
 
           <DialogFooter className="flex justify-between sm:justify-between">
