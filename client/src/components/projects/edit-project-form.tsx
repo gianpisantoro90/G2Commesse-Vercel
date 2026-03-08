@@ -220,7 +220,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
   const prestazioniList = getAllPrestazioni();
   const livelliProgettazioneList = getAllLivelliProgettazione();
 
-  // Compute totals from DB classificazioni (amounts in centesimi)
+  // Compute totals from DB classificazioni (amounts in euro)
   const importoTotaleOpere = dbClassificazioni.reduce((sum: number, c: any) => sum + (c.importoOpere || 0), 0);
   const importoTotaleServizio = dbClassificazioni.reduce((sum: number, c: any) => sum + (c.importoServizio || 0), 0);
 
@@ -531,7 +531,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                               <span>{config.shortLabel}</span>
                               {classificazioni.length > 0 && (
                                 <span className="ml-auto text-xs text-muted-foreground">
-                                  {classificazioni.length} class. | Serv: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoServizio || 0), 0) / 100)}
+                                  {classificazioni.length} class. | Serv: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoServizio || 0), 0))}
                                 </span>
                               )}
                             </Label>
@@ -660,9 +660,9 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                         placeholder="Opere"
                                         min="0"
                                         step="0.01"
-                                        defaultValue={c.importoOpere ? c.importoOpere / 100 : ''}
+                                        defaultValue={c.importoOpere || ''}
                                         onBlur={(e) => {
-                                          const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
+                                          const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                           if (val !== c.importoOpere) {
                                             updateClassificazioneMutation.mutate({
                                               prestazioneId: dbPrestazione.id,
@@ -678,9 +678,9 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                         placeholder="Servizio"
                                         min="0"
                                         step="0.01"
-                                        defaultValue={c.importoServizio ? c.importoServizio / 100 : ''}
+                                        defaultValue={c.importoServizio || ''}
                                         onBlur={(e) => {
-                                          const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
+                                          const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                           if (val !== c.importoServizio) {
                                             updateClassificazioneMutation.mutate({
                                               prestazioneId: dbPrestazione.id,
@@ -708,8 +708,8 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                     </div>
                                   ))}
                                   <div className="flex justify-end gap-4 text-xs text-muted-foreground pt-1 border-t">
-                                    <span>Opere: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoOpere || 0), 0) / 100)}</span>
-                                    <span className="font-medium text-primary">Servizio: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoServizio || 0), 0) / 100)}</span>
+                                    <span>Opere: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoOpere || 0), 0))}</span>
+                                    <span className="font-medium text-primary">Servizio: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoServizio || 0), 0))}</span>
                                   </div>
                                 </div>
                               ) : (
@@ -732,11 +732,11 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                     <div className="pt-3 border-t border-border">
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Totale Commessa Opere:</span>
-                        <span className="font-semibold">{formatImporto(importoTotaleOpere / 100)}</span>
+                        <span className="font-semibold">{formatImporto(importoTotaleOpere)}</span>
                       </div>
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-muted-foreground">Totale Commessa Servizio:</span>
-                        <span className="font-semibold text-primary">{formatImporto(importoTotaleServizio / 100)}</span>
+                        <span className="font-semibold text-primary">{formatImporto(importoTotaleServizio)}</span>
                       </div>
                     </div>
                   )}

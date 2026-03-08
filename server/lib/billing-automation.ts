@@ -679,7 +679,7 @@ class BillingAutomationService {
               alertType: 'fattura_scaduta',
               daysOverdue: giorniScaduti,
               priority: 'urgent',
-              message: `Fattura ${invoice.numeroFattura} scaduta da ${giorniScaduti} giorni - €${(invoice.importoTotale / 100).toFixed(2)}`,
+              message: `Fattura ${invoice.numeroFattura} scaduta da ${giorniScaduti} giorni - €${invoice.importoTotale.toFixed(2)}`,
             });
 
             alertsCreated++;
@@ -743,7 +743,7 @@ class BillingAutomationService {
               alertType: 'pagamento_ritardo',
               daysOverdue: giorniPassati,
               priority: 'high',
-              message: `Fattura ${invoice.numeroFattura} emessa da ${giorniPassati} giorni - €${(invoice.importoTotale / 100).toFixed(2)}`,
+              message: `Fattura ${invoice.numeroFattura} emessa da ${giorniPassati} giorni - €${invoice.importoTotale.toFixed(2)}`,
             });
 
             alertsCreated++;

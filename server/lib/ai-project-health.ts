@@ -98,7 +98,7 @@ export async function calculateProjectHealth(
   if (completateNonFatturate.length > 0) {
     billingScore -= 20 * Math.min(completateNonFatturate.length, 3);
     recommendations.push(
-      `Fatturare ${completateNonFatturate.length} prestazion${completateNonFatturate.length === 1 ? 'e' : 'i'} completat${completateNonFatturate.length === 1 ? 'a' : 'e'} (€${(completateNonFatturate.reduce((s, p) => s + (p.importoPrevisto || 0), 0) / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })})`
+      `Fatturare ${completateNonFatturate.length} prestazion${completateNonFatturate.length === 1 ? 'e' : 'i'} completat${completateNonFatturate.length === 1 ? 'a' : 'e'} (€${completateNonFatturate.reduce((s, p) => s + (p.importoPrevisto || 0), 0).toLocaleString('it-IT', { minimumFractionDigits: 2 })})`
     );
   }
   if (fattureScadute.length > 0) {
@@ -117,7 +117,7 @@ export async function calculateProjectHealth(
     name: 'Fatturazione',
     score: billingScore,
     weight: 0.30,
-    details: `Previsto: €${(totalePrevisto / 100).toLocaleString('it-IT')} | Fatturato: €${(totaleFatturato / 100).toLocaleString('it-IT')} | Pagato: €${(totalePagato / 100).toLocaleString('it-IT')}`,
+    details: `Previsto: €${totalePrevisto.toLocaleString('it-IT')} | Fatturato: €${totaleFatturato.toLocaleString('it-IT')} | Pagato: €${totalePagato.toLocaleString('it-IT')}`,
     severity: componentSeverity(billingScore),
   });
 

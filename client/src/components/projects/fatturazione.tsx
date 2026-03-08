@@ -168,10 +168,10 @@ export default function Fatturazione() {
   };
 
   const calculateInvoice = () => {
-    const netto = Math.round(formData.importoNetto * 100); // Converti in centesimi
-    const iva = Math.round((netto * formData.aliquotaIVA) / 100);
-    const totale = netto + iva;
-    const ritenuta = Math.round(formData.ritenuta * 100);
+    const netto = formData.importoNetto; // In euro
+    const iva = Math.round(netto * formData.aliquotaIVA) / 100;
+    const totale = Math.round((netto + iva) * 100) / 100;
+    const ritenuta = formData.ritenuta;
 
     return {
       importoNetto: netto,
@@ -219,9 +219,9 @@ export default function Fatturazione() {
     setFormData({
       numeroFattura: invoice.numeroFattura,
       dataEmissione: invoice.dataEmissione.split('T')[0],
-      importoNetto: invoice.importoNetto / 100,
+      importoNetto: invoice.importoNetto,
       aliquotaIVA: invoice.aliquotaIVA,
-      ritenuta: invoice.ritenuta / 100,
+      ritenuta: invoice.ritenuta,
       scadenzaPagamento: invoice.scadenzaPagamento?.split('T')[0] || "",
       stato: (invoice.stato as any) || "emessa",
       dataPagamento: invoice.dataPagamento ? new Date(invoice.dataPagamento).toISOString().split('T')[0] : "",
@@ -468,7 +468,7 @@ export default function Fatturazione() {
           <p className="text-sm font-medium text-muted-foreground mb-2">Importo Totale</p>
           <div className="flex items-center justify-between">
             <div className="text-2xl font-bold text-foreground">
-              €{(stats.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
+              €{stats.importoTotale.toLocaleString('it-IT', { minimumFractionDigits: 0 })}
             </div>
             <Euro className="w-8 h-8 text-purple-500 dark:text-purple-400" />
           </div>
@@ -478,7 +478,7 @@ export default function Fatturazione() {
           <p className="text-sm font-medium text-muted-foreground mb-2">Incassato</p>
           <div className="flex items-center justify-between">
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              €{(stats.importoPagato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
+              €{stats.importoPagato.toLocaleString('it-IT', { minimumFractionDigits: 0 })}
             </div>
             <CheckCircle className="w-8 h-8 text-green-500 dark:text-green-400" />
           </div>
@@ -488,7 +488,7 @@ export default function Fatturazione() {
           <p className="text-sm font-medium text-muted-foreground mb-2">Da Incassare</p>
           <div className="flex items-center justify-between">
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-              €{(stats.importoDaPagare / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
+              €{stats.importoDaPagare.toLocaleString('it-IT', { minimumFractionDigits: 0 })}
             </div>
             <Clock className="w-8 h-8 text-orange-500 dark:text-orange-400" />
           </div>
@@ -575,7 +575,7 @@ export default function Fatturazione() {
                               {format(new Date(invoice.dataEmissione), 'dd/MM/yyyy', { locale: it })}
                             </td>
                             <td className="py-3 px-4 text-right font-semibold text-foreground">
-                              €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                              €{invoice.importoTotale.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                             </td>
                             <td className="py-3 px-4 text-center">
                               <Badge className={statoConfig?.color}>
@@ -671,7 +671,7 @@ export default function Fatturazione() {
                 <div className="text-right">
                   <div className="text-sm text-muted-foreground">Fatturato Totale</div>
                   <div className="text-xl font-bold text-foreground">
-                    €{(group.totaleFatturato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
+                    €{group.totaleFatturato.toLocaleString('it-IT', { minimumFractionDigits: 0 })}
                   </div>
                 </div>
               </div>
@@ -692,7 +692,7 @@ export default function Fatturazione() {
                         </Badge>
                         <div className="text-right">
                           <div className="font-bold text-foreground">
-                            €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                            €{invoice.importoTotale.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                           </div>
                         </div>
                         <div className="flex gap-1">
@@ -774,7 +774,7 @@ export default function Fatturazione() {
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <div className="text-xl font-bold text-foreground">
-                            €{(invoice.importoTotale / 100).toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                            €{invoice.importoTotale.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
                           </div>
                         </div>
                         <Button

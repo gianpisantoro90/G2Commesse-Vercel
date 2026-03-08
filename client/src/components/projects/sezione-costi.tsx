@@ -213,7 +213,7 @@ export default function SezioneCosti() {
       role: resource.role,
       oreAssegnate: resource.oreAssegnate || 0,
       oreLavorate: resource.oreLavorate || 0,
-      costoOrario: (resource.costoOrario || 0) / 100,
+      costoOrario: resource.costoOrario || 0,
       isResponsabile: resource.isResponsabile || false,
       dataInizio: resource.dataInizio?.toString().split('T')[0] || "",
       dataFine: resource.dataFine?.toString().split('T')[0] || ""
@@ -227,7 +227,7 @@ export default function SezioneCosti() {
     setSelectedCostType(cost.tipo);
     setCostForm({
       descrizione: cost.descrizione || "",
-      importo: (cost.importo || 0) / 100,
+      importo: cost.importo || 0,
       fornitore: cost.fornitore || "",
       data: cost.data?.toString().split('T')[0] || ""
     });
@@ -245,14 +245,14 @@ export default function SezioneCosti() {
       saveResourceMutation.mutate({
         projectId: selectedProjectId,
         ...resourceForm,
-        costoOrario: Math.round(resourceForm.costoOrario * 100)
+        costoOrario: resourceForm.costoOrario
       });
     } else {
       saveCostMutation.mutate({
         projectId: selectedProjectId,
         tipo: selectedCostType,
         descrizione: costForm.descrizione,
-        importo: Math.round(costForm.importo * 100),
+        importo: costForm.importo,
         fornitore: costForm.fornitore || null,
         data: costForm.data || null
       });
@@ -266,9 +266,9 @@ export default function SezioneCosti() {
       const projectCosts = costs.filter(c => c.projectId === project.id);
       const projectInvoices = invoices.filter(i => i.projectId === project.id);
 
-      // Ricavi (importoServizio nel metadata è in euro, convertiamo in centesimi per coerenza con gli altri importi)
+      // Ricavi (importoServizio nel metadata è in euro)
       const metadata = project.metadata as ProjectPrestazioni;
-      const ricaviPrevisti = Math.round((metadata?.importoServizio || 0) * 100);
+      const ricaviPrevisti = metadata?.importoServizio || 0;
       const ricaviFatturati = projectInvoices.reduce((sum, inv) => sum + (inv.importoNetto || 0), 0);
       const ricaviIncassati = projectInvoices
         .filter(inv => inv.stato === 'pagata')
@@ -372,7 +372,7 @@ export default function SezioneCosti() {
   const top5Margine = [...projectCostsData].sort((a, b) => b.margine - a.margine).slice(0, 5);
   const bottom5Margine = [...projectCostsData].filter(p => p.margine < 0).sort((a, b) => a.margine - b.margine).slice(0, 5);
 
-  const formatCurrency = (cents: number) => `€${(cents / 100).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const formatCurrency = (euros: number) => `€${euros.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   const getMargineColor = (percent: number) => percent >= 20 ? "text-green-600 dark:text-green-400" : percent >= 10 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400";
   const getMargineBadge = (percent: number) => {
     const color = percent >= 20 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : percent >= 10 ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
@@ -849,7 +849,7 @@ export default function SezioneCosti() {
                                     </td>
                                     <td className="py-3 px-4 text-sm">{roleInfo?.icon} {roleInfo?.label}</td>
                                     <td className="py-3 px-4 text-sm text-right">{resource.oreLavorate}/{resource.oreAssegnate}h</td>
-                                    <td className="py-3 px-4 text-sm text-right">€{((resource.costoOrario || 0) / 100).toFixed(2)}</td>
+                                    <td className="py-3 px-4 text-sm text-right">€{(resource.costoOrario || 0).toFixed(2)}</td>
                                     <td className="py-3 px-4 text-sm text-right font-medium">{formatCurrency(costoTotale)}</td>
                                     <td className="py-3 px-4 text-sm">
                                       <div className="flex items-center justify-center gap-1">

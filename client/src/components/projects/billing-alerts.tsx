@@ -329,7 +329,7 @@ export function BillingAlerts({
                             <span className="inline-flex items-center gap-1">
                               <span className="font-medium">Fatt. {alert.invoice.numeroFattura}</span>
                               <span className="font-medium text-foreground">
-                                {(alert.invoice.importoTotale / 100).toLocaleString('it-IT', {
+                                {alert.invoice.importoTotale.toLocaleString('it-IT', {
                                   style: 'currency',
                                   currency: 'EUR'
                                 })}

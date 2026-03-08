@@ -34,7 +34,7 @@ export interface InvoiceStats {
 
 /**
  * Calculate aggregate invoice statistics from a list of invoices.
- * All amounts are in centesimi.
+ * All amounts are in euro.
  */
 export function calcInvoiceStats(invoices: Pick<ProjectInvoice, 'importoTotale' | 'stato'>[]): InvoiceStats {
   let importoTotale = 0;
@@ -149,19 +149,19 @@ export function calcBillingAlerts(
 // ============================================
 
 export interface InvoiceFormInput {
-  imponibile: number; // in euro (will be converted to centesimi)
+  imponibile: number; // in euro
   cassaPercentuale: number;
   ivaPercentuale: number;
   ritenuta: number; // in euro
 }
 
 export interface InvoiceCalculated {
-  imponibile: number; // centesimi
-  cassaPrevidenziale: number; // centesimi
-  importoIVA: number; // centesimi
-  importoTotale: number; // centesimi
-  ritenuta: number; // centesimi
-  nettoPagare: number; // centesimi
+  imponibile: number; // euro
+  cassaPrevidenziale: number; // euro
+  importoIVA: number; // euro
+  importoTotale: number; // euro
+  ritenuta: number; // euro
+  nettoPagare: number; // euro
 }
 
 /**
@@ -169,12 +169,12 @@ export interface InvoiceCalculated {
  * IVA is calculated on (imponibile + cassa previdenziale).
  */
 export function calcInvoiceAmounts(input: InvoiceFormInput): InvoiceCalculated {
-  const imponibile = Math.round(input.imponibile * 100);
-  const cassaPrevidenziale = Math.round(imponibile * (input.cassaPercentuale / 100));
+  const imponibile = input.imponibile;
+  const cassaPrevidenziale = Math.round(imponibile * (input.cassaPercentuale / 100) * 100) / 100;
   const baseIva = imponibile + cassaPrevidenziale;
-  const importoIVA = Math.round(baseIva * (input.ivaPercentuale / 100));
-  const importoTotale = baseIva + importoIVA;
-  const ritenuta = Math.round(input.ritenuta * 100);
+  const importoIVA = Math.round(baseIva * (input.ivaPercentuale / 100) * 100) / 100;
+  const importoTotale = Math.round((baseIva + importoIVA) * 100) / 100;
+  const ritenuta = input.ritenuta;
 
   return {
     imponibile,
@@ -182,7 +182,7 @@ export function calcInvoiceAmounts(input: InvoiceFormInput): InvoiceCalculated {
     importoIVA,
     importoTotale,
     ritenuta,
-    nettoPagare: importoTotale - ritenuta,
+    nettoPagare: Math.round((importoTotale - ritenuta) * 100) / 100,
   };
 }
 
@@ -191,21 +191,32 @@ export function calcInvoiceAmounts(input: InvoiceFormInput): InvoiceCalculated {
 // ============================================
 
 /**
- * Format centesimi to EUR string.
+ * Format euro amount to EUR string.
+ * @deprecated Use formatEuro instead. Kept for backward compatibility.
  */
-export function formatCentesimi(cents: number): string {
-  return (cents / 100).toLocaleString("it-IT", {
+export function formatCentesimi(euros: number): string {
+  return euros.toLocaleString("it-IT", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 }
 
 /**
- * Format centesimi to compact EUR (e.g. "12k", "1.5M").
+ * Format euro amount to EUR string.
  */
-export function formatCentesimiCompact(cents: number): string {
-  const euros = cents / 100;
+export const formatEuro = formatCentesimi;
+
+/**
+ * Format euro amount to compact EUR (e.g. "12k", "1.5M").
+ * @deprecated Use formatEuroCompact instead. Kept for backward compatibility.
+ */
+export function formatCentesimiCompact(euros: number): string {
   if (Math.abs(euros) >= 1_000_000) return `${(euros / 1_000_000).toFixed(1)}M`;
   if (Math.abs(euros) >= 1_000) return `${(euros / 1_000).toFixed(0)}k`;
   return euros.toFixed(0);
 }
+
+/**
+ * Format euro amount to compact EUR (e.g. "12k", "1.5M").
+ */
+export const formatEuroCompact = formatCentesimiCompact;

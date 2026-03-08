@@ -30,12 +30,12 @@ const transformInvoiceData = (data: any) => {
   let importoTotale = 0;
 
   if (data.importoNetto !== undefined) {
-    const nettoInCentesimi = Math.round(data.importoNetto * 100);
+    const netto = data.importoNetto;
     const cassaPercentuale = data.cassaPercentuale ?? 4; // Default 4% Inarcassa
-    cassaPrevidenziale = Math.round(nettoInCentesimi * (cassaPercentuale / 100));
+    cassaPrevidenziale = Math.round(netto * (cassaPercentuale / 100) * 100) / 100;
     const aliquota = data.aliquotaIVA || 22;
-    importoIVA = Math.round((nettoInCentesimi + cassaPrevidenziale) * (aliquota / 100)); // IVA su netto+cassa
-    importoTotale = nettoInCentesimi + cassaPrevidenziale + importoIVA;
+    importoIVA = Math.round((netto + cassaPrevidenziale) * (aliquota / 100) * 100) / 100; // IVA su netto+cassa
+    importoTotale = Math.round((netto + cassaPrevidenziale + importoIVA) * 100) / 100;
   }
 
   // Calcola scadenzaPagamento automatica: +30 giorni da emissione se non fornita
@@ -49,15 +49,15 @@ const transformInvoiceData = (data: any) => {
   return {
     numeroFattura: data.numeroFattura || undefined,
     dataEmissione: dataEmissione || undefined,
-    importoNetto: data.importoNetto !== undefined ? Math.round(data.importoNetto * 100) : undefined,
-    importoParcella: data.importoParcella !== undefined ? Math.round(data.importoParcella * 100) : undefined,
+    importoNetto: data.importoNetto !== undefined ? data.importoNetto : undefined,
+    importoParcella: data.importoParcella !== undefined ? data.importoParcella : undefined,
     stato: data.stato || "emessa",
     aliquotaIVA: data.aliquotaIVA || 22,
     dataPagamento: dataPagamento || null,
     note: data.note || null,
     prestazioneId: data.prestazioneId || null, // Collegamento a prestazione (1:N)
     tipoFattura: data.tipoFattura || 'unica', // Tipo fattura (acconto, sal, saldo, unica)
-    ritenuta: data.ritenuta !== undefined ? Math.round(data.ritenuta * 100) : 0,
+    ritenuta: data.ritenuta !== undefined ? data.ritenuta : 0,
     scadenzaPagamento: finalScadenza,
     attachmentPath: data.attachmentPath || null,
     cassaPrevidenziale: cassaPrevidenziale,
@@ -66,7 +66,7 @@ const transformInvoiceData = (data: any) => {
   };
 };
 
-// Schema per trasformare i dati delle fatture dal frontend (decimali) al database (centesimi)
+// Schema per validare e trasformare i dati delle fatture dal frontend al database (in euro)
 // Base schema without transform (used for PATCH with .partial())
 const invoiceInputSchemaBase = z.object({
   numeroFattura: z.string().optional(),

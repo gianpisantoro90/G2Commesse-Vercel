@@ -136,11 +136,11 @@ async function audit() {
       const m = row.metadata;
       const metaServizio = m?.importoServizio || 0;
       const metaOpere = m?.importoOpere || 0;
-      const dbPrevisto = row.total_previsto_centesimi;
-      const dbPrevistoEuro = dbPrevisto / 100;
+      const dbPrevisto = row.total_previsto_centesimi; // Ora in euro nonostante il nome colonna
+      const dbPrevistoEuro = dbPrevisto;
 
       let status = "✅";
-      // If metadata servizio ≈ db previsto/100, they're consistent
+      // If metadata servizio ≈ db previsto, they're consistent (entrambi in euro)
       if (metaServizio > 0 && dbPrevisto > 0) {
         const ratio = metaServizio / dbPrevistoEuro;
         if (ratio > 50 || ratio < 0.02) {

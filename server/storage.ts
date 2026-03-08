@@ -1230,12 +1230,12 @@ export class MemStorage implements IStorage {
       }
     }
 
-    // Converti da centesimi (DB) a euro per il metadata JSON
+    // DB e metadata JSON sono entrambi in euro
     const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
       codice,
-      importo: v.importo / 100,
-      importoOpere: v.importoOpere / 100,
-      importoServizio: v.importoServizio / 100,
+      importo: v.importo,
+      importoOpere: v.importoOpere,
+      importoServizio: v.importoServizio,
     }));
 
     const metadata = (project.metadata as any) || {};
@@ -2910,11 +2910,12 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
+    // DB e metadata JSON sono entrambi in euro
     const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
       codice,
-      importo: v.importo / 100,
-      importoOpere: v.importoOpere / 100,
-      importoServizio: v.importoServizio / 100,
+      importo: v.importo,
+      importoOpere: v.importoOpere,
+      importoServizio: v.importoServizio,
     }));
 
     const metadata = (project.metadata as any) || {};
