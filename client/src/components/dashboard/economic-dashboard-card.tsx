@@ -51,22 +51,14 @@ export default function EconomicDashboardCard() {
   }, 0);
 
   // Compensi professionali ora provengono dalle prestazioni
-  // Usa i dati delle prestazioni se disponibili
-  const totalImportoServizi = prestazioniStats?.importoTotaleFatturato
-    ? prestazioniStats.importoTotaleFatturato / 100 // convertito da centesimi
-    : 0;
+  // Usa i dati delle prestazioni se disponibili (già in euro)
+  const totalImportoServizi = prestazioniStats?.importoTotaleFatturato || 0;
 
-  const totalImportoPrevisto = prestazioniStats?.importoTotalePrevisto
-    ? prestazioniStats.importoTotalePrevisto / 100
-    : 0;
+  const totalImportoPrevisto = prestazioniStats?.importoTotalePrevisto || 0;
 
-  const importoServiziInCorso = prestazioniStats?.importoDaFatturare
-    ? prestazioniStats.importoDaFatturare / 100
-    : 0;
+  const importoServiziInCorso = prestazioniStats?.importoDaFatturare || 0;
 
-  const importoServiziIncassati = prestazioniStats?.importoTotalePagato
-    ? prestazioniStats.importoTotalePagato / 100
-    : 0;
+  const importoServiziIncassati = prestazioniStats?.importoTotalePagato || 0;
 
   const averageImportoServizio = prestazioniStats && prestazioniStats.totale > 0
     ? totalImportoPrevisto / prestazioniStats.totale
@@ -93,19 +85,19 @@ export default function EconomicDashboardCard() {
   const statusData = prestazioniStats ? [
     {
       name: 'Da fatturare',
-      value: prestazioniStats.importoDaFatturare / 100,
+      value: prestazioniStats.importoDaFatturare,
       count: prestazioniStats.completateNonFatturate,
       color: '#F59E0B'
     },
     {
       name: 'Da incassare',
-      value: prestazioniStats.importoDaIncassare / 100,
+      value: prestazioniStats.importoDaIncassare,
       count: prestazioniStats.fatturateNonPagate,
       color: '#8B5CF6'
     },
     {
       name: 'Incassate',
-      value: prestazioniStats.importoTotalePagato / 100,
+      value: prestazioniStats.importoTotalePagato,
       count: prestazioniStats.pagate,
       color: '#10B981'
     },
@@ -241,9 +233,9 @@ export default function EconomicDashboardCard() {
                   Da Incassare
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {formatImporto((prestazioniStats?.importoDaIncassare || 0) / 100)}
+                  {formatImporto(prestazioniStats?.importoDaIncassare || 0)}
                 </p>
-                <Progress value={totalImportoServizi > 0 ? ((prestazioniStats?.importoDaIncassare || 0) / 100 / totalImportoServizi) * 100 : 0} className="mt-3 h-2 [&>div]:bg-purple-500" />
+                <Progress value={totalImportoServizi > 0 ? ((prestazioniStats?.importoDaIncassare || 0) / totalImportoServizi) * 100 : 0} className="mt-3 h-2 [&>div]:bg-purple-500" />
                 <p className="text-xs text-muted-foreground mt-2">
                   {prestazioniStats?.fatturateNonPagate || 0} fatture in attesa
                 </p>
@@ -446,7 +438,7 @@ export default function EconomicDashboardCard() {
                             {prestazioniStats.completateNonFatturate}
                           </Badge>
                           <span className="text-sm font-semibold text-amber-900 dark:text-amber-100">
-                            {formatImporto(prestazioniStats.importoDaFatturare / 100)}
+                            {formatImporto(prestazioniStats.importoDaFatturare)}
                           </span>
                         </div>
                       </div>
@@ -464,7 +456,7 @@ export default function EconomicDashboardCard() {
                             {prestazioniStats.fatturateNonPagate}
                           </Badge>
                           <span className="text-sm font-semibold text-orange-900 dark:text-orange-100">
-                            {formatImporto(prestazioniStats.importoDaIncassare / 100)}
+                            {formatImporto(prestazioniStats.importoDaIncassare)}
                           </span>
                         </div>
                       </div>
@@ -527,7 +519,7 @@ export default function EconomicDashboardCard() {
                       <p className="text-xs text-muted-foreground">Pagate</p>
                       <div className="flex justify-between items-baseline">
                         <p className="font-semibold">{prestazioniStats.pagate} / {prestazioniStats.totale}</p>
-                        <p className="text-sm text-green-600 font-medium">{formatImporto(prestazioniStats.importoTotalePagato / 100)}</p>
+                        <p className="text-sm text-green-600 font-medium">{formatImporto(prestazioniStats.importoTotalePagato)}</p>
                       </div>
                     </div>
                   </div>
@@ -538,15 +530,15 @@ export default function EconomicDashboardCard() {
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
                       <p className="text-xs text-muted-foreground">Previsto</p>
-                      <p className="font-medium text-sm text-foreground">{formatImporto(prestazioniStats.importoTotalePrevisto / 100)}</p>
+                      <p className="font-medium text-sm text-foreground">{formatImporto(prestazioniStats.importoTotalePrevisto)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Fatturato</p>
-                      <p className="font-medium text-sm text-foreground">{formatImporto(prestazioniStats.importoTotaleFatturato / 100)}</p>
+                      <p className="font-medium text-sm text-foreground">{formatImporto(prestazioniStats.importoTotaleFatturato)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Incassato</p>
-                      <p className="font-medium text-sm text-green-700 dark:text-green-400">{formatImporto(prestazioniStats.importoTotalePagato / 100)}</p>
+                      <p className="font-medium text-sm text-green-700 dark:text-green-400">{formatImporto(prestazioniStats.importoTotalePagato)}</p>
                     </div>
                   </div>
                 </div>

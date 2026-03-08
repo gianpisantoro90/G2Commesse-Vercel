@@ -1,13 +1,11 @@
 /**
  * Script di fix: normalizzazione valori monetari
  *
- * Root cause: la funzione syncProjectMetadataFromClassificazioni NON divideva
- * per 100 prima del commit 669e460. Quindi il metadata ha centesimi dove
- * dovrebbe avere euro.
+ * NOTA: Ora tutti i valori monetari (DB e metadata) sono in euro.
  *
  * Fix:
  * 1. Re-sync metadata per tutti i progetti con classificazioni DB
- *    (divide DB centesimi / 100 → euro nel metadata)
+ *    (copia valori euro dal DB al metadata)
  * 2. Ricalcola importoPrevisto prestazioni dalla somma classificazioni
  *
  * Esegui con: npx tsx scripts/fix-monetary-data.ts
@@ -25,7 +23,7 @@ async function fix() {
     console.log("=== FIX MONETARIO G2 ===\n");
 
     // ========== STEP 1: Re-sync metadata per tutti i progetti ==========
-    console.log("--- STEP 1: Re-sync metadata (DB centesimi / 100 → euro) ---\n");
+    console.log("--- STEP 1: Re-sync metadata (DB euro → metadata euro) ---\n");
 
     const syncRes = await client.query(`
       SELECT DISTINCT p.id, p.code, p.metadata
@@ -62,12 +60,12 @@ async function fix() {
         }
       }
 
-      // Convert centesimi → euro for metadata
+      // DB e metadata sono entrambi in euro
       const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
         codice,
-        importo: v.importo / 100,
-        importoOpere: v.importoOpere / 100,
-        importoServizio: v.importoServizio / 100,
+        importo: v.importo,
+        importoOpere: v.importoOpere,
+        importoServizio: v.importoServizio,
       }));
 
       const metadata = (proj.metadata as any) || {};

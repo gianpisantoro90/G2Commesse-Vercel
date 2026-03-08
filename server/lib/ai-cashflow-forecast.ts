@@ -203,7 +203,7 @@ export async function generateCashFlowForecast(
   const totalEntriPrevisti = forecastData.reduce((s, m) => s + m.entriPrevisti, 0);
   const totalUscitePreviste = forecastData.reduce((s, m) => s + m.uscitePreviste, 0);
 
-  logger.info(`Cash flow forecast generated: ${forecastMonths} months, ${totalEntriPrevisti / 100}€ expected income`);
+  logger.info(`Cash flow forecast generated: ${forecastMonths} months, ${totalEntriPrevisti}€ expected income`);
 
   return {
     months: forecastData,

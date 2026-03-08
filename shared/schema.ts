@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, timestamp, jsonb, boolean, unique, doublePrecision } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -74,10 +74,10 @@ export const projects = pgTable("projects", {
   fatturato: boolean("fatturato").default(false), // Se è stato emesso documento fiscale
   numeroFattura: text("numero_fattura"), // Numero fattura/nota/parcella
   dataFattura: timestamp("data_fattura"), // Data emissione fattura
-  importoFatturato: integer("importo_fatturato").default(0), // In centesimi di euro
+  importoFatturato: doublePrecision("importo_fatturato").default(0), // In euro
   pagato: boolean("pagato").default(false), // Se il compenso è stato incassato
   dataPagamento: timestamp("data_pagamento"), // Data incasso effettivo
-  importoPagato: integer("importo_pagato").default(0), // In centesimi di euro
+  importoPagato: doublePrecision("importo_pagato").default(0), // In euro
   noteFatturazione: text("note_fatturazione"), // Note su fatturazione/pagamento
 
   // Nuovo: Stato di fatturazione unificato (calcolato automaticamente)
@@ -399,13 +399,13 @@ export const projectInvoices = pgTable("project_invoices", {
   tipoFattura: text("tipo_fattura").default("unica"), // 'acconto', 'sal', 'saldo', 'unica'
   numeroFattura: text("numero_fattura").notNull(),
   dataEmissione: timestamp("data_emissione").notNull(),
-  importoNetto: integer("importo_netto").notNull(), // In centesimi
-  cassaPrevidenziale: integer("cassa_previdenziale").default(0), // Inarcassa 4% calcolata su netto - in centesimi
-  importoIVA: integer("importo_iva").notNull(),
-  importoTotale: integer("importo_totale").notNull(),
-  importoParcella: integer("importo_parcella").default(0), // Importo pattuito (parcella)
+  importoNetto: doublePrecision("importo_netto").notNull(), // In euro
+  cassaPrevidenziale: doublePrecision("cassa_previdenziale").default(0), // Inarcassa 4% calcolata su netto - in euro
+  importoIVA: doublePrecision("importo_iva").notNull(),
+  importoTotale: doublePrecision("importo_totale").notNull(),
+  importoParcella: doublePrecision("importo_parcella").default(0), // Importo pattuito (parcella)
   aliquotaIVA: integer("aliquota_iva").default(22), // Percentuale
-  ritenuta: integer("ritenuta").default(0), // In centesimi
+  ritenuta: doublePrecision("ritenuta").default(0), // In euro
   stato: text("stato").notNull().default("emessa"), // 'emessa', 'pagata', 'parzialmente_pagata', 'scaduta'
   scadenzaPagamento: timestamp("scadenza_pagamento"),
   dataPagamento: timestamp("data_pagamento"),
@@ -448,10 +448,10 @@ export const projectPrestazioni = pgTable("project_prestazioni", {
   dataFatturazione: timestamp("data_fatturazione"),
   dataPagamento: timestamp("data_pagamento"),
 
-  // Importi (in centesimi di euro)
-  importoPrevisto: integer("importo_previsto").default(0), // Importo stimato/preventivato
-  importoFatturato: integer("importo_fatturato").default(0), // Importo effettivamente fatturato (calcolato come somma fatture collegate)
-  importoPagato: integer("importo_pagato").default(0), // Importo effettivamente incassato
+  // Importi (in euro)
+  importoPrevisto: doublePrecision("importo_previsto").default(0), // Importo stimato/preventivato
+  importoFatturato: doublePrecision("importo_fatturato").default(0), // Importo effettivamente fatturato (calcolato come somma fatture collegate)
+  importoPagato: doublePrecision("importo_pagato").default(0), // Importo effettivamente incassato
 
   // Note e metadata
   note: text("note"),
@@ -467,8 +467,8 @@ export const prestazioneClassificazioni = pgTable("prestazione_classificazioni",
   prestazioneId: text("prestazione_id").notNull().references(() => projectPrestazioni.id, { onDelete: "cascade" }),
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   codiceDM: text("codice_dm").notNull(), // Es. "E.22", "S.05", "IA.03"
-  importoOpere: integer("importo_opere").notNull().default(0), // Centesimi di euro
-  importoServizio: integer("importo_servizio").notNull().default(0), // Centesimi di euro
+  importoOpere: doublePrecision("importo_opere").notNull().default(0), // In euro
+  importoServizio: doublePrecision("importo_servizio").notNull().default(0), // In euro
   note: text("note"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -482,12 +482,12 @@ export const projectBudget = pgTable("project_budget", {
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }).unique(),
   budgetOreTotale: integer("budget_ore_totale").default(0), // Ore stimate totali
   oreConsuntivate: integer("ore_consuntivate").default(0), // Ore effettivamente lavorate
-  costiConsulenze: integer("costi_consulenze").default(0), // In centesimi
-  costiRilievi: integer("costi_rilievi").default(0),
-  altriCosti: integer("altri_costi").default(0),
-  costiTotali: integer("costi_totali").default(0),
-  ricaviPrevisti: integer("ricavi_previsti").default(0),
-  ricaviEffettivi: integer("ricavi_effettivi").default(0),
+  costiConsulenze: doublePrecision("costi_consulenze").default(0), // In euro
+  costiRilievi: doublePrecision("costi_rilievi").default(0), // In euro
+  altriCosti: doublePrecision("altri_costi").default(0), // In euro
+  costiTotali: doublePrecision("costi_totali").default(0), // In euro
+  ricaviPrevisti: doublePrecision("ricavi_previsti").default(0), // In euro
+  ricaviEffettivi: doublePrecision("ricavi_effettivi").default(0), // In euro
   note: text("note"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -499,7 +499,7 @@ export const projectCosts = pgTable("project_costs", {
   projectId: text("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   tipo: text("tipo").notNull(), // 'consulenza', 'benzina', 'nolo', 'materiali', 'rilievo', 'altro'
   descrizione: text("descrizione"),
-  importo: integer("importo").default(0), // In centesimi
+  importo: doublePrecision("importo").default(0), // In euro
   data: timestamp("data"), // Data del costo (opzionale)
   fornitore: text("fornitore"), // Nome fornitore/azienda (opzionale)
   createdAt: timestamp("created_at").defaultNow(),
@@ -515,7 +515,7 @@ export const projectResources = pgTable("project_resources", {
   role: text("role").notNull(), // 'progettista', 'dl', 'csp', 'cse', 'collaudatore', 'tecnico'
   oreAssegnate: integer("ore_assegnate").default(0),
   oreLavorate: integer("ore_lavorate").default(0),
-  costoOrario: integer("costo_orario").default(0), // In centesimi
+  costoOrario: doublePrecision("costo_orario").default(0), // In euro
   isResponsabile: boolean("is_responsabile").default(false),
   dataInizio: timestamp("data_inizio"),
   dataFine: timestamp("data_fine"),
@@ -584,8 +584,8 @@ export const insertPrestazioneClassificazioneSchema = createInsertSchema(prestaz
   updatedAt: true,
 }).extend({
   codiceDM: z.string().regex(/^[A-Z]{1,2}\.?[0-9]{1,2}$/, 'Formato codice DM non valido (es: E.22, IA.03)'),
-  importoOpere: z.number().int().min(0).default(0),
-  importoServizio: z.number().int().min(0).default(0),
+  importoOpere: z.number().min(0).default(0),
+  importoServizio: z.number().min(0).default(0),
 });
 
 // Schema per aggiornamento stato prestazione

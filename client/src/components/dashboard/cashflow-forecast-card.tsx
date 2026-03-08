@@ -36,12 +36,11 @@ interface CashFlowForecast {
   generatedAt: string;
 }
 
-function formatEuro(cents: number): string {
-  return (cents / 100).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+function formatEuro(euros: number): string {
+  return euros.toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
-function formatEuroCompact(cents: number): string {
-  const euros = cents / 100;
+function formatEuroCompact(euros: number): string {
   if (Math.abs(euros) >= 1000000) return `${(euros / 1000000).toFixed(1)}M`;
   if (Math.abs(euros) >= 1000) return `${(euros / 1000).toFixed(0)}k`;
   return euros.toFixed(0);

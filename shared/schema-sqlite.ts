@@ -4,7 +4,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -77,10 +77,10 @@ export const projects = sqliteTable("projects", {
   fatturato: integer("fatturato", { mode: "boolean" }).default(false),
   numeroFattura: text("numero_fattura"),
   dataFattura: integer("data_fattura", { mode: "timestamp" }),
-  importoFatturato: integer("importo_fatturato").default(0),
+  importoFatturato: real("importo_fatturato").default(0),
   pagato: integer("pagato", { mode: "boolean" }).default(false),
   dataPagamento: integer("data_pagamento", { mode: "timestamp" }),
-  importoPagato: integer("importo_pagato").default(0),
+  importoPagato: real("importo_pagato").default(0),
   noteFatturazione: text("note_fatturazione"),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
   fsRoot: text("fs_root"),
@@ -218,8 +218,8 @@ export const projectSAL = sqliteTable("project_sal", {
   numero: integer("numero").notNull(),
   descrizione: text("descrizione"),
   percentualeAvanzamento: integer("percentuale_avanzamento").notNull(),
-  importoLavori: integer("importo_lavori").default(0),
-  importoContabilizzato: integer("importo_contabilizzato").default(0),
+  importoLavori: real("importo_lavori").default(0),
+  importoContabilizzato: real("importo_contabilizzato").default(0),
   dataEmissione: integer("data_emissione", { mode: "timestamp" }).notNull(),
   dataApprovazione: integer("data_approvazione", { mode: "timestamp" }),
   stato: text("stato").notNull().default("bozza"),
@@ -237,13 +237,13 @@ export const projectInvoices = sqliteTable("project_invoices", {
   projectId: text("project_id").notNull().references(() => projects.id),
   numeroFattura: text("numero_fattura").notNull(),
   dataEmissione: integer("data_emissione", { mode: "timestamp" }).notNull(),
-  importoNetto: integer("importo_netto").notNull(),
-  cassaPrevidenziale: integer("cassa_previdenziale").default(0),
-  importoIVA: integer("importo_iva").notNull(),
-  importoTotale: integer("importo_totale").notNull(),
-  importoParcella: integer("importo_parcella").default(0),
+  importoNetto: real("importo_netto").notNull(),
+  cassaPrevidenziale: real("cassa_previdenziale").default(0),
+  importoIVA: real("importo_iva").notNull(),
+  importoTotale: real("importo_totale").notNull(),
+  importoParcella: real("importo_parcella").default(0),
   aliquotaIVA: integer("aliquota_iva").default(22),
-  ritenuta: integer("ritenuta").default(0),
+  ritenuta: real("ritenuta").default(0),
   stato: text("stato").notNull().default("emessa"),
   scadenzaPagamento: integer("scadenza_pagamento", { mode: "timestamp" }),
   dataPagamento: integer("data_pagamento", { mode: "timestamp" }),
@@ -283,10 +283,10 @@ export const projectPrestazioni = sqliteTable("project_prestazioni", {
   dataFatturazione: integer("data_fatturazione", { mode: "timestamp" }),
   dataPagamento: integer("data_pagamento", { mode: "timestamp" }),
 
-  // Importi (in centesimi di euro)
-  importoPrevisto: integer("importo_previsto").default(0),
-  importoFatturato: integer("importo_fatturato").default(0),
-  importoPagato: integer("importo_pagato").default(0),
+  // Importi (in euro)
+  importoPrevisto: real("importo_previsto").default(0),
+  importoFatturato: real("importo_fatturato").default(0),
+  importoPagato: real("importo_pagato").default(0),
 
   // Collegamento a fattura specifica
   invoiceId: text("invoice_id").references(() => projectInvoices.id),
@@ -323,12 +323,12 @@ export const projectBudget = sqliteTable("project_budget", {
   projectId: text("project_id").notNull().references(() => projects.id).unique(),
   budgetOreTotale: integer("budget_ore_totale").default(0),
   oreConsuntivate: integer("ore_consuntivate").default(0),
-  costiConsulenze: integer("costi_consulenze").default(0),
-  costiRilievi: integer("costi_rilievi").default(0),
-  altriCosti: integer("altri_costi").default(0),
-  costiTotali: integer("costi_totali").default(0),
-  ricaviPrevisti: integer("ricavi_previsti").default(0),
-  ricaviEffettivi: integer("ricavi_effettivi").default(0),
+  costiConsulenze: real("costi_consulenze").default(0),
+  costiRilievi: real("costi_rilievi").default(0),
+  altriCosti: real("altri_costi").default(0),
+  costiTotali: real("costi_totali").default(0),
+  ricaviPrevisti: real("ricavi_previsti").default(0),
+  ricaviEffettivi: real("ricavi_effettivi").default(0),
   note: text("note"),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
@@ -345,7 +345,7 @@ export const projectResources = sqliteTable("project_resources", {
   role: text("role").notNull(),
   oreAssegnate: integer("ore_assegnate").default(0),
   oreLavorate: integer("ore_lavorate").default(0),
-  costoOrario: integer("costo_orario").default(0),
+  costoOrario: real("costo_orario").default(0),
   isResponsabile: integer("is_responsabile", { mode: "boolean" }).default(false),
   dataInizio: integer("data_inizio", { mode: "timestamp" }),
   dataFine: integer("data_fine", { mode: "timestamp" }),

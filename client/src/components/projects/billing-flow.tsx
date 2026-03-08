@@ -650,7 +650,7 @@ export default function BillingFlow() {
         tipo: prestazioneForm.tipo,
         livelloProgettazione: prestazioneForm.tipo === "progettazione" ? prestazioneForm.livelloProgettazione || null : null,
         descrizione: prestazioneForm.descrizione || null,
-        importoPrevisto: Math.round(prestazioneForm.importoPrevisto * 100),
+        importoPrevisto: prestazioneForm.importoPrevisto,
         note: prestazioneForm.note || null,
       },
     });
@@ -658,7 +658,7 @@ export default function BillingFlow() {
 
   // Helpers
   const formatCurrency = (cents: number) => {
-    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(cents / 100);
+    return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(cents);
   };
 
   const formatDate = (date: Date | string | null) => {
@@ -692,10 +692,10 @@ export default function BillingFlow() {
       setInvoiceForm({
         numeroFattura: invoice.numeroFattura,
         dataEmissione: new Date(invoice.dataEmissione).toISOString().split("T")[0],
-        imponibile: invoice.importoNetto / 100,
+        imponibile: invoice.importoNetto,
         cassaPercentuale: invoice.cassaPrevidenziale ? (invoice.cassaPrevidenziale / invoice.importoNetto) * 100 : 4,
         ivaPercentuale: invoice.aliquotaIVA || 22,
-        ritenuta: (invoice.ritenuta || 0) / 100,
+        ritenuta: invoice.ritenuta || 0,
         scadenzaPagamento: invoice.scadenzaPagamento ? new Date(invoice.scadenzaPagamento).toISOString().split("T")[0] : "",
         tipoFattura: (invoice.tipoFattura as any) || "unica",
         stato: (invoice.stato as any) || "emessa",
@@ -706,7 +706,7 @@ export default function BillingFlow() {
       setInvoiceForm({
         numeroFattura: "",
         dataEmissione: new Date().toISOString().split("T")[0],
-        imponibile: prestazione ? (prestazione.importoPrevisto || 0) / 100 : 0,
+        imponibile: prestazione ? (prestazione.importoPrevisto || 0) : 0,
         cassaPercentuale: 4,
         ivaPercentuale: 22,
         ritenuta: 0,
@@ -753,17 +753,17 @@ export default function BillingFlow() {
 
     const totals = calculateInvoiceTotals();
 
-    // Invio valori in EURO (il server converte in centesimi)
+    // Invio valori in EURO
     const invoiceData = {
       projectId: selectedProject.id,
       prestazioneId: selectedPrestazione?.id || null,
       numeroFattura: invoiceForm.numeroFattura,
       dataEmissione: invoiceForm.dataEmissione,
       scadenzaPagamento: invoiceForm.scadenzaPagamento || null,
-      importoNetto: invoiceForm.imponibile, // Euro, non centesimi
+      importoNetto: invoiceForm.imponibile, // Euro
       cassaPercentuale: invoiceForm.cassaPercentuale, // Percentuale cassa
       aliquotaIVA: invoiceForm.ivaPercentuale,
-      ritenuta: invoiceForm.ritenuta, // Euro, non centesimi
+      ritenuta: invoiceForm.ritenuta, // Euro
       tipoFattura: invoiceForm.tipoFattura,
       note: invoiceForm.note,
       stato: invoiceForm.stato,
@@ -1798,7 +1798,7 @@ export default function BillingFlow() {
                       if (prest && !editingInvoice) {
                         setInvoiceForm(prev => ({
                           ...prev,
-                          imponibile: (prest.importoPrevisto || 0) / 100
+                          imponibile: prest.importoPrevisto || 0
                         }));
                       }
                     }
@@ -1815,7 +1815,7 @@ export default function BillingFlow() {
                         <SelectItem key={prest.id} value={prest.id}>
                           {PRESTAZIONE_CONFIG[prest.tipo]?.label || prest.tipo}
                           {prest.livelloProgettazione && ` - ${prest.livelloProgettazione.toUpperCase()}`}
-                          {(prest.importoPrevisto ?? 0) > 0 && ` (€${((prest.importoPrevisto ?? 0) / 100).toLocaleString('it-IT')})`}
+                          {(prest.importoPrevisto ?? 0) > 0 && ` (€${(prest.importoPrevisto ?? 0).toLocaleString('it-IT')})`}
                         </SelectItem>
                       ))}
                   </SelectContent>

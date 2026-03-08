@@ -78,7 +78,7 @@ Run a single test file: `npx vitest run client/src/lib/__tests__/retry-utils.tes
 
 ### Key Conventions
 
-- All monetary amounts stored as **integer cents** (centesimi di euro) in the database
+- All monetary amounts stored as **double precision** values in **euro** in the database
 - Italian language used for domain terms (commessa, prestazione, fattura, pagamento, CRE, CIG, etc.)
 - Zod schemas for all API input validation; types generated from Drizzle schema via `drizzle-zod`
 - `shared/schema.ts` exports both table definitions and insert schemas — modify this file when changing the DB structure

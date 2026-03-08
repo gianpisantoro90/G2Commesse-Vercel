@@ -118,13 +118,13 @@ export function registerClassificazioniRoutes(app: Express): void {
             try {
               const rawOpere = c.importo || c.importoOpere || 0;
               const rawServizio = c.importoServizio || 0;
-              // Metadata stores euro (decimals), DB needs centesimi (integers)
+              // Metadata stores euro, DB now also stores euro
               await storage.createClassificazione({
                 prestazioneId: p.id,
                 projectId: project.id,
                 codiceDM: c.codice,
-                importoOpere: Math.round(rawOpere * 100),
-                importoServizio: pi === 0 ? Math.round(rawServizio * 100) : 0,
+                importoOpere: rawOpere,
+                importoServizio: pi === 0 ? rawServizio : 0,
               });
               migrated++;
             } catch (err: any) {

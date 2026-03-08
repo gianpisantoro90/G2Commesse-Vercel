@@ -944,7 +944,7 @@ export default function ProjectsTable() {
                                   </span>
                                   {stats.importoFatturato > 0 && (
                                     <span className="text-xs text-muted-foreground">
-                                      €{(stats.importoFatturato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
+                                      €{stats.importoFatturato.toLocaleString('it-IT', { minimumFractionDigits: 0 })}
                                     </span>
                                   )}
                                 </div>
@@ -957,7 +957,7 @@ export default function ProjectsTable() {
                                   </span>
                                   {stats.importoPagato > 0 && (
                                     <span className="text-xs text-green-600 dark:text-green-400">
-                                      €{(stats.importoPagato / 100).toLocaleString('it-IT', { minimumFractionDigits: 0 })}
+                                      €{stats.importoPagato.toLocaleString('it-IT', { minimumFractionDigits: 0 })}
                                     </span>
                                   )}
                                 </div>

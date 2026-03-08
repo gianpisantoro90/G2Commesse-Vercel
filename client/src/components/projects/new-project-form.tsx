@@ -192,8 +192,8 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             try {
               await apiRequest("POST", `/api/prestazioni/${prestazione.id}/classificazioni`, {
                 codiceDM: c.codice,
-                importoOpere: Math.round(c.importoOpere * 100),
-                importoServizio: Math.round(c.importoServizio * 100),
+                importoOpere: c.importoOpere,
+                importoServizio: c.importoServizio,
               });
             } catch (err) {
               console.error(`Error saving classificazione for ${tipo}:`, err);
@@ -286,8 +286,8 @@ export default function NewProjectForm({ onProjectSaved }: NewProjectFormProps) 
             try {
               await apiRequest("POST", `/api/prestazioni/${prestazione.id}/classificazioni`, {
                 codiceDM: c.codice,
-                importoOpere: Math.round(c.importoOpere * 100),
-                importoServizio: Math.round(c.importoServizio * 100),
+                importoOpere: c.importoOpere,
+                importoServizio: c.importoServizio,
               });
             } catch (err) {
               console.error(`Error saving classificazione for ${tipo}:`, err);

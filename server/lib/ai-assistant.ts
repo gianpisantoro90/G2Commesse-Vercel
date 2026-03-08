@@ -57,8 +57,8 @@ async function buildSystemContext(storage: IStorage): Promise<SystemContext> {
     const totaleFattureScadute = fattureScadute.reduce((sum, i) => sum + (i.importoTotale || 0), 0);
 
     const billingOverview = [
-      `Prestazioni completate non fatturate: ${completateNonFatturate.length} (€${(totaleCompletateNonFatturate / 100).toFixed(2)})`,
-      `Fatture scadute: ${fattureScadute.length} (€${(totaleFattureScadute / 100).toFixed(2)})`,
+      `Prestazioni completate non fatturate: ${completateNonFatturate.length} (€${totaleCompletateNonFatturate.toFixed(2)})`,
+      `Fatture scadute: ${fattureScadute.length} (€${totaleFattureScadute.toFixed(2)})`,
       `Totale progetti attivi: ${activeProjects.length}`,
       `Totale clienti: ${clients.length}`,
     ].join('\n');

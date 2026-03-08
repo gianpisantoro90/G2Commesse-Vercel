@@ -221,7 +221,7 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
       tipo: formData.tipo,
       livelloProgettazione: formData.tipo === 'progettazione' ? formData.livelloProgettazione : null,
       descrizione: formData.descrizione || null,
-      importoPrevisto: Math.round(formData.importoPrevisto * 100), // Converti in centesimi
+      importoPrevisto: formData.importoPrevisto, // In euro
       note: formData.note || null,
     });
   };
@@ -234,9 +234,9 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
     return null;
   };
 
-  const formatCurrency = (cents: number | null | undefined) => {
-    if (!cents) return "€ 0,00";
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(cents / 100);
+  const formatCurrency = (euros: number | null | undefined) => {
+    if (!euros) return "€ 0,00";
+    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(euros);
   };
 
   if (isLoading) {
@@ -547,9 +547,9 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
                                     type="number"
                                     placeholder="Opere"
                                     className="h-7 text-xs"
-                                    defaultValue={c.importoOpere / 100 || ''}
+                                    defaultValue={c.importoOpere || ''}
                                     onBlur={(e) => {
-                                      const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
+                                      const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                       if (val !== c.importoOpere) {
                                         updateClassMutation.mutate({
                                           prestazioneId: prestazione.id,
@@ -563,9 +563,9 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
                                     type="number"
                                     placeholder="Servizio"
                                     className="h-7 text-xs"
-                                    defaultValue={c.importoServizio / 100 || ''}
+                                    defaultValue={c.importoServizio || ''}
                                     onBlur={(e) => {
-                                      const val = e.target.value === '' ? 0 : Math.round(parseFloat(e.target.value) * 100);
+                                      const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
                                       if (val !== c.importoServizio) {
                                         updateClassMutation.mutate({
                                           prestazioneId: prestazione.id,
