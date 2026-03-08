@@ -173,6 +173,7 @@ export interface IStorage {
     deadlines: Deadline[],
     invoices: ProjectInvoice[],
     prestazioni: ProjectPrestazione[],
+    classificazioni: PrestazioneClassificazione[],
     budget: ProjectBudget[],
     resources: ProjectResource[],
   }>;
@@ -189,6 +190,7 @@ export interface IStorage {
     deadlines?: Deadline[],
     invoices?: ProjectInvoice[],
     prestazioni?: ProjectPrestazione[],
+    classificazioni?: PrestazioneClassificazione[],
     budget?: ProjectBudget[],
     resources?: ProjectResource[],
   }, mode?: 'merge' | 'overwrite'): Promise<ImportReport>;
@@ -640,6 +642,7 @@ export class MemStorage implements IStorage {
       deadlines: await db.select().from(projectDeadlines),
       invoices: await db.select().from(projectInvoices),
       prestazioni: await db.select().from(projectPrestazioni),
+      classificazioni: await db.select().from(prestazioneClassificazioni),
       budget: await db.select().from(projectBudget),
       resources: await db.select().from(projectResources),
     };
@@ -658,6 +661,7 @@ export class MemStorage implements IStorage {
     deadlines?: Deadline[],
     invoices?: ProjectInvoice[],
     prestazioni?: ProjectPrestazione[],
+    classificazioni?: PrestazioneClassificazione[],
     budget?: ProjectBudget[],
     resources?: ProjectResource[],
   }, mode: 'merge' | 'overwrite' = 'overwrite'): Promise<ImportReport> {
@@ -676,6 +680,7 @@ export class MemStorage implements IStorage {
       this.deadlines.clear();
       this.invoices.clear();
       this.prestazioni.clear();
+      this.classificazioni.clear();
       this.budget.clear();
       this.resources.clear();
     }
@@ -706,6 +711,7 @@ export class MemStorage implements IStorage {
     importMap(this.deadlines, data.deadlines, 'id', 'deadlines');
     importMap(this.invoices, data.invoices, 'id', 'invoices');
     importMap(this.prestazioni, data.prestazioni, 'id', 'prestazioni');
+    importMap(this.classificazioni, data.classificazioni, 'id', 'classificazioni');
     importMap(this.budget, data.budget, 'id', 'budget');
     importMap(this.resources, data.resources, 'id', 'resources');
 
@@ -3021,7 +3027,7 @@ export class DatabaseStorage implements IStorage {
 
   // Bulk operations
   async exportAllData() {
-    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData, usersData, tasksData, communicationsData, deadlinesData, invoicesData, prestazioniData, budgetData, resourcesData] = await Promise.all([
+    const [projectsData, clientsData, fileRoutingsData, systemConfigData, oneDriveMappingsData, filesIndexData, usersData, tasksData, communicationsData, deadlinesData, invoicesData, prestazioniData, classificazioniData, budgetData, resourcesData] = await Promise.all([
       this.getAllProjects(),
       this.getAllClients(),
       db.select().from(fileRoutings),
@@ -3034,6 +3040,7 @@ export class DatabaseStorage implements IStorage {
       this.getAllDeadlines(),
       this.getAllInvoices(),
       this.getAllPrestazioni(),
+      db.select().from(prestazioneClassificazioni),
       db.select().from(projectBudget),
       db.select().from(projectResources),
     ]);
@@ -3051,6 +3058,7 @@ export class DatabaseStorage implements IStorage {
       deadlines: deadlinesData,
       invoices: invoicesData,
       prestazioni: prestazioniData,
+      classificazioni: classificazioniData,
       budget: budgetData,
       resources: resourcesData,
     };
@@ -3085,6 +3093,7 @@ export class DatabaseStorage implements IStorage {
     deadlines?: Deadline[],
     invoices?: ProjectInvoice[],
     prestazioni?: ProjectPrestazione[],
+    classificazioni?: PrestazioneClassificazione[],
     budget?: ProjectBudget[],
     resources?: ProjectResource[],
   }, mode: 'merge' | 'overwrite' = 'overwrite'): Promise<ImportReport> {
@@ -3104,7 +3113,11 @@ export class DatabaseStorage implements IStorage {
       }
       const existingUsers = await db.select({ id: users.id }).from(users);
       for (const u of existingUsers) validUserIds.add(u.id);
+      const existingPrestazioni = await db.select({ id: projectPrestazioni.id }).from(projectPrestazioni);
+      for (const p of existingPrestazioni) validPrestazioneIds.add(p.id);
     }
+
+    const validPrestazioneIds = new Set<string>();
 
     // Also add IDs from the import data itself (they'll be inserted before dependents)
     if (data.projects) for (const p of data.projects) {
@@ -3112,6 +3125,7 @@ export class DatabaseStorage implements IStorage {
       validProjectCodes.add(p.code);
     }
     if (data.users) for (const u of data.users) validUserIds.add(u.id);
+    if (data.prestazioni) for (const p of data.prestazioni) validPrestazioneIds.add(p.id);
 
     await db.transaction(async (tx: typeof db) => {
       if (mode === 'overwrite') {
@@ -3123,6 +3137,7 @@ export class DatabaseStorage implements IStorage {
         await tx.delete(fileRoutings);
         await tx.delete(oneDriveMappings);
         await tx.delete(projectInvoices);
+        await tx.delete(prestazioneClassificazioni);
         await tx.delete(projectPrestazioni);
         await tx.delete(projectBudget);
         await tx.delete(projectResources);
@@ -3483,6 +3498,39 @@ export class DatabaseStorage implements IStorage {
             }
           } catch (err: any) {
             report.entities.prestazioni.errors.push(`Prestazione ${prestazione.tipo}: ${err.message}`);
+          }
+        }
+      }
+
+      // 12b. Classificazioni (depends on prestazioni + projects)
+      if (data.classificazioni && data.classificazioni.length > 0) {
+        report.entities.classificazioni = { created: 0, updated: 0, skipped: 0, errors: [] };
+        const classificazioniWithDates = this.convertTimestampsToDate(data.classificazioni, ['createdAt', 'updatedAt']);
+        for (const classif of classificazioniWithDates) {
+          if (!validPrestazioneIds.has(classif.prestazioneId)) {
+            report.entities.classificazioni.skipped++;
+            report.entities.classificazioni.errors.push(`Classificazione ${classif.codiceDM}: prestazioneId non trovato`);
+            continue;
+          }
+          if (!validProjectIds.has(classif.projectId)) {
+            report.entities.classificazioni.skipped++;
+            report.entities.classificazioni.errors.push(`Classificazione ${classif.codiceDM}: projectId non trovato`);
+            continue;
+          }
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = classif as any;
+              await tx.insert(prestazioneClassificazioni).values(classif).onConflictDoUpdate({
+                target: prestazioneClassificazioni.id,
+                set: fields
+              });
+              report.entities.classificazioni.updated++;
+            } else {
+              await tx.insert(prestazioneClassificazioni).values(classif);
+              report.entities.classificazioni.created++;
+            }
+          } catch (err: any) {
+            report.entities.classificazioni.errors.push(`Classificazione ${classif.codiceDM}: ${err.message}`);
           }
         }
       }
@@ -4282,6 +4330,7 @@ class FallbackStorage implements IStorage {
     deadlines: Deadline[],
     invoices: ProjectInvoice[],
     prestazioni: ProjectPrestazione[],
+    classificazioni: PrestazioneClassificazione[],
     budget: ProjectBudget[],
     resources: ProjectResource[],
   }> {
@@ -4301,6 +4350,7 @@ class FallbackStorage implements IStorage {
     deadlines?: Deadline[],
     invoices?: ProjectInvoice[],
     prestazioni?: ProjectPrestazione[],
+    classificazioni?: PrestazioneClassificazione[],
     budget?: ProjectBudget[],
     resources?: ProjectResource[],
   }, mode?: 'merge' | 'overwrite'): Promise<ImportReport> {
