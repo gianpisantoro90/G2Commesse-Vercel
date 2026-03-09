@@ -34,6 +34,20 @@ export interface PrestazionePaginationParams extends PaginationParams {
 // Use serverless database for now (local fix will be in exported version)
 import { db, pool } from "./db";
 
+export interface RequisitoTecnicoRow {
+  projectCode: string;
+  projectYear: string;
+  projectStatus: string;
+  clientName: string;
+  codiceDM: string;
+  importoOpere: number;
+  importoServizio: number;
+  prestazioneTipo: string;
+  prestazioneLivello: string | null;
+  prestazioneDataInizio: Date | null;
+  prestazioneDataCompletamento: Date | null;
+}
+
 export interface IStorage {
   // Projects
   getProject(id: string): Promise<Project | undefined>;
@@ -136,6 +150,7 @@ export interface IStorage {
   // Classificazioni DM per prestazione
   getClassificazioniByPrestazione(prestazioneId: string): Promise<PrestazioneClassificazione[]>;
   getClassificazioniByProject(projectId: string): Promise<PrestazioneClassificazione[]>;
+  getRequisitiTecniciFullData(): Promise<RequisitoTecnicoRow[]>;
   createClassificazione(data: InsertPrestazioneClassificazione): Promise<PrestazioneClassificazione>;
   updateClassificazione(id: string, updates: Partial<InsertPrestazioneClassificazione>): Promise<PrestazioneClassificazione | undefined>;
   deleteClassificazione(id: string): Promise<boolean>;
@@ -1158,6 +1173,8 @@ export class MemStorage implements IStorage {
       .filter(c => c.projectId === projectId)
       .sort((a, b) => (a.codiceDM || '').localeCompare(b.codiceDM || ''));
   }
+
+  async getRequisitiTecniciFullData(): Promise<RequisitoTecnicoRow[]> { return []; }
 
   async createClassificazione(data: InsertPrestazioneClassificazione): Promise<PrestazioneClassificazione> {
     const id = randomUUID();
@@ -2842,6 +2859,33 @@ export class DatabaseStorage implements IStorage {
       .orderBy(prestazioneClassificazioni.codiceDM);
   }
 
+  async getRequisitiTecniciFullData(): Promise<RequisitoTecnicoRow[]> {
+    const rows = await db
+      .select({
+        projectCode: projects.code,
+        projectYear: projects.year,
+        projectStatus: projects.status,
+        clientName: projects.client,
+        codiceDM: prestazioneClassificazioni.codiceDM,
+        importoOpere: prestazioneClassificazioni.importoOpere,
+        importoServizio: prestazioneClassificazioni.importoServizio,
+        prestazioneTipo: projectPrestazioni.tipo,
+        prestazioneLivello: projectPrestazioni.livelloProgettazione,
+        prestazioneDataInizio: projectPrestazioni.dataInizio,
+        prestazioneDataCompletamento: projectPrestazioni.dataCompletamento,
+      })
+      .from(prestazioneClassificazioni)
+      .innerJoin(projectPrestazioni, eq(prestazioneClassificazioni.prestazioneId, projectPrestazioni.id))
+      .innerJoin(projects, eq(prestazioneClassificazioni.projectId, projects.id));
+
+    return rows.map((r: typeof rows[number]) => ({
+      ...r,
+      projectYear: String(r.projectYear),
+      importoOpere: r.importoOpere ?? 0,
+      importoServizio: r.importoServizio ?? 0,
+    }));
+  }
+
   async createClassificazione(data: InsertPrestazioneClassificazione): Promise<PrestazioneClassificazione> {
     const [record] = await db.insert(prestazioneClassificazioni).values({
       ...data,
@@ -4249,6 +4293,10 @@ class FallbackStorage implements IStorage {
 
   async getClassificazioniByProject(projectId: string): Promise<PrestazioneClassificazione[]> {
     return this.executeWithFallback(storage => storage.getClassificazioniByProject(projectId));
+  }
+
+  async getRequisitiTecniciFullData(): Promise<RequisitoTecnicoRow[]> {
+    return this.executeWithFallback(storage => storage.getRequisitiTecniciFullData());
   }
 
   async createClassificazione(data: InsertPrestazioneClassificazione): Promise<PrestazioneClassificazione> {

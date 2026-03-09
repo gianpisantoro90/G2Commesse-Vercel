@@ -1,8 +1,19 @@
 import type { Express } from "express";
 import { storage } from "../storage";
 import { insertPrestazioneClassificazioneSchema } from "@shared/schema";
+import { requireAuth } from "./middleware";
 
 export function registerClassificazioniRoutes(app: Express): void {
+
+  // Get full denormalized data for requisiti tecnici page
+  app.get("/api/requisiti-tecnici/full", requireAuth, async (req, res) => {
+    try {
+      const data = await storage.getRequisitiTecniciFullData();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: "Errore nel recupero dati requisiti tecnici" });
+    }
+  });
 
   // Get classificazioni for a prestazione
   app.get("/api/prestazioni/:id/classificazioni", async (req, res) => {
