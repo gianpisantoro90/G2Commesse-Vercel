@@ -14,6 +14,7 @@ import cors from "cors";
 import { registerRoutes } from "./routes";
 import { errorHandler } from "./middleware/error-handler";
 import { logger, requestLogger } from "./lib/logger";
+import { emailPoller } from "./lib/email-poller";
 
 export async function createApp() {
   const app = express();
@@ -265,6 +266,11 @@ export async function createApp() {
       env: process.env.NODE_ENV
     });
   });
+
+  // Initialize email poller for manual check-now endpoint
+  const { storage: emailStorage, storagePromise: emailStoragePromise } = await import('./storage');
+  await emailStoragePromise;
+  emailPoller.initialize(emailStorage);
 
   // Register API routes
   await registerRoutes(app);
