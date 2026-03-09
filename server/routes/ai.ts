@@ -82,6 +82,11 @@ export function registerAIRoutes(app: Express): void {
       const aiConfig = await storage.getSystemConfig('ai_config');
       const storedKey = (aiConfig?.value as any)?.apiKey;
 
+      // Check if stored key belongs to a specific provider
+      const storedProvider = (aiConfig?.value as any)?.provider;
+      const storedKeyForAnthropic = storedKey && storedProvider === 'anthropic';
+      const storedKeyForDeepseek = storedKey && storedProvider === 'deepseek';
+
       const available = !!(anthropicKey || deepseekKey || storedKey);
 
       if (available) {
@@ -89,8 +94,8 @@ export function registerAIRoutes(app: Express): void {
           available: true,
           message: "API Key configurata",
           providers: {
-            anthropic: !!(anthropicKey || storedKey),
-            deepseek: !!deepseekKey,
+            anthropic: !!(anthropicKey || storedKeyForAnthropic),
+            deepseek: !!(deepseekKey || storedKeyForDeepseek),
           },
         });
       } else {
@@ -114,7 +119,12 @@ export function registerAIRoutes(app: Express): void {
       if (!apiKey || apiKey === 'server-managed') {
         const aiConfig = await storage.getSystemConfig('ai_config');
         const savedKey = (aiConfig?.value as any)?.apiKey;
-        apiKey = savedKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
+        const isDeepSeekModel = model?.includes('deepseek');
+        if (isDeepSeekModel) {
+          apiKey = savedKey || process.env.DEEPSEEK_API_KEY;
+        } else {
+          apiKey = savedKey || process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY;
+        }
         if (!apiKey) {
           return res.status(400).json({ message: "API Key non configurata sul server" });
         }
