@@ -135,7 +135,7 @@ export function registerAIRoutes(app: Express): void {
       const provider = isDeepSeek ? 'DeepSeek' : 'Claude';
 
       // Use the unified ai-provider for the test call
-      const globalConfig = { apiKey, model: model || 'claude-sonnet-4-6', provider: isDeepSeek ? 'deepseek' as const : 'anthropic' as const };
+      const globalConfig = { apiKey, model: model || 'claude-sonnet-4-6', provider: isDeepSeek ? 'deepseek' as const : 'anthropic' as const, autoRouting: true, contentAnalysis: true, learningMode: true };
       await aiComplete('chat_assistant', {
         messages: [{ role: 'user', content: 'test' }],
         maxTokens: 10,
