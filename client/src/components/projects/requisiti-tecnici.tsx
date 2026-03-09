@@ -1,247 +1,379 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronRight, Filter, RotateCcw } from "lucide-react";
-import { ProjectStatusBadge } from "@/components/ui/status-badge";
-import { type Project, type ProjectPrestazioni } from "@shared/schema";
-import { getCategoriaById, type CategoriaOpera } from "@/lib/dm2016-tavole-ufficiali";
-import { QK } from "@/lib/query-utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Search,
+  Filter,
+  Download,
+  FileText,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpDown,
+  RefreshCw,
+} from "lucide-react";
+import { getCategoriaById } from "@/lib/dm2016-tavole-ufficiali";
+import { getQueryFn } from "@/lib/queryClient";
+import * as XLSX from "xlsx";
 
-// Definizione macro-categorie
-const MACRO_CATEGORIE = [
-  { id: "E", nome: "Edilizia", emoji: "🏗️" },
-  { id: "S", nome: "Strutture", emoji: "🏛️" },
-  { id: "IA", nome: "Impianti Meccanici", emoji: "⚙️" },
-  { id: "IB", nome: "Impianti Elettrici", emoji: "⚡" },
-  { id: "V", nome: "Infrastrutture Viarie", emoji: "🛣️" },
-  { id: "D", nome: "Opere Idrauliche", emoji: "💧" },
-  { id: "T", nome: "Tecnologie ICT", emoji: "💻" },
-  { id: "P", nome: "Paesaggio", emoji: "🌳" },
-  { id: "U", nome: "Urbanistica", emoji: "🗺️" },
-];
-
-// Range di importi predefiniti
-const RANGE_IMPORTI = [
-  { id: "all", label: "Tutti gli importi", min: 0, max: Infinity },
-  { id: "0-100k", label: "€0 - €100.000", min: 0, max: 100000 },
-  { id: "100k-500k", label: "€100.000 - €500.000", min: 100000, max: 500000 },
-  { id: "500k-1m", label: "€500.000 - €1.000.000", min: 500000, max: 1000000 },
-  { id: "1m-5m", label: "€1.000.000 - €5.000.000", min: 1000000, max: 5000000 },
-  { id: "5m+", label: "Oltre €5.000.000", min: 5000000, max: Infinity },
-];
-
-interface ClassificazioneConCommessa {
-  codice: string;
-  importo: number;
-  importoServizio?: number;
-  projectId: string;
+// ---------- Types ----------
+interface RequisitoTecnicoRow {
   projectCode: string;
-  projectClient: string;
+  projectYear: string;
   projectStatus: string;
-  projectYear: number;
+  clientName: string;
+  codiceDM: string;
+  importoOpere: number;
+  importoServizio: number;
+  prestazioneTipo: string;
+  prestazioneLivello: string | null;
+  prestazioneDataInizio: string | null;
+  prestazioneDataCompletamento: string | null;
 }
 
-interface AggregatedCategory {
-  codice: string;
-  categoria: CategoriaOpera | undefined;
-  commesse: ClassificazioneConCommessa[];
-  totaleImportoOpere: number;
-  totaleImportoServizi: number;
-  numeroCommesse: number;
-}
+// ---------- Constants ----------
+const MACRO_CATEGORIE = [
+  { id: "E", nome: "Edilizia" },
+  { id: "S", nome: "Strutture" },
+  { id: "IA", nome: "Impianti Meccanici" },
+  { id: "IB", nome: "Impianti Elettrici" },
+  { id: "V", nome: "Infrastrutture Viarie" },
+  { id: "D", nome: "Opere Idrauliche" },
+  { id: "T", nome: "Tecnologie ICT" },
+  { id: "P", nome: "Paesaggio" },
+  { id: "U", nome: "Urbanistica" },
+];
 
-interface AggregatedMacroCategory {
-  macroCategoria: typeof MACRO_CATEGORIE[0];
-  categorie: AggregatedCategory[];
-  totaleImportoOpere: number;
-  totaleImportoServizi: number;
-  numeroCommesse: number;
-  numeroCategorie: number;
-}
+const TIPO_PRESTAZIONE_OPTIONS: { value: string; label: string }[] = [
+  { value: "progettazione", label: "Progettazione" },
+  { value: "dl", label: "Direzione Lavori" },
+  { value: "csp", label: "CSP" },
+  { value: "cse", label: "CSE" },
+  { value: "contabilita", label: "Contabilit\u00e0" },
+  { value: "collaudo", label: "Collaudo" },
+  { value: "perizia", label: "Perizia" },
+  { value: "pratiche", label: "Pratiche" },
+];
 
+type SortField =
+  | "projectCode"
+  | "clientName"
+  | "projectYear"
+  | "codiceDM"
+  | "descrizione"
+  | "importoOpere"
+  | "importoServizio"
+  | "prestazioneTipo"
+  | "prestazioneLivello"
+  | "prestazioneDataInizio"
+  | "prestazioneDataCompletamento";
+
+// ---------- Helpers ----------
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("it-IT", {
+    style: "currency",
+    currency: "EUR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+
+const formatDate = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("it-IT");
+};
+
+const capitalize = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
+
+const getMacroFromCode = (codiceDM: string): string => {
+  // Macro prefixes can be 1 or 2 chars: E, S, IA, IB, V, D, T, P, U
+  if (codiceDM.startsWith("IA")) return "IA";
+  if (codiceDM.startsWith("IB")) return "IB";
+  return codiceDM.split(".")[0];
+};
+
+const getDescription = (codiceDM: string): string =>
+  getCategoriaById(codiceDM)?.destinazioneFunzionale || codiceDM;
+
+// ---------- Component ----------
 export default function RequisitiTecnici() {
-  // Filtri
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [macroCategoriaFilter, setMacroCategoriaFilter] = useState<string>("all");
-  const [rangeImportoFilter, setRangeImportoFilter] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // Stato espansione
-  const [expandedMacro, setExpandedMacro] = useState<string[]>([]);
-  const [expandedCategorie, setExpandedCategorie] = useState<string[]>([]);
-
-  // Fetch progetti
-  const { data: projects = [], isLoading } = useQuery<Project[]>({
-    queryKey: QK.projects,
+  // Data fetch
+  const { data: rows = [], isLoading, refetch, isFetching } = useQuery<RequisitoTecnicoRow[]>({
+    queryKey: ["/api/requisiti-tecnici/full"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  // Estrai tutte le classificazioni con i dati della commessa
-  const tutteClassificazioni = useMemo(() => {
-    const classificazioni: ClassificazioneConCommessa[] = [];
+  // Filter states
+  const [search, setSearch] = useState("");
+  const [macroCategoria, setMacroCategoria] = useState("all");
+  const [categoriaSpecifica, setCategoriaSpecifica] = useState("all");
+  const [annoMin, setAnnoMin] = useState("");
+  const [annoMax, setAnnoMax] = useState("");
+  const [importoOpereMin, setImportoOpereMin] = useState("");
+  const [importoOpereMax, setImportoOpereMax] = useState("");
+  const [importoServiziMin, setImportoServiziMin] = useState("");
+  const [importoServiziMax, setImportoServiziMax] = useState("");
+  const [tipoPrestazione, setTipoPrestazione] = useState<string[]>([]);
+  const [livelloProgettazione, setLivelloProgettazione] = useState("all");
+  const [statoCommessa, setStatoCommessa] = useState("all");
+  const [dataInizio, setDataInizio] = useState("");
+  const [dataFine, setDataFine] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-    projects.forEach((project) => {
-      const metadata = project.metadata as ProjectPrestazioni | null;
-      if (metadata?.classificazioniDM2016?.length) {
-        metadata.classificazioniDM2016.forEach((classif) => {
-          classificazioni.push({
-            codice: classif.codice,
-            importo: classif.importo || 0,
-            importoServizio: classif.importoServizio || 0,
-            projectId: project.id,
-            projectCode: project.code,
-            projectClient: project.client,
-            projectStatus: project.status,
-            projectYear: project.year,
-          });
-        });
+  // Sort state
+  const [sortField, setSortField] = useState<SortField>("projectCode");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  // Distinct specific categories for currently selected macro
+  const categorieSpecificheDisponibili = useMemo(() => {
+    if (macroCategoria === "all") return [];
+    const codes = new Set<string>();
+    rows.forEach((r) => {
+      if (getMacroFromCode(r.codiceDM) === macroCategoria) {
+        codes.add(r.codiceDM);
       }
     });
+    return Array.from(codes).sort();
+  }, [rows, macroCategoria]);
 
-    return classificazioni;
-  }, [projects]);
+  // Reset categoriaSpecifica when macro changes
+  const handleMacroCategoriaChange = useCallback(
+    (val: string) => {
+      setMacroCategoria(val);
+      setCategoriaSpecifica("all");
+    },
+    [],
+  );
 
-  // Applica filtri
-  const classificazioniFiltrate = useMemo(() => {
-    const rangeSelezionato = RANGE_IMPORTI.find(r => r.id === rangeImportoFilter) || RANGE_IMPORTI[0];
+  // Has active filters
+  const hasActiveFilters =
+    search !== "" ||
+    macroCategoria !== "all" ||
+    categoriaSpecifica !== "all" ||
+    annoMin !== "" ||
+    annoMax !== "" ||
+    importoOpereMin !== "" ||
+    importoOpereMax !== "" ||
+    importoServiziMin !== "" ||
+    importoServiziMax !== "" ||
+    tipoPrestazione.length > 0 ||
+    livelloProgettazione !== "all" ||
+    statoCommessa !== "all" ||
+    dataInizio !== "" ||
+    dataFine !== "";
 
-    return tutteClassificazioni.filter((c) => {
-      // Filtro stato
-      if (statusFilter !== "all" && c.projectStatus !== statusFilter) return false;
+  const resetFilters = useCallback(() => {
+    setSearch("");
+    setMacroCategoria("all");
+    setCategoriaSpecifica("all");
+    setAnnoMin("");
+    setAnnoMax("");
+    setImportoOpereMin("");
+    setImportoOpereMax("");
+    setImportoServiziMin("");
+    setImportoServiziMax("");
+    setTipoPrestazione([]);
+    setLivelloProgettazione("all");
+    setStatoCommessa("all");
+    setDataInizio("");
+    setDataFine("");
+  }, []);
 
-      // Filtro macro-categoria
-      if (macroCategoriaFilter !== "all") {
-        const macroDelCodice = c.codice.split(".")[0];
-        if (macroDelCodice !== macroCategoriaFilter) return false;
-      }
-
-      // Filtro range importo
-      if (rangeImportoFilter !== "all") {
-        if (c.importo < rangeSelezionato.min || c.importo > rangeSelezionato.max) return false;
-      }
-
-      // Filtro ricerca
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        if (!c.projectCode.toLowerCase().includes(term) &&
-            !c.projectClient.toLowerCase().includes(term) &&
-            !c.codice.toLowerCase().includes(term)) {
+  // Filtering
+  const filtered = useMemo(() => {
+    return rows.filter((r) => {
+      // Text search
+      if (search) {
+        const term = search.toLowerCase();
+        if (
+          !r.projectCode.toLowerCase().includes(term) &&
+          !r.clientName.toLowerCase().includes(term) &&
+          !r.codiceDM.toLowerCase().includes(term)
+        )
           return false;
-        }
       }
-
+      // Macro-categoria
+      if (macroCategoria !== "all" && getMacroFromCode(r.codiceDM) !== macroCategoria) return false;
+      // Categoria specifica
+      if (categoriaSpecifica !== "all" && r.codiceDM !== categoriaSpecifica) return false;
+      // Anno range
+      if (annoMin && r.projectYear < annoMin) return false;
+      if (annoMax && r.projectYear > annoMax) return false;
+      // Importo Opere range
+      if (importoOpereMin && r.importoOpere < parseFloat(importoOpereMin)) return false;
+      if (importoOpereMax && r.importoOpere > parseFloat(importoOpereMax)) return false;
+      // Importo Servizi range
+      if (importoServiziMin && r.importoServizio < parseFloat(importoServiziMin)) return false;
+      if (importoServiziMax && r.importoServizio > parseFloat(importoServiziMax)) return false;
+      // Tipo prestazione (multi-select)
+      if (tipoPrestazione.length > 0 && !tipoPrestazione.includes(r.prestazioneTipo)) return false;
+      // Livello progettazione
+      if (livelloProgettazione !== "all" && r.prestazioneLivello !== livelloProgettazione)
+        return false;
+      // Stato commessa
+      if (statoCommessa !== "all" && r.projectStatus !== statoCommessa) return false;
+      // Date range (overlap semantics)
+      if (dataInizio && r.prestazioneDataCompletamento && r.prestazioneDataCompletamento < dataInizio)
+        return false;
+      if (dataFine && r.prestazioneDataInizio && r.prestazioneDataInizio > dataFine) return false;
       return true;
     });
-  }, [tutteClassificazioni, statusFilter, macroCategoriaFilter, rangeImportoFilter, searchTerm]);
+  }, [
+    rows,
+    search,
+    macroCategoria,
+    categoriaSpecifica,
+    annoMin,
+    annoMax,
+    importoOpereMin,
+    importoOpereMax,
+    importoServiziMin,
+    importoServiziMax,
+    tipoPrestazione,
+    livelloProgettazione,
+    statoCommessa,
+    dataInizio,
+    dataFine,
+  ]);
 
-  // Aggrega per macro-categoria
-  const aggregatoPerMacroCategoria = useMemo(() => {
-    const aggregato: AggregatedMacroCategory[] = [];
-
-    MACRO_CATEGORIE.forEach((macro) => {
-      const classificazioniMacro = classificazioniFiltrate.filter((c) => {
-        const macroDelCodice = c.codice.split(".")[0];
-        return macroDelCodice === macro.id;
-      });
-
-      if (classificazioniMacro.length === 0) {
-        aggregato.push({
-          macroCategoria: macro,
-          categorie: [],
-          totaleImportoOpere: 0,
-          totaleImportoServizi: 0,
-          numeroCommesse: 0,
-          numeroCategorie: 0,
-        });
-        return;
-      }
-
-      // Raggruppa per categoria specifica
-      const categorieMap = new Map<string, AggregatedCategory>();
-
-      classificazioniMacro.forEach((c) => {
-        if (!categorieMap.has(c.codice)) {
-          categorieMap.set(c.codice, {
-            codice: c.codice,
-            categoria: getCategoriaById(c.codice),
-            commesse: [],
-            totaleImportoOpere: 0,
-            totaleImportoServizi: 0,
-            numeroCommesse: 0,
-          });
+  // Sorting
+  const sorted = useMemo(() => {
+    const arr = [...filtered];
+    arr.sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case "importoOpere":
+          cmp = a.importoOpere - b.importoOpere;
+          break;
+        case "importoServizio":
+          cmp = a.importoServizio - b.importoServizio;
+          break;
+        case "prestazioneDataInizio":
+        case "prestazioneDataCompletamento": {
+          const va = a[sortField] || "";
+          const vb = b[sortField] || "";
+          cmp = va.localeCompare(vb);
+          break;
         }
-        const cat = categorieMap.get(c.codice)!;
-        cat.commesse.push(c);
-        cat.totaleImportoOpere += c.importo;
-        cat.totaleImportoServizi += c.importoServizio || 0;
-        cat.numeroCommesse += 1;
-      });
-
-      const categorie = Array.from(categorieMap.values()).sort((a, b) =>
-        b.totaleImportoOpere - a.totaleImportoOpere
-      );
-
-      // Conta commesse uniche per macro-categoria
-      const commesseUniche = new Set(classificazioniMacro.map(c => c.projectId));
-
-      aggregato.push({
-        macroCategoria: macro,
-        categorie,
-        totaleImportoOpere: categorie.reduce((sum, c) => sum + c.totaleImportoOpere, 0),
-        totaleImportoServizi: categorie.reduce((sum, c) => sum + c.totaleImportoServizi, 0),
-        numeroCommesse: commesseUniche.size,
-        numeroCategorie: categorie.length,
-      });
+        case "descrizione":
+          cmp = getDescription(a.codiceDM).localeCompare(getDescription(b.codiceDM));
+          break;
+        default:
+          cmp = String(a[sortField] ?? "").localeCompare(String(b[sortField] ?? ""));
+          break;
+      }
+      return sortDir === "asc" ? cmp : -cmp;
     });
+    return arr;
+  }, [filtered, sortField, sortDir]);
 
-    return aggregato.sort((a, b) => b.totaleImportoOpere - a.totaleImportoOpere);
-  }, [classificazioniFiltrate]);
-
-  // Totali globali
-  const totaliGlobali = useMemo(() => {
-    const commesseUniche = new Set(classificazioniFiltrate.map(c => c.projectId));
+  // Summary (from filtered data)
+  const summary = useMemo(() => {
+    const uniqueProjects = new Set(filtered.map((r) => r.projectCode));
     return {
-      totaleImportoOpere: classificazioniFiltrate.reduce((sum, c) => sum + c.importo, 0),
-      totaleImportoServizi: classificazioniFiltrate.reduce((sum, c) => sum + (c.importoServizio || 0), 0),
-      numeroCommesse: commesseUniche.size,
-      numeroClassificazioni: classificazioniFiltrate.length,
+      commesse: uniqueProjects.size,
+      totaleOpere: filtered.reduce((s, r) => s + r.importoOpere, 0),
+      totaleServizi: filtered.reduce((s, r) => s + r.importoServizio, 0),
+      classificazioni: filtered.length,
     };
-  }, [classificazioniFiltrate]);
+  }, [filtered]);
 
-  // Handlers
-  const toggleMacro = (id: string) => {
-    setExpandedMacro((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+  // Sort handler
+  const toggleSort = useCallback(
+    (field: SortField) => {
+      if (sortField === field) {
+        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      } else {
+        setSortField(field);
+        setSortDir("asc");
+      }
+    },
+    [sortField],
+  );
+
+  // Export Excel
+  const exportExcel = useCallback(() => {
+    const exportData = sorted.map((r) => ({
+      Commessa: r.projectCode,
+      Cliente: r.clientName,
+      Anno: r.projectYear,
+      "Categoria DM": r.codiceDM,
+      Descrizione: getCategoriaById(r.codiceDM)?.destinazioneFunzionale || "",
+      "Importo Opere (\u20ac)": r.importoOpere || 0,
+      "Importo Servizi (\u20ac)": r.importoServizio || 0,
+      Prestazione: r.prestazioneTipo,
+      Livello: r.prestazioneLivello || "",
+      "Data Inizio": r.prestazioneDataInizio
+        ? new Date(r.prestazioneDataInizio).toLocaleDateString("it-IT")
+        : "",
+      "Data Fine": r.prestazioneDataCompletamento
+        ? new Date(r.prestazioneDataCompletamento).toLocaleDateString("it-IT")
+        : "",
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Requisiti Tecnici");
+    XLSX.writeFile(wb, `requisiti-tecnici-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }, [sorted]);
+
+  // Export PDF (print)
+  const exportPDF = useCallback(() => {
+    window.print();
+  }, []);
+
+  // Tipo prestazione toggle
+  const toggleTipoPrestazione = useCallback((value: string) => {
+    setTipoPrestazione((prev) =>
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
     );
-  };
+  }, []);
 
-  const toggleCategoria = (codice: string) => {
-    setExpandedCategorie((prev) =>
-      prev.includes(codice) ? prev.filter((x) => x !== codice) : [...prev, codice]
-    );
-  };
+  // Sort header component
+  const SortHeader = ({
+    field,
+    children,
+    className = "",
+  }: {
+    field: SortField;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <th
+      className={`p-2 font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors ${className}`}
+      onClick={() => toggleSort(field)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        {sortField === field ? (
+          sortDir === "asc" ? (
+            <ChevronUp className="w-3 h-3" />
+          ) : (
+            <ChevronDown className="w-3 h-3" />
+          )
+        ) : (
+          <ArrowUpDown className="w-3 h-3 opacity-30" />
+        )}
+      </div>
+    </th>
+  );
 
-  const resetFilters = () => {
-    setStatusFilter("all");
-    setMacroCategoriaFilter("all");
-    setRangeImportoFilter("all");
-    setSearchTerm("");
-  };
-
-  const hasActiveFilters = statusFilter !== "all" || macroCategoriaFilter !== "all" ||
-                           rangeImportoFilter !== "all" || searchTerm !== "";
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("it-IT", {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
+  // Loading
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -250,308 +382,436 @@ export default function RequisitiTecnici() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Requisiti Tecnici
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Riepilogo delle categorie opere e importi accumulati (DM 17/06/2016)
-          </p>
-        </div>
-      </div>
+  // Active filters summary for print
+  const activeFiltersSummary = [
+    search && `Ricerca: "${search}"`,
+    macroCategoria !== "all" && `Macro: ${macroCategoria}`,
+    categoriaSpecifica !== "all" && `Categoria: ${categoriaSpecifica}`,
+    annoMin && `Anno da: ${annoMin}`,
+    annoMax && `Anno a: ${annoMax}`,
+    statoCommessa !== "all" && `Stato: ${statoCommessa}`,
+    tipoPrestazione.length > 0 && `Tipo: ${tipoPrestazione.join(", ")}`,
+    livelloProgettazione !== "all" && `Livello: ${livelloProgettazione}`,
+    dataInizio && `Dal: ${dataInizio}`,
+    dataFine && `Al: ${dataFine}`,
+  ]
+    .filter(Boolean)
+    .join(" | ");
 
-      {/* Filtri */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Filter className="w-5 h-5" />
-            Filtri
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Ricerca */}
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">
-                Ricerca
-              </label>
+  return (
+    <>
+      {/* Print styles */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          .requisiti-print-area, .requisiti-print-area * { visibility: visible; }
+          .requisiti-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+          .requisiti-no-print { display: none !important; }
+          .requisiti-print-header { display: block !important; }
+          @page { size: landscape; margin: 10mm; }
+          table { font-size: 9px; }
+        }
+      `}</style>
+
+      <div className="space-y-6 requisiti-print-area">
+        {/* Print-only header */}
+        <div className="requisiti-print-header hidden">
+          <h1 className="text-xl font-bold">G2 Engineering — Requisiti Tecnici</h1>
+          {activeFiltersSummary && (
+            <p className="text-sm text-gray-600 mt-1">Filtri attivi: {activeFiltersSummary}</p>
+          )}
+        </div>
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 requisiti-no-print">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">
+              Requisiti Tecnici DM 17/06/2016
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Tabella classificazioni opere e importi per partecipazione a gare
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refetch()}
+            disabled={isFetching}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isFetching ? "animate-spin" : ""}`} />
+            Aggiorna
+          </Button>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 requisiti-no-print">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-bold text-primary">{summary.commesse}</div>
+              <p className="text-sm text-muted-foreground">Commesse trovate</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-bold text-green-600">
+                {formatCurrency(summary.totaleOpere)}
+              </div>
+              <p className="text-sm text-muted-foreground">Importo Opere Totale</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-bold text-teal-600">
+                {formatCurrency(summary.totaleServizi)}
+              </div>
+              <p className="text-sm text-muted-foreground">Importo Servizi Totale</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-2xl font-bold text-purple-600">{summary.classificazioni}</div>
+              <p className="text-sm text-muted-foreground">Classificazioni</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filter Row 1 */}
+        <div className="flex flex-wrap gap-3 items-end requisiti-no-print">
+          {/* Ricerca */}
+          <div className="flex-1 min-w-[200px]">
+            <label className="text-sm font-medium text-foreground mb-1 block">Ricerca</label>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Codice, cliente, categoria..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
               />
             </div>
+          </div>
+          {/* Macro-Categoria */}
+          <div className="min-w-[180px]">
+            <label className="text-sm font-medium text-foreground mb-1 block">
+              Macro-Categoria
+            </label>
+            <Select value={macroCategoria} onValueChange={handleMacroCategoriaChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutte</SelectItem>
+                {MACRO_CATEGORIE.map((m) => (
+                  <SelectItem key={m.id} value={m.id}>
+                    {m.id} - {m.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Categoria Specifica */}
+          <div className="min-w-[180px]">
+            <label className="text-sm font-medium text-foreground mb-1 block">
+              Categoria Specifica
+            </label>
+            <Select
+              value={categoriaSpecifica}
+              onValueChange={setCategoriaSpecifica}
+              disabled={macroCategoria === "all"}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tutte</SelectItem>
+                {categorieSpecificheDisponibili.map((code) => (
+                  <SelectItem key={code} value={code}>
+                    {code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Anno range */}
+          <div className="min-w-[90px]">
+            <label className="text-sm font-medium text-foreground mb-1 block">Anno da</label>
+            <Input
+              placeholder="es. 2020"
+              value={annoMin}
+              onChange={(e) => setAnnoMin(e.target.value)}
+            />
+          </div>
+          <div className="min-w-[90px]">
+            <label className="text-sm font-medium text-foreground mb-1 block">Anno a</label>
+            <Input
+              placeholder="es. 2026"
+              value={annoMax}
+              onChange={(e) => setAnnoMax(e.target.value)}
+            />
+          </div>
+        </div>
 
-            {/* Stato commessa */}
-            <div>
+        {/* Toggle advanced filters */}
+        <div className="requisiti-no-print">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filtri Avanzati
+            {showAdvanced ? (
+              <ChevronUp className="w-4 h-4 ml-1" />
+            ) : (
+              <ChevronDown className="w-4 h-4 ml-1" />
+            )}
+          </Button>
+        </div>
+
+        {/* Filter Row 2 (advanced) */}
+        {showAdvanced && (
+          <div className="flex flex-wrap gap-3 items-end requisiti-no-print">
+            {/* Importo Opere range */}
+            <div className="min-w-[120px]">
               <label className="text-sm font-medium text-foreground mb-1 block">
-                Stato Commessa
+                Imp. Opere min
               </label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Input
+                type="number"
+                placeholder="0"
+                value={importoOpereMin}
+                onChange={(e) => setImportoOpereMin(e.target.value)}
+              />
+            </div>
+            <div className="min-w-[120px]">
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Imp. Opere max
+              </label>
+              <Input
+                type="number"
+                placeholder="..."
+                value={importoOpereMax}
+                onChange={(e) => setImportoOpereMax(e.target.value)}
+              />
+            </div>
+            {/* Importo Servizi range */}
+            <div className="min-w-[120px]">
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Imp. Servizi min
+              </label>
+              <Input
+                type="number"
+                placeholder="0"
+                value={importoServiziMin}
+                onChange={(e) => setImportoServiziMin(e.target.value)}
+              />
+            </div>
+            <div className="min-w-[120px]">
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Imp. Servizi max
+              </label>
+              <Input
+                type="number"
+                placeholder="..."
+                value={importoServiziMax}
+                onChange={(e) => setImportoServiziMax(e.target.value)}
+              />
+            </div>
+            {/* Tipo Prestazione multi-select */}
+            <div className="min-w-[180px]">
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Tipo Prestazione
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-between font-normal">
+                    {tipoPrestazione.length === 0
+                      ? "Tutti"
+                      : `${tipoPrestazione.length} selezionati`}
+                    <ChevronDown className="w-4 h-4 ml-2 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[220px] p-2" align="start">
+                  <div className="space-y-1">
+                    {TIPO_PRESTAZIONE_OPTIONS.map((opt) => (
+                      <label
+                        key={opt.value}
+                        className="flex items-center gap-2 p-1.5 rounded hover:bg-muted cursor-pointer"
+                      >
+                        <Checkbox
+                          checked={tipoPrestazione.includes(opt.value)}
+                          onCheckedChange={() => toggleTipoPrestazione(opt.value)}
+                        />
+                        <span className="text-sm">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            {/* Livello Progettazione */}
+            <div className="min-w-[160px]">
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Livello Progettazione
+              </label>
+              <Select value={livelloProgettazione} onValueChange={setLivelloProgettazione}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tutti gli stati</SelectItem>
+                  <SelectItem value="all">Tutti</SelectItem>
+                  <SelectItem value="pfte">PFTE</SelectItem>
+                  <SelectItem value="definitivo">Definitivo</SelectItem>
+                  <SelectItem value="esecutivo">Esecutivo</SelectItem>
+                  <SelectItem value="variante">Variante</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Stato Commessa */}
+            <div className="min-w-[140px]">
+              <label className="text-sm font-medium text-foreground mb-1 block">
+                Stato Commessa
+              </label>
+              <Select value={statoCommessa} onValueChange={setStatoCommessa}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti</SelectItem>
                   <SelectItem value="in corso">In Corso</SelectItem>
                   <SelectItem value="sospesa">Sospesa</SelectItem>
                   <SelectItem value="conclusa">Conclusa</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Macro-categoria */}
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">
-                Macro-Categoria
-              </label>
-              <Select value={macroCategoriaFilter} onValueChange={setMacroCategoriaFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tutte le categorie</SelectItem>
-                  {MACRO_CATEGORIE.map((macro) => (
-                    <SelectItem key={macro.id} value={macro.id}>
-                      {macro.emoji} {macro.id} - {macro.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            {/* Date range */}
+            <div className="min-w-[140px]">
+              <label className="text-sm font-medium text-foreground mb-1 block">Data da</label>
+              <Input
+                type="date"
+                value={dataInizio}
+                onChange={(e) => setDataInizio(e.target.value)}
+              />
             </div>
-
-            {/* Range importo */}
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">
-                Range Importo Opere
-              </label>
-              <Select value={rangeImportoFilter} onValueChange={setRangeImportoFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {RANGE_IMPORTI.map((range) => (
-                    <SelectItem key={range.id} value={range.id}>
-                      {range.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="min-w-[140px]">
+              <label className="text-sm font-medium text-foreground mb-1 block">Data a</label>
+              <Input
+                type="date"
+                value={dataFine}
+                onChange={(e) => setDataFine(e.target.value)}
+              />
             </div>
           </div>
+        )}
 
-          {hasActiveFilters && (
-            <div className="mt-4 flex justify-end">
+        {/* Results bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 requisiti-no-print">
+          <span className="text-sm text-muted-foreground">
+            {filtered.length} classificazioni trovate su {rows.length} totali
+          </span>
+          <div className="flex items-center gap-2">
+            {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={resetFilters}>
                 <RotateCcw className="w-4 h-4 mr-2" />
-                Pulisci filtri
+                Reset Filtri
               </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Riepilogo Totale */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-primary">
-              {totaliGlobali.numeroCommesse}
-            </div>
-            <p className="text-sm text-muted-foreground">Commesse</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(totaliGlobali.totaleImportoOpere)}
-            </div>
-            <p className="text-sm text-muted-foreground">Importo Opere</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-teal-600">
-              {formatCurrency(totaliGlobali.totaleImportoServizi)}
-            </div>
-            <p className="text-sm text-muted-foreground">Importo Servizi</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-2xl font-bold text-purple-600">
-              {totaliGlobali.numeroClassificazioni}
-            </div>
-            <p className="text-sm text-muted-foreground">Classificazioni</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabella Macro-Categorie */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Riepilogo per Categoria</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y divide-border">
-            {aggregatoPerMacroCategoria.map((macro) => (
-              <div key={macro.macroCategoria.id}>
-                {/* Riga Macro-Categoria */}
-                <div
-                  onClick={() => toggleMacro(macro.macroCategoria.id)}
-                  className={`flex items-center justify-between p-4 hover:bg-muted cursor-pointer transition-colors ${
-                    macro.numeroCommesse === 0 ? "opacity-50" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    {expandedMacro.includes(macro.macroCategoria.id) ? (
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
-                    ) : (
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
-                    )}
-                    <span className="text-2xl">{macro.macroCategoria.emoji}</span>
-                    <div>
-                      <div className="font-semibold text-foreground">
-                        {macro.macroCategoria.id} - {macro.macroCategoria.nome}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {macro.numeroCommesse} commesse · {macro.numeroCategorie} categorie
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bold text-green-600">
-                      {formatCurrency(macro.totaleImportoOpere)}
-                    </div>
-                    <div className="text-sm text-teal-600">
-                      Servizi: {formatCurrency(macro.totaleImportoServizi)}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dettaglio Categorie */}
-                {expandedMacro.includes(macro.macroCategoria.id) && (
-                  <div className="bg-muted/50 border-t border-border">
-                    {macro.categorie.length === 0 ? (
-                      <div className="p-4 text-center text-muted-foreground text-sm">
-                        Nessuna commessa in questa categoria
-                      </div>
-                    ) : (
-                      macro.categorie.map((cat) => (
-                        <div key={cat.codice}>
-                          {/* Riga Categoria Specifica */}
-                          <div
-                            onClick={() => toggleCategoria(cat.codice)}
-                            className="flex items-center justify-between p-3 pl-12 hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
-                          >
-                            <div className="flex items-center gap-2">
-                              {expandedCategorie.includes(cat.codice) ? (
-                                <ChevronDown className="w-4 h-4 text-gray-400" />
-                              ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-400" />
-                              )}
-                              <div>
-                                <div className="font-medium text-foreground">
-                                  {cat.codice}
-                                  {cat.categoria && (
-                                    <span className="ml-2 text-sm font-normal text-muted-foreground">
-                                      {cat.categoria.descrizione}
-                                    </span>
-                                  )}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  {cat.numeroCommesse} commesse
-                                  {cat.categoria && ` · G = ${cat.categoria.G}`}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-green-600 text-sm">
-                                {formatCurrency(cat.totaleImportoOpere)}
-                              </div>
-                              <div className="text-xs text-teal-600">
-                                {formatCurrency(cat.totaleImportoServizi)}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Dettaglio Commesse */}
-                          {expandedCategorie.includes(cat.codice) && (
-                            <div className="bg-background border-t border-border">
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr className="border-b border-border bg-muted">
-                                    <th className="text-left p-2 pl-16 font-medium text-muted-foreground">
-                                      Commessa
-                                    </th>
-                                    <th className="text-left p-2 font-medium text-muted-foreground">
-                                      Cliente
-                                    </th>
-                                    <th className="text-center p-2 font-medium text-muted-foreground">
-                                      Anno
-                                    </th>
-                                    <th className="text-center p-2 font-medium text-muted-foreground">
-                                      Stato
-                                    </th>
-                                    <th className="text-right p-2 font-medium text-muted-foreground">
-                                      Importo Opere
-                                    </th>
-                                    <th className="text-right p-2 pr-4 font-medium text-muted-foreground">
-                                      Importo Servizi
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {cat.commesse.map((c, idx) => (
-                                    <tr
-                                      key={`${c.projectId}-${idx}`}
-                                      className="border-b border-border hover:bg-muted/50"
-                                    >
-                                      <td className="p-2 pl-16 font-mono text-primary">
-                                        {c.projectCode}
-                                      </td>
-                                      <td className="p-2 text-foreground">
-                                        {c.projectClient}
-                                      </td>
-                                      <td className="p-2 text-center text-muted-foreground">
-                                        {c.projectYear}
-                                      </td>
-                                      <td className="p-2 text-center">
-                                        <ProjectStatusBadge status={c.projectStatus as "in corso" | "conclusa" | "sospesa"} />
-                                      </td>
-                                      <td className="p-2 text-right font-medium text-green-600">
-                                        {formatCurrency(c.importo)}
-                                      </td>
-                                      <td className="p-2 pr-4 text-right text-teal-600">
-                                        {formatCurrency(c.importoServizio || 0)}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+            )}
+            <Button variant="outline" size="sm" onClick={exportExcel}>
+              <Download className="w-4 h-4 mr-2" />
+              Esporta Excel
+            </Button>
+            <Button variant="outline" size="sm" onClick={exportPDF}>
+              <FileText className="w-4 h-4 mr-2" />
+              Esporta PDF
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Nota informativa */}
-      <div className="text-sm text-muted-foreground text-center">
-        I dati sono aggregati dalle classificazioni DM 17/06/2016 inserite nelle singole commesse.
-        <br />
-        Per modificare le classificazioni, accedi alla scheda della commessa e modifica le prestazioni/DM2016.
+        {/* Table */}
+        <div className="overflow-x-auto border rounded-md">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-muted">
+                <SortHeader field="projectCode" className="text-left">
+                  Commessa
+                </SortHeader>
+                <SortHeader field="clientName" className="text-left">
+                  Cliente
+                </SortHeader>
+                <SortHeader field="projectYear" className="text-center">
+                  Anno
+                </SortHeader>
+                <SortHeader field="codiceDM" className="text-left">
+                  Cat. DM
+                </SortHeader>
+                <SortHeader field="descrizione" className="text-left">
+                  Descrizione
+                </SortHeader>
+                <SortHeader field="importoOpere" className="text-right">
+                  Imp. Opere
+                </SortHeader>
+                <SortHeader field="importoServizio" className="text-right">
+                  Imp. Servizi
+                </SortHeader>
+                <SortHeader field="prestazioneTipo" className="text-left">
+                  Prestazione
+                </SortHeader>
+                <SortHeader field="prestazioneLivello" className="text-left">
+                  Livello
+                </SortHeader>
+                <SortHeader field="prestazioneDataInizio" className="text-center">
+                  Data Inizio
+                </SortHeader>
+                <SortHeader field="prestazioneDataCompletamento" className="text-center">
+                  Data Fine
+                </SortHeader>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="p-8 text-center text-muted-foreground">
+                    Nessun risultato trovato
+                  </td>
+                </tr>
+              ) : (
+                sorted.map((r, idx) => (
+                  <tr
+                    key={`${r.projectCode}-${r.codiceDM}-${r.prestazioneTipo}-${idx}`}
+                    className="border-b hover:bg-muted/50"
+                  >
+                    <td className="p-2 font-mono text-primary whitespace-nowrap">
+                      {r.projectCode}
+                    </td>
+                    <td className="p-2 text-foreground max-w-[200px] truncate">{r.clientName}</td>
+                    <td className="p-2 text-center text-muted-foreground">{r.projectYear}</td>
+                    <td className="p-2 font-mono whitespace-nowrap">{r.codiceDM}</td>
+                    <td className="p-2 text-muted-foreground max-w-[250px] truncate" title={getDescription(r.codiceDM)}>
+                      {getDescription(r.codiceDM)}
+                    </td>
+                    <td className="p-2 text-right font-medium text-green-600 whitespace-nowrap">
+                      {formatCurrency(r.importoOpere)}
+                    </td>
+                    <td className="p-2 text-right text-teal-600 whitespace-nowrap">
+                      {formatCurrency(r.importoServizio)}
+                    </td>
+                    <td className="p-2 whitespace-nowrap">{capitalize(r.prestazioneTipo)}</td>
+                    <td className="p-2 text-muted-foreground whitespace-nowrap">
+                      {r.prestazioneLivello ? capitalize(r.prestazioneLivello) : ""}
+                    </td>
+                    <td className="p-2 text-center text-muted-foreground whitespace-nowrap">
+                      {formatDate(r.prestazioneDataInizio)}
+                    </td>
+                    <td className="p-2 text-center text-muted-foreground whitespace-nowrap">
+                      {formatDate(r.prestazioneDataCompletamento)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
