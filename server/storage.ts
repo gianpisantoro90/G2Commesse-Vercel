@@ -3104,6 +3104,7 @@ export class DatabaseStorage implements IStorage {
     const validProjectIds = new Set<string>();
     const validProjectCodes = new Set<string>();
     const validUserIds = new Set<string>();
+    const validPrestazioneIds = new Set<string>();
 
     if (mode === 'merge') {
       // In merge mode, existing DB records satisfy FK constraints
@@ -3117,8 +3118,6 @@ export class DatabaseStorage implements IStorage {
       const existingPrestazioni = await db.select({ id: projectPrestazioni.id }).from(projectPrestazioni);
       for (const p of existingPrestazioni) validPrestazioneIds.add(p.id);
     }
-
-    const validPrestazioneIds = new Set<string>();
 
     // Also add IDs from the import data itself (they'll be inserted before dependents)
     if (data.projects) for (const p of data.projects) {
@@ -3447,35 +3446,8 @@ export class DatabaseStorage implements IStorage {
         }
       }
 
-      // 11. Invoices (depends on projects)
-      if (data.invoices && data.invoices.length > 0) {
-        report.entities.invoices = { created: 0, updated: 0, skipped: 0, errors: [] };
-        const invoicesWithDates = this.convertTimestampsToDate(data.invoices, ['createdAt', 'updatedAt', 'dataEmissione', 'dataPagamento', 'scadenzaPagamento']);
-        for (const invoice of invoicesWithDates) {
-          if (!validProjectIds.has(invoice.projectId)) {
-            report.entities.invoices.skipped++;
-            report.entities.invoices.errors.push(`Fattura ${invoice.numeroFattura}: projectId non trovato`);
-            continue;
-          }
-          try {
-            if (mode === 'merge') {
-              const { id: _id, ...fields } = invoice as any;
-              await tx.insert(projectInvoices).values(invoice).onConflictDoUpdate({
-                target: projectInvoices.id,
-                set: fields
-              });
-              report.entities.invoices.updated++;
-            } else {
-              await tx.insert(projectInvoices).values(invoice);
-              report.entities.invoices.created++;
-            }
-          } catch (err: any) {
-            report.entities.invoices.errors.push(`Fattura ${invoice.numeroFattura}: ${err.message}`);
-          }
-        }
-      }
-
-      // 12. Prestazioni (depends on projects)
+      // 11. Prestazioni (depends on projects — MUST be before invoices due to FK)
+      //     Moved before invoices because invoices.prestazione_id → project_prestazioni.id
       if (data.prestazioni && data.prestazioni.length > 0) {
         report.entities.prestazioni = { created: 0, updated: 0, skipped: 0, errors: [] };
         const prestazioniWithDates = this.convertTimestampsToDate(data.prestazioni, ['createdAt', 'updatedAt', 'dataInizio', 'dataCompletamento', 'dataFatturazione', 'dataPagamento']);
@@ -3499,6 +3471,34 @@ export class DatabaseStorage implements IStorage {
             }
           } catch (err: any) {
             report.entities.prestazioni.errors.push(`Prestazione ${prestazione.tipo}: ${err.message}`);
+          }
+        }
+      }
+
+      // 12. Invoices (depends on projects + prestazioni)
+      if (data.invoices && data.invoices.length > 0) {
+        report.entities.invoices = { created: 0, updated: 0, skipped: 0, errors: [] };
+        const invoicesWithDates = this.convertTimestampsToDate(data.invoices, ['createdAt', 'updatedAt', 'dataEmissione', 'dataPagamento', 'scadenzaPagamento']);
+        for (const invoice of invoicesWithDates) {
+          if (!validProjectIds.has(invoice.projectId)) {
+            report.entities.invoices.skipped++;
+            report.entities.invoices.errors.push(`Fattura ${invoice.numeroFattura}: projectId non trovato`);
+            continue;
+          }
+          try {
+            if (mode === 'merge') {
+              const { id: _id, ...fields } = invoice as any;
+              await tx.insert(projectInvoices).values(invoice).onConflictDoUpdate({
+                target: projectInvoices.id,
+                set: fields
+              });
+              report.entities.invoices.updated++;
+            } else {
+              await tx.insert(projectInvoices).values(invoice);
+              report.entities.invoices.created++;
+            }
+          } catch (err: any) {
+            report.entities.invoices.errors.push(`Fattura ${invoice.numeroFattura}: ${err.message}`);
           }
         }
       }
