@@ -384,10 +384,11 @@ export default function ProjectsTable() {
           <Button
             variant="outline"
             onClick={() => refetch()}
+            disabled={isFetching}
             className="button-g2-secondary"
             data-testid="refresh-projects"
           >
-            🔄 Aggiorna
+            <span className={isFetching ? "animate-spin inline-block" : ""}>🔄</span> {isFetching ? "Caricamento..." : "Aggiorna"}
           </Button>
         </div>
 
