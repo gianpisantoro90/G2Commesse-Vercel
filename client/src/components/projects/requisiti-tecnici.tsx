@@ -70,6 +70,27 @@ const TIPO_PRESTAZIONE_OPTIONS: { value: string; label: string }[] = [
   { value: "pratiche", label: "Pratiche" },
 ];
 
+// Aggregated row: one per projectCode + codiceDM, with all prestazioni grouped
+interface RequisitoAggregato {
+  projectCode: string;
+  projectYear: string;
+  projectStatus: string;
+  clientName: string;
+  codiceDM: string;
+  importoOpere: number;
+  importoServizio: number;
+  prestazioni: Array<{
+    tipo: string;
+    livello: string | null;
+    dataInizio: string | null;
+    dataCompletamento: string | null;
+  }>;
+  // Derived for sorting/display
+  prestazioniLabel: string;
+  dataInizioMin: string | null;
+  dataFineMax: string | null;
+}
+
 type SortField =
   | "projectCode"
   | "clientName"
@@ -78,10 +99,9 @@ type SortField =
   | "descrizione"
   | "importoOpere"
   | "importoServizio"
-  | "prestazioneTipo"
-  | "prestazioneLivello"
-  | "prestazioneDataInizio"
-  | "prestazioneDataCompletamento";
+  | "prestazioniLabel"
+  | "dataInizioMin"
+  | "dataFineMax";
 
 // ---------- Helpers ----------
 const formatCurrency = (value: number) =>
@@ -252,9 +272,66 @@ export default function RequisitiTecnici() {
     dataFine,
   ]);
 
+  // Aggregate: group by projectCode + codiceDM
+  const aggregated = useMemo((): RequisitoAggregato[] => {
+    const map = new Map<string, RequisitoAggregato>();
+    for (const r of filtered) {
+      const key = `${r.projectCode}||${r.codiceDM}`;
+      let agg = map.get(key);
+      if (!agg) {
+        agg = {
+          projectCode: r.projectCode,
+          projectYear: r.projectYear,
+          projectStatus: r.projectStatus,
+          clientName: r.clientName,
+          codiceDM: r.codiceDM,
+          importoOpere: r.importoOpere,
+          importoServizio: r.importoServizio,
+          prestazioni: [],
+          prestazioniLabel: "",
+          dataInizioMin: null,
+          dataFineMax: null,
+        };
+        map.set(key, agg);
+      }
+      // Sum importi across prestazioni for same project+DM
+      if (agg.prestazioni.length > 0) {
+        agg.importoServizio += r.importoServizio || 0;
+      }
+      agg.prestazioni.push({
+        tipo: r.prestazioneTipo,
+        livello: r.prestazioneLivello,
+        dataInizio: r.prestazioneDataInizio,
+        dataCompletamento: r.prestazioneDataCompletamento,
+      });
+      // Track earliest start and latest end
+      if (r.prestazioneDataInizio) {
+        if (!agg.dataInizioMin || r.prestazioneDataInizio < agg.dataInizioMin) {
+          agg.dataInizioMin = r.prestazioneDataInizio;
+        }
+      }
+      if (r.prestazioneDataCompletamento) {
+        if (!agg.dataFineMax || r.prestazioneDataCompletamento > agg.dataFineMax) {
+          agg.dataFineMax = r.prestazioneDataCompletamento;
+        }
+      }
+    }
+    // Build prestazioni label
+    const result = Array.from(map.values());
+    for (const agg of result) {
+      const labels = agg.prestazioni.map((p: { tipo: string; livello: string | null }) => {
+        let label = capitalize(p.tipo);
+        if (p.livello) label += ` (${capitalize(p.livello)})`;
+        return label;
+      });
+      agg.prestazioniLabel = labels.join(", ");
+    }
+    return result;
+  }, [filtered]);
+
   // Sorting
   const sorted = useMemo(() => {
-    const arr = [...filtered];
+    const arr = [...aggregated];
     arr.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
@@ -264,8 +341,8 @@ export default function RequisitiTecnici() {
         case "importoServizio":
           cmp = a.importoServizio - b.importoServizio;
           break;
-        case "prestazioneDataInizio":
-        case "prestazioneDataCompletamento": {
+        case "dataInizioMin":
+        case "dataFineMax": {
           const va = a[sortField] || "";
           const vb = b[sortField] || "";
           cmp = va.localeCompare(vb);
@@ -281,18 +358,18 @@ export default function RequisitiTecnici() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return arr;
-  }, [filtered, sortField, sortDir]);
+  }, [aggregated, sortField, sortDir]);
 
-  // Summary (from filtered data)
+  // Summary (from aggregated data)
   const summary = useMemo(() => {
-    const uniqueProjects = new Set(filtered.map((r) => r.projectCode));
+    const uniqueProjects = new Set(aggregated.map((r) => r.projectCode));
     return {
       commesse: uniqueProjects.size,
-      totaleOpere: filtered.reduce((s, r) => s + r.importoOpere, 0),
-      totaleServizi: filtered.reduce((s, r) => s + r.importoServizio, 0),
-      classificazioni: filtered.length,
+      totaleOpere: aggregated.reduce((s, r) => s + r.importoOpere, 0),
+      totaleServizi: aggregated.reduce((s, r) => s + r.importoServizio, 0),
+      classificazioni: aggregated.length,
     };
-  }, [filtered]);
+  }, [aggregated]);
 
   // Sort handler
   const toggleSort = useCallback(
@@ -317,14 +394,9 @@ export default function RequisitiTecnici() {
       Descrizione: getCategoriaById(r.codiceDM)?.destinazioneFunzionale || "",
       "Importo Opere (\u20ac)": r.importoOpere || 0,
       "Importo Servizi (\u20ac)": r.importoServizio || 0,
-      Prestazione: r.prestazioneTipo,
-      Livello: r.prestazioneLivello || "",
-      "Data Inizio": r.prestazioneDataInizio
-        ? new Date(r.prestazioneDataInizio).toLocaleDateString("it-IT")
-        : "",
-      "Data Fine": r.prestazioneDataCompletamento
-        ? new Date(r.prestazioneDataCompletamento).toLocaleDateString("it-IT")
-        : "",
+      Prestazioni: r.prestazioniLabel,
+      "Data Inizio": formatDate(r.dataInizioMin),
+      "Data Fine": formatDate(r.dataFineMax),
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
@@ -707,7 +779,7 @@ export default function RequisitiTecnici() {
         {/* Results bar */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 requisiti-no-print">
           <span className="text-sm text-muted-foreground">
-            {filtered.length} classificazioni trovate su {rows.length} totali
+            {aggregated.length} risultati trovati ({summary.commesse} commesse)
           </span>
           <div className="flex items-center gap-2">
             {hasActiveFilters && (
@@ -753,16 +825,13 @@ export default function RequisitiTecnici() {
                 <SortHeader field="importoServizio" className="text-right">
                   Imp. Servizi
                 </SortHeader>
-                <SortHeader field="prestazioneTipo" className="text-left">
-                  Prestazione
+                <SortHeader field="prestazioniLabel" className="text-left">
+                  Prestazioni
                 </SortHeader>
-                <SortHeader field="prestazioneLivello" className="text-left">
-                  Livello
-                </SortHeader>
-                <SortHeader field="prestazioneDataInizio" className="text-center">
+                <SortHeader field="dataInizioMin" className="text-center">
                   Data Inizio
                 </SortHeader>
-                <SortHeader field="prestazioneDataCompletamento" className="text-center">
+                <SortHeader field="dataFineMax" className="text-center">
                   Data Fine
                 </SortHeader>
               </tr>
@@ -770,14 +839,14 @@ export default function RequisitiTecnici() {
             <tbody>
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-8 text-center text-muted-foreground">
                     Nessun risultato trovato
                   </td>
                 </tr>
               ) : (
-                sorted.map((r, idx) => (
+                sorted.map((r) => (
                   <tr
-                    key={`${r.projectCode}-${r.codiceDM}-${r.prestazioneTipo}-${idx}`}
+                    key={`${r.projectCode}-${r.codiceDM}`}
                     className="border-b hover:bg-muted/50"
                   >
                     <td className="p-2 font-mono text-primary whitespace-nowrap">
@@ -795,15 +864,31 @@ export default function RequisitiTecnici() {
                     <td className="p-2 text-right text-teal-600 whitespace-nowrap">
                       {formatCurrency(r.importoServizio)}
                     </td>
-                    <td className="p-2 whitespace-nowrap">{capitalize(r.prestazioneTipo)}</td>
-                    <td className="p-2 text-muted-foreground whitespace-nowrap">
-                      {r.prestazioneLivello ? capitalize(r.prestazioneLivello) : ""}
+                    <td className="p-2 text-foreground">
+                      {r.prestazioni.length === 1 ? (
+                        <span className="whitespace-nowrap">
+                          {capitalize(r.prestazioni[0].tipo)}
+                          {r.prestazioni[0].livello ? ` (${capitalize(r.prestazioni[0].livello)})` : ""}
+                        </span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {r.prestazioni.map((p, i) => (
+                            <span
+                              key={i}
+                              className="inline-block bg-muted px-1.5 py-0.5 rounded text-xs"
+                            >
+                              {capitalize(p.tipo)}
+                              {p.livello ? ` (${capitalize(p.livello)})` : ""}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td className="p-2 text-center text-muted-foreground whitespace-nowrap">
-                      {formatDate(r.prestazioneDataInizio)}
+                      {formatDate(r.dataInizioMin)}
                     </td>
                     <td className="p-2 text-center text-muted-foreground whitespace-nowrap">
-                      {formatDate(r.prestazioneDataCompletamento)}
+                      {formatDate(r.dataFineMax)}
                     </td>
                   </tr>
                 ))
