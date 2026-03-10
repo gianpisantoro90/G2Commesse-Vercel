@@ -22,7 +22,8 @@ import {
   ArrowRight,
   Link as LinkIcon,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Copy
 } from "lucide-react";
 import { type Project, type ProjectPrestazione, type ProjectInvoice, PRESTAZIONE_TIPI, PRESTAZIONE_STATI, LIVELLI_PROGETTAZIONE } from "@shared/schema";
 import { QK } from "@/lib/query-utils";
@@ -193,6 +194,23 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
       return response.json();
     },
     onSuccess: invalidateAfterClassificazione,
+  });
+
+  const copyClassMutation = useMutation({
+    mutationFn: async ({ fromId, toId }: { fromId: string; toId: string }) => {
+      const response = await apiRequest("POST", `/api/prestazioni/${fromId}/classificazioni/copy-to/${toId}`);
+      return response.json();
+    },
+    onSuccess: (data: { copied: number; skipped: number }) => {
+      invalidateAfterClassificazione();
+      toast({
+        title: "Classificazioni copiate",
+        description: `${data.copied} copiate${data.skipped > 0 ? `, ${data.skipped} già presenti` : ''}`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile copiare le classificazioni", variant: "destructive" });
+    },
   });
 
   const getClassificazioniForPrestazione = (prestazioneId: string) => {
@@ -466,20 +484,55 @@ export default function PrestazioniTracker({ project }: PrestazioniTrackerProps)
                       <div className="mt-2 space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-xs font-medium text-muted-foreground">Classificazioni DM 17/06/2016</span>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-6 text-xs px-2"
-                            onClick={() => {
-                              createClassMutation.mutate({
-                                prestazioneId: prestazione.id,
-                                data: { codiceDM: 'E.01', importoOpere: 0, importoServizio: 0 },
-                              });
-                            }}
-                          >
-                            <Plus className="w-3 h-3 mr-1" /> Aggiungi
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            {/* Copia da altra prestazione */}
+                            {(() => {
+                              const otherWithClass = prestazioni.filter(p =>
+                                p.id !== prestazione.id && getClassificazioniForPrestazione(p.id).length > 0
+                              );
+                              if (otherWithClass.length === 0) return null;
+                              return (
+                                <Select
+                                  value=""
+                                  onValueChange={(fromId) => {
+                                    copyClassMutation.mutate({ fromId, toId: prestazione.id });
+                                  }}
+                                >
+                                  <SelectTrigger className="h-6 text-xs px-2 w-auto gap-1">
+                                    <Copy className="w-3 h-3" />
+                                    <span>Copia da...</span>
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {otherWithClass.map(p => {
+                                      const pConfig = PRESTAZIONE_CONFIG[p.tipo] || { label: p.tipo, icon: '📋' };
+                                      const pClass = getClassificazioniForPrestazione(p.id);
+                                      return (
+                                        <SelectItem key={p.id} value={p.id} className="text-xs">
+                                          {pConfig.icon} {pConfig.label}
+                                          {p.livelloProgettazione && ` (${LIVELLO_CONFIG[p.livelloProgettazione]})`}
+                                          {' '}&mdash; {pClass.length} class.
+                                        </SelectItem>
+                                      );
+                                    })}
+                                  </SelectContent>
+                                </Select>
+                              );
+                            })()}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-6 text-xs px-2"
+                              onClick={() => {
+                                createClassMutation.mutate({
+                                  prestazioneId: prestazione.id,
+                                  data: { codiceDM: 'E.01', importoOpere: 0, importoServizio: 0 },
+                                });
+                              }}
+                            >
+                              <Plus className="w-3 h-3 mr-1" /> Aggiungi
+                            </Button>
+                          </div>
                         </div>
 
                         {classificazioni.length > 0 ? (

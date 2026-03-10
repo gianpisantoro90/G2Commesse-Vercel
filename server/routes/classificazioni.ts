@@ -91,6 +91,49 @@ export function registerClassificazioniRoutes(app: Express): void {
     }
   });
 
+  // Copy classificazioni from one prestazione to another (same project)
+  app.post("/api/prestazioni/:fromId/classificazioni/copy-to/:toId", requireAuth, async (req, res) => {
+    try {
+      const fromPrestazione = await storage.getPrestazione(req.params.fromId);
+      const toPrestazione = await storage.getPrestazione(req.params.toId);
+
+      if (!fromPrestazione || !toPrestazione) {
+        return res.status(404).json({ message: "Prestazione non trovata" });
+      }
+      if (fromPrestazione.projectId !== toPrestazione.projectId) {
+        return res.status(400).json({ message: "Le prestazioni devono appartenere allo stesso progetto" });
+      }
+
+      const sourceClassificazioni = await storage.getClassificazioniByPrestazione(req.params.fromId);
+      if (sourceClassificazioni.length === 0) {
+        return res.status(400).json({ message: "La prestazione sorgente non ha classificazioni" });
+      }
+
+      let copied = 0;
+      let skipped = 0;
+      for (const c of sourceClassificazioni) {
+        try {
+          await storage.createClassificazione({
+            prestazioneId: req.params.toId,
+            projectId: toPrestazione.projectId,
+            codiceDM: c.codiceDM,
+            importoOpere: c.importoOpere ?? 0,
+            importoServizio: c.importoServizio ?? 0,
+            note: c.note,
+          });
+          copied++;
+        } catch (err: any) {
+          if (err.code === '23505') { skipped++; continue; } // Skip duplicates
+          throw err;
+        }
+      }
+
+      res.json({ copied, skipped, total: sourceClassificazioni.length });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Migration: copy metadata classificazioni to new table
   app.post("/api/prestazioni/migrate-classificazioni", async (req, res) => {
     try {
