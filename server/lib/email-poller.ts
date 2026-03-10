@@ -21,6 +21,13 @@ class EmailPoller {
   private storage: IStorage | null = null;
 
   /**
+   * Check if storage is initialized
+   */
+  hasStorage(): boolean {
+    return this.storage !== null;
+  }
+
+  /**
    * Initialize email poller with configuration
    */
   initialize(storage: IStorage) {
