@@ -187,9 +187,16 @@ export function registerEmailRoutes(app: Express): void {
     try {
       logger.info('Manual email check triggered by user');
       const result = await emailPoller.checkEmails();
-      const message = result.found === 0
-        ? "Nessuna nuova email trovata"
-        : `Trovate ${result.found} email, ${result.processed} elaborate con successo`;
+      let message: string;
+      if (result.found === 0) {
+        message = "Nessuna nuova email trovata";
+      } else {
+        const parts: string[] = [`Trovate ${result.found} email`];
+        if (result.processed > 0) parts.push(`${result.processed} elaborate`);
+        if (result.filtered > 0) parts.push(`${result.filtered} filtrate (spam/duplicati)`);
+        if (result.errors.length > 0) parts.push(`${result.errors.length} errori`);
+        message = parts.join(', ');
+      }
       res.json({ message, status: "success", ...result });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Errore nel controllo delle email";

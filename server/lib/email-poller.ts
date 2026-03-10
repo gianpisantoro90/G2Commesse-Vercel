@@ -89,10 +89,10 @@ class EmailPoller {
   /**
    * Check for new emails (can be called manually)
    */
-  async checkEmails(): Promise<{ found: number; processed: number }> {
+  async checkEmails(): Promise<{ found: number; processed: number; filtered: number; errors: string[] }> {
     if (this.isProcessing) {
       logger.debug('Email check already in progress, skipping');
-      return { found: 0, processed: 0 };
+      return { found: 0, processed: 0, filtered: 0, errors: [] };
     }
 
     if (!this.config) {
@@ -114,22 +114,31 @@ class EmailPoller {
           logger.debug('No new emails found');
         }
         this.isProcessing = false;
-        return { found: 0, processed: 0 };
+        return { found: 0, processed: 0, filtered: 0, errors: [] };
       }
 
       logger.info(`Found ${emails.length} new email(s)`);
 
       let processed = 0;
+      let filtered = 0;
+      const errors: string[] = [];
       // Process each email
       for (const emailData of emails) {
         try {
-          await this.processEmail(emailData);
-          processed++;
+          const result = await this.processEmail(emailData);
+          if (typeof result === 'string' && result.startsWith('filtered:')) {
+            filtered++;
+          } else {
+            processed++;
+          }
         } catch (error) {
-          logger.error('Failed to process email', { error, subject: emailData.parsed.subject });
+          const subject = emailData.parsed.subject || '(senza oggetto)';
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          errors.push(`"${subject}": ${errorMsg}`);
+          logger.error('Failed to process email', { error, subject });
         }
       }
-      return { found: emails.length, processed };
+      return { found: emails.length, processed, filtered, errors };
     } catch (error) {
       logger.error('Email check failed', { error });
       throw error;
@@ -502,7 +511,7 @@ class EmailPoller {
         });
         // Mark as read and skip processing
         await this.markAsRead(emailData.uid);
-        return;
+        return 'filtered:spam';
       }
 
       // Get all projects for AI matching
@@ -543,7 +552,7 @@ class EmailPoller {
 
         // Mark as read to avoid re-processing
         await this.markAsRead(emailData.uid);
-        return;
+        return 'filtered:duplicate';
       }
 
       // Check auto-approval configuration

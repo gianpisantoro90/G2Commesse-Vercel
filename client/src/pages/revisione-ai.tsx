@@ -52,10 +52,13 @@ export default function RevisioneAI() {
       queryClient.invalidateQueries({ queryKey: QK.aiSuggestedDeadlines });
       queryClient.invalidateQueries({ queryKey: QK.communications });
 
+      const hasErrors = data.errors && data.errors.length > 0;
       toast({
-        title: "Controllo Completato",
-        description: data.message,
-        variant: "default",
+        title: hasErrors ? "Controllo Completato con Errori" : "Controllo Completato",
+        description: hasErrors
+          ? `${data.message}\n${data.errors.join('\n')}`
+          : data.message,
+        variant: hasErrors ? "destructive" : "default",
       });
     } catch (error) {
       toast({
