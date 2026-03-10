@@ -41,7 +41,8 @@ import {
   Search,
   FolderOpen,
   Loader2,
-  XCircle
+  XCircle,
+  Pencil
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -366,22 +367,13 @@ export function CommunicationsReview() {
                         </div>
                       )}
 
-                      {/* Project suggestions */}
-                      <div className="flex items-center gap-2">
-                        {comm.aiSuggestions?.projectMatches && comm.aiSuggestions.projectMatches.length > 0 ? (
-                          <>
-                            <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
-                            <Badge variant="secondary" className="text-xs">
-                              {comm.aiSuggestions.projectMatches.length} progett{comm.aiSuggestions.projectMatches.length === 1 ? 'o' : 'i'}
-                            </Badge>
-                          </>
-                        ) : (
-                          <>
-                            <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
-                            <span className="text-xs text-muted-foreground">Nessun progetto suggerito</span>
-                          </>
-                        )}
-                      </div>
+                      {/* Project AI info (no match fallback) */}
+                      {!comm.aiSuggestions?.projectMatches?.[0] && (
+                        <div className="flex items-center gap-1.5">
+                          <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
+                          <span className="text-xs text-muted-foreground">Nessun progetto suggerito</span>
+                        </div>
+                      )}
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 pt-2 border-t">
@@ -497,22 +489,37 @@ export function CommunicationsReview() {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      {comm.aiSuggestions?.projectMatches?.[0] ? (
-                        <div className="flex items-center gap-1.5">
-                          <Badge variant="outline" className="font-mono text-xs">
-                            {comm.aiSuggestions.projectMatches[0].projectCode}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {Math.round(comm.aiSuggestions.projectMatches[0].confidence * 100)}%
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5">
-                          <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
-                          <span className="text-xs text-muted-foreground">Nessuno</span>
-                        </div>
-                      )}
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-1.5">
+                        {comm.aiSuggestions?.projectMatches?.[0] ? (
+                          <>
+                            <Badge variant="outline" className="font-mono text-xs">
+                              {comm.aiSuggestions.projectMatches[0].projectCode}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {Math.round(comm.aiSuggestions.projectMatches[0].confidence * 100)}%
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
+                            <span className="text-xs text-muted-foreground">Nessuno</span>
+                          </>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 ml-1"
+                          title="Assegna manualmente"
+                          onClick={() => {
+                            setProjectSearch("");
+                            setSelectedProjectId(null);
+                            setSelectedComm(comm);
+                          }}
+                        >
+                          <Pencil className="h-3 w-3 text-muted-foreground" />
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -666,7 +673,7 @@ export function CommunicationsReview() {
             </div>
 
             {/* AI Suggestions */}
-            {selectedComm?.aiSuggestions?.projectMatches && selectedComm.aiSuggestions.projectMatches.length > 0 ? (
+            {selectedComm?.aiSuggestions?.projectMatches && selectedComm.aiSuggestions.projectMatches.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
@@ -694,116 +701,102 @@ export function CommunicationsReview() {
                   onProjectSelected={handleProjectAssigned}
                 />
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                    <span className="font-medium text-yellow-800 dark:text-yellow-200">
-                      Nessun progetto suggerito dall'AI
-                    </span>
-                  </div>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    Puoi assegnare manualmente questa comunicazione a una commessa esistente.
-                  </p>
-                </div>
-
-                {/* Manual project selection */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <FolderOpen className="h-5 w-5 text-teal-600 dark:text-teal-400" />
-                    <h4 className="font-semibold text-foreground">Assegna a Commessa</h4>
-                  </div>
-
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Cerca per codice, cliente o oggetto..."
-                      value={projectSearch}
-                      onChange={(e) => setProjectSearch(e.target.value)}
-                      className="pl-10"
-                      data-testid="input-project-search"
-                    />
-                  </div>
-
-                  <ScrollArea className="h-[200px] rounded-md border">
-                    <div className="p-2 space-y-1">
-                      {filteredProjects.length === 0 ? (
-                        <div className="text-center py-4 text-sm text-muted-foreground">
-                          {projectSearch ? "Nessuna commessa trovata" : "Inizia a digitare per cercare..."}
-                        </div>
-                      ) : (
-                        filteredProjects.map((project) => (
-                          <div
-                            key={project.id}
-                            onClick={() => setSelectedProjectId(project.id.toString())}
-                            className={`p-3 rounded-lg cursor-pointer transition-all ${
-                              selectedProjectId === project.id.toString()
-                                ? "bg-teal-100 dark:bg-teal-900/30 border-2 border-teal-500"
-                                : "hover:bg-muted border border-transparent"
-                            }`}
-                            data-testid={`project-option-${project.id}`}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                  <Badge variant="outline" className="font-mono text-xs shrink-0">
-                                    {project.code}
-                                  </Badge>
-                                  {selectedProjectId === project.id.toString() && (
-                                    <CheckCircle2 className="h-4 w-4 text-teal-600 shrink-0" />
-                                  )}
-                                </div>
-                                <p className="text-sm font-medium text-foreground mt-1 truncate">
-                                  {project.client}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {project.object}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </ScrollArea>
-
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      onClick={() => {
-                        if (selectedComm && selectedProjectId) {
-                          assignProjectMutation.mutate({
-                            communicationId: selectedComm.id,
-                            projectId: selectedProjectId,
-                          });
-                        }
-                      }}
-                      disabled={!selectedProjectId || assignProjectMutation.isPending}
-                      className="flex-1"
-                      data-testid="button-assign-project"
-                    >
-                      {assignProjectMutation.isPending ? (
-                        "Assegnazione..."
-                      ) : (
-                        <>
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Assegna a Commessa
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => selectedComm && handleDismiss([selectedComm.id])}
-                      disabled={dismissMutation.isPending}
-                      data-testid="button-dismiss-no-match"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Ignora
-                    </Button>
-                  </div>
-                </div>
-              </div>
             )}
+
+            {/* Manual project selection — always visible */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <FolderOpen className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                <h4 className="font-semibold text-foreground">Assegna Manualmente</h4>
+              </div>
+
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Cerca per codice, cliente o oggetto..."
+                  value={projectSearch}
+                  onChange={(e) => setProjectSearch(e.target.value)}
+                  className="pl-10"
+                  data-testid="input-project-search"
+                />
+              </div>
+
+              <ScrollArea className="h-[200px] rounded-md border">
+                <div className="p-2 space-y-1">
+                  {filteredProjects.length === 0 ? (
+                    <div className="text-center py-4 text-sm text-muted-foreground">
+                      {projectSearch ? "Nessuna commessa trovata" : "Inizia a digitare per cercare..."}
+                    </div>
+                  ) : (
+                    filteredProjects.map((project) => (
+                      <div
+                        key={project.id}
+                        onClick={() => setSelectedProjectId(project.id.toString())}
+                        className={`p-3 rounded-lg cursor-pointer transition-all ${
+                          selectedProjectId === project.id.toString()
+                            ? "bg-teal-100 dark:bg-teal-900/30 border-2 border-teal-500"
+                            : "hover:bg-muted border border-transparent"
+                        }`}
+                        data-testid={`project-option-${project.id}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="font-mono text-xs shrink-0">
+                                {project.code}
+                              </Badge>
+                              {selectedProjectId === project.id.toString() && (
+                                <CheckCircle2 className="h-4 w-4 text-teal-600 shrink-0" />
+                              )}
+                            </div>
+                            <p className="text-sm font-medium text-foreground mt-1 truncate">
+                              {project.client}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {project.object}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  onClick={() => {
+                    if (selectedComm && selectedProjectId) {
+                      assignProjectMutation.mutate({
+                        communicationId: selectedComm.id,
+                        projectId: selectedProjectId,
+                      });
+                    }
+                  }}
+                  disabled={!selectedProjectId || assignProjectMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-assign-project"
+                >
+                  {assignProjectMutation.isPending ? (
+                    "Assegnazione..."
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Assegna a Commessa
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => selectedComm && handleDismiss([selectedComm.id])}
+                  disabled={dismissMutation.isPending}
+                  data-testid="button-dismiss-no-match"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Ignora
+                </Button>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
