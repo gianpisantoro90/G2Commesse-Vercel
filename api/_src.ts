@@ -17,10 +17,12 @@ function getApp() {
 }
 
 // Disable Vercel's body parser — Express handles parsing + gzip decompression
+// maxDuration: 300s (Vercel Pro max) needed for email check with multiple AI calls
 export const config = {
   api: {
     bodyParser: false,
   },
+  maxDuration: 300,
 };
 
 // Vercel serverless handler
