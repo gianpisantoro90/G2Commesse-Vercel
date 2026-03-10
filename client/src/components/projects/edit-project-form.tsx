@@ -21,7 +21,7 @@ import {
 } from "@/lib/prestazioni-utils";
 import { CATEGORIE_DM2016 } from "@/lib/parcella-calculator";
 import { ClientCombobox } from "@/components/ui/client-combobox";
-import { ChevronDown, ChevronUp, Plus, Trash2, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, Trash2, Loader2, Copy } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import ProjectHealthCard from "./project-health-card";
 
@@ -138,6 +138,23 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       await apiRequest("DELETE", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`);
     },
     onSuccess: invalidateAfterClassificazione,
+  });
+
+  const copyClassificazioniMutation = useMutation({
+    mutationFn: async ({ fromId, toId }: { fromId: string; toId: string }) => {
+      const response = await apiRequest("POST", `/api/prestazioni/${fromId}/classificazioni/copy-to/${toId}`);
+      return response.json();
+    },
+    onSuccess: (data: { copied: number; skipped: number }) => {
+      invalidateAfterClassificazione();
+      toast({
+        title: "Classificazioni copiate",
+        description: `${data.copied} copiate${data.skipped > 0 ? `, ${data.skipped} già presenti` : ''}`,
+      });
+    },
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile copiare le classificazioni", variant: "destructive" });
+    },
   });
 
   // Helper: find the DB prestazione record for a given tipo
@@ -579,20 +596,54 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                             <div className="ml-6 mt-2 p-3 border border-dashed border-border rounded-lg bg-muted/30 space-y-2">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs font-medium text-muted-foreground">Classificazioni DM 17/06/2016</span>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-6 text-xs px-2"
-                                  onClick={() => {
-                                    createClassificazioneMutation.mutate({
-                                      prestazioneId: dbPrestazione.id,
-                                      data: { codiceDM: 'E.01', importoOpere: 0, importoServizio: 0 },
-                                    });
-                                  }}
-                                >
-                                  <Plus className="w-3 h-3 mr-1" /> Aggiungi
-                                </Button>
+                                <div className="flex items-center gap-1">
+                                  {/* Copia da altra prestazione */}
+                                  {(() => {
+                                    const otherWithClass = dbPrestazioni.filter((p: any) =>
+                                      p.id !== dbPrestazione.id && getClassificazioniForPrestazione(p.id).length > 0
+                                    );
+                                    if (otherWithClass.length === 0) return null;
+                                    return (
+                                      <Select
+                                        value=""
+                                        onValueChange={(fromId) => {
+                                          copyClassificazioniMutation.mutate({ fromId, toId: dbPrestazione.id });
+                                        }}
+                                      >
+                                        <SelectTrigger className="h-6 text-xs px-2 w-auto gap-1">
+                                          <Copy className="w-3 h-3" />
+                                          <span>Copia da...</span>
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {otherWithClass.map((p: any) => {
+                                            const pConfig = prestazioniList.find(pl => pl.id === p.tipo)?.config;
+                                            const pClass = getClassificazioniForPrestazione(p.id);
+                                            return (
+                                              <SelectItem key={p.id} value={p.id} className="text-xs">
+                                                {pConfig?.icon} {pConfig?.shortLabel || p.tipo}
+                                                {' '}&mdash; {pClass.length} class.
+                                              </SelectItem>
+                                            );
+                                          })}
+                                        </SelectContent>
+                                      </Select>
+                                    );
+                                  })()}
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 text-xs px-2"
+                                    onClick={() => {
+                                      createClassificazioneMutation.mutate({
+                                        prestazioneId: dbPrestazione.id,
+                                        data: { codiceDM: 'E.01', importoOpere: 0, importoServizio: 0 },
+                                      });
+                                    }}
+                                  >
+                                    <Plus className="w-3 h-3 mr-1" /> Aggiungi
+                                  </Button>
+                                </div>
                               </div>
 
                               {classificazioni.length > 0 ? (
