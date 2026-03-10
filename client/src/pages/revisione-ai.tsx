@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +19,11 @@ function getTabFromPath(path: string) {
 export default function RevisioneAI() {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState(getTabFromPath(location));
+
+  // Sync tab when navigating from sidebar (component doesn't remount)
+  useEffect(() => {
+    setActiveTab(getTabFromPath(location));
+  }, [location]);
   const [isCheckingEmails, setIsCheckingEmails] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
