@@ -116,7 +116,8 @@ export default function AiConfigPanelUnified() {
 
   // ── Provider tab state ──
   const [showApiKey, setShowApiKey] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+  // connectionStatus: 'unknown' (loading), 'none' (no keys), 'available' (keys found), 'connected' (test passed), 'error' (test failed)
+  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'none' | 'available' | 'connected' | 'error'>('unknown');
   const [lastSync, setLastSync] = useState<string>("");
   const [isTesting, setIsTesting] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<'anthropic' | 'deepseek'>('anthropic');
@@ -163,19 +164,24 @@ export default function AiConfigPanelUnified() {
 
   useEffect(() => {
     const loadServerConfig = async () => {
-      // 1. Check which providers are available (env vars + DB)
+      let providers = { anthropic: false, deepseek: false };
+
+      // 1. Check which providers are available (env vars + DB) — fast, no AI call
       try {
         const keyStatusRes = await fetch('/api/ai/key-status', { credentials: "include" });
         if (keyStatusRes.ok) {
           const keyStatus = await keyStatusRes.json();
-          setAvailableProviders(keyStatus.providers || { anthropic: false, deepseek: false });
+          providers = keyStatus.providers || providers;
+          setAvailableProviders(providers);
+          if (providers.anthropic || providers.deepseek) {
+            setConnectionStatus('available');
+          }
         }
       } catch {
         // Could not check key status
       }
 
       // 2. Load stored DB config (if any)
-      let hasDbConfig = false;
       try {
         const response = await fetch('/api/ai/config', { credentials: "include" });
         if (response.ok) {
@@ -186,18 +192,19 @@ export default function AiConfigPanelUnified() {
             form.reset({ apiKey: "", model });
             setHasServerKey(true);
             setKeySource('db');
-            hasDbConfig = true;
+            return;
           }
         }
       } catch {
         // Could not load server config
       }
 
-      // 3. Always test connection (works via env vars even without DB config)
-      if (!hasDbConfig) {
+      // 3. No DB config — keys come from env vars
+      if (providers.anthropic || providers.deepseek) {
         setKeySource('env');
+      } else {
+        setConnectionStatus('none');
       }
-      checkAiStatus();
     };
     loadServerConfig();
   }, []);
@@ -216,16 +223,6 @@ export default function AiConfigPanelUnified() {
 
   // ── Provider tab handlers ──
 
-  const checkAiStatus = async () => {
-    try {
-      const connected = await testClaudeConnection('server-managed', savedModel);
-      setIsConnected(connected);
-      if (connected) setLastSync(new Date().toLocaleString("it-IT"));
-    } catch {
-      setIsConnected(false);
-    }
-  };
-
   const handleTestConnection = async () => {
     const apiKey = form.getValues("apiKey");
     const hasAnyKey = hasServerKey || availableProviders.anthropic || availableProviders.deepseek;
@@ -238,15 +235,16 @@ export default function AiConfigPanelUnified() {
     try {
       const model = form.getValues("model");
       const connected = await testClaudeConnection(keyToTest, model);
-      setIsConnected(connected);
       if (connected) {
+        setConnectionStatus('connected');
         setLastSync(new Date().toLocaleString("it-IT"));
         toast({ title: "Connessione riuscita", description: "L'API Key funziona perfettamente" });
       } else {
+        setConnectionStatus('error');
         toast({ title: "Connessione fallita", description: "Verifica l'API Key", variant: "destructive" });
       }
     } catch {
-      setIsConnected(false);
+      setConnectionStatus('error');
       toast({ title: "Errore", description: "Errore durante il test", variant: "destructive" });
     } finally {
       setIsTesting(false);
@@ -279,9 +277,10 @@ export default function AiConfigPanelUnified() {
       if (!response.ok) throw new Error('Errore nel salvataggio');
 
       setHasServerKey(true);
+      setKeySource('db');
+      setConnectionStatus('available');
       form.setValue("apiKey", "");
-      toast({ title: "Salvato", description: "Configurazione AI salvata sul server" });
-      checkAiStatus();
+      toast({ title: "Salvato", description: "Configurazione AI salvata sul server. Usa 'Test Connessione' per verificare." });
     } catch {
       toast({ title: "Errore", description: "Errore nel salvataggio", variant: "destructive" });
     }
@@ -353,47 +352,94 @@ export default function AiConfigPanelUnified() {
       </div>
 
       {/* Status Banner */}
-      <div className={`border-l-4 p-4 rounded-lg ${isConnected ? 'bg-green-50 dark:bg-green-950/30 border-green-500' : 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-500'}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {isConnected ? (
-              <>
-                <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-                <div>
-                  <p className="font-semibold text-green-900 dark:text-green-200">Connesso</p>
-                  <p className="text-sm text-green-700 dark:text-green-300">
-                    Ultimo test: {lastSync}
-                    {keySource === 'env' && " (chiave da variabile d'ambiente)"}
-                  </p>
-                  <div className="flex gap-2 mt-1">
-                    {availableProviders.anthropic && (
-                      <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                        Anthropic Claude
-                      </Badge>
-                    )}
-                    {availableProviders.deepseek && (
-                      <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-                        DeepSeek
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                <div>
-                  <p className="font-semibold text-yellow-900 dark:text-yellow-200">Non configurato</p>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">Completa la configurazione per attivare le funzionalita AI</p>
-                </div>
-              </>
-            )}
+      {(() => {
+        const isGreen = connectionStatus === 'connected' || connectionStatus === 'available';
+        const bannerClass = isGreen
+          ? 'bg-green-50 dark:bg-green-950/30 border-green-500'
+          : connectionStatus === 'error'
+            ? 'bg-red-50 dark:bg-red-950/30 border-red-500'
+            : 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-500';
+        return (
+          <div className={`border-l-4 p-4 rounded-lg ${bannerClass}`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {connectionStatus === 'connected' ? (
+                  <>
+                    <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div>
+                      <p className="font-semibold text-green-900 dark:text-green-200">Connesso e Verificato</p>
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        Ultimo test: {lastSync}
+                        {keySource === 'env' && " (chiave da variabile d'ambiente)"}
+                      </p>
+                      <div className="flex gap-2 mt-1">
+                        {availableProviders.anthropic && (
+                          <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            Anthropic Claude
+                          </Badge>
+                        )}
+                        {availableProviders.deepseek && (
+                          <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            DeepSeek
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : connectionStatus === 'available' ? (
+                  <>
+                    <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div>
+                      <p className="font-semibold text-green-900 dark:text-green-200">AI Configurata</p>
+                      <p className="text-sm text-green-700 dark:text-green-300">
+                        {keySource === 'env' ? "Chiavi API configurate via variabili d'ambiente" : "Chiavi API salvate nel sistema"}
+                      </p>
+                      <div className="flex gap-2 mt-1">
+                        {availableProviders.anthropic && (
+                          <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            Anthropic Claude
+                          </Badge>
+                        )}
+                        {availableProviders.deepseek && (
+                          <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                            DeepSeek
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                ) : connectionStatus === 'error' ? (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+                    <div>
+                      <p className="font-semibold text-red-900 dark:text-red-200">Test Fallito</p>
+                      <p className="text-sm text-red-700 dark:text-red-300">La connessione AI non ha risposto. Verifica le chiavi API.</p>
+                    </div>
+                  </>
+                ) : connectionStatus === 'unknown' ? (
+                  <>
+                    <Settings className="w-5 h-5 text-yellow-600 dark:text-yellow-400 animate-spin" />
+                    <div>
+                      <p className="font-semibold text-yellow-900 dark:text-yellow-200">Verifica in corso...</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                    <div>
+                      <p className="font-semibold text-yellow-900 dark:text-yellow-200">Non configurato</p>
+                      <p className="text-sm text-yellow-700 dark:text-yellow-300">Configura le chiavi API per attivare le funzionalita AI</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <Button onClick={handleTestConnection} disabled={isTesting} variant="outline" size="sm">
+                {isTesting ? "Test..." : "Test Connessione"}
+              </Button>
+            </div>
           </div>
-          <Button onClick={handleTestConnection} disabled={isTesting} variant="outline" size="sm">
-            {isTesting ? "Test..." : "Test Connessione"}
-          </Button>
-        </div>
-      </div>
+        );
+      })()}
 
       <Tabs defaultValue="provider" className="space-y-4">
         <TabsList className="bg-muted w-full flex-wrap h-auto gap-1 p-1">

@@ -39,9 +39,13 @@ export function registerAIRoutes(app: Express): void {
       const existingConfig = await storage.getSystemConfig('ai_config');
       const existingApiKey = (existingConfig?.value as any)?.apiKey;
 
+      // Resolve API key: provided > existing DB > env var sentinel
+      const resolvedApiKey = value.apiKey || existingApiKey || '';
+      const hasEnvKey = !!(process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || process.env.AI_API_KEY || process.env.DEEPSEEK_API_KEY);
+
       const configToValidate = {
         ...value,
-        apiKey: value.apiKey || existingApiKey || '',
+        apiKey: resolvedApiKey || (hasEnvKey ? 'env-managed' : ''),
       };
 
       const validatedConfig = aiConfigSchema.parse(configToValidate);

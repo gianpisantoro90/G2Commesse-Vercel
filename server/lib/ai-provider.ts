@@ -170,8 +170,8 @@ const DEFAULT_FEATURE_CONFIGS: Record<AIFeature, { provider: 'anthropic' | 'deep
  * Get API key for a given provider. Checks stored config first, then env vars.
  */
 function getApiKey(provider: 'anthropic' | 'deepseek', globalConfig?: AIConfig): string {
-  // If global config has an API key and it matches the provider, use it
-  if (globalConfig?.apiKey && globalConfig.provider === provider) {
+  // If global config has a real API key (not a sentinel) and it matches the provider, use it
+  if (globalConfig?.apiKey && globalConfig.provider === provider && !globalConfig.apiKey.startsWith('env-')) {
     return globalConfig.apiKey;
   }
 
