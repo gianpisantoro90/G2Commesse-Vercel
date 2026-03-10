@@ -3,6 +3,9 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { QK } from "@/lib/query-utils";
 import DOMPurify from "dompurify";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDialog } from "./confirm-dialog";
+import { BulkActionBar } from "./bulk-action-bar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,7 +40,8 @@ import {
   X,
   Search,
   FolderOpen,
-  Loader2
+  Loader2,
+  XCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -102,6 +106,8 @@ export function CommunicationsReview() {
   const [pageSize, setPageSize] = useState(10);
   const [projectSearch, setProjectSearch] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDismiss, setConfirmDismiss] = useState<{ ids: string[] } | null>(null);
 
   // Fetch communications that need review
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
@@ -197,22 +203,37 @@ export function CommunicationsReview() {
     setSelectedComm(null);
   };
 
-  const handleDismiss = async (communicationId: string, event?: React.MouseEvent) => {
-    if (event) {
-      event.stopPropagation();
-    }
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
-    if (!window.confirm("Sei sicuro di voler ignorare questa comunicazione? L'azione non è reversibile.")) {
-      return;
+  const toggleAll = () => {
+    if (selectedIds.size === paginatedComms.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedComms.map(c => c.id)));
     }
+  };
 
+  const handleDismiss = (ids: string[]) => {
+    setConfirmDismiss({ ids });
+  };
+
+  const executeDismiss = async () => {
+    if (!confirmDismiss) return;
     try {
-      await dismissMutation.mutateAsync(communicationId);
-      // Close dialog only after mutation completes successfully
+      for (const id of confirmDismiss.ids) {
+        await dismissMutation.mutateAsync(id);
+      }
+      setSelectedIds(new Set());
       setSelectedComm(null);
-    } catch (error) {
-      // Error toast is already shown by mutation onError
-      // Keep dialog open so user can retry
+    } finally {
+      setConfirmDismiss(null);
     }
   };
 
@@ -226,6 +247,7 @@ export function CommunicationsReview() {
   const handlePageSizeChange = (newSize: string) => {
     setPageSize(parseInt(newSize));
     setCurrentPage(1);
+    setSelectedIds(new Set());
   };
 
   if (isLoading) {
@@ -287,85 +309,107 @@ export function CommunicationsReview() {
             <Card key={comm.id} className="overflow-hidden">
               <CardContent className="p-4">
                 <div className="space-y-3">
-                  {/* Subject and importance */}
                   <div className="flex items-start gap-2">
-                    <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium line-clamp-2">{comm.subject}</span>
-                        {comm.isImportant && (
-                          <Badge variant="destructive" className="text-xs">!</Badge>
+                    <Checkbox
+                      checked={selectedIds.has(comm.id)}
+                      onCheckedChange={() => toggleSelection(comm.id)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1 min-w-0 space-y-3">
+                      {/* Subject and importance */}
+                      <div className="flex items-start gap-2">
+                        <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium line-clamp-2">{comm.subject}</span>
+                            {comm.isImportant && (
+                              <Badge variant="destructive" className="text-xs">!</Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Sender and Date */}
+                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          <span className="truncate max-w-[120px]">{comm.sender}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{format(new Date(comm.communicationDate), "dd/MM/yy HH:mm", { locale: it })}</span>
+                        </div>
+                      </div>
+
+                      {/* Tags */}
+                      {comm.tags && comm.tags.length > 0 && (
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {comm.tags.slice(0, 3).map((tag: string, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs h-5 px-1.5">{tag}</Badge>
+                          ))}
+                          {comm.tags.length > 3 && (
+                            <span className="text-xs text-muted-foreground">+{comm.tags.length - 3}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Project AI info */}
+                      {comm.aiSuggestions?.projectMatches?.[0] && (
+                        <div className="flex items-center gap-1.5">
+                          <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {comm.aiSuggestions.projectMatches[0].projectCode}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {Math.round(comm.aiSuggestions.projectMatches[0].confidence * 100)}%
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Project suggestions */}
+                      <div className="flex items-center gap-2">
+                        {comm.aiSuggestions?.projectMatches && comm.aiSuggestions.projectMatches.length > 0 ? (
+                          <>
+                            <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                            <Badge variant="secondary" className="text-xs">
+                              {comm.aiSuggestions.projectMatches.length} progett{comm.aiSuggestions.projectMatches.length === 1 ? 'o' : 'i'}
+                            </Badge>
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
+                            <span className="text-xs text-muted-foreground">Nessun progetto suggerito</span>
+                          </>
                         )}
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Sender and Date */}
-                  <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      <span className="truncate max-w-[120px]">{comm.sender}</span>
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 pt-2 border-t">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => {
+                            setProjectSearch("");
+                            setSelectedProjectId(null);
+                            setSelectedComm(comm);
+                          }}
+                          data-testid={`button-review-${comm.id}`}
+                        >
+                          Revisiona
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); handleDismiss([comm.id]); }}
+                          disabled={dismissMutation.isPending}
+                          data-testid={`button-dismiss-${comm.id}`}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>{format(new Date(comm.communicationDate), "dd/MM/yy HH:mm", { locale: it })}</span>
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  {comm.tags && comm.tags.length > 0 && (
-                    <div className="flex items-center gap-1 flex-wrap">
-                      {comm.tags.slice(0, 3).map((tag: string, index: number) => (
-                        <Badge key={index} variant="outline" className="text-xs h-5 px-1.5">{tag}</Badge>
-                      ))}
-                      {comm.tags.length > 3 && (
-                        <span className="text-xs text-muted-foreground">+{comm.tags.length - 3}</span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Project suggestions */}
-                  <div className="flex items-center gap-2">
-                    {comm.aiSuggestions?.projectMatches && comm.aiSuggestions.projectMatches.length > 0 ? (
-                      <>
-                        <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
-                        <Badge variant="secondary" className="text-xs">
-                          {comm.aiSuggestions.projectMatches.length} progett{comm.aiSuggestions.projectMatches.length === 1 ? 'o' : 'i'}
-                        </Badge>
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
-                        <span className="text-xs text-muted-foreground">Nessun progetto suggerito</span>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 pt-2 border-t">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => {
-                        setProjectSearch("");
-                        setSelectedProjectId(null);
-                        setSelectedComm(comm);
-                      }}
-                      data-testid={`button-review-${comm.id}`}
-                    >
-                      Revisiona
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => handleDismiss(comm.id, e)}
-                      disabled={dismissMutation.isPending}
-                      data-testid={`button-dismiss-${comm.id}`}
-                      className="text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -379,10 +423,16 @@ export function CommunicationsReview() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40%]">Oggetto</TableHead>
-                  <TableHead className="w-[20%]">Mittente</TableHead>
-                  <TableHead className="w-[15%]">Data</TableHead>
-                  <TableHead className="w-[15%]">Progetti Suggeriti</TableHead>
+                  <TableHead className="w-[40px]">
+                    <Checkbox
+                      checked={paginatedComms.length > 0 && selectedIds.size === paginatedComms.length}
+                      onCheckedChange={toggleAll}
+                    />
+                  </TableHead>
+                  <TableHead className="w-[30%]">Oggetto</TableHead>
+                  <TableHead className="w-[15%]">Mittente</TableHead>
+                  <TableHead className="w-[12%]">Data</TableHead>
+                  <TableHead className="w-[18%]">Progetto AI</TableHead>
                   <TableHead className="w-[10%] text-right">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
@@ -392,6 +442,12 @@ export function CommunicationsReview() {
                     key={comm.id}
                     className="cursor-pointer hover:bg-muted/50"
                   >
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedIds.has(comm.id)}
+                        onCheckedChange={() => toggleSelection(comm.id)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       <div className="flex items-start gap-2">
                         <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
@@ -442,16 +498,18 @@ export function CommunicationsReview() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {comm.aiSuggestions?.projectMatches && comm.aiSuggestions.projectMatches.length > 0 ? (
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-                          <Badge variant="secondary" className="text-xs">
-                            {comm.aiSuggestions.projectMatches.length} progett{comm.aiSuggestions.projectMatches.length === 1 ? 'o' : 'i'}
+                      {comm.aiSuggestions?.projectMatches?.[0] ? (
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {comm.aiSuggestions.projectMatches[0].projectCode}
                           </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {Math.round(comm.aiSuggestions.projectMatches[0].confidence * 100)}%
+                          </span>
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2">
-                          <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                        <div className="flex items-center gap-1.5">
+                          <AlertCircle className="h-3 w-3 text-yellow-600 dark:text-yellow-400" />
                           <span className="text-xs text-muted-foreground">Nessuno</span>
                         </div>
                       )}
@@ -473,7 +531,7 @@ export function CommunicationsReview() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={(e) => handleDismiss(comm.id, e)}
+                          onClick={(e) => { e.stopPropagation(); handleDismiss([comm.id]); }}
                           disabled={dismissMutation.isPending}
                           data-testid={`button-dismiss-${comm.id}`}
                           className="text-muted-foreground hover:text-destructive"
@@ -518,6 +576,32 @@ export function CommunicationsReview() {
           </div>
         </div>
       )}
+
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        totalCount={communications.length}
+        onClearSelection={() => setSelectedIds(new Set())}
+        actions={[
+          {
+            label: "Ignora selezionati",
+            icon: <XCircle className="h-4 w-4" />,
+            variant: "outline" as const,
+            onClick: () => handleDismiss(Array.from(selectedIds)),
+          },
+        ]}
+      />
+
+      <ConfirmDialog
+        open={!!confirmDismiss}
+        onOpenChange={() => setConfirmDismiss(null)}
+        title="Ignora comunicazioni"
+        description={confirmDismiss?.ids.length === 1
+          ? "Sei sicuro di voler ignorare questa comunicazione? L'azione non è reversibile."
+          : `Sei sicuro di voler ignorare ${confirmDismiss?.ids.length} comunicazioni? L'azione non è reversibile.`}
+        confirmLabel="Ignora"
+        onConfirm={executeDismiss}
+        isPending={dismissMutation.isPending}
+      />
 
       {/* Communication Detail Dialog */}
       <Dialog
@@ -709,7 +793,7 @@ export function CommunicationsReview() {
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => selectedComm && handleDismiss(selectedComm.id)}
+                      onClick={() => selectedComm && handleDismiss([selectedComm.id])}
                       disabled={dismissMutation.isPending}
                       data-testid="button-dismiss-no-match"
                     >

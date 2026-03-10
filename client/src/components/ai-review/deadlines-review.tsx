@@ -4,6 +4,7 @@ import { QK } from "@/lib/query-utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Table,
@@ -32,7 +33,8 @@ import {
   Mail,
   Calendar,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -45,6 +47,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ConfirmDialog } from "./confirm-dialog";
+import { BulkActionBar } from "./bulk-action-bar";
 
 interface SuggestedDeadline {
   title: string;
@@ -84,6 +88,8 @@ export function DeadlinesReview() {
   const [selectedComm, setSelectedComm] = useState<{ comm: Communication; deadlineIndex: number } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
+  const [confirmDismiss, setConfirmDismiss] = useState<{ items: typeof allDeadlines } | null>(null);
 
   // Fetch communications with suggested deadlines
   const { data: communications = [], isLoading } = useQuery<Communication[]>({
@@ -213,12 +219,64 @@ export function DeadlinesReview() {
   const handlePageSizeChange = (newSize: string) => {
     setPageSize(parseInt(newSize));
     setCurrentPage(1);
+    setSelectedKeys(new Set());
+  };
+
+  // Selection helpers
+  const toggleSelection = (key: string) => {
+    setSelectedKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedKeys.size === paginatedDeadlines.length) {
+      setSelectedKeys(new Set());
+    } else {
+      setSelectedKeys(new Set(paginatedDeadlines.map(d => `${d.comm.id}-${d.index}`)));
+    }
+  };
+
+  // Bulk action handlers
+  const handleBulkDismiss = () => {
+    const items = allDeadlines.filter(d => selectedKeys.has(`${d.comm.id}-${d.index}`));
+    setConfirmDismiss({ items });
+  };
+
+  const executeBulkDismiss = async () => {
+    if (!confirmDismiss) return;
+    try {
+      for (const item of confirmDismiss.items) {
+        await dismissDeadline.mutateAsync({ communicationId: item.comm.id, deadlineIndex: item.index });
+      }
+      setSelectedKeys(new Set());
+    } finally {
+      setConfirmDismiss(null);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    const items = allDeadlines.filter(d => selectedKeys.has(`${d.comm.id}-${d.index}`));
+    for (const item of items) {
+      try {
+        await approveDeadline.mutateAsync({ communicationId: item.comm.id, deadlineIndex: item.index });
+      } catch {
+        // Error toast shown by mutation
+      }
+    }
+    setSelectedKeys(new Set());
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="text-muted-foreground">Caricamento...</div>
+        <div className="text-center space-y-3">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Caricamento scadenze...</p>
+        </div>
       </div>
     );
   }
@@ -275,8 +333,13 @@ export function DeadlinesReview() {
               <Card key={`${comm.id}-${index}`} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="space-y-3">
-                    {/* Title */}
+                    {/* Checkbox + Title */}
                     <div className="flex items-start gap-2">
+                      <Checkbox
+                        checked={selectedKeys.has(`${comm.id}-${index}`)}
+                        onCheckedChange={() => toggleSelection(`${comm.id}-${index}`)}
+                        className="mt-0.5"
+                      />
                       <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-teal-600 dark:text-teal-400" />
                       <span className="font-medium line-clamp-2">{deadline.title}</span>
                     </div>
@@ -308,15 +371,33 @@ export function DeadlinesReview() {
                       )}
                     </div>
 
-                    {/* Action */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => setSelectedComm({ comm, deadlineIndex: index })}
-                    >
-                      Revisiona
-                    </Button>
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-2 border-t">
+                      <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => approveDeadline.mutate({ communicationId: comm.id, deadlineIndex: index })}
+                        disabled={approveDeadline.isPending || !comm.projectId}
+                      >
+                        <CheckSquare className="h-4 w-4 mr-1" />
+                        Approva
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedComm({ comm, deadlineIndex: index })}
+                      >
+                        Dettagli
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setConfirmDismiss({ items: [{ comm, deadline, index, isPending: true }] })}
+                        disabled={dismissDeadline.isPending}
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -330,12 +411,18 @@ export function DeadlinesReview() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[40px]">
+                    <Checkbox
+                      checked={paginatedDeadlines.length > 0 && selectedKeys.size === paginatedDeadlines.length}
+                      onCheckedChange={toggleAll}
+                    />
+                  </TableHead>
                   <TableHead className="w-[30%]">Scadenza</TableHead>
                   <TableHead className="w-[15%]">Data</TableHead>
                   <TableHead className="w-[10%]">Priorità</TableHead>
-                  <TableHead className="w-[15%]">Tipo</TableHead>
+                  <TableHead className="w-[13%]">Tipo</TableHead>
                   <TableHead className="w-[20%]">Comunicazione</TableHead>
-                  <TableHead className="w-[10%] text-right">Azioni</TableHead>
+                  <TableHead className="w-[12%] text-right">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -346,10 +433,21 @@ export function DeadlinesReview() {
                       key={`${comm.id}-${index}`}
                       className="cursor-pointer hover:bg-muted/50"
                     >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedKeys.has(`${comm.id}-${index}`)}
+                          onCheckedChange={() => toggleSelection(`${comm.id}-${index}`)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex items-start gap-2">
                           <CalendarClock className="h-4 w-4 mt-0.5 flex-shrink-0 text-teal-600 dark:text-teal-400" />
-                          <span className="line-clamp-2">{deadline.title}</span>
+                          <span
+                            className="line-clamp-2 cursor-pointer hover:text-primary hover:underline"
+                            onClick={() => setSelectedComm({ comm, deadlineIndex: index })}
+                          >
+                            {deadline.title}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -384,13 +482,26 @@ export function DeadlinesReview() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedComm({ comm, deadlineIndex: index })}
-                        >
-                          Revisiona
-                        </Button>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => approveDeadline.mutate({ communicationId: comm.id, deadlineIndex: index })}
+                            disabled={approveDeadline.isPending || !comm.projectId}
+                            title={!comm.projectId ? "Comunicazione senza progetto" : "Approva"}
+                          >
+                            <CheckSquare className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setConfirmDismiss({ items: [{ comm, deadline, index, isPending: true }] })}
+                            disabled={dismissDeadline.isPending}
+                            title="Rifiuta"
+                          >
+                            <XCircle className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -429,6 +540,39 @@ export function DeadlinesReview() {
           </div>
         </div>
       )}
+
+      <BulkActionBar
+        selectedCount={selectedKeys.size}
+        totalCount={allDeadlines.length}
+        onClearSelection={() => setSelectedKeys(new Set())}
+        actions={[
+          {
+            label: "Approva selezionati",
+            icon: <CheckSquare className="h-4 w-4" />,
+            onClick: handleBulkApprove,
+            disabled: approveDeadline.isPending,
+          },
+          {
+            label: "Rifiuta selezionati",
+            icon: <XCircle className="h-4 w-4" />,
+            variant: "outline" as const,
+            onClick: handleBulkDismiss,
+            disabled: dismissDeadline.isPending,
+          },
+        ]}
+      />
+
+      <ConfirmDialog
+        open={!!confirmDismiss}
+        onOpenChange={() => setConfirmDismiss(null)}
+        title="Rifiuta scadenze"
+        description={confirmDismiss?.items.length === 1
+          ? "Sei sicuro di voler rifiutare questa scadenza? L'azione non è reversibile."
+          : `Sei sicuro di voler rifiutare ${confirmDismiss?.items.length} scadenze? L'azione non è reversibile.`}
+        confirmLabel="Rifiuta"
+        onConfirm={executeBulkDismiss}
+        isPending={dismissDeadline.isPending}
+      />
 
       {/* Deadline Detail Dialog */}
       <Dialog open={!!selectedComm} onOpenChange={() => setSelectedComm(null)}>
@@ -522,11 +666,11 @@ export function DeadlinesReview() {
               variant="outline"
               className="w-full sm:w-auto"
               onClick={() => {
-                if (selectedComm && window.confirm("Sei sicuro di voler rifiutare questa scadenza suggerita? L'azione non è reversibile.")) {
-                  dismissDeadline.mutate({
-                    communicationId: selectedComm.comm.id,
-                    deadlineIndex: selectedComm.deadlineIndex
-                  });
+                if (selectedComm) {
+                  const item = allDeadlines.find(d =>
+                    d.comm.id === selectedComm.comm.id && d.index === selectedComm.deadlineIndex
+                  );
+                  if (item) setConfirmDismiss({ items: [item] });
                 }
               }}
               disabled={dismissDeadline.isPending}
