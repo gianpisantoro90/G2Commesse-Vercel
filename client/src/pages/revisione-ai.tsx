@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Brain, Mail, CheckSquare, Calendar, RefreshCw, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { QK } from "@/lib/query-utils";
 import { CommunicationsReview } from "@/components/ai-review/communications-review";
 import { TasksReview } from "@/components/ai-review/tasks-review";
 import { DeadlinesReview } from "@/components/ai-review/deadlines-review";
@@ -19,6 +21,7 @@ export default function RevisioneAI() {
   const [activeTab, setActiveTab] = useState(getTabFromPath(location));
   const [isCheckingEmails, setIsCheckingEmails] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -42,6 +45,13 @@ export default function RevisioneAI() {
       }
 
       const data = await response.json();
+
+      // Invalidate all AI review queries so tabs refresh with new data
+      queryClient.invalidateQueries({ queryKey: QK.communicationsPending });
+      queryClient.invalidateQueries({ queryKey: QK.aiSuggestedTasks });
+      queryClient.invalidateQueries({ queryKey: QK.aiSuggestedDeadlines });
+      queryClient.invalidateQueries({ queryKey: QK.communications });
+
       toast({
         title: "Controllo Completato",
         description: data.message,

@@ -186,8 +186,11 @@ export function registerEmailRoutes(app: Express): void {
   app.post("/api/emails/check-now", async (req, res) => {
     try {
       logger.info('Manual email check triggered by user');
-      await emailPoller.checkEmails();
-      res.json({ message: "Controllo email completato", status: "success" });
+      const result = await emailPoller.checkEmails();
+      const message = result.found === 0
+        ? "Nessuna nuova email trovata"
+        : `Trovate ${result.found} email, ${result.processed} elaborate con successo`;
+      res.json({ message, status: "success", ...result });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Errore nel controllo delle email";
       logger.error('Error during manual email check:', { error, message: errorMessage });

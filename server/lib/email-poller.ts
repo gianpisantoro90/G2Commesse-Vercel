@@ -89,10 +89,10 @@ class EmailPoller {
   /**
    * Check for new emails (can be called manually)
    */
-  async checkEmails() {
+  async checkEmails(): Promise<{ found: number; processed: number }> {
     if (this.isProcessing) {
       logger.debug('Email check already in progress, skipping');
-      return;
+      return { found: 0, processed: 0 };
     }
 
     if (!this.config) {
@@ -114,21 +114,25 @@ class EmailPoller {
           logger.debug('No new emails found');
         }
         this.isProcessing = false;
-        return;
+        return { found: 0, processed: 0 };
       }
 
       logger.info(`Found ${emails.length} new email(s)`);
 
+      let processed = 0;
       // Process each email
       for (const emailData of emails) {
         try {
           await this.processEmail(emailData);
+          processed++;
         } catch (error) {
           logger.error('Failed to process email', { error, subject: emailData.parsed.subject });
         }
       }
+      return { found: emails.length, processed };
     } catch (error) {
       logger.error('Email check failed', { error });
+      throw error;
     } finally {
       this.isProcessing = false;
     }
@@ -601,7 +605,7 @@ class EmailPoller {
       });
 
       // Auto-create tasks if enabled and project is assigned
-      if (autoApproval.enabled && assignedProjectId && analysis.suggestedTasks?.length > 0) {
+      if (autoApproval.enabled && assignedProjectId && analysis.suggestedTasks && analysis.suggestedTasks.length > 0) {
         const taskThreshold = autoApproval.taskCreationThreshold || 0.90;
         if (analysis.confidence >= taskThreshold) {
           const aiTasksStatus: Record<string, any> = {};
@@ -614,7 +618,7 @@ class EmailPoller {
                 description: suggestedTask.description || null,
                 projectId: assignedProjectId,
                 assignedToId: null,
-                createdById: null,
+                createdById: "system",
                 priority: suggestedTask.priority,
                 status: 'pending',
                 dueDate: suggestedTask.dueDate ? new Date(suggestedTask.dueDate) : null,
@@ -644,7 +648,7 @@ class EmailPoller {
       }
 
       // Auto-create deadlines if enabled and project is assigned
-      if (autoApproval.enabled && assignedProjectId && analysis.suggestedDeadlines?.length > 0) {
+      if (autoApproval.enabled && assignedProjectId && analysis.suggestedDeadlines && analysis.suggestedDeadlines.length > 0) {
         const deadlineThreshold = autoApproval.deadlineCreationThreshold || 0.90;
         if (analysis.confidence >= deadlineThreshold) {
           const aiDeadlinesStatus: Record<string, any> = {};
