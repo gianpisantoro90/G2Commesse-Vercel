@@ -26,7 +26,7 @@ import { z } from "zod";
 // ─── Provider / Model config (used by Provider tab) ─────────────────────────
 
 const aiConfigSchema = z.object({
-  apiKey: z.string().min(1, "API Key richiesta"),
+  apiKey: z.string().default(""),
   model: z.string().min(1, "Modello richiesto"),
 });
 
@@ -122,6 +122,8 @@ export default function AiConfigPanelUnified() {
   const [selectedProvider, setSelectedProvider] = useState<'anthropic' | 'deepseek'>('anthropic');
   const [savedModel, setSavedModel] = useState("claude-sonnet-4-6");
   const [hasServerKey, setHasServerKey] = useState(false);
+  const [availableProviders, setAvailableProviders] = useState<{ anthropic: boolean; deepseek: boolean }>({ anthropic: false, deepseek: false });
+  const [keySource, setKeySource] = useState<'none' | 'env' | 'db'>('none');
 
   const form = useForm<AiConfigForm>({
     resolver: zodResolver(aiConfigSchema),
@@ -161,6 +163,19 @@ export default function AiConfigPanelUnified() {
 
   useEffect(() => {
     const loadServerConfig = async () => {
+      // 1. Check which providers are available (env vars + DB)
+      try {
+        const keyStatusRes = await fetch('/api/ai/key-status', { credentials: "include" });
+        if (keyStatusRes.ok) {
+          const keyStatus = await keyStatusRes.json();
+          setAvailableProviders(keyStatus.providers || { anthropic: false, deepseek: false });
+        }
+      } catch {
+        // Could not check key status
+      }
+
+      // 2. Load stored DB config (if any)
+      let hasDbConfig = false;
       try {
         const response = await fetch('/api/ai/config', { credentials: "include" });
         if (response.ok) {
@@ -170,13 +185,19 @@ export default function AiConfigPanelUnified() {
             setSavedModel(model);
             form.reset({ apiKey: "", model });
             setHasServerKey(true);
-            checkAiStatus();
-            return;
+            setKeySource('db');
+            hasDbConfig = true;
           }
         }
       } catch {
         // Could not load server config
       }
+
+      // 3. Always test connection (works via env vars even without DB config)
+      if (!hasDbConfig) {
+        setKeySource('env');
+      }
+      checkAiStatus();
     };
     loadServerConfig();
   }, []);
@@ -207,7 +228,8 @@ export default function AiConfigPanelUnified() {
 
   const handleTestConnection = async () => {
     const apiKey = form.getValues("apiKey");
-    const keyToTest = apiKey || (hasServerKey ? 'server-managed' : '');
+    const hasAnyKey = hasServerKey || availableProviders.anthropic || availableProviders.deepseek;
+    const keyToTest = apiKey || (hasAnyKey ? 'server-managed' : '');
     if (!keyToTest) {
       toast({ title: "API Key mancante", description: "Inserire prima l'API Key", variant: "destructive" });
       return;
@@ -339,7 +361,22 @@ export default function AiConfigPanelUnified() {
                 <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
                 <div>
                   <p className="font-semibold text-green-900 dark:text-green-200">Connesso</p>
-                  <p className="text-sm text-green-700 dark:text-green-300">Ultimo test: {lastSync}</p>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Ultimo test: {lastSync}
+                    {keySource === 'env' && " (chiave da variabile d'ambiente)"}
+                  </p>
+                  <div className="flex gap-2 mt-1">
+                    {availableProviders.anthropic && (
+                      <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                        Anthropic Claude
+                      </Badge>
+                    )}
+                    {availableProviders.deepseek && (
+                      <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                        DeepSeek
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </>
             ) : (
@@ -394,20 +431,35 @@ export default function AiConfigPanelUnified() {
                 </h3>
               </div>
               <div className="space-y-4">
-                {Object.entries(AI_PROVIDERS).map(([key, provider]) => (
-                  <div key={key} className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    selectedProvider === key
-                      ? 'border-primary bg-primary/5 dark:bg-primary/10'
-                      : 'border-border hover:border-gray-300 dark:hover:border-gray-500'
-                  }`} onClick={() => setSelectedProvider(key as 'anthropic' | 'deepseek')}>
-                    <p className="font-semibold text-foreground">{provider.name}</p>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {provider.features.map((f, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">{f}</Badge>
-                      ))}
+                {Object.entries(AI_PROVIDERS).map(([key, provider]) => {
+                  const isAvailable = availableProviders[key as keyof typeof availableProviders];
+                  return (
+                    <div key={key} className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      selectedProvider === key
+                        ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                        : 'border-border hover:border-gray-300 dark:hover:border-gray-500'
+                    }`} onClick={() => setSelectedProvider(key as 'anthropic' | 'deepseek')}>
+                      <div className="flex items-center justify-between">
+                        <p className="font-semibold text-foreground">{provider.name}</p>
+                        {isAvailable ? (
+                          <Badge className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs">
+                            <Check className="w-3 h-3 mr-1" />
+                            Attivo
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                            Non configurato
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {provider.features.map((f, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{f}</Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -422,10 +474,23 @@ export default function AiConfigPanelUnified() {
                   {/* API Key Input */}
                   <div className="space-y-2">
                     <Label className="text-foreground">API Key</Label>
+                    {keySource === 'env' && availableProviders[selectedProvider] ? (
+                      <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                        <div className="flex items-center gap-2">
+                          <Check className="w-4 h-4 text-green-600" />
+                          <p className="text-sm text-green-800 dark:text-green-200 font-medium">
+                            Chiave configurata via variabile d&apos;ambiente
+                          </p>
+                        </div>
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          Puoi sovrascriverla inserendo una chiave qui sotto (opzionale)
+                        </p>
+                      </div>
+                    ) : null}
                     <div className="relative">
                       <Input
                         type={showApiKey ? "text" : "password"}
-                        placeholder="sk-... o your-api-key"
+                        placeholder={keySource === 'env' ? "(opzionale — sovrascrive env var)" : "sk-... o your-api-key"}
                         {...form.register("apiKey")}
                         className="pr-10"
                       />
