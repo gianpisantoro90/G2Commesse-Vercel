@@ -94,6 +94,20 @@ class EmailPoller {
   }
 
   /**
+   * Ensure storage is available, re-importing if needed
+   */
+  private async ensureStorage(): Promise<IStorage> {
+    if (this.storage) return this.storage;
+    const { storage: s, storagePromise } = await import('../storage');
+    const resolved = await storagePromise;
+    this.storage = resolved || s;
+    if (!this.storage) {
+      throw new Error('Impossibile inizializzare lo storage');
+    }
+    return this.storage;
+  }
+
+  /**
    * Check for new emails (can be called manually)
    */
   async checkEmails(): Promise<{ found: number; processed: number; filtered: number; errors: string[] }> {
@@ -377,14 +391,10 @@ class EmailPoller {
   /**
    * Check if email already exists in database (anti-duplicate logic)
    */
-  private async isDuplicateEmail(messageId: string, subject: string, sender: string, date: Date): Promise<boolean> {
-    if (!this.storage) {
-      return false;
-    }
-
+  private async isDuplicateEmail(stor: IStorage, messageId: string, subject: string, sender: string, date: Date): Promise<boolean> {
     try {
       // Fetch once and reuse (avoid N+1 query)
-      const allComms = await this.storage.getAllCommunications();
+      const allComms = await stor.getAllCommunications();
 
       // Strategy 1: Check by emailMessageId (most reliable)
       if (messageId) {
@@ -489,12 +499,11 @@ class EmailPoller {
       // Use existing email service to parse and analyze
       const parsedEmail = emailService.parseSendGridWebhook(webhookPayload);
 
-      if (!this.storage) {
-        throw new Error('Storage not initialized');
-      }
+      // Ensure storage is available (handles Vercel cold starts)
+      const stor = await this.ensureStorage();
 
       // Get AI config (includes API key from server-side storage)
-      const aiConfigResult = await this.storage.getSystemConfig('ai_config');
+      const aiConfigResult = await stor.getSystemConfig('ai_config');
       const storedConfig = aiConfigResult?.value;
       const finalConfig = storedConfig || process.env.ANTHROPIC_API_KEY;
 
@@ -522,7 +531,7 @@ class EmailPoller {
       }
 
       // Get all projects for AI matching
-      const projects = await this.storage.getAllProjects();
+      const projects = await stor.getAllProjects();
 
       // Analyze with AI
       const analysis = await emailService.analyzeEmailWithAI(
@@ -544,6 +553,7 @@ class EmailPoller {
 
       // Check for duplicates before importing
       const isDuplicate = await this.isDuplicateEmail(
+        stor,
         parsedEmail.messageId,
         parsedEmail.subject,
         `${parsedEmail.from.name || ''} <${parsedEmail.from.email}>`.trim(),
@@ -563,7 +573,7 @@ class EmailPoller {
       }
 
       // Check auto-approval configuration
-      const autoApprovalConfig = await this.storage.getSystemConfig('ai_auto_approval');
+      const autoApprovalConfig = await stor.getSystemConfig('ai_auto_approval');
       const autoApproval = autoApprovalConfig?.value as any || { enabled: false };
 
       // Determine if email should be auto-assigned to a project
@@ -588,7 +598,7 @@ class EmailPoller {
       }
 
       // Store email (auto-assigned or for manual review)
-      const communication = await this.storage.createCommunication({
+      const communication = await stor.createCommunication({
         projectId: assignedProjectId,
         type: parsedEmail.from.email.includes('@pec.') ? 'pec' : 'email',
         direction: 'incoming',
@@ -629,7 +639,7 @@ class EmailPoller {
           for (let i = 0; i < analysis.suggestedTasks.length; i++) {
             const suggestedTask = analysis.suggestedTasks[i];
             try {
-              const newTask = await this.storage.createTask({
+              const newTask = await stor.createTask({
                 title: suggestedTask.title,
                 description: suggestedTask.description || null,
                 projectId: assignedProjectId,
@@ -658,7 +668,7 @@ class EmailPoller {
           }
 
           if (Object.keys(aiTasksStatus).length > 0) {
-            await this.storage.updateCommunication(communication.id, { aiTasksStatus });
+            await stor.updateCommunication(communication.id, { aiTasksStatus });
           }
         }
       }
@@ -672,7 +682,7 @@ class EmailPoller {
           for (let i = 0; i < analysis.suggestedDeadlines.length; i++) {
             const suggestedDeadline = analysis.suggestedDeadlines[i];
             try {
-              const newDeadline = await this.storage.createDeadline({
+              const newDeadline = await stor.createDeadline({
                 projectId: assignedProjectId,
                 title: suggestedDeadline.title,
                 description: suggestedDeadline.description || null,
@@ -700,7 +710,7 @@ class EmailPoller {
           }
 
           if (Object.keys(aiDeadlinesStatus).length > 0) {
-            await this.storage.updateCommunication(communication.id, { aiDeadlinesStatus });
+            await stor.updateCommunication(communication.id, { aiDeadlinesStatus });
           }
         }
       }

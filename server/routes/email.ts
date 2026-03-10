@@ -1,5 +1,5 @@
 import type { Express } from "express";
-import { storage } from "../storage";
+import { storage, storagePromise } from "../storage";
 import { emailService } from "../lib/email-service";
 import { emailPoller } from "../lib/email-poller";
 import { logger } from "../lib/logger";
@@ -188,7 +188,8 @@ export function registerEmailRoutes(app: Express): void {
       // Ensure email poller has storage (may be lost on Vercel cold starts)
       if (!emailPoller.hasStorage()) {
         logger.info('Re-initializing email poller with storage');
-        emailPoller.initialize(storage);
+        const resolvedStorage = await storagePromise;
+        emailPoller.initialize(resolvedStorage);
       }
       logger.info('Manual email check triggered by user');
       const result = await emailPoller.checkEmails();
