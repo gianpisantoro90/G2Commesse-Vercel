@@ -12,8 +12,6 @@ import RecentProjectsTable from "@/components/dashboard/recent-projects-table";
 import RecentTasksTable from "@/components/dashboard/recent-tasks-table";
 import OneDriveStatusCard from "@/components/dashboard/onedrive-status-card";
 import EconomicDashboardCard from "@/components/dashboard/economic-dashboard-card";
-import AiInsightsCard from "@/components/dashboard/ai-insights-card";
-import CashFlowForecastCard from "@/components/dashboard/cashflow-forecast-card";
 
 const BillingAlerts = lazy(() => import("@/components/projects/billing-alerts"));
 
@@ -162,17 +160,7 @@ export default function Dashboard() {
           {/* Row 1: Quick stats bar */}
           <AdminQuickStats />
 
-          {/* Row 2: AI Insights + CashFlow side by side */}
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
-            <div className="xl:col-span-3">
-              <AiInsightsCard />
-            </div>
-            <div className="xl:col-span-2">
-              <CashFlowForecastCard />
-            </div>
-          </div>
-
-          {/* Row 3: Economic Dashboard full width */}
+          {/* Row 2: Economic Dashboard full width */}
           <EconomicDashboardCard />
 
           {/* Row 4: Billing Alerts */}
