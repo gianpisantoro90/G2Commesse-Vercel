@@ -1230,27 +1230,25 @@ export class MemStorage implements IStorage {
     const project = await this.getProject(projectId);
     if (!project) return;
 
-    // Aggregate by codiceDM across all prestazioni
-    const byCode = new Map<string, { importo: number; importoOpere: number; importoServizio: number }>();
+    // importoOpere: MAX per categoria (costo dell'opera, non varia tra prestazioni)
+    // importoServizio: SUM per categoria (ogni prestazione ha il suo compenso)
+    const byCode = new Map<string, { importoOpere: number; importoServizio: number }>();
     for (const c of allClassificazioni) {
       const existing = byCode.get(c.codiceDM);
       if (existing) {
-        existing.importo += c.importoOpere ?? 0;
-        existing.importoOpere += c.importoOpere ?? 0;
+        existing.importoOpere = Math.max(existing.importoOpere, c.importoOpere ?? 0);
         existing.importoServizio += c.importoServizio ?? 0;
       } else {
         byCode.set(c.codiceDM, {
-          importo: c.importoOpere ?? 0,
           importoOpere: c.importoOpere ?? 0,
           importoServizio: c.importoServizio ?? 0,
         });
       }
     }
 
-    // DB e metadata JSON sono entrambi in euro
     const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
       codice,
-      importo: v.importo,
+      importo: v.importoOpere,
       importoOpere: v.importoOpere,
       importoServizio: v.importoServizio,
     }));
@@ -1260,7 +1258,7 @@ export class MemStorage implements IStorage {
     metadata.importoServizio = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importoServizio || 0), 0);
     if (classificazioniDM2016.length > 0) {
       metadata.classeDM2016 = classificazioniDM2016[0].codice;
-      metadata.importoOpere = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importo || 0), 0);
+      metadata.importoOpere = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importoOpere || 0), 0);
     }
 
     await this.updateProject(projectId, { metadata });
@@ -2938,26 +2936,25 @@ export class DatabaseStorage implements IStorage {
     const project = await this.getProject(projectId);
     if (!project) return;
 
-    const byCode = new Map<string, { importo: number; importoOpere: number; importoServizio: number }>();
+    // importoOpere: MAX per categoria (costo dell'opera, non varia tra prestazioni)
+    // importoServizio: SUM per categoria (ogni prestazione ha il suo compenso)
+    const byCode = new Map<string, { importoOpere: number; importoServizio: number }>();
     for (const c of allClassificazioni) {
       const existing = byCode.get(c.codiceDM);
       if (existing) {
-        existing.importo += c.importoOpere ?? 0;
-        existing.importoOpere += c.importoOpere ?? 0;
+        existing.importoOpere = Math.max(existing.importoOpere, c.importoOpere ?? 0);
         existing.importoServizio += c.importoServizio ?? 0;
       } else {
         byCode.set(c.codiceDM, {
-          importo: c.importoOpere ?? 0,
           importoOpere: c.importoOpere ?? 0,
           importoServizio: c.importoServizio ?? 0,
         });
       }
     }
 
-    // DB e metadata JSON sono entrambi in euro
     const classificazioniDM2016 = Array.from(byCode.entries()).map(([codice, v]) => ({
       codice,
-      importo: v.importo,
+      importo: v.importoOpere,
       importoOpere: v.importoOpere,
       importoServizio: v.importoServizio,
     }));
@@ -2967,7 +2964,7 @@ export class DatabaseStorage implements IStorage {
     metadata.importoServizio = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importoServizio || 0), 0);
     if (classificazioniDM2016.length > 0) {
       metadata.classeDM2016 = classificazioniDM2016[0].codice;
-      metadata.importoOpere = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importo || 0), 0);
+      metadata.importoOpere = classificazioniDM2016.reduce((sum: number, c: any) => sum + (c.importoOpere || 0), 0);
     }
 
     await this.updateProject(projectId, { metadata });

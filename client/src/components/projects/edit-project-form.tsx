@@ -123,6 +123,10 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       return response.json();
     },
     onSuccess: invalidateAfterClassificazione,
+    onError: () => {
+      toast({ title: "Errore", description: "Classificazione già presente o dati non validi", variant: "destructive" });
+      invalidateAfterClassificazione();
+    },
   });
 
   const updateClassificazioneMutation = useMutation({
@@ -131,6 +135,10 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       return response.json();
     },
     onSuccess: invalidateAfterClassificazione,
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile aggiornare: classificazione già presente", variant: "destructive" });
+      invalidateAfterClassificazione();
+    },
   });
 
   const deleteClassificazioneMutation = useMutation({
@@ -138,6 +146,9 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
       await apiRequest("DELETE", `/api/prestazioni/${prestazioneId}/classificazioni/${classId}`);
     },
     onSuccess: invalidateAfterClassificazione,
+    onError: () => {
+      toast({ title: "Errore", description: "Impossibile eliminare la classificazione", variant: "destructive" });
+    },
   });
 
   const copyClassificazioniMutation = useMutation({
@@ -635,9 +646,12 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                     size="sm"
                                     className="h-6 text-xs px-2"
                                     onClick={() => {
+                                      const usedCodes = classificazioni.map((c: any) => c.codiceDM);
+                                      const allCodes = Object.keys(CATEGORIE_DM2016);
+                                      const firstAvailable = allCodes.find(code => !usedCodes.includes(code)) || 'E.01';
                                       createClassificazioneMutation.mutate({
                                         prestazioneId: dbPrestazione.id,
-                                        data: { codiceDM: 'E.01', importoOpere: 0, importoServizio: 0 },
+                                        data: { codiceDM: firstAvailable, importoOpere: 0, importoServizio: 0 },
                                       });
                                     }}
                                   >
@@ -648,7 +662,12 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
 
                               {classificazioni.length > 0 ? (
                                 <div className="space-y-2">
-                                  {classificazioni.map((c: any) => (
+                                  {classificazioni.map((c: any) => {
+                                    // Codici già usati da ALTRE classificazioni di questa prestazione (esclusa la corrente)
+                                    const usedByOthers = classificazioni
+                                      .filter((other: any) => other.id !== c.id)
+                                      .map((other: any) => other.codiceDM);
+                                    return (
                                     <div key={c.id} className="grid grid-cols-[2fr_1fr_1fr_auto] gap-2 items-center">
                                       <Select
                                         value={c.codiceDM}
@@ -667,7 +686,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                           <SelectGroup>
                                             <SelectLabel>Edilizia</SelectLabel>
                                             {Object.entries(CATEGORIE_DM2016)
-                                              .filter(([_, data]) => data.categoria === 'Edilizia')
+                                              .filter(([codice, data]) => data.categoria === 'Edilizia' && (codice === c.codiceDM || !usedByOthers.includes(codice)))
                                               .map(([codice, data]) => (
                                                 <SelectItem key={codice} value={codice} className="text-xs">
                                                   <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
@@ -677,7 +696,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                           <SelectGroup>
                                             <SelectLabel>Strutture</SelectLabel>
                                             {Object.entries(CATEGORIE_DM2016)
-                                              .filter(([_, data]) => data.categoria === 'Strutture')
+                                              .filter(([codice, data]) => data.categoria === 'Strutture' && (codice === c.codiceDM || !usedByOthers.includes(codice)))
                                               .map(([codice, data]) => (
                                                 <SelectItem key={codice} value={codice} className="text-xs">
                                                   <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
@@ -687,7 +706,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                           <SelectGroup>
                                             <SelectLabel>Impianti</SelectLabel>
                                             {Object.entries(CATEGORIE_DM2016)
-                                              .filter(([_, data]) => data.categoria === 'Impianti')
+                                              .filter(([codice, data]) => data.categoria === 'Impianti' && (codice === c.codiceDM || !usedByOthers.includes(codice)))
                                               .map(([codice, data]) => (
                                                 <SelectItem key={codice} value={codice} className="text-xs">
                                                   <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
@@ -697,7 +716,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                           <SelectGroup>
                                             <SelectLabel>Altro</SelectLabel>
                                             {Object.entries(CATEGORIE_DM2016)
-                                              .filter(([_, data]) => !['Edilizia', 'Strutture', 'Impianti'].includes(data.categoria))
+                                              .filter(([codice, data]) => !['Edilizia', 'Strutture', 'Impianti'].includes(data.categoria) && (codice === c.codiceDM || !usedByOthers.includes(codice)))
                                               .map(([codice, data]) => (
                                                 <SelectItem key={codice} value={codice} className="text-xs">
                                                   <span className="font-mono">{codice}</span> - {data.descrizione.substring(0, 35)}
@@ -707,6 +726,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                         </SelectContent>
                                       </Select>
                                       <Input
+                                        key={`opere-${c.id}-${c.importoOpere}`}
                                         type="number"
                                         placeholder="Opere"
                                         min="0"
@@ -725,6 +745,7 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                         className="text-xs h-8"
                                       />
                                       <Input
+                                        key={`servizio-${c.id}-${c.importoServizio}`}
                                         type="number"
                                         placeholder="Servizio"
                                         min="0"
@@ -757,7 +778,8 @@ export default function EditProjectForm({ project, children }: EditProjectFormPr
                                         <Trash2 className="w-3 h-3" />
                                       </Button>
                                     </div>
-                                  ))}
+                                    );
+                                  })}
                                   <div className="flex justify-end gap-4 text-xs text-muted-foreground pt-1 border-t">
                                     <span>Opere: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoOpere || 0), 0))}</span>
                                     <span className="font-medium text-primary">Servizio: {formatImporto(classificazioni.reduce((s: number, c: any) => s + (c.importoServizio || 0), 0))}</span>
